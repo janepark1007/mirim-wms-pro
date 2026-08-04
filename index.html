@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MIRIM WMS PRO V10</title>
+<title>MIRIM WMS PRO V12</title>
 <style>
 :root{--navy:#17357a;--blue:#2563eb;--bg:#f3f6fb;--text:#111827;--muted:#64748b;--red:#b91c1c;--green:#047857;--amber:#b45309}
 *{box-sizing:border-box}
@@ -38,7 +38,7 @@ th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:no
 </style>
 </head>
 <body>
-<header><div class="wrap"><h2>📦 MIRIM WMS PRO V10</h2><div id="who"></div></div></header>
+<header><div class="wrap"><h2>📦 MIRIM WMS PRO V12</h2><div id="who"></div></div></header>
 
 <div class="wrap">
 <div id="setup" class="card bad">연결 확인 중...</div>
@@ -86,7 +86,7 @@ th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:no
 <select id="catalogStock"><option value="">전체 재고</option><option value="low">부족재고</option><option value="normal">정상재고</option></select>
 <button id="catalogApply">적용</button>
 </div>
-<div id="catalogCount" class="muted" style="margin-top:8px"></div>
+<div id="catalogCount" class="muted" style="margin-top:8px"></div><div class="muted">새 품목은 계속 누적됩니다. 같은 품번은 중복 등록되지 않습니다.</div>
 </div>
 <div id="catalogList" class="items-grid"></div>
 </section>
@@ -149,7 +149,7 @@ th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:no
 <h3>📷 품목 사진</h3>
 <div class="row"><div><label>제품사진</label><input id="photoProduct" type="file" accept="image/*" capture="environment"></div><div><label>박스사진</label><input id="photoBox" type="file" accept="image/*" capture="environment"></div><div><label>라벨사진</label><input id="photoLabel" type="file" accept="image/*" capture="environment"></div></div>
 <label>비고</label><textarea id="itemNote"></textarea>
-<button id="saveItemBtn">품목 저장</button><div id="itemMsg" class="muted"></div>
+<div class="row"><button id="saveItemBtn">품목 저장</button><button id="newItemBtn" type="button" class="secondary">새 품목 입력</button></div><div id="itemMsg" class="muted"></div>
 </div>
 </section>
 
@@ -463,6 +463,39 @@ async function oneFile(id){const f=$(id).files?.[0];return f?compress(f):null}
 async function manyFiles(id){return Promise.all([...($(id).files||[])].slice(0,3).map(compress))}
 
 
+
+function resetItemForm(){
+ $("partNo").value="";
+ $("itemName").value="";
+ $("category").selectedIndex=0;
+ $("maker").value="";
+ $("spec").value="";
+ $("unit").value="EA";
+ $("minStock").value="0";
+ $("itemPartner").value="";
+ $("itemNote").value="";
+
+ $("photoProduct").value="";
+ $("photoBox").value="";
+ $("photoLabel").value="";
+
+ $("multiLocType").value="생산";
+ $("multiProdLine").value="D1";
+ $("multiProdNumber").value="1";
+ $("multiLocQty").value="0";
+
+ locationDrafts=[];
+ renderLocationDrafts();
+ refreshMultiLocationControls();
+
+ $("partNo").focus();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+$("newItemBtn").onclick=()=>{
+ resetItemForm();
+ $("itemMsg").textContent="새 품목을 입력하세요.";
+};
+
 $("saveItemBtn").onclick=async()=>{
  try{
    if(!$("partNo").value.trim()||!$("itemName").value.trim()){
@@ -470,6 +503,11 @@ $("saveItemBtn").onclick=async()=>{
    }
    if(locationDrafts.length===0){
      throw new Error("위치와 수량을 한 곳 이상 추가하세요.");
+   }
+
+   const duplicate=items.find(x=>x.part_no.trim()===$("partNo").value.trim());
+   if(duplicate){
+     throw new Error("이미 등록된 품번입니다. 등록 품목 전체에서 해당 품목을 수정하세요.");
    }
 
    $("itemMsg").textContent="품목 저장 중...";
@@ -510,10 +548,12 @@ $("saveItemBtn").onclick=async()=>{
      if(updateError) throw updateError;
    }
 
-   $("itemMsg").textContent="✅ 품목·사진·위치별 수량 저장 완료";
-   locationDrafts=[];
-   renderLocationDrafts();
    await loadItems();
+   resetItemForm();
+   document.querySelectorAll(".panel").forEach(x=>x.classList.add("hidden"));
+   $("catalogPanel").classList.remove("hidden");
+   renderCatalog(items);
+   $("itemMsg").textContent="✅ 저장 완료. 등록 품목 전체에 누적했습니다.";
  }catch(e){
    $("itemMsg").textContent="❌ "+e.message;
  }
