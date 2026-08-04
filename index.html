@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MIRIM WMS PRO V6</title>
+<title>MIRIM WMS PRO V10</title>
 <style>
 :root{--navy:#17357a;--blue:#2563eb;--bg:#f3f6fb;--text:#111827;--muted:#64748b;--red:#b91c1c;--green:#047857;--amber:#b45309}
 *{box-sizing:border-box}
@@ -28,10 +28,17 @@ label{display:block;font-weight:800;margin:8px 0 5px}
 .detail-photo{width:100%;max-width:240px;border-radius:14px;background:#e2e8f0}
 dialog{border:0;border-radius:18px;width:min(760px,94vw);padding:0;box-shadow:0 24px 70px #0005}
 dialog::backdrop{background:#0008}.dialog-body{padding:18px}
+
+dialog{border:0;border-radius:18px;width:min(820px,94vw);padding:0;box-shadow:0 24px 70px #0005}
+dialog::backdrop{background:#0008}.dialog-body{padding:18px}
+
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}
 </style>
 </head>
 <body>
-<header><div class="wrap"><h2>📦 MIRIM WMS PRO V6</h2><div id="who"></div></div></header>
+<header><div class="wrap"><h2>📦 MIRIM WMS PRO V10</h2><div id="who"></div></div></header>
 
 <div class="wrap">
 <div id="setup" class="card bad">연결 확인 중...</div>
@@ -54,7 +61,7 @@ dialog::backdrop{background:#0008}.dialog-body{padding:18px}
 <button data-tab="outPanel">🚚 출고</button>
 <button id="adminItemTab" data-tab="adminItemPanel" class="hidden">👑 품목 등록</button>
 <button id="inTab" data-tab="inPanel" class="hidden">📥 입고</button>
-<button id="statsTab" data-tab="statsPanel" class="hidden">📊 통계</button>
+<button id="statsTab" data-tab="statsPanel" class="hidden">📊 통계</button><button id="activityTab" data-tab="activityPanel" class="hidden">👥 관리자 활동</button>
 <button id="logoutBtn" class="secondary">로그아웃</button>
 </div>
 
@@ -108,19 +115,37 @@ dialog::backdrop{background:#0008}.dialog-body{padding:18px}
 <div class="row"><div><label>품번</label><input id="partNo"></div><div><label>품명</label><input id="itemName"></div></div>
 <div class="row"><div><label>분류</label><select id="category"><option>나사</option><option>타이</option><option>하우징</option><option>커넥터</option><option>후드</option><option>터미널</option><option>전선</option><option>PVC</option><option>포장재</option><option>기타</option></select></div><div><label>제조사</label><input id="maker"></div><div><label>규격</label><input id="spec"></div></div>
 <div class="row"><div><label>관리단위</label><select id="unit"><option>EA</option><option>M</option><option>ROLL</option><option>BOX</option></select></div><div><label>최소재고</label><input id="minStock" type="number" value="0"></div><div><label>거래업체</label><input id="itemPartner"></div></div>
-<h3>📍 기본 위치</h3>
+<h3>📍 품목 위치·수량 등록</h3>
+<div class="card" style="background:#f8fafc">
 <div class="row">
-<div><label>구분</label><select id="locType"><option>생산</option><option>1층</option><option>2층</option></select></div>
+<div><label>구분</label><select id="multiLocType"><option>생산</option><option>1층</option><option>2층</option></select></div>
 
-<div id="warehouseAreaWrap" class="hidden"><label>구역</label><select id="locArea"></select></div>
-<div id="warehouseShelfWrap" class="hidden"><label>단</label><select id="locShelf"></select></div>
-<div id="warehouseNumberWrap" class="hidden"><label>번호</label><select id="locNumber"></select></div>
-<div id="warehouseSideWrap" class="hidden"><label>구분</label><select id="locSide"><option>A</option><option>B</option></select></div>
+<div id="multiWarehouseAreaWrap" class="hidden"><label>구역</label><select id="multiLocArea"></select></div>
+<div id="multiWarehouseShelfWrap" class="hidden"><label>단</label><select id="multiLocShelf"></select></div>
+<div id="multiWarehouseNumberWrap" class="hidden"><label>번호</label><select id="multiLocNumber"></select></div>
+<div id="multiWarehouseSideWrap" class="hidden"><label>구분</label><select id="multiLocSide"><option>A</option><option>B</option></select></div>
 
-<div id="productionLineWrap"><label>생산구역</label><select id="productionLine"></select></div>
-<div id="productionNumberWrap"><label>번호</label><select id="productionNumber"></select></div>
+<div id="multiProductionLineWrap"><label>생산구역</label><select id="multiProdLine"></select></div>
+<div id="multiProductionNumberWrap"><label>번호</label><select id="multiProdNumber"></select></div>
+
+<div><label>해당 위치 수량</label><input id="multiLocQty" type="number" min="0" value="0"></div>
 </div>
-<div id="locationPreview" class="muted" style="margin-top:8px">선택 위치: 생산-D1-1</div>
+
+<div id="multiLocPreview" class="muted" style="margin:8px 0">선택 위치: 생산-D1-1</div>
+<div class="row">
+<button id="addLocationBtn" type="button">➕ 위치·수량 추가</button>
+<button id="clearLocationsBtn" type="button" class="secondary">전체 지우기</button>
+</div>
+</div>
+
+<div class="card">
+<h3>등록할 위치별 수량</h3>
+<div id="locationDraftEmpty" class="muted">아직 추가된 위치가 없습니다.</div>
+<div id="locationDraftTable" class="table-wrap"></div>
+<div class="muted">1층·2층·생산에 동시에 보관되는 경우 위치를 각각 추가하세요. 총수량은 자동 합산됩니다.</div>
+<div><b>초기 총수량: <span id="locationDraftTotal">0</span></b></div>
+</div>
+
 <h3>📷 품목 사진</h3>
 <div class="row"><div><label>제품사진</label><input id="photoProduct" type="file" accept="image/*" capture="environment"></div><div><label>박스사진</label><input id="photoBox" type="file" accept="image/*" capture="environment"></div><div><label>라벨사진</label><input id="photoLabel" type="file" accept="image/*" capture="environment"></div></div>
 <label>비고</label><textarea id="itemNote"></textarea>
@@ -143,12 +168,149 @@ dialog::backdrop{background:#0008}.dialog-body{padding:18px}
 </div>
 </section>
 
+
+<section id="activityPanel" class="panel hidden">
+<div class="card">
+<h3>👥 관리자 로그인·출고 활동 · 박향숙 주관리자 전용</h3>
+<div class="row">
+<div><label>시작일</label><input id="activityFrom" type="date"></div>
+<div><label>종료일</label><input id="activityTo" type="date"></div>
+<div><label>관리자</label><select id="activityUser"><option value="">전체 관리자</option></select></div>
+<div><label>구분</label><select id="activityType"><option value="">전체 활동</option><option value="LOGIN">로그인</option><option value="OUT">출고</option></select></div>
+</div>
+<div class="row" style="margin-top:8px">
+<button id="applyActivityBtn">조회</button>
+<button id="activityTodayBtn" class="secondary">오늘</button>
+<button id="activityMonthBtn" class="secondary">이번 달</button>
+<button id="exportActivityBtn" class="green">활동 엑셀 내보내기</button>
+</div>
+<div id="activityMsg" class="muted" style="margin-top:8px"></div>
+</div>
+
+<div class="metric-grid">
+<div class="card"><div class="muted">로그인 건수</div><div id="activityLoginCount" class="metric">0</div></div>
+<div class="card"><div class="muted">출고 건수</div><div id="activityOutCount" class="metric">0</div></div>
+<div class="card"><div class="muted">출고 총수량</div><div id="activityOutQty" class="metric">0</div></div>
+<div class="card"><div class="muted">활동 관리자 수</div><div id="activityUserCount" class="metric">0</div></div>
+</div>
+
+<div class="card">
+<h3>관리자별 최근 활동</h3>
+<div id="activitySummaryTable" class="table-wrap"></div>
+</div>
+
+<div class="card">
+<h3>상세 활동 기록</h3>
+<div id="activityDetailTable" class="table-wrap"></div>
+</div>
+</section>
+
 <section id="statsPanel" class="panel hidden">
-<div class="card"><h3>📊 통계</h3><div class="muted">기존 V3/V4 통계 기능을 그대로 사용합니다.</div></div>
+<div class="card">
+<h3>📊 통계·정산 · 박향숙 주관리자 전용</h3>
+<div class="row">
+<div><label>시작일</label><input id="statFrom" type="date"></div>
+<div><label>종료일</label><input id="statTo" type="date"></div>
+<div><label>구분</label><select id="statType"><option value="">입출고 전체</option><option value="IN">입고</option><option value="OUT">출고</option><option value="ADJUST">재고조정</option></select></div>
+</div>
+<div class="row">
+<input id="statPartNo" placeholder="품번">
+<input id="statItemName" placeholder="품명">
+<input id="statPartner" placeholder="거래업체·현장">
+<input id="statActor" placeholder="처리자">
+<input id="statLocation" placeholder="위치">
+</div>
+<div class="row" style="margin-top:8px">
+<button id="applyStatsBtn">조회</button>
+<button id="thisMonthBtn" class="secondary">이번 달</button>
+<button id="thisYearBtn" class="secondary">올해</button>
+<button id="exportExcelBtn" class="green">엑셀 내보내기</button>
+</div>
+<div id="statsMsg" class="muted" style="margin-top:8px"></div>
+</div>
+
+<div class="metric-grid">
+<div class="card"><div class="muted">검색 건수</div><div id="statCount" class="metric">0</div></div>
+<div class="card"><div class="muted">총 입고수량</div><div id="statInQty" class="metric">0</div></div>
+<div class="card"><div class="muted">총 출고수량</div><div id="statOutQty" class="metric">0</div></div>
+<div class="card"><div class="muted">재고조정 순증감</div><div id="statAdjustQty" class="metric">0</div></div>
+</div>
+
+<div class="card">
+<h3>품목별 합계</h3>
+<div id="itemSummaryTable" class="table-wrap"></div>
+</div>
+
+<div class="card">
+<h3>거래업체별 합계</h3>
+<div id="partnerSummaryTable" class="table-wrap"></div>
+</div>
+
+<div class="card">
+<h3>상세 입출고 내역</h3>
+<div id="statsDetailTable" class="table-wrap"></div>
+</div>
 </section>
 </div>
 </div>
 
+
+<dialog id="editDialog">
+<div class="dialog-body">
+<h3>✏️ 품목 수정 · 박향숙 주관리자</h3>
+<input id="editItemId" type="hidden">
+<div class="row">
+<div><label>품번</label><input id="editPartNo"></div>
+<div><label>품명</label><input id="editItemName"></div>
+</div>
+<div class="row">
+<div><label>분류</label><select id="editCategory"><option>나사</option><option>타이</option><option>하우징</option><option>커넥터</option><option>후드</option><option>터미널</option><option>전선</option><option>PVC</option><option>포장재</option><option>기타</option></select></div>
+<div><label>제조사</label><input id="editMaker"></div>
+<div><label>규격</label><input id="editSpec"></div>
+</div>
+<div class="row">
+<div><label>단위</label><select id="editUnit"><option>EA</option><option>M</option><option>ROLL</option><option>BOX</option></select></div>
+<div><label>최소재고</label><input id="editMinStock" type="number" min="0"></div>
+<div><label>거래업체</label><input id="editPartner"></div>
+</div>
+<div class="row">
+<div><label>제품사진 변경</label><input id="editPhotoProduct" type="file" accept="image/*" capture="environment"></div>
+<div><label>박스사진 변경</label><input id="editPhotoBox" type="file" accept="image/*" capture="environment"></div>
+<div><label>라벨사진 변경</label><input id="editPhotoLabel" type="file" accept="image/*" capture="environment"></div>
+</div>
+<label>비고</label><textarea id="editNote"></textarea>
+<div class="row" style="margin-top:10px">
+<button id="saveEditBtn">수정 저장</button>
+<button id="closeEditBtn" class="secondary">취소</button>
+</div>
+<div id="editMsg" class="muted"></div>
+</div>
+</dialog>
+
+<dialog id="stockDialog">
+<div class="dialog-body">
+<h3>📦 재고·위치 관리</h3>
+<input id="stockItemId" type="hidden">
+<div id="stockItemTitle"></div>
+<label>위치 선택</label><select id="stockLocation"></select>
+<label>새 재고수량</label><input id="stockNewQty" type="number" min="0">
+<label>조정 사유</label><input id="stockReason" placeholder="예: 실재고 조사">
+<h3>📍 선택 위치 변경</h3>
+<div class="row">
+<select id="editLocType"><option>생산</option><option>1층</option><option>2층</option></select>
+<select id="editLocArea"></select><select id="editLocShelf"></select>
+<select id="editLocNumber"></select><select id="editLocSide"><option>A</option><option>B</option></select>
+<select id="editProdLine"></select><select id="editProdNumber"></select>
+</div>
+<div id="editLocPreview" class="muted"></div>
+<div class="row" style="margin-top:10px">
+<button id="adjustStockBtn" class="amber">재고 조정</button>
+<button id="updateLocationBtn">위치 변경</button>
+<button id="closeStockBtn" class="secondary">닫기</button>
+</div>
+<div id="stockMsg" class="muted"></div>
+</div>
+</dialog>
 <dialog id="detailDialog">
 <div class="dialog-body">
 <div class="row" style="align-items:start">
@@ -169,7 +331,7 @@ const $=id=>document.getElementById(id),cfg=window.MIRIM_SUPABASE||{};
 if(!cfg.url||!cfg.publishableKey)throw new Error("Supabase config missing");
 const db=window.supabase.createClient(cfg.url,cfg.publishableKey);
 $("setup").textContent="✅ 공용 데이터베이스 연결 준비됨";$("setup").className="card ok";
-let session=null,items=[];
+let session=null,items=[],history=[],filteredHistory=[],loginEvents=[],filteredActivity=[];
 
 async function loadUsers(){
  const {data,error}=await db.rpc("list_outbound_users");
@@ -183,8 +345,9 @@ $("loginBtn").onclick=async()=>{
  session={id,pin,...data[0]};
  $("who").textContent=session.display_name+" · "+(session.role==="super_admin"?"주관리자":"승인 관리자");
  $("loginCard").classList.add("hidden");$("app").classList.remove("hidden");
- if(session.role==="super_admin"){["adminItemTab","inTab","statsTab"].forEach(x=>$(x).classList.remove("hidden"))}
+ if(session.role==="super_admin"){["adminItemTab","inTab","statsTab","activityTab"].forEach(x=>$(x).classList.remove("hidden"))}
  await loadItems();
+ if(session.role==='super_admin'){ await loadHistory(); await loadActivity(); }
 };
 $("logoutBtn").onclick=()=>location.reload();
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".panel").forEach(x=>x.classList.add("hidden"));$(b.dataset.tab).classList.remove("hidden")});
@@ -208,7 +371,7 @@ function itemCard(x){
  return `<div class="card item-card" onclick="showDetail('${x.id}')">
  ${x.photo_url?`<img class="thumb" src="${x.photo_url}">`:`<div class="thumb"></div>`}
  <div><b>${x.part_no} · ${x.item_name}</b><div class="muted">${x.maker||""} ${x.spec||""}</div>
- <div>${locs}</div><div class="${low?'stock-low':'stock-ok'}">현재고 ${total} ${x.unit}</div>
+ <div>${locs}</div><div class="${low?'stock-low':'stock-ok'}">총재고 ${total} ${x.unit}</div>
  <span class="badge">${x.category||"기타"}</span></div></div>`;
 }
 function renderCatalog(list){$("catalogList").innerHTML=list.map(itemCard).join("")||'<div class="card muted">등록된 품목이 없습니다.</div>';$("catalogCount").textContent=`총 ${list.length}개 품목`}
@@ -230,7 +393,12 @@ window.showDetail=id=>{
  $("detailBody").innerHTML=`
  <p><b>분류:</b> ${x.category||""}</p><p><b>제조사:</b> ${x.maker||""}</p><p><b>규격:</b> ${x.spec||""}</p>
  <p><b>최소재고:</b> ${x.min_stock||0} ${x.unit}</p><p><b>현재고:</b> ${totalStock(x)} ${x.unit}</p>
- <p><b>위치별 재고:</b><br>${(x.item_locations||[]).map(l=>`${l.location_display}: ${l.qty} ${x.unit}`).join("<br>")||"위치 확인 필요"}</p>`;
+ <p><b>위치별 재고:</b><br>${(x.item_locations||[]).map(l=>`${l.location_display}: ${l.qty} ${x.unit}`).join("<br>")||"위치 확인 필요"}</p>
+ ${session?.role==="super_admin"?`<div class="row" style="margin-top:10px">
+ <button onclick="openEdit('${x.id}')">✏️ 수정·사진 변경</button>
+ <button class="amber" onclick="openStock('${x.id}')">📦 재고·위치 관리</button>
+ <button class="secondary" onclick="deactivateItem('${x.id}')">품목 비활성화</button>
+ </div>`:""}`;
  $("detailDialog").showModal();
 };
 $("closeDetail").onclick=()=>$("detailDialog").close();
@@ -295,51 +463,611 @@ async function oneFile(id){const f=$(id).files?.[0];return f?compress(f):null}
 async function manyFiles(id){return Promise.all([...($(id).files||[])].slice(0,3).map(compress))}
 
 
-function optionRange(start,end,pad=0){
- return Array.from({length:end-start+1},(_,i)=>{
-   const n=String(start+i).padStart(pad,"0");
-   return `<option value="${n}">${n}</option>`;
- }).join("");
-}
-$("locArea").innerHTML="ABCDEFGHIJKLMNOPQ".split("").map(x=>`<option value="${x}">${x}</option>`).join("");
-$("locShelf").innerHTML=optionRange(1,4).replaceAll('value="1"','value="1단"').replaceAll('>1<','>1단<').replaceAll('value="2"','value="2단"').replaceAll('>2<','>2단<').replaceAll('value="3"','value="3단"').replaceAll('>3<','>3단<').replaceAll('value="4"','value="4단"').replaceAll('>4<','>4단<');
-$("locNumber").innerHTML=optionRange(1,6,3);
-$("productionLine").innerHTML=optionRange(1,8).replaceAll('value="','value="D').replaceAll('>','>D');
-$("productionNumber").innerHTML=optionRange(1,100);
-
-function currentLocation(){
- if($("locType").value==="생산"){
-   return `생산-${$("productionLine").value}-${$("productionNumber").value}`;
- }
- return `${$("locType").value}-${$("locArea").value}-${$("locShelf").value}-${$("locNumber").value}-${$("locSide").value}`;
-}
-function updateLocationControls(){
- const production=$("locType").value==="생산";
- ["productionLineWrap","productionNumberWrap"].forEach(id=>$(id).classList.toggle("hidden",!production));
- ["warehouseAreaWrap","warehouseShelfWrap","warehouseNumberWrap","warehouseSideWrap"].forEach(id=>$(id).classList.toggle("hidden",production));
- $("locationPreview").textContent="선택 위치: "+currentLocation();
-}
-["locType","locArea","locShelf","locNumber","locSide","productionLine","productionNumber"].forEach(id=>$(id).addEventListener("change",updateLocationControls));
-updateLocationControls();
-
 $("saveItemBtn").onclick=async()=>{
- const display=currentLocation();
- const [p,b,l]=await Promise.all([oneFile("photoProduct"),oneFile("photoBox"),oneFile("photoLabel")]);
- const note=[`거래업체:${$("itemPartner").value.trim()}`,$("itemNote").value.trim()].filter(Boolean).join(" / ");
- const {error}=await db.rpc("wms_admin_upsert_item",{p_user_id:session.id,p_pin:session.pin,p_part_no:$("partNo").value.trim(),p_item_name:$("itemName").value.trim(),p_category:$("category").value,p_maker:$("maker").value.trim()||null,p_spec:$("spec").value.trim()||null,p_unit:$("unit").value,p_min_stock:Number($("minStock").value||0),p_note:note||null,p_photo_product:p,p_photo_box:b,p_photo_label:l,p_location_code:display.replaceAll(" ",""),p_location_display:display,p_initial_qty:0});
- $("itemMsg").textContent=error?"❌ "+error.message:"✅ 품목 기준정보 저장 완료";
- if(!error)await loadItems();
+ try{
+   if(!$("partNo").value.trim()||!$("itemName").value.trim()){
+     throw new Error("품번과 품명을 입력하세요.");
+   }
+   if(locationDrafts.length===0){
+     throw new Error("위치와 수량을 한 곳 이상 추가하세요.");
+   }
+
+   $("itemMsg").textContent="품목 저장 중...";
+
+   const {data:itemId,error:firstError}=await db.rpc("wms_admin_upsert_item_multi_locations",{
+     p_user_id:session.id,
+     p_pin:session.pin,
+     p_part_no:$("partNo").value.trim(),
+     p_item_name:$("itemName").value.trim(),
+     p_category:$("category").value,
+     p_maker:$("maker").value.trim()||null,
+     p_spec:$("spec").value.trim()||null,
+     p_unit:$("unit").value,
+     p_min_stock:Number($("minStock").value||0),
+     p_partner_name:$("itemPartner").value.trim()||null,
+     p_note:$("itemNote").value.trim()||null,
+     p_locations:locationDrafts
+   });
+   if(firstError) throw firstError;
+
+   const [p,b,l]=await Promise.all([
+     uploadImage($("photoProduct").files?.[0],itemId,"product"),
+     uploadImage($("photoBox").files?.[0],itemId,"box"),
+     uploadImage($("photoLabel").files?.[0],itemId,"label")
+   ]);
+
+   if(p||b||l){
+     const {error:updateError}=await db.rpc("wms_admin_update_item",{
+       p_user_id:session.id,p_pin:session.pin,p_item_id:itemId,
+       p_part_no:$("partNo").value.trim(),p_item_name:$("itemName").value.trim(),
+       p_category:$("category").value,p_maker:$("maker").value.trim()||null,
+       p_spec:$("spec").value.trim()||null,p_unit:$("unit").value,
+       p_min_stock:Number($("minStock").value||0),
+       p_partner_name:$("itemPartner").value.trim()||null,
+       p_note:$("itemNote").value.trim()||null,
+       p_photo_product:p,p_photo_box:b,p_photo_label:l
+     });
+     if(updateError) throw updateError;
+   }
+
+   $("itemMsg").textContent="✅ 품목·사진·위치별 수량 저장 완료";
+   locationDrafts=[];
+   renderLocationDrafts();
+   await loadItems();
+ }catch(e){
+   $("itemMsg").textContent="❌ "+e.message;
+ }
 };
 $("outBtn").onclick=async()=>{
  const x=items.find(v=>v.id===$("outItem").value),imgs=await manyFiles("outImages");
  const {error}=await db.rpc("wms_record_outbound",{p_user_id:session.id,p_pin:session.pin,p_item_id:x?.id,p_location_id:$("outLocation").value,p_qty:Number($("outQty").value),p_partner_name:$("outPartner").value||null,p_note:$("outNote").value||null,p_evidence_images:imgs});
- $("outMsg").textContent=error?"❌ "+error.message:"✅ 출고 저장 완료";if(!error)await loadItems();
+ $("outMsg").textContent=error?"❌ "+error.message:"✅ 출고 저장 완료";if(!error){await loadItems();if(session.role==="super_admin")await loadHistory();}
 };
 $("inBtn").onclick=async()=>{
  const x=items.find(v=>v.id===$("inItem").value),imgs=await manyFiles("inImages");
  const {error}=await db.rpc("wms_record_inbound",{p_user_id:session.id,p_pin:session.pin,p_item_id:x?.id,p_location_id:$("inLocation").value,p_qty:Number($("inQty").value),p_partner_name:$("inPartner").value||null,p_note:$("inNote").value||null,p_erp_registered:$("inErp").checked,p_evidence_images:imgs});
  $("inMsg").textContent=error?"❌ "+error.message:"✅ 입고 저장 완료";if(!error)await loadItems();
 };
+
+
+let locationDrafts=[];
+
+function makeOptions(values){
+ return values.map(v=>`<option value="${v}">${v}</option>`).join("");
+}
+$("multiLocArea").innerHTML=makeOptions("ABCDEFGHIJKLMNOPQ".split(""));
+$("multiLocShelf").innerHTML=makeOptions(["1단","2단","3단","4단"]);
+$("multiLocNumber").innerHTML=makeOptions(Array.from({length:6},(_,i)=>String(i+1).padStart(3,"0")));
+$("multiProdLine").innerHTML=makeOptions(Array.from({length:8},(_,i)=>`D${i+1}`));
+$("multiProdNumber").innerHTML=makeOptions(Array.from({length:100},(_,i)=>String(i+1)));
+
+function selectedMultiLocation(){
+ if($("multiLocType").value==="생산"){
+   return `생산-${$("multiProdLine").value}-${$("multiProdNumber").value}`;
+ }
+ return `${$("multiLocType").value}-${$("multiLocArea").value}-${$("multiLocShelf").value}-${$("multiLocNumber").value}-${$("multiLocSide").value}`;
+}
+function refreshMultiLocationControls(){
+ const production=$("multiLocType").value==="생산";
+ ["multiProductionLineWrap","multiProductionNumberWrap"].forEach(id=>$(id).classList.toggle("hidden",!production));
+ ["multiWarehouseAreaWrap","multiWarehouseShelfWrap","multiWarehouseNumberWrap","multiWarehouseSideWrap"].forEach(id=>$(id).classList.toggle("hidden",production));
+ $("multiLocPreview").textContent="선택 위치: "+selectedMultiLocation();
+}
+["multiLocType","multiLocArea","multiLocShelf","multiLocNumber","multiLocSide","multiProdLine","multiProdNumber"].forEach(id=>{
+ $(id).addEventListener("change",refreshMultiLocationControls);
+});
+refreshMultiLocationControls();
+
+function renderLocationDrafts(){
+ const total=locationDrafts.reduce((s,x)=>s+Number(x.qty||0),0);
+ $("locationDraftTotal").textContent=total.toLocaleString("ko-KR");
+ $("locationDraftEmpty").classList.toggle("hidden",locationDrafts.length>0);
+
+ if(locationDrafts.length===0){
+   $("locationDraftTable").innerHTML="";
+   return;
+ }
+
+ $("locationDraftTable").innerHTML=`<table>
+ <thead><tr><th>위치</th><th>수량</th><th>삭제</th></tr></thead>
+ <tbody>${locationDrafts.map((x,i)=>`<tr>
+ <td>${esc(x.location_display)}</td>
+ <td>${Number(x.qty).toLocaleString("ko-KR")}</td>
+ <td><button type="button" class="secondary" onclick="removeLocationDraft(${i})">삭제</button></td>
+ </tr>`).join("")}</tbody>
+ </table>`;
+}
+window.removeLocationDraft=index=>{
+ locationDrafts.splice(index,1);
+ renderLocationDrafts();
+};
+$("addLocationBtn").onclick=()=>{
+ const display=selectedMultiLocation();
+ const qty=Number($("multiLocQty").value);
+
+ if(!Number.isFinite(qty)||qty<0){
+   $("itemMsg").textContent="❌ 위치 수량을 0 이상으로 입력하세요.";
+   return;
+ }
+
+ const code=display.replaceAll(" ","");
+ const existing=locationDrafts.find(x=>x.location_code===code);
+
+ if(existing){
+   existing.qty=qty;
+ }else{
+   locationDrafts.push({
+     location_code:code,
+     location_display:display,
+     qty
+   });
+ }
+ renderLocationDrafts();
+ $("multiLocQty").value="0";
+ $("itemMsg").textContent=`✅ ${display} 위치가 추가되었습니다.`;
+};
+$("clearLocationsBtn").onclick=()=>{
+ locationDrafts=[];
+ renderLocationDrafts();
+};
+renderLocationDrafts();
+
+
+async function uploadImage(file, itemId, kind){
+ if(!file) return null;
+ const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
+ const safeExt=["jpg","jpeg","png","webp"].includes(ext)?ext:"jpg";
+ const path=`${itemId}/${kind}-${Date.now()}.${safeExt}`;
+ const {error}=await db.storage.from("item-images").upload(path,file,{
+   cacheControl:"3600",upsert:true,contentType:file.type||"image/jpeg"
+ });
+ if(error) throw error;
+ const {data}=db.storage.from("item-images").getPublicUrl(path);
+ return data.publicUrl;
+}
+
+window.openEdit=id=>{
+ const x=items.find(v=>v.id===id); if(!x)return;
+ $("detailDialog").close();
+ $("editItemId").value=x.id;$("editPartNo").value=x.part_no||"";$("editItemName").value=x.item_name||"";
+ $("editCategory").value=x.category||"기타";$("editMaker").value=x.maker||"";$("editSpec").value=x.spec||"";
+ $("editUnit").value=x.unit||"EA";$("editMinStock").value=x.min_stock||0;$("editPartner").value=x.partner_name||"";
+ $("editNote").value=x.note||"";$("editMsg").textContent="";
+ $("editDialog").showModal();
+};
+$("closeEditBtn").onclick=()=>$("editDialog").close();
+
+$("saveEditBtn").onclick=async()=>{
+ try{
+   const id=$("editItemId").value;
+   $("editMsg").textContent="저장 중...";
+   const [p,b,l]=await Promise.all([
+     uploadImage($("editPhotoProduct").files?.[0],id,"product"),
+     uploadImage($("editPhotoBox").files?.[0],id,"box"),
+     uploadImage($("editPhotoLabel").files?.[0],id,"label")
+   ]);
+   const {error}=await db.rpc("wms_admin_update_item",{
+     p_user_id:session.id,p_pin:session.pin,p_item_id:id,
+     p_part_no:$("editPartNo").value.trim(),p_item_name:$("editItemName").value.trim(),
+     p_category:$("editCategory").value,p_maker:$("editMaker").value.trim()||null,
+     p_spec:$("editSpec").value.trim()||null,p_unit:$("editUnit").value,
+     p_min_stock:Number($("editMinStock").value||0),p_partner_name:$("editPartner").value.trim()||null,
+     p_note:$("editNote").value.trim()||null,p_photo_product:p,p_photo_box:b,p_photo_label:l
+   });
+   if(error) throw error;
+   $("editMsg").textContent="✅ 수정 완료";
+   await loadItems();
+ }catch(e){$("editMsg").textContent="❌ "+e.message}
+};
+
+function fillEditLocationOptions(){
+ $("editLocArea").innerHTML="ABCDEFGHIJKLMNOPQ".split("").map(x=>`<option>${x}</option>`).join("");
+ $("editLocShelf").innerHTML=[1,2,3,4].map(x=>`<option value="${x}단">${x}단</option>`).join("");
+ $("editLocNumber").innerHTML=Array.from({length:6},(_,i)=>String(i+1).padStart(3,"0")).map(x=>`<option>${x}</option>`).join("");
+ $("editProdLine").innerHTML=Array.from({length:8},(_,i)=>`<option>D${i+1}</option>`).join("");
+ $("editProdNumber").innerHTML=Array.from({length:100},(_,i)=>`<option>${i+1}</option>`).join("");
+}
+fillEditLocationOptions();
+
+function selectedEditLocation(){
+ return $("editLocType").value==="생산"
+ ? `생산-${$("editProdLine").value}-${$("editProdNumber").value}`
+ : `${$("editLocType").value}-${$("editLocArea").value}-${$("editLocShelf").value}-${$("editLocNumber").value}-${$("editLocSide").value}`;
+}
+function refreshEditLocation(){
+ const prod=$("editLocType").value==="생산";
+ ["editLocArea","editLocShelf","editLocNumber","editLocSide"].forEach(id=>$(id).classList.toggle("hidden",prod));
+ ["editProdLine","editProdNumber"].forEach(id=>$(id).classList.toggle("hidden",!prod));
+ $("editLocPreview").textContent="새 위치: "+selectedEditLocation();
+}
+["editLocType","editLocArea","editLocShelf","editLocNumber","editLocSide","editProdLine","editProdNumber"].forEach(id=>$(id).onchange=refreshEditLocation);
+refreshEditLocation();
+
+window.openStock=id=>{
+ const x=items.find(v=>v.id===id);if(!x)return;
+ $("detailDialog").close();$("stockItemId").value=x.id;$("stockItemTitle").innerHTML=`<b>${x.part_no} · ${x.item_name}</b>`;
+ $("stockLocation").innerHTML=(x.item_locations||[]).map(l=>`<option value="${l.id}" data-qty="${l.qty}">${l.location_display} · ${l.qty} ${x.unit}</option>`).join("");
+ $("stockNewQty").value=$("stockLocation").selectedOptions[0]?.dataset.qty||0;
+ $("stockMsg").textContent="";$("stockDialog").showModal();
+};
+$("stockLocation").onchange=()=>{$("stockNewQty").value=$("stockLocation").selectedOptions[0]?.dataset.qty||0};
+$("closeStockBtn").onclick=()=>$("stockDialog").close();
+
+$("adjustStockBtn").onclick=async()=>{
+ const {error}=await db.rpc("wms_admin_adjust_stock",{
+   p_user_id:session.id,p_pin:session.pin,p_item_id:$("stockItemId").value,
+   p_location_id:$("stockLocation").value,p_new_qty:Number($("stockNewQty").value),
+   p_reason:$("stockReason").value.trim()||"재고 조정"
+ });
+ $("stockMsg").textContent=error?"❌ "+error.message:"✅ 재고 조정 완료";
+ if(!error)await loadItems();
+};
+
+$("updateLocationBtn").onclick=async()=>{
+ const display=selectedEditLocation();
+ const {error}=await db.rpc("wms_admin_update_location",{
+   p_user_id:session.id,p_pin:session.pin,p_location_id:$("stockLocation").value,
+   p_location_code:display.replaceAll(" ",""),p_location_display:display
+ });
+ $("stockMsg").textContent=error?"❌ "+error.message:"✅ 위치 변경 완료";
+ if(!error)await loadItems();
+};
+
+window.deactivateItem=async id=>{
+ if(!confirm("이 품목을 비활성화할까요? 입출고 이력은 유지됩니다."))return;
+ const {error}=await db.rpc("wms_admin_deactivate_item",{p_user_id:session.id,p_pin:session.pin,p_item_id:id});
+ if(error){alert("❌ "+error.message);return}
+ $("detailDialog").close();await loadItems();alert("✅ 품목 비활성화 완료");
+};
+
+
+
+function esc(value){
+ return String(value ?? "")
+   .replaceAll("&","&amp;")
+   .replaceAll("<","&lt;")
+   .replaceAll(">","&gt;");
+}
+function movementLabel(type){
+ if(type==="IN") return "입고";
+ if(type==="OUT") return "출고";
+ if(type==="ADJUST") return "재고조정";
+ return type||"";
+}
+function itemUnit(row){
+ const item=items.find(x=>x.id===row.item_id);
+ return item?.unit||"";
+}
+async function loadHistory(){
+ const {data,error}=await db.rpc("wms_admin_history",{
+   p_user_id:session.id,
+   p_pin:session.pin
+ });
+ if(error){
+   $("statsMsg").textContent="❌ 이력 불러오기 오류: "+error.message;
+   return;
+ }
+ history=data||[];
+ filteredHistory=[...history];
+ applyStats();
+}
+function isoDateLocal(date){
+ const y=date.getFullYear();
+ const m=String(date.getMonth()+1).padStart(2,"0");
+ const d=String(date.getDate()).padStart(2,"0");
+ return `${y}-${m}-${d}`;
+}
+function applyStats(){
+ const from=$("statFrom").value;
+ const to=$("statTo").value;
+ const type=$("statType").value;
+ const part=$("statPartNo").value.trim().toLowerCase();
+ const name=$("statItemName").value.trim().toLowerCase();
+ const partner=$("statPartner").value.trim().toLowerCase();
+ const actor=$("statActor").value.trim().toLowerCase();
+ const location=$("statLocation").value.trim().toLowerCase();
+
+ filteredHistory=history.filter(r=>{
+   const day=(r.created_at||"").slice(0,10);
+   return (!from||day>=from)
+     &&(!to||day<=to)
+     &&(!type||r.movement_type===type)
+     &&(!part||(r.part_no_snapshot||"").toLowerCase().includes(part))
+     &&(!name||(r.item_name_snapshot||"").toLowerCase().includes(name))
+     &&(!partner||(r.partner_name||"").toLowerCase().includes(partner))
+     &&(!actor||(r.actor_name||"").toLowerCase().includes(actor))
+     &&(!location||(r.location_display_snapshot||"").toLowerCase().includes(location));
+ });
+
+ const inQty=filteredHistory.filter(r=>r.movement_type==="IN").reduce((s,r)=>s+Number(r.qty||0),0);
+ const outQty=filteredHistory.filter(r=>r.movement_type==="OUT").reduce((s,r)=>s+Number(r.qty||0),0);
+ const adjustQty=filteredHistory.filter(r=>r.movement_type==="ADJUST").reduce((s,r)=>s+Number(r.signed_qty||0),0);
+
+ $("statCount").textContent=filteredHistory.length.toLocaleString("ko-KR");
+ $("statInQty").textContent=inQty.toLocaleString("ko-KR");
+ $("statOutQty").textContent=outQty.toLocaleString("ko-KR");
+ $("statAdjustQty").textContent=adjustQty.toLocaleString("ko-KR");
+ $("statsMsg").textContent=`조회 결과 ${filteredHistory.length.toLocaleString("ko-KR")}건`;
+ renderSettlementTables();
+}
+function summarizeByItem(rows){
+ const map=new Map();
+ for(const r of rows){
+   const key=`${r.part_no_snapshot||""}||${r.item_name_snapshot||""}||${itemUnit(r)}`;
+   if(!map.has(key)) map.set(key,{
+     part_no:r.part_no_snapshot||"",
+     item_name:r.item_name_snapshot||"",
+     unit:itemUnit(r),
+     inbound:0,outbound:0,adjust:0
+   });
+   const x=map.get(key);
+   if(r.movement_type==="IN") x.inbound+=Number(r.qty||0);
+   else if(r.movement_type==="OUT") x.outbound+=Number(r.qty||0);
+   else if(r.movement_type==="ADJUST") x.adjust+=Number(r.signed_qty||0);
+ }
+ return [...map.values()].sort((a,b)=>a.part_no.localeCompare(b.part_no,"ko"));
+}
+function summarizeByPartner(rows){
+ const map=new Map();
+ for(const r of rows){
+   const key=r.partner_name||"미입력";
+   if(!map.has(key)) map.set(key,{partner:key,inbound:0,outbound:0,count:0});
+   const x=map.get(key);x.count+=1;
+   if(r.movement_type==="IN") x.inbound+=Number(r.qty||0);
+   if(r.movement_type==="OUT") x.outbound+=Number(r.qty||0);
+ }
+ return [...map.values()].sort((a,b)=>a.partner.localeCompare(b.partner,"ko"));
+}
+function renderSettlementTables(){
+ const itemRows=summarizeByItem(filteredHistory);
+ const partnerRows=summarizeByPartner(filteredHistory);
+
+ $("itemSummaryTable").innerHTML=`<table>
+ <thead><tr><th>품번</th><th>품명</th><th>단위</th><th>입고합계</th><th>출고합계</th><th>조정증감</th><th>순증감</th></tr></thead>
+ <tbody>${itemRows.map(x=>`<tr><td>${esc(x.part_no)}</td><td>${esc(x.item_name)}</td><td>${esc(x.unit)}</td><td>${x.inbound}</td><td>${x.outbound}</td><td>${x.adjust}</td><td>${x.inbound-x.outbound+x.adjust}</td></tr>`).join("")}</tbody>
+ </table>`;
+
+ $("partnerSummaryTable").innerHTML=`<table>
+ <thead><tr><th>거래업체·현장</th><th>건수</th><th>입고합계</th><th>출고합계</th></tr></thead>
+ <tbody>${partnerRows.map(x=>`<tr><td>${esc(x.partner)}</td><td>${x.count}</td><td>${x.inbound}</td><td>${x.outbound}</td></tr>`).join("")}</tbody>
+ </table>`;
+
+ $("statsDetailTable").innerHTML=`<table>
+ <thead><tr><th>일시</th><th>구분</th><th>품번</th><th>품명</th><th>거래업체·현장</th><th>수량</th><th>단위</th><th>위치</th><th>처리자</th><th>ERP</th><th>비고</th></tr></thead>
+ <tbody>${filteredHistory.map(r=>`<tr>
+ <td>${esc(new Date(r.created_at).toLocaleString("ko-KR"))}</td>
+ <td>${esc(movementLabel(r.movement_type))}</td>
+ <td>${esc(r.part_no_snapshot)}</td><td>${esc(r.item_name_snapshot)}</td>
+ <td>${esc(r.partner_name)}</td><td>${esc(r.qty)}</td><td>${esc(itemUnit(r))}</td>
+ <td>${esc(r.location_display_snapshot)}</td><td>${esc(r.actor_name)}</td>
+ <td>${r.erp_registered?"완료":"-"}</td><td>${esc(r.note)}</td>
+ </tr>`).join("")}</tbody>
+ </table>`;
+}
+$("applyStatsBtn").onclick=applyStats;
+$("thisMonthBtn").onclick=()=>{
+ const now=new Date();
+ $("statFrom").value=isoDateLocal(new Date(now.getFullYear(),now.getMonth(),1));
+ $("statTo").value=isoDateLocal(new Date(now.getFullYear(),now.getMonth()+1,0));
+ applyStats();
+};
+$("thisYearBtn").onclick=()=>{
+ const now=new Date();
+ $("statFrom").value=`${now.getFullYear()}-01-01`;
+ $("statTo").value=`${now.getFullYear()}-12-31`;
+ applyStats();
+};
+function excelTable(title,headers,rows){
+ return `<h2>${esc(title)}</h2><table border="1"><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table><br>`;
+}
+$("exportExcelBtn").onclick=()=>{
+ if(session?.role!=="super_admin"){
+   $("statsMsg").textContent="❌ 주관리자 전용입니다.";
+   return;
+ }
+ const itemRows=summarizeByItem(filteredHistory).map(x=>[
+   x.part_no,x.item_name,x.unit,x.inbound,x.outbound,x.adjust,x.inbound-x.outbound+x.adjust
+ ]);
+ const partnerRows=summarizeByPartner(filteredHistory).map(x=>[
+   x.partner,x.count,x.inbound,x.outbound
+ ]);
+ const detailRows=filteredHistory.map(r=>[
+   new Date(r.created_at).toLocaleString("ko-KR"),
+   movementLabel(r.movement_type),
+   r.part_no_snapshot||"",
+   r.item_name_snapshot||"",
+   r.partner_name||"",
+   r.qty||0,
+   itemUnit(r),
+   r.location_display_snapshot||"",
+   r.actor_name||"",
+   r.erp_registered?"완료":"",
+   r.note||""
+ ]);
+ const from=$("statFrom").value||"전체";
+ const to=$("statTo").value||"전체";
+ const summary=[
+   ["조회기간",`${from} ~ ${to}`],
+   ["검색건수",filteredHistory.length],
+   ["총 입고수량",$("statInQty").textContent],
+   ["총 출고수량",$("statOutQty").textContent],
+   ["재고조정 순증감",$("statAdjustQty").textContent]
+ ];
+ const workbookHtml=`<!doctype html><html><head><meta charset="utf-8"></head><body>
+ ${excelTable("정산 요약",["항목","값"],summary)}
+ ${excelTable("품목별 합계",["품번","품명","단위","입고합계","출고합계","조정증감","순증감"],itemRows)}
+ ${excelTable("거래업체별 합계",["거래업체·현장","건수","입고합계","출고합계"],partnerRows)}
+ ${excelTable("상세 입출고 내역",["일시","구분","품번","품명","거래업체·현장","수량","단위","위치","처리자","ERP","비고"],detailRows)}
+ </body></html>`;
+ const blob=new Blob(["\ufeff",workbookHtml],{type:"application/vnd.ms-excel;charset=utf-8"});
+ const link=document.createElement("a");
+ link.href=URL.createObjectURL(blob);
+ link.download=`MIRIM_정산_${from}_${to}.xls`;
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
+ URL.revokeObjectURL(link.href);
+ $("statsMsg").textContent="✅ 엑셀 내보내기 완료";
+};
+
+
+
+async function loadActivity(){
+ const {data,error}=await db.rpc("wms_admin_activity",{
+   p_user_id:session.id,
+   p_pin:session.pin
+ });
+ if(error){
+   $("activityMsg").textContent="❌ 활동기록 불러오기 오류: "+error.message;
+   return;
+ }
+ loginEvents=(data||[]).map(x=>({...x,activity_type:"LOGIN"}));
+
+ const adminNames=[...new Set([
+   ...loginEvents.map(x=>x.display_name).filter(Boolean),
+   ...history.map(x=>x.actor_name).filter(Boolean)
+ ])].sort((a,b)=>a.localeCompare(b,"ko"));
+
+ $("activityUser").innerHTML='<option value="">전체 관리자</option>'
+   +adminNames.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+
+ applyActivity();
+}
+function activityRows(){
+ const loginRows=loginEvents.map(x=>({
+   activity_type:"LOGIN",
+   created_at:x.logged_in_at,
+   display_name:x.display_name,
+   part_no:"",
+   item_name:"",
+   qty:"",
+   location:"",
+   partner:"",
+   note:x.user_agent||""
+ }));
+ const outRows=history.filter(x=>x.movement_type==="OUT").map(x=>({
+   activity_type:"OUT",
+   created_at:x.created_at,
+   display_name:x.actor_name,
+   part_no:x.part_no_snapshot||"",
+   item_name:x.item_name_snapshot||"",
+   qty:Number(x.qty||0),
+   location:x.location_display_snapshot||"",
+   partner:x.partner_name||"",
+   note:x.note||""
+ }));
+ return [...loginRows,...outRows].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+}
+function applyActivity(){
+ const from=$("activityFrom").value;
+ const to=$("activityTo").value;
+ const user=$("activityUser").value;
+ const type=$("activityType").value;
+
+ filteredActivity=activityRows().filter(r=>{
+   const day=(r.created_at||"").slice(0,10);
+   return(!from||day>=from)&&(!to||day<=to)&&(!user||r.display_name===user)&&(!type||r.activity_type===type);
+ });
+
+ const loginCount=filteredActivity.filter(x=>x.activity_type==="LOGIN").length;
+ const outRows=filteredActivity.filter(x=>x.activity_type==="OUT");
+ const outQty=outRows.reduce((s,x)=>s+Number(x.qty||0),0);
+ const userCount=new Set(filteredActivity.map(x=>x.display_name).filter(Boolean)).size;
+
+ $("activityLoginCount").textContent=loginCount.toLocaleString("ko-KR");
+ $("activityOutCount").textContent=outRows.length.toLocaleString("ko-KR");
+ $("activityOutQty").textContent=outQty.toLocaleString("ko-KR");
+ $("activityUserCount").textContent=userCount.toLocaleString("ko-KR");
+ $("activityMsg").textContent=`조회 결과 ${filteredActivity.length.toLocaleString("ko-KR")}건`;
+
+ renderActivityTables();
+}
+function renderActivityTables(){
+ const names=[...new Set(filteredActivity.map(x=>x.display_name).filter(Boolean))];
+ const summary=names.map(name=>{
+   const rows=filteredActivity.filter(x=>x.display_name===name);
+   const logins=rows.filter(x=>x.activity_type==="LOGIN");
+   const outs=rows.filter(x=>x.activity_type==="OUT");
+   return{
+     name,
+     lastLogin:logins.length?logins.map(x=>x.created_at).sort().at(-1):"",
+     loginCount:logins.length,
+     outCount:outs.length,
+     outQty:outs.reduce((s,x)=>s+Number(x.qty||0),0),
+     lastOut:outs.length?outs.map(x=>x.created_at).sort().at(-1):""
+   };
+ }).sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+
+ $("activitySummaryTable").innerHTML=`<table>
+ <thead><tr><th>관리자</th><th>최근 로그인</th><th>로그인 횟수</th><th>최근 출고</th><th>출고 건수</th><th>출고 총수량</th></tr></thead>
+ <tbody>${summary.map(x=>`<tr>
+ <td>${esc(x.name)}</td>
+ <td>${x.lastLogin?esc(new Date(x.lastLogin).toLocaleString("ko-KR")):"-"}</td>
+ <td>${x.loginCount}</td>
+ <td>${x.lastOut?esc(new Date(x.lastOut).toLocaleString("ko-KR")):"-"}</td>
+ <td>${x.outCount}</td>
+ <td>${x.outQty}</td>
+ </tr>`).join("")}</tbody>
+ </table>`;
+
+ $("activityDetailTable").innerHTML=`<table>
+ <thead><tr><th>일시</th><th>관리자</th><th>활동</th><th>품번</th><th>품명</th><th>수량</th><th>위치</th><th>거래업체·현장</th><th>비고</th></tr></thead>
+ <tbody>${filteredActivity.map(r=>`<tr>
+ <td>${esc(new Date(r.created_at).toLocaleString("ko-KR"))}</td>
+ <td>${esc(r.display_name)}</td>
+ <td>${r.activity_type==="LOGIN"?"로그인":"출고"}</td>
+ <td>${esc(r.part_no)}</td><td>${esc(r.item_name)}</td>
+ <td>${esc(r.qty)}</td><td>${esc(r.location)}</td>
+ <td>${esc(r.partner)}</td><td>${esc(r.note)}</td>
+ </tr>`).join("")}</tbody>
+ </table>`;
+}
+$("applyActivityBtn").onclick=applyActivity;
+$("activityTodayBtn").onclick=()=>{
+ const now=new Date();
+ const today=isoDateLocal(now);
+ $("activityFrom").value=today;
+ $("activityTo").value=today;
+ applyActivity();
+};
+$("activityMonthBtn").onclick=()=>{
+ const now=new Date();
+ $("activityFrom").value=isoDateLocal(new Date(now.getFullYear(),now.getMonth(),1));
+ $("activityTo").value=isoDateLocal(new Date(now.getFullYear(),now.getMonth()+1,0));
+ applyActivity();
+};
+$("exportActivityBtn").onclick=()=>{
+ if(session?.role!=="super_admin"){
+   $("activityMsg").textContent="❌ 주관리자 전용입니다.";
+   return;
+ }
+ const rows=filteredActivity.map(r=>[
+   new Date(r.created_at).toLocaleString("ko-KR"),
+   r.display_name||"",
+   r.activity_type==="LOGIN"?"로그인":"출고",
+   r.part_no||"",
+   r.item_name||"",
+   r.qty||"",
+   r.location||"",
+   r.partner||"",
+   r.note||""
+ ]);
+ const htmlText=`<!doctype html><html><head><meta charset="utf-8"></head><body>
+ ${excelTable("관리자 로그인·출고 활동",
+ ["일시","관리자","활동","품번","품명","수량","위치","거래업체·현장","비고"],rows)}
+ </body></html>`;
+ const blob=new Blob(["\ufeff",htmlText],{type:"application/vnd.ms-excel;charset=utf-8"});
+ const link=document.createElement("a");
+ link.href=URL.createObjectURL(blob);
+ link.download=`MIRIM_관리자활동_${$("activityFrom").value||"전체"}_${$("activityTo").value||"전체"}.xls`;
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
+ URL.revokeObjectURL(link.href);
+ $("activityMsg").textContent="✅ 관리자 활동 엑셀 내보내기 완료";
+};
+
+
 loadUsers();
 </script>
 </body>
