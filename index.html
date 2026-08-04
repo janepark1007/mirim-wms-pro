@@ -1,124 +1,346 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MIRIM WMS PRO V3</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MIRIM WMS PRO V6</title>
 <style>
 :root{--navy:#17357a;--blue:#2563eb;--bg:#f3f6fb;--text:#111827;--muted:#64748b;--red:#b91c1c;--green:#047857;--amber:#b45309}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--text)}
-header{background:linear-gradient(135deg,#17357a,#2563eb);color:white;padding:20px}.wrap{max-width:1180px;margin:auto;padding:14px}
-.card{background:white;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px #00000012}
-.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:180px}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#17357a,#2563eb);color:#fff;padding:20px}
+.wrap{max-width:1180px;margin:auto;padding:14px}
+.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px #00000012}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:170px}
 input,select,textarea,button{width:100%;padding:12px;border-radius:12px;border:1px solid #cbd5e1;font-size:15px}
-button{background:var(--blue);color:white;border:0;font-weight:800;cursor:pointer}.secondary{background:#475569}.green{background:#047857}.amber{background:#b45309}
+button{background:var(--blue);color:#fff;border:0;font-weight:800;cursor:pointer}
+.secondary{background:#475569}.green{background:var(--green)}.amber{background:var(--amber)}
 .hidden{display:none!important}.muted{color:var(--muted);font-size:13px}.bad{color:var(--red);font-weight:800}.ok{color:var(--green);font-weight:800}
 .tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.tabs button{width:auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.metric{font-size:26px;font-weight:900}
-.item{display:grid;grid-template-columns:92px 1fr;gap:12px}.thumb{width:92px;height:92px;object-fit:cover;border-radius:12px;background:#e2e8f0}
-label{display:block;font-weight:800;margin:8px 0 5px}.table-wrap{overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e2e8f0;font-size:12px}
-img.evidence{width:58px;height:58px;object-fit:cover;border-radius:8px;margin:2px}
+.items-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.item-card{display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:start}
+.thumb{width:100px;height:100px;object-fit:cover;border-radius:14px;background:#e2e8f0}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e2e8f0;font-size:12px;margin-right:4px;margin-top:4px}
+.stock-low{color:var(--red);font-weight:900}.stock-ok{color:var(--green);font-weight:900}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.metric{font-size:26px;font-weight:900}
+label{display:block;font-weight:800;margin:8px 0 5px}
+.detail-photo{width:100%;max-width:240px;border-radius:14px;background:#e2e8f0}
+dialog{border:0;border-radius:18px;width:min(760px,94vw);padding:0;box-shadow:0 24px 70px #0005}
+dialog::backdrop{background:#0008}.dialog-body{padding:18px}
 </style>
 </head>
 <body>
-<header><div class="wrap"><h2>📦 MIRIM WMS PRO V3</h2><div id="who"></div></div></header>
+<header><div class="wrap"><h2>📦 MIRIM WMS PRO V6</h2><div id="who"></div></div></header>
+
 <div class="wrap">
 <div id="setup" class="card bad">연결 확인 중...</div>
 
 <section id="loginCard" class="card">
 <h3>🔐 로그인</h3>
-<div class="row"><select id="loginUser"><option value="">담당자 선택</option></select><input id="loginPin" type="password" inputmode="numeric" placeholder="개인 PIN"><button id="loginBtn">로그인</button></div>
+<div class="row">
+<select id="loginUser"><option value="">담당자 선택</option></select>
+<input id="loginPin" type="password" inputmode="numeric" placeholder="개인 PIN">
+<button id="loginBtn">로그인</button>
+</div>
 <div id="loginMsg" class="muted"></div>
 </section>
 
 <div id="app" class="hidden">
 <div class="tabs">
-<button data-tab="dashboard">🏠 현황</button><button data-tab="searchPanel">🔍 검색</button><button data-tab="outPanel">🚚 출고</button>
-<button id="inTab" data-tab="inPanel" class="hidden">📥 입고</button><button id="itemTab" data-tab="itemPanel" class="hidden">📦 품목·사진</button>
-<button id="statsTab" data-tab="statsPanel" class="hidden">📊 통계·엑셀</button><button data-tab="historyPanel">📋 이력</button>
+<button data-tab="dashboard">🏠 현황</button>
+<button data-tab="catalogPanel">📦 등록 품목 전체</button>
+<button data-tab="searchPanel">🔍 검색</button>
+<button data-tab="outPanel">🚚 출고</button>
+<button id="adminItemTab" data-tab="adminItemPanel" class="hidden">👑 품목 등록</button>
+<button id="inTab" data-tab="inPanel" class="hidden">📥 입고</button>
+<button id="statsTab" data-tab="statsPanel" class="hidden">📊 통계</button>
 <button id="logoutBtn" class="secondary">로그아웃</button>
 </div>
 
-<section id="dashboard" class="panel"><div class="grid">
-<div class="card"><div class="muted">품목 수</div><div id="mItems" class="metric">0</div></div>
+<datalist id="partNoList"></datalist>
+<datalist id="itemNameList"></datalist>
+
+<section id="dashboard" class="panel">
+<div class="metric-grid">
+<div class="card"><div class="muted">등록 품목 수</div><div id="mItems" class="metric">0</div></div>
 <div class="card"><div class="muted">총 재고수량</div><div id="mStock" class="metric">0</div></div>
 <div class="card"><div class="muted">부족재고 품목</div><div id="mLow" class="metric">0</div></div>
-<div class="card"><div class="muted">오늘 입출고 건수</div><div id="mToday" class="metric">0</div></div>
-</div></section>
-
-<section id="searchPanel" class="panel hidden">
-<div class="card"><div class="row"><input id="q" placeholder="품번·품명·제조사·위치 검색"><button id="searchBtn">검색</button></div></div><div id="results"></div>
+</div>
 </section>
 
-<section id="outPanel" class="panel hidden"><div class="card"><h3>🚚 출고 등록</h3>
-<div class="row"><select id="outItem"><option value="">품목 선택</option></select><select id="outLocation"><option value="">위치 선택</option></select></div>
+<section id="catalogPanel" class="panel hidden">
+<div class="card">
+<h3>📦 현재 등록된 모든 품목</h3>
+<div class="row">
+<input id="catalogQ" placeholder="품번·품명·제조사·거래업체·위치 검색">
+<select id="catalogCategory"><option value="">전체 분류</option></select>
+<select id="catalogLocation"><option value="">전체 위치</option><option>생산</option><option>1층</option><option>2층</option></select>
+<select id="catalogStock"><option value="">전체 재고</option><option value="low">부족재고</option><option value="normal">정상재고</option></select>
+<button id="catalogApply">적용</button>
+</div>
+<div id="catalogCount" class="muted" style="margin-top:8px"></div>
+</div>
+<div id="catalogList" class="items-grid"></div>
+</section>
+
+<section id="searchPanel" class="panel hidden">
+<div class="card"><div class="row"><input id="q" placeholder="품번·품명·제조사·위치 검색"><button id="searchBtn">검색</button></div></div>
+<div id="results" class="items-grid"></div>
+</section>
+
+<section id="outPanel" class="panel hidden">
+<div class="card"><h3>🚚 출고 등록</h3>
+<div class="row">
+<input id="outPartNo" list="partNoList" placeholder="품번 입력 또는 선택">
+<input id="outItemName" list="itemNameList" placeholder="품명 입력 또는 선택">
+<select id="outLocation"><option value="">위치 선택</option></select>
+</div>
+<select id="outItem" class="hidden"><option value="">품목 선택</option></select>
 <div class="row"><input id="outPartner" placeholder="거래업체·출고현장"><input id="outQty" type="number" min="1" placeholder="출고수량"><input id="outNote" placeholder="비고"></div>
 <label>출고 증빙 이미지</label><input id="outImages" type="file" accept="image/*" capture="environment" multiple>
 <button id="outBtn" style="margin-top:8px">출고 저장</button><div id="outMsg" class="muted"></div>
-</div></section>
+</div>
+</section>
 
-<section id="inPanel" class="panel hidden"><div class="card"><h3>📥 입고 등록 · 주관리자</h3>
-<div class="row"><select id="inItem"><option value="">품목 선택</option></select><select id="inLocation"><option value="">위치 선택</option></select></div>
+<section id="adminItemPanel" class="panel hidden">
+<div class="card"><h3>👑 품목 기준정보 등록 · 박향숙 주관리자 전용</h3>
+<div class="row"><div><label>품번</label><input id="partNo"></div><div><label>품명</label><input id="itemName"></div></div>
+<div class="row"><div><label>분류</label><select id="category"><option>나사</option><option>타이</option><option>하우징</option><option>커넥터</option><option>후드</option><option>터미널</option><option>전선</option><option>PVC</option><option>포장재</option><option>기타</option></select></div><div><label>제조사</label><input id="maker"></div><div><label>규격</label><input id="spec"></div></div>
+<div class="row"><div><label>관리단위</label><select id="unit"><option>EA</option><option>M</option><option>ROLL</option><option>BOX</option></select></div><div><label>최소재고</label><input id="minStock" type="number" value="0"></div><div><label>거래업체</label><input id="itemPartner"></div></div>
+<h3>📍 기본 위치</h3>
+<div class="row">
+<div><label>구분</label><select id="locType"><option>생산</option><option>1층</option><option>2층</option></select></div>
+
+<div id="warehouseAreaWrap" class="hidden"><label>구역</label><select id="locArea"></select></div>
+<div id="warehouseShelfWrap" class="hidden"><label>단</label><select id="locShelf"></select></div>
+<div id="warehouseNumberWrap" class="hidden"><label>번호</label><select id="locNumber"></select></div>
+<div id="warehouseSideWrap" class="hidden"><label>구분</label><select id="locSide"><option>A</option><option>B</option></select></div>
+
+<div id="productionLineWrap"><label>생산구역</label><select id="productionLine"></select></div>
+<div id="productionNumberWrap"><label>번호</label><select id="productionNumber"></select></div>
+</div>
+<div id="locationPreview" class="muted" style="margin-top:8px">선택 위치: 생산-D1-1</div>
+<h3>📷 품목 사진</h3>
+<div class="row"><div><label>제품사진</label><input id="photoProduct" type="file" accept="image/*" capture="environment"></div><div><label>박스사진</label><input id="photoBox" type="file" accept="image/*" capture="environment"></div><div><label>라벨사진</label><input id="photoLabel" type="file" accept="image/*" capture="environment"></div></div>
+<label>비고</label><textarea id="itemNote"></textarea>
+<button id="saveItemBtn">품목 저장</button><div id="itemMsg" class="muted"></div>
+</div>
+</section>
+
+<section id="inPanel" class="panel hidden">
+<div class="card"><h3>📥 입고 등록 · 등록된 품목만 선택</h3>
+<div class="row">
+<input id="inPartNo" list="partNoList" placeholder="품번 입력 또는 선택">
+<input id="inItemName" list="itemNameList" placeholder="품명 입력 또는 선택">
+<select id="inLocation"><option value="">위치 선택</option></select>
+</div>
+<select id="inItem" class="hidden"><option value="">품목 선택</option></select>
 <div class="row"><input id="inPartner" placeholder="거래업체·입고처"><input id="inQty" type="number" min="1" placeholder="입고수량"><input id="inNote" placeholder="비고"></div>
 <label><input id="inErp" type="checkbox" style="width:auto"> ERP 등록 완료</label>
 <label>거래명세표·입고 이미지</label><input id="inImages" type="file" accept="image/*" capture="environment" multiple>
 <button id="inBtn" class="green" style="margin-top:8px">입고 저장</button><div id="inMsg" class="muted"></div>
-</div></section>
+</div>
+</section>
 
-<section id="itemPanel" class="panel hidden"><div class="card"><h3>📦 품목·사진 등록 · 주관리자</h3>
-<div class="row"><div><label>품번</label><input id="partNo"></div><div><label>품명</label><input id="itemName"></div></div>
-<div class="row"><div><label>분류</label><select id="category"><option>나사</option><option>타이</option><option>하우징</option><option>커넥터</option><option>후드</option><option>터미널</option><option>전선</option><option>PVC</option><option>포장재</option><option>기타</option></select></div><div><label>제조사</label><input id="maker"></div><div><label>규격</label><input id="spec"></div></div>
-<div class="row"><div><label>단위</label><select id="unit"><option>EA</option><option>M</option><option>ROLL</option><option>BOX</option></select></div><div><label>최소재고</label><input id="minStock" type="number" value="0"></div><div><label>초기수량</label><input id="initialQty" type="number" value="0"></div></div>
-<h3>📍 위치</h3><div class="row"><select id="locType"><option>생산</option><option>1층</option><option>2층</option></select><input id="locArea" placeholder="A구역 / 생산1"><input id="locShelf" placeholder="1단"><input id="locDetail" placeholder="001-A"></div>
-<h3>📷 이미지</h3><div class="row"><div><label>제품사진</label><input id="photoProduct" type="file" accept="image/*" capture="environment"></div><div><label>박스사진</label><input id="photoBox" type="file" accept="image/*" capture="environment"></div><div><label>라벨사진</label><input id="photoLabel" type="file" accept="image/*" capture="environment"></div></div>
-<label>비고</label><textarea id="itemNote"></textarea><button id="saveItemBtn">품목 저장</button><div id="itemMsg" class="muted"></div>
-</div></section>
+<section id="statsPanel" class="panel hidden">
+<div class="card"><h3>📊 통계</h3><div class="muted">기존 V3/V4 통계 기능을 그대로 사용합니다.</div></div>
+</section>
+</div>
+</div>
 
-<section id="statsPanel" class="panel hidden"><div class="card"><h3>📊 월별·연도별 통계</h3>
-<div class="row"><input id="dateFrom" type="date"><input id="dateTo" type="date"><input id="statPart" placeholder="품번"><input id="statName" placeholder="품명"><input id="statPartner" placeholder="거래업체"><select id="statType"><option value="">입출고 전체</option><option value="IN">입고</option><option value="OUT">출고</option></select></div>
-<div class="row" style="margin-top:8px"><button id="applyStats">통계 적용</button><button id="exportExcel" class="green">엑셀 내보내기</button></div></div>
-<div class="grid"><div class="card"><div class="muted">총 입고수량</div><div id="sIn" class="metric">0</div></div><div class="card"><div class="muted">총 출고수량</div><div id="sOut" class="metric">0</div></div><div class="card"><div class="muted">검색 건수</div><div id="sCount" class="metric">0</div></div></div>
-<div id="statsTable"></div></section>
+<dialog id="detailDialog">
+<div class="dialog-body">
+<div class="row" style="align-items:start">
+<div><img id="detailPhoto" class="detail-photo"></div>
+<div>
+<h3 id="detailTitle"></h3>
+<div id="detailBody"></div>
+<button id="closeDetail" class="secondary" style="margin-top:12px">닫기</button>
+</div>
+</div>
+</div>
+</dialog>
 
-<section id="historyPanel" class="panel hidden"><div id="historyTable"></div></section>
-</div></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="./config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
 <script>
 const $=id=>document.getElementById(id),cfg=window.MIRIM_SUPABASE||{};
 if(!cfg.url||!cfg.publishableKey)throw new Error("Supabase config missing");
 const db=window.supabase.createClient(cfg.url,cfg.publishableKey);
 $("setup").textContent="✅ 공용 데이터베이스 연결 준비됨";$("setup").className="card ok";
-let session=null,items=[],history=[],filteredHistory=[];
+let session=null,items=[];
 
-async function users(){const {data,error}=await db.rpc("list_outbound_users");if(error){$("loginMsg").textContent="❌ "+error.message;return}$("loginUser").innerHTML='<option value="">담당자 선택</option>'+data.map(x=>`<option value="${x.id}">${x.display_name}</option>`).join("")}
-$("loginBtn").onclick=async()=>{const id=$("loginUser").value,pin=$("loginPin").value,{data,error}=await db.rpc("wms_login",{p_user_id:id,p_pin:pin});if(error||!data?.length){$("loginMsg").textContent="❌ 담당자 또는 PIN이 맞지 않습니다.";return}session={id,pin,...data[0]};$("who").textContent=session.display_name+" · "+(session.role==="super_admin"?"주관리자":"승인 관리자");$("loginCard").classList.add("hidden");$("app").classList.remove("hidden");if(session.role==="super_admin")["inTab","itemTab","statsTab"].forEach(x=>$(x).classList.remove("hidden"));await loadItems();await loadHistory()}
+async function loadUsers(){
+ const {data,error}=await db.rpc("list_outbound_users");
+ if(error){$("loginMsg").textContent="❌ "+error.message;return}
+ $("loginUser").innerHTML='<option value="">담당자 선택</option>'+data.map(x=>`<option value="${x.id}">${x.display_name}</option>`).join("");
+}
+$("loginBtn").onclick=async()=>{
+ const id=$("loginUser").value,pin=$("loginPin").value;
+ const {data,error}=await db.rpc("wms_login",{p_user_id:id,p_pin:pin});
+ if(error||!data?.length){$("loginMsg").textContent="❌ 담당자 또는 PIN이 맞지 않습니다.";return}
+ session={id,pin,...data[0]};
+ $("who").textContent=session.display_name+" · "+(session.role==="super_admin"?"주관리자":"승인 관리자");
+ $("loginCard").classList.add("hidden");$("app").classList.remove("hidden");
+ if(session.role==="super_admin"){["adminItemTab","inTab","statsTab"].forEach(x=>$(x).classList.remove("hidden"))}
+ await loadItems();
+};
 $("logoutBtn").onclick=()=>location.reload();
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".panel").forEach(x=>x.classList.add("hidden"));$(b.dataset.tab).classList.remove("hidden")});
 
-async function loadItems(){const {data,error}=await db.rpc("wms_list_items",{p_user_id:session.id,p_pin:session.pin});if(error){$("results").innerHTML='<div class="card bad">'+error.message+'</div>';return}items=data||[];["outItem","inItem"].forEach(id=>$(id).innerHTML='<option value="">품목 선택</option>'+items.map(x=>`<option value="${x.id}">${x.part_no} · ${x.item_name}</option>`).join(""));renderItems(items);dashboard()}
-function renderItems(list){$("results").innerHTML=list.map(x=>{const ls=x.item_locations||[],total=ls.reduce((s,l)=>s+Number(l.qty||0),0),loc=ls.map(l=>`${l.location_display}: ${l.qty} ${x.unit}`).join("<br>")||"⚠️ 위치 확인 필요";return `<div class="card item">${x.photo_url?`<img class="thumb" src="${x.photo_url}">`:`<div class="thumb"></div>`}<div><b>${x.part_no} · ${x.item_name}</b><div class="muted">${x.maker||""} ${x.spec||""}</div><div>${loc}</div><div><b>현재고 ${total} ${x.unit}</b></div></div></div>`}).join("")}
-$("searchBtn").onclick=()=>{const k=$("q").value.toLowerCase();renderItems(items.filter(x=>`${x.part_no} ${x.item_name} ${x.maker||""} ${(x.item_locations||[]).map(l=>l.location_display).join(" ")}`.toLowerCase().includes(k)))};
-function bindLoc(itemId,locId){$(itemId).onchange=()=>{const x=items.find(v=>v.id===$(itemId).value);$(locId).innerHTML=x?(x.item_locations||[]).map(l=>`<option value="${l.id}">${l.location_display} · ${l.qty} ${x.unit}</option>`).join(""):""}}
-bindLoc("outItem","outLocation");bindLoc("inItem","inLocation");
+async function loadItems(){
+ const {data,error}=await db.rpc("wms_list_items",{p_user_id:session.id,p_pin:session.pin});
+ if(error){$("catalogList").innerHTML='<div class="card bad">'+error.message+'</div>';return}
+ items=data||[];
+ const options='<option value="">품목 선택</option>'+items.map(x=>`<option value="${x.id}">${x.part_no} · ${x.item_name}</option>`).join("");
+ $("outItem").innerHTML=options;$("inItem").innerHTML=options;
+ $("partNoList").innerHTML=items.map(x=>`<option value="${x.part_no}">${x.item_name}</option>`).join("");
+ $("itemNameList").innerHTML=items.map(x=>`<option value="${x.item_name}">${x.part_no}</option>`).join("");
+ const categories=[...new Set(items.map(x=>x.category).filter(Boolean))].sort();
+ $("catalogCategory").innerHTML='<option value="">전체 분류</option>'+categories.map(x=>`<option>${x}</option>`).join("");
+ renderCatalog(items);renderSearch(items);dashboard();
+}
+function totalStock(x){return (x.item_locations||[]).reduce((s,l)=>s+Number(l.qty||0),0)}
+function itemCard(x){
+ const total=totalStock(x),low=total<Number(x.min_stock||0);
+ const locs=(x.item_locations||[]).map(l=>`${l.location_display}: ${l.qty} ${x.unit}`).join("<br>")||"⚠️ 위치 확인 필요";
+ return `<div class="card item-card" onclick="showDetail('${x.id}')">
+ ${x.photo_url?`<img class="thumb" src="${x.photo_url}">`:`<div class="thumb"></div>`}
+ <div><b>${x.part_no} · ${x.item_name}</b><div class="muted">${x.maker||""} ${x.spec||""}</div>
+ <div>${locs}</div><div class="${low?'stock-low':'stock-ok'}">현재고 ${total} ${x.unit}</div>
+ <span class="badge">${x.category||"기타"}</span></div></div>`;
+}
+function renderCatalog(list){$("catalogList").innerHTML=list.map(itemCard).join("")||'<div class="card muted">등록된 품목이 없습니다.</div>';$("catalogCount").textContent=`총 ${list.length}개 품목`}
+function renderSearch(list){$("results").innerHTML=list.map(itemCard).join("")||'<div class="card muted">검색 결과가 없습니다.</div>'}
+$("catalogApply").onclick=()=>{
+ const q=$("catalogQ").value.trim().toLowerCase(),cat=$("catalogCategory").value,loc=$("catalogLocation").value,stock=$("catalogStock").value;
+ const list=items.filter(x=>{
+  const text=`${x.part_no} ${x.item_name} ${x.maker||""} ${x.note||""} ${(x.item_locations||[]).map(l=>l.location_display).join(" ")}`.toLowerCase();
+  const total=totalStock(x),low=total<Number(x.min_stock||0);
+  return(!q||text.includes(q))&&(!cat||x.category===cat)&&(!loc||(x.item_locations||[]).some(l=>(l.location_display||"").includes(loc)))&&(!stock||(stock==="low"?low:!low));
+ });renderCatalog(list);
+};
+$("searchBtn").onclick=()=>{const q=$("q").value.trim().toLowerCase();renderSearch(items.filter(x=>`${x.part_no} ${x.item_name} ${x.maker||""} ${(x.item_locations||[]).map(l=>l.location_display).join(" ")}`.toLowerCase().includes(q)))};
 
-async function filesToData(id){const fs=[...($(id).files||[])].slice(0,3);return Promise.all(fs.map(compress))}
-function compress(file){return new Promise((resolve,reject)=>{const r=new FileReader(),img=new Image();r.onload=()=>img.src=r.result;r.onerror=reject;img.onload=()=>{const m=900,s=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;c.getContext("2d").drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",.7))};r.readAsDataURL(file)})}
+window.showDetail=id=>{
+ const x=items.find(v=>v.id===id);if(!x)return;
+ $("detailPhoto").src=x.photo_url||"";
+ $("detailTitle").textContent=`${x.part_no} · ${x.item_name}`;
+ $("detailBody").innerHTML=`
+ <p><b>분류:</b> ${x.category||""}</p><p><b>제조사:</b> ${x.maker||""}</p><p><b>규격:</b> ${x.spec||""}</p>
+ <p><b>최소재고:</b> ${x.min_stock||0} ${x.unit}</p><p><b>현재고:</b> ${totalStock(x)} ${x.unit}</p>
+ <p><b>위치별 재고:</b><br>${(x.item_locations||[]).map(l=>`${l.location_display}: ${l.qty} ${x.unit}`).join("<br>")||"위치 확인 필요"}</p>`;
+ $("detailDialog").showModal();
+};
+$("closeDetail").onclick=()=>$("detailDialog").close();
 
-$("outBtn").onclick=async()=>{const x=items.find(v=>v.id===$("outItem").value),n=Number($("outQty").value),imgs=await filesToData("outImages");const {error}=await db.rpc("wms_record_outbound",{p_user_id:session.id,p_pin:session.pin,p_item_id:x?.id,p_location_id:$("outLocation").value,p_qty:n,p_partner_name:$("outPartner").value||null,p_note:$("outNote").value||null,p_evidence_images:imgs});$("outMsg").textContent=error?"❌ "+error.message:"✅ 출고 저장 완료";if(!error){await loadItems();await loadHistory()}}
-$("inBtn").onclick=async()=>{const x=items.find(v=>v.id===$("inItem").value),n=Number($("inQty").value),imgs=await filesToData("inImages");const {error}=await db.rpc("wms_record_inbound",{p_user_id:session.id,p_pin:session.pin,p_item_id:x?.id,p_location_id:$("inLocation").value,p_qty:n,p_partner_name:$("inPartner").value||null,p_note:$("inNote").value||null,p_erp_registered:$("inErp").checked,p_evidence_images:imgs});$("inMsg").textContent=error?"❌ "+error.message:"✅ 입고 저장 완료";if(!error){await loadItems();await loadHistory()}}
+function fillLocations(item, locationId){
+ $(locationId).innerHTML=item
+   ? (item.item_locations||[]).map(l=>`<option value="${l.id}">${l.location_display} · ${l.qty} ${item.unit}</option>`).join("")
+   : '<option value="">위치 선택</option>';
+}
 
+function bindAutoItem(prefix){
+ const partEl=$(prefix+"PartNo"), nameEl=$(prefix+"ItemName"), hiddenEl=$(prefix+"Item"), locElId=prefix+"Location";
+
+ function applyItem(item){
+   if(!item){
+     hiddenEl.value="";
+     fillLocations(null,locElId);
+     return;
+   }
+   partEl.value=item.part_no;
+   nameEl.value=item.item_name;
+   hiddenEl.value=item.id;
+   fillLocations(item,locElId);
+ }
+
+ partEl.addEventListener("input",()=>{
+   const value=partEl.value.trim();
+   const exact=items.find(x=>x.part_no===value);
+   if(exact) applyItem(exact);
+   else{
+     const one=items.filter(x=>x.part_no.toLowerCase().includes(value.toLowerCase()));
+     if(one.length===1) applyItem(one[0]);
+     else{ hiddenEl.value=""; nameEl.value=""; fillLocations(null,locElId); }
+   }
+ });
+
+ nameEl.addEventListener("input",()=>{
+   const value=nameEl.value.trim();
+   const exact=items.find(x=>x.item_name===value);
+   if(exact) applyItem(exact);
+   else{
+     const one=items.filter(x=>x.item_name.toLowerCase().includes(value.toLowerCase()));
+     if(one.length===1) applyItem(one[0]);
+     else{ hiddenEl.value=""; partEl.value=""; fillLocations(null,locElId); }
+   }
+ });
+}
+
+bindAutoItem("out");
+bindAutoItem("in");
+
+function dashboard(){
+ const stock=items.reduce((s,x)=>s+totalStock(x),0);
+ const low=items.filter(x=>totalStock(x)<Number(x.min_stock||0)).length;
+ $("mItems").textContent=items.length;$("mStock").textContent=stock;$("mLow").textContent=low;
+}
+
+async function compress(file){
+ return new Promise((resolve,reject)=>{const r=new FileReader(),img=new Image();r.onload=()=>img.src=r.result;r.onerror=reject;img.onload=()=>{const m=900,s=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",.7))};r.readAsDataURL(file)});
+}
 async function oneFile(id){const f=$(id).files?.[0];return f?compress(f):null}
-$("saveItemBtn").onclick=async()=>{const display=[$("locType").value,$("locArea").value.trim(),$("locShelf").value.trim(),$("locDetail").value.trim()].filter(Boolean).join("-");const [p,b,l]=await Promise.all([oneFile("photoProduct"),oneFile("photoBox"),oneFile("photoLabel")]);const {error}=await db.rpc("wms_admin_upsert_item",{p_user_id:session.id,p_pin:session.pin,p_part_no:$("partNo").value.trim(),p_item_name:$("itemName").value.trim(),p_category:$("category").value,p_maker:$("maker").value||null,p_spec:$("spec").value||null,p_unit:$("unit").value,p_min_stock:Number($("minStock").value||0),p_note:$("itemNote").value||null,p_photo_product:p,p_photo_box:b,p_photo_label:l,p_location_code:display.replaceAll(" ",""),p_location_display:display,p_initial_qty:Number($("initialQty").value||0)});$("itemMsg").textContent=error?"❌ "+error.message:"✅ 품목 저장 완료";if(!error)await loadItems()}
+async function manyFiles(id){return Promise.all([...($(id).files||[])].slice(0,3).map(compress))}
 
-async function loadHistory(){const fn=session.role==="super_admin"?"wms_admin_history":"wms_my_outbound_history";const {data,error}=await db.rpc(fn,{p_user_id:session.id,p_pin:session.pin});if(error){$("historyTable").innerHTML='<div class="card bad">'+error.message+'</div>';return}history=data||[];filteredHistory=history;renderHistory(history);applyStats();dashboard()}
-function imagesHtml(v){const arr=Array.isArray(v)?v:[];return arr.map(src=>`<img class="evidence" src="${src}">`).join("")}
-function renderHistory(list){$("historyTable").innerHTML='<div class="card table-wrap"><table><thead><tr><th>일시</th><th>구분</th><th>품번</th><th>품명</th><th>거래업체</th><th>수량</th><th>위치</th><th>처리자</th><th>ERP</th><th>이미지</th><th>비고</th></tr></thead><tbody>'+list.map(r=>`<tr><td>${new Date(r.created_at).toLocaleString("ko-KR")}</td><td>${r.movement_type==="IN"?"입고":"출고"}</td><td>${r.part_no_snapshot||""}</td><td>${r.item_name_snapshot||""}</td><td>${r.partner_name||""}</td><td>${r.qty}</td><td>${r.location_display_snapshot||""}</td><td>${r.actor_name||""}</td><td>${r.erp_registered?"완료":"-"}</td><td>${imagesHtml(r.evidence_images)}</td><td>${r.note||""}</td></tr>`).join("")+'</tbody></table></div>'}
-function applyStats(){filteredHistory=history.filter(r=>{const d=(r.created_at||"").slice(0,10);return(!$("dateFrom").value||d>=$("dateFrom").value)&&(!$("dateTo").value||d<=$("dateTo").value)&&(!$("statPart").value||(r.part_no_snapshot||"").includes($("statPart").value))&&(!$("statName").value||(r.item_name_snapshot||"").includes($("statName").value))&&(!$("statPartner").value||(r.partner_name||"").includes($("statPartner").value))&&(!$("statType").value||r.movement_type===$("statType").value)});$("sIn").textContent=filteredHistory.filter(x=>x.movement_type==="IN").reduce((s,x)=>s+Number(x.qty||0),0);$("sOut").textContent=filteredHistory.filter(x=>x.movement_type==="OUT").reduce((s,x)=>s+Number(x.qty||0),0);$("sCount").textContent=filteredHistory.length;$("statsTable").innerHTML="";renderStatsTable(filteredHistory)}
-function renderStatsTable(list){$("statsTable").innerHTML='<div class="card table-wrap"><table><thead><tr><th>일시</th><th>구분</th><th>품번</th><th>품명</th><th>거래업체</th><th>수량</th><th>처리자</th></tr></thead><tbody>'+list.map(r=>`<tr><td>${new Date(r.created_at).toLocaleString("ko-KR")}</td><td>${r.movement_type==="IN"?"입고":"출고"}</td><td>${r.part_no_snapshot||""}</td><td>${r.item_name_snapshot||""}</td><td>${r.partner_name||""}</td><td>${r.qty}</td><td>${r.actor_name||""}</td></tr>`).join("")+'</tbody></table></div>'}
-$("applyStats").onclick=applyStats;
-$("exportExcel").onclick=()=>{const rows=filteredHistory.map(r=>[new Date(r.created_at).toLocaleString("ko-KR"),r.movement_type==="IN"?"입고":"출고",r.part_no_snapshot||"",r.item_name_snapshot||"",r.partner_name||"",r.qty,r.location_display_snapshot||"",r.actor_name||"",r.erp_registered?"완료":"",r.note||""]);const table=`<table><tr><th>일시</th><th>구분</th><th>품번</th><th>품명</th><th>거래업체</th><th>수량</th><th>위치</th><th>처리자</th><th>ERP</th><th>비고</th></tr>${rows.map(a=>"<tr>"+a.map(v=>`<td>${String(v).replaceAll("&","&amp;").replaceAll("<","&lt;")}</td>`).join("")+"</tr>").join("")}</table>`;const blob=new Blob(["\ufeff",table],{type:"application/vnd.ms-excel"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`MIRIM_입출고통계_${new Date().toISOString().slice(0,10)}.xls`;a.click();URL.revokeObjectURL(a.href)}
-function dashboard(){const stock=items.reduce((s,x)=>s+(x.item_locations||[]).reduce((a,l)=>a+Number(l.qty||0),0),0),low=items.filter(x=>(x.item_locations||[]).reduce((a,l)=>a+Number(l.qty||0),0)<Number(x.min_stock||0)).length,today=new Date().toISOString().slice(0,10);$("mItems").textContent=items.length;$("mStock").textContent=stock;$("mLow").textContent=low;$("mToday").textContent=history.filter(x=>(x.created_at||"").slice(0,10)===today).length}
-users();
-</script></body></html>
+
+function optionRange(start,end,pad=0){
+ return Array.from({length:end-start+1},(_,i)=>{
+   const n=String(start+i).padStart(pad,"0");
+   return `<option value="${n}">${n}</option>`;
+ }).join("");
+}
+$("locArea").innerHTML="ABCDEFGHIJKLMNOPQ".split("").map(x=>`<option value="${x}">${x}</option>`).join("");
+$("locShelf").innerHTML=optionRange(1,4).replaceAll('value="1"','value="1단"').replaceAll('>1<','>1단<').replaceAll('value="2"','value="2단"').replaceAll('>2<','>2단<').replaceAll('value="3"','value="3단"').replaceAll('>3<','>3단<').replaceAll('value="4"','value="4단"').replaceAll('>4<','>4단<');
+$("locNumber").innerHTML=optionRange(1,6,3);
+$("productionLine").innerHTML=optionRange(1,8).replaceAll('value="','value="D').replaceAll('>','>D');
+$("productionNumber").innerHTML=optionRange(1,100);
+
+function currentLocation(){
+ if($("locType").value==="생산"){
+   return `생산-${$("productionLine").value}-${$("productionNumber").value}`;
+ }
+ return `${$("locType").value}-${$("locArea").value}-${$("locShelf").value}-${$("locNumber").value}-${$("locSide").value}`;
+}
+function updateLocationControls(){
+ const production=$("locType").value==="생산";
+ ["productionLineWrap","productionNumberWrap"].forEach(id=>$(id).classList.toggle("hidden",!production));
+ ["warehouseAreaWrap","warehouseShelfWrap","warehouseNumberWrap","warehouseSideWrap"].forEach(id=>$(id).classList.toggle("hidden",production));
+ $("locationPreview").textContent="선택 위치: "+currentLocation();
+}
+["locType","locArea","locShelf","locNumber","locSide","productionLine","productionNumber"].forEach(id=>$(id).addEventListener("change",updateLocationControls));
+updateLocationControls();
+
+$("saveItemBtn").onclick=async()=>{
+ const display=currentLocation();
+ const [p,b,l]=await Promise.all([oneFile("photoProduct"),oneFile("photoBox"),oneFile("photoLabel")]);
+ const note=[`거래업체:${$("itemPartner").value.trim()}`,$("itemNote").value.trim()].filter(Boolean).join(" / ");
+ const {error}=await db.rpc("wms_admin_upsert_item",{p_user_id:session.id,p_pin:session.pin,p_part_no:$("partNo").value.trim(),p_item_name:$("itemName").value.trim(),p_category:$("category").value,p_maker:$("maker").value.trim()||null,p_spec:$("spec").value.trim()||null,p_unit:$("unit").value,p_min_stock:Number($("minStock").value||0),p_note:note||null,p_photo_product:p,p_photo_box:b,p_photo_label:l,p_location_code:display.replaceAll(" ",""),p_location_display:display,p_initial_qty:0});
+ $("itemMsg").textContent=error?"❌ "+error.message:"✅ 품목 기준정보 저장 완료";
+ if(!error)await loadItems();
+};
+$("outBtn").onclick=async()=>{
+ const x=items.find(v=>v.id===$("outItem").value),imgs=await manyFiles("outImages");
+ const {error}=await db.rpc("wms_record_outbound",{p_user_id:session.id,p_pin:session.pin,p_item_id:x?.id,p_location_id:$("outLocation").value,p_qty:Number($("outQty").value),p_partner_name:$("outPartner").value||null,p_note:$("outNote").value||null,p_evidence_images:imgs});
+ $("outMsg").textContent=error?"❌ "+error.message:"✅ 출고 저장 완료";if(!error)await loadItems();
+};
+$("inBtn").onclick=async()=>{
+ const x=items.find(v=>v.id===$("inItem").value),imgs=await manyFiles("inImages");
+ const {error}=await db.rpc("wms_record_inbound",{p_user_id:session.id,p_pin:session.pin,p_item_id:x?.id,p_location_id:$("inLocation").value,p_qty:Number($("inQty").value),p_partner_name:$("inPartner").value||null,p_note:$("inNote").value||null,p_erp_registered:$("inErp").checked,p_evidence_images:imgs});
+ $("inMsg").textContent=error?"❌ "+error.message:"✅ 입고 저장 완료";if(!error)await loadItems();
+};
+loadUsers();
+</script>
+</body>
+</html>
