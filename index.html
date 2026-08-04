@@ -1,78 +1,447 @@
 <!doctype html>
-<html lang="ko"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MIRIM WMS PRO - Shared</title>
-<style>
-body{font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;margin:0;background:#f3f6fb;color:#111827}
-header{background:#17357a;color:#fff;padding:25px}main{max-width:900px;margin:auto;padding:16px}
-.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px #00000012}
-input,select,button{padding:12px;border-radius:12px;border:1px solid #cbd5e1;font-size:16px}
-button{background:#2563eb;color:#fff;border:0;font-weight:700}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
-.item{border-bottom:1px solid #e5e7eb;padding:12px 0}.muted{color:#64748b;font-size:13px}.bad{color:#b91c1c;font-weight:800}
-</style></head>
-<body><header><h2>📦 MIRIM WMS PRO · 공용 데이터베이스형</h2></header>
-<main>
-<div id="setup" class="card bad">config.js에 Supabase URL과 publishable key를 입력해야 합니다.</div>
-<div class="card"><div class="row"><input id="q" placeholder="품번·품명 검색"><button id="search">검색</button></div></div>
-<div id="results"></div>
-<div class="card">
-<h3>🚚 빠른 출고</h3>
-<div class="row"><select id="user"></select><input id="pin" type="password" inputmode="numeric" placeholder="개인 PIN"></div>
-<div class="row" style="margin-top:8px"><select id="item"></select><select id="location"></select></div>
-<div class="row" style="margin-top:8px"><input id="qty" type="number" min="1" placeholder="출고수량"><input id="note" placeholder="비고"></div>
-<button id="out" style="width:100%;margin-top:8px">출고 저장</button>
-<div id="msg" class="muted" style="margin-top:8px"></div>
-</div>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config.js"></script>
-<script>
-const cfg=window.MIRIM_SUPABASE||{};
-if(!cfg.url||cfg.url.includes('YOUR_')) throw new Error('Supabase config missing');
-const db=supabase.createClient(cfg.url,cfg.publishableKey);
-setup.textContent='✅ 공용 데이터베이스 연결 준비됨';setup.classList.remove('bad');
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
 
-let items=[];
-async function load(){
- const [{data:i,error:ie},{data:u,error:ue}]=await Promise.all([
-  db.from('items').select('id,part_no,item_name,category,unit,min_stock,photo_url,item_locations(id,location_display,qty)').eq('is_active',true).order('part_no'),
-  db.rpc('list_outbound_users')
- ]);
- if(ie||ue){msg.textContent='불러오기 오류: '+(ie?.message||ue?.message);return}
- items=i||[];
- user.innerHTML=(u||[]).map(x=>`<option value="${x.id}">${x.display_name}</option>`).join('');
- item.innerHTML=items.map(x=>`<option value="${x.id}">${x.part_no} · ${x.item_name}</option>`).join('');
- updateLocations(); render(items);
-}
-function updateLocations(){
- const x=items.find(v=>v.id===item.value)||items[0];
- location.innerHTML=(x?.item_locations||[]).map(l=>`<option value="${l.id}">${l.location_display} · ${l.qty} ${x.unit}</option>`).join('');
-}
-function render(list){
- results.innerHTML=list.map(x=>{
-  const total=(x.item_locations||[]).reduce((s,l)=>s+Number(l.qty||0),0);
-  const locs=(x.item_locations||[]).map(l=>`${l.location_display}: ${l.qty} ${x.unit}`).join('<br>');
-  return `<div class="card item"><b>${x.part_no} · ${x.item_name}</b><div>${locs}</div><div><b>현재고 합계 ${total} ${x.unit}</b></div></div>`;
- }).join('');
-}
-search.onclick=()=>{const k=q.value.trim().toLowerCase();render(items.filter(x=>(x.part_no+' '+x.item_name).toLowerCase().includes(k)))};
-item.onchange=updateLocations;
-out.onclick=async()=>{
- msg.textContent='처리 중...';
- const x=items.find(v=>v.id===item.value), n=Number(qty.value);
- if(!x||!location.value||!n||n<=0){msg.textContent='❌ 품목·위치·수량을 확인하세요.';return}
- const {error}=await db.rpc('apply_outbound_movement',{
-  p_item_id:x.id,p_location_id:location.value,p_qty:n,p_user_id:user.value,
-  p_pin:pin.value,p_note:note.value||null
- });
- if(error){
-  if(error.message.includes('INVALID_USER_OR_PIN')) msg.textContent='❌ 담당자 PIN이 맞지 않습니다.';
-  else if(error.message.includes('INSUFFICIENT_STOCK')) msg.textContent='❌ 선택 위치의 재고가 부족합니다.';
-  else msg.textContent='❌ '+error.message;
-  return;
- }
- msg.textContent='✅ 출고 저장 완료';pin.value='';qty.value='';note.value='';await load();
-};
-db.channel('mirim-live').on('postgres_changes',{event:'*',schema:'public',table:'item_locations'},load).subscribe();
-load();
-</script></body></html>
+  <title>MIRIM WMS PRO - Shared</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif;
+      margin: 0;
+      background: #f3f6fb;
+      color: #111827;
+    }
+
+    header {
+      background: #17357a;
+      color: #fff;
+      padding: 25px;
+    }
+
+    main {
+      max-width: 900px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 6px 20px #00000012;
+    }
+
+    input,
+    select,
+    button {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .row > * {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .item {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 0;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .bad {
+      color: #b91c1c;
+      font-weight: 800;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>📦 MIRIM WMS PRO · 공용 데이터베이스형</h2>
+  </header>
+
+  <main>
+    <div id="setup" class="card bad">
+      config.js에 Supabase URL과 Publishable Key를 입력해야 합니다.
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <input id="q" placeholder="품번·품명 검색">
+        <button id="search" type="button">검색</button>
+      </div>
+    </div>
+
+    <div id="results"></div>
+
+    <div class="card">
+      <h3>🚚 빠른 출고</h3>
+
+      <div class="row">
+        <select id="user">
+          <option value="">출고 담당자 선택</option>
+        </select>
+
+        <input
+          id="pin"
+          type="password"
+          inputmode="numeric"
+          placeholder="개인 PIN"
+        >
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <select id="item">
+          <option value="">품목 선택</option>
+        </select>
+
+        <select id="location">
+          <option value="">출고 위치 선택</option>
+        </select>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <input
+          id="qty"
+          type="number"
+          min="1"
+          placeholder="출고수량"
+        >
+
+        <input
+          id="note"
+          placeholder="비고"
+        >
+      </div>
+
+      <button
+        id="out"
+        type="button"
+        style="width:100%;margin-top:8px"
+      >
+        출고 저장
+      </button>
+
+      <div
+        id="msg"
+        class="muted"
+        style="margin-top:8px"
+      ></div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <script>
+    const setupEl = document.getElementById("setup");
+    const queryEl = document.getElementById("q");
+    const searchEl = document.getElementById("search");
+    const resultsEl = document.getElementById("results");
+    const userEl = document.getElementById("user");
+    const pinEl = document.getElementById("pin");
+    const itemEl = document.getElementById("item");
+    const locationEl = document.getElementById("location");
+    const qtyEl = document.getElementById("qty");
+    const noteEl = document.getElementById("note");
+    const outEl = document.getElementById("out");
+    const msgEl = document.getElementById("msg");
+
+    const cfg = window.MIRIM_SUPABASE || {};
+
+    if (
+      !cfg.url ||
+      !cfg.publishableKey ||
+      cfg.url.includes("YOUR_") ||
+      cfg.publishableKey.includes("YOUR_")
+    ) {
+      setupEl.textContent =
+        "❌ config.js의 Supabase URL 또는 Publishable Key를 확인하세요.";
+
+      throw new Error("Supabase config missing");
+    }
+
+    const db = window.supabase.createClient(
+      cfg.url,
+      cfg.publishableKey
+    );
+
+    setupEl.textContent = "✅ 공용 데이터베이스 연결 준비됨";
+    setupEl.classList.remove("bad");
+
+    let items = [];
+
+    async function load() {
+      msgEl.textContent = "데이터를 불러오는 중...";
+
+      const [
+        { data: itemData, error: itemError },
+        { data: userData, error: userError }
+      ] = await Promise.all([
+        db
+          .from("items")
+          .select(`
+            id,
+            part_no,
+            item_name,
+            category,
+            unit,
+            min_stock,
+            photo_url,
+            item_locations(
+              id,
+              location_display,
+              qty
+            )
+          `)
+          .eq("is_active", true)
+          .order("part_no"),
+
+        db.rpc("list_outbound_users")
+      ]);
+
+      if (itemError || userError) {
+        msgEl.textContent =
+          "❌ 불러오기 오류: " +
+          (itemError?.message || userError?.message);
+
+        return;
+      }
+
+      items = itemData || [];
+
+      userEl.innerHTML =
+        '<option value="">출고 담당자 선택</option>' +
+        (userData || [])
+          .map(
+            user =>
+              `<option value="${user.id}">${user.display_name}</option>`
+          )
+          .join("");
+
+      itemEl.innerHTML =
+        '<option value="">품목 선택</option>' +
+        items
+          .map(
+            item =>
+              `<option value="${item.id}">${item.part_no} · ${item.item_name}</option>`
+          )
+          .join("");
+
+      render(items);
+      updateLocations();
+
+      msgEl.textContent = "";
+    }
+
+    function updateLocations() {
+      const selectedItem = items.find(
+        item => String(item.id) === String(itemEl.value)
+      );
+
+      if (!selectedItem) {
+        locationEl.innerHTML =
+          '<option value="">품목을 먼저 선택하세요</option>';
+
+        return;
+      }
+
+      const locations = selectedItem.item_locations || [];
+
+      if (locations.length === 0) {
+        locationEl.innerHTML =
+          '<option value="">⚠️ 등록된 출고 위치 없음</option>';
+
+        return;
+      }
+
+      locationEl.innerHTML = locations
+        .map(
+          locationItem =>
+            `<option value="${locationItem.id}">
+              ${locationItem.location_display} ·
+              ${locationItem.qty} ${selectedItem.unit}
+            </option>`
+        )
+        .join("");
+    }
+
+    function render(list) {
+      if (!list.length) {
+        resultsEl.innerHTML = `
+          <div class="card muted">
+            검색 결과가 없습니다.
+          </div>
+        `;
+
+        return;
+      }
+
+      resultsEl.innerHTML = list
+        .map(item => {
+          const locations = item.item_locations || [];
+
+          const total = locations.reduce(
+            (sum, locationItem) =>
+              sum + Number(locationItem.qty || 0),
+            0
+          );
+
+          const locationText = locations.length
+            ? locations
+                .map(
+                  locationItem =>
+                    `${locationItem.location_display}: ${locationItem.qty} ${item.unit}`
+                )
+                .join("<br>")
+            : "⚠️ 위치 확인 필요";
+
+          return `
+            <div class="card item">
+              <b>${item.part_no} · ${item.item_name}</b>
+              <div>${locationText}</div>
+              <div>
+                <b>현재고 합계 ${total} ${item.unit}</b>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    searchEl.addEventListener("click", () => {
+      const keyword = queryEl.value
+        .trim()
+        .toLowerCase();
+
+      const filteredItems = items.filter(item =>
+        `${item.part_no} ${item.item_name}`
+          .toLowerCase()
+          .includes(keyword)
+      );
+
+      render(filteredItems);
+    });
+
+    queryEl.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        searchEl.click();
+      }
+    });
+
+    itemEl.addEventListener("change", updateLocations);
+
+    outEl.addEventListener("click", async () => {
+      msgEl.textContent = "처리 중...";
+
+      const selectedItem = items.find(
+        item => String(item.id) === String(itemEl.value)
+      );
+
+      const outboundQty = Number(qtyEl.value);
+
+      if (!userEl.value) {
+        msgEl.textContent = "❌ 출고 담당자를 선택하세요.";
+        return;
+      }
+
+      if (!pinEl.value) {
+        msgEl.textContent = "❌ 개인 PIN을 입력하세요.";
+        return;
+      }
+
+      if (
+        !selectedItem ||
+        !locationEl.value ||
+        !outboundQty ||
+        outboundQty <= 0
+      ) {
+        msgEl.textContent =
+          "❌ 품목·위치·출고수량을 확인하세요.";
+
+        return;
+      }
+
+      const { error } = await db.rpc(
+        "apply_outbound_movement",
+        {
+          p_item_id: selectedItem.id,
+          p_location_id: locationEl.value,
+          p_qty: outboundQty,
+          p_user_id: userEl.value,
+          p_pin: pinEl.value,
+          p_note: noteEl.value || null
+        }
+      );
+
+      if (error) {
+        if (error.message.includes("INVALID_USER_OR_PIN")) {
+          msgEl.textContent =
+            "❌ 담당자 또는 PIN이 맞지 않습니다.";
+        } else if (
+          error.message.includes("INSUFFICIENT_STOCK")
+        ) {
+          msgEl.textContent =
+            "❌ 선택 위치의 재고가 부족합니다.";
+        } else {
+          msgEl.textContent =
+            "❌ 출고 저장 오류: " + error.message;
+        }
+
+        return;
+      }
+
+      msgEl.textContent = "✅ 출고 저장 완료";
+
+      pinEl.value = "";
+      qtyEl.value = "";
+      noteEl.value = "";
+
+      await load();
+    });
+
+    db
+      .channel("mirim-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "item_locations"
+        },
+        load
+      )
+      .subscribe();
+
+    load();
+  </script>
+</body>
+</html>
