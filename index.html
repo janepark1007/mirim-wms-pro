@@ -86,6 +86,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   .coop-notice-item{padding:9px 10px}
 }
 
+
+#rememberLogin{accent-color:var(--g)}
+@media(max-width:720px){
+  #rememberLogin{width:22px!important;height:22px!important}
+}
+
 </style>
 </head>
 <body>
@@ -106,13 +112,25 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <p class="muted">관리자 또는 생산 PC 계정으로 로그인하세요.</p>
     <input id="loginId" placeholder="아이디"><br><br>
     <input id="loginPw" type="password" inputmode="numeric" placeholder="비밀번호"><br><br>
+
+    <label style="display:flex;align-items:center;gap:9px;margin:2px 0 14px;cursor:pointer">
+      <input id="rememberLogin" type="checkbox" style="width:20px;height:20px;min-width:20px">
+      <span style="font-weight:800">로그인 상태 유지</span>
+    </label>
+
     <button id="loginBtn">로그인</button>
     <div id="loginMsg" class="muted" style="margin-top:10px"></div>
   </div>
 </section>
 
 <section id="appView" class="hidden">
-  <div class="toolbar card"><div id="who"></div><button id="logoutBtn" class="secondary" style="width:auto">로그아웃</button></div>
+  <div class="toolbar card">
+    <div>
+      <div id="who"></div>
+      <div id="lastLoginInfo" class="muted" style="margin-top:4px"></div>
+    </div>
+    <button id="logoutBtn" class="secondary" style="width:auto">로그아웃</button>
+  </div>
   <div id="tabs" class="tabs">
     <button class="tab active" data-tab="search">🔎 검색</button>
     <button class="tab adminOnly" data-tab="items">📦 품목 등록</button>
@@ -644,7 +662,47 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 const cfg=window.MIRIM_SUPABASE||{};
 if(!cfg.url||!cfg.publishableKey||cfg.url.includes('YOUR_')) alert('config.js 연결정보를 확인하세요.');
 const db=supabase.createClient(cfg.url,cfg.publishableKey);
+
 let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, photoData=null;
+
+const LOGIN_STORAGE_KEY='mirim_wms_saved_login_v1';
+
+function saveLoginState(username,password){
+ const payload={
+   username,
+   password,
+   savedAt:new Date().toISOString()
+ };
+ localStorage.setItem(LOGIN_STORAGE_KEY,JSON.stringify(payload));
+}
+
+function clearLoginState(){
+ localStorage.removeItem(LOGIN_STORAGE_KEY);
+}
+
+function readLoginState(){
+ try{
+   const raw=localStorage.getItem(LOGIN_STORAGE_KEY);
+   if(!raw) return null;
+   const data=JSON.parse(raw);
+   if(!data?.username || !data?.password) return null;
+   return data;
+ }catch(_){
+   return null;
+ }
+}
+
+function formatLoginTime(value){
+ if(!value) return '';
+ const d=new Date(value);
+ if(Number.isNaN(d.getTime())) return '';
+ return new Intl.DateTimeFormat('ko-KR',{
+   timeZone:'Asia/Seoul',
+   year:'numeric',month:'2-digit',day:'2-digit',
+   hour:'2-digit',minute:'2-digit'
+ }).format(d);
+}
+
 
 const DEFAULT_HANDLERS=[
   '미림대표님','정부장님','박부장님','이연주부장님','김부장님',
@@ -727,17 +785,95 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const norm=v=>String(v||'').toLowerCase().replace(/\s+/g,'').trim();
 const total=x=>(x.item_locations||[]).reduce((s,l)=>s+Number(l.qty||0),0);
 
-async function login(){
- const {data,error}=await db.rpc('verify_app_login',{p_username:$('loginId').value,p_password:$('loginPw').value});
- if(error||!data?.length){$('loginMsg').textContent='❌ 아이디 또는 비밀번호를 확인하세요.';return}
- session={username:$('loginId').value,password:$('loginPw').value,role:data[0].role,displayName:data[0].display_name};
- $('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
+async function login(options={}){
+ const username=options.username ?? $('loginId').value.trim();
+ const password=options.password ?? $('loginPw').value;
+ const auto=options.auto===true;
+
+ if(!username || !password){
+   $('loginMsg').textContent='⚠️ 아이디와 비밀번호를 입력하세요.';
+   return false;
+ }
+
+ if(auto){
+   $('loginMsg').textContent='자동 로그인 중...';
+ }
+
+ const {data,error}=await db.rpc('verify_app_login',{
+   p_username:username,
+   p_password:password
+ });
+
+ if(error || !data?.length){
+   if(auto){
+     clearLoginState();
+     $('rememberLogin').checked=false;
+     $('loginMsg').textContent='⚠️ 저장된 로그인 정보가 만료되었습니다. 다시 로그인하세요.';
+   }else{
+     $('loginMsg').textContent='❌ 아이디 또는 비밀번호를 확인하세요.';
+   }
+   return false;
+ }
+
+ session={
+   username,
+   password,
+   role:data[0].role,
+   displayName:data[0].display_name
+ };
+
+ const loginTime=new Date().toISOString();
+
+ if(!auto && $('rememberLogin').checked){
+   saveLoginState(username,password);
+ }else if(!auto && !$('rememberLogin').checked){
+   clearLoginState();
+ }
+
+ $('loginView').classList.add('hidden');
+ $('appView').classList.remove('hidden');
  $('who').innerHTML='<b>'+esc(session.displayName)+'</b> · '+(session.role==='admin'?'관리자':'검색 전용');
- document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',session.role!=='admin'));
- setupCooperationNotice(); await loadAll(); switchTab('search');
+
+ if($('lastLoginInfo')){
+   $('lastLoginInfo').textContent=`마지막 로그인: ${formatLoginTime(loginTime)}`;
+ }
+
+ document.querySelectorAll('.adminOnly').forEach(x=>
+   x.classList.toggle('hidden',session.role!=='admin')
+ );
+
+ setupCooperationNotice();
+ await loadAll();
+ switchTab('search');
+ return true;
 }
-$('loginBtn').onclick=login;$('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
-$('logoutBtn').onclick=()=>location.reload();
+$('loginBtn').onclick=()=>login();
+$('loginPw').addEventListener('keydown',e=>{
+ if(e.key==='Enter') login();
+});
+
+$('logoutBtn').onclick=()=>{
+ clearLoginState();
+ sessionStorage.removeItem('mirim_coop_notice_hidden');
+ location.reload();
+};
+
+async function tryAutoLogin(){
+ const saved=readLoginState();
+ if(!saved) return;
+
+ $('loginId').value=saved.username;
+ $('loginPw').value=saved.password;
+ $('rememberLogin').checked=true;
+
+ await login({
+   username:saved.username,
+   password:saved.password,
+   auto:true
+ });
+}
+
+setTimeout(tryAutoLogin,0);
 
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 function switchTab(name){
