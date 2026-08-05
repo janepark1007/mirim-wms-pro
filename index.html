@@ -138,6 +138,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         </select>
         <button id="cancelEditBtn" class="secondary" type="button">수정 취소</button>
       </div>
+      <div class="muted" style="margin:8px 0 6px">삭제할 품목을 선택한 뒤 오른쪽 위 빨간 × 버튼을 누르세요.</div>
       <div id="editModeMsg" class="muted" style="margin:8px 0 6px">새 품목 등록 모드입니다.</div>
       <div class="ok" style="margin-bottom:14px">
         품번 또는 품명을 모르면 비워 두거나 0을 입력하세요. 임시값으로 등록한 뒤 나중에 수정할 수 있습니다.
@@ -1002,39 +1003,55 @@ $('archiveItemBtn').onclick=async()=>{
 
 
 
+
+
+
+function selectedItemForDelete(){
+ const id=String($('itemId')?.value || $('editItemSelect')?.value || '');
+ return items.find(x=>String(x.id)===id)||null;
+}
+
 $('deleteItemXBtn').onclick=async()=>{
- const item=getSelectedEditItem();
+ const item=selectedItemForDelete();
+
  if(!item){
    $('itemMsg').textContent='⚠️ 기존 품목 수정에서 삭제할 품목을 먼저 선택하세요.';
    return;
  }
 
  const password=prompt(
-   `❌ 완전삭제\n${item.part_no} · ${item.item_name}\n관리자 비밀번호를 입력하세요.`
+   `❌ 품목 완전삭제\n\n품번: ${item.part_no}\n품명: ${item.item_name}\n\n관리자 비밀번호를 입력하세요.`
  );
 
  if(password===null) return;
- if(!password){
+
+ if(!password.trim()){
    $('itemMsg').textContent='⚠️ 관리자 비밀번호를 입력하세요.';
    return;
  }
 
- if(!confirm('완전삭제는 복구할 수 없습니다. 정말 삭제할까요?')) return;
+ const really=confirm(
+   `완전삭제는 복구할 수 없습니다.\n\n${item.part_no} · ${item.item_name}\n\n정말 삭제할까요?`
+ );
+ if(!really) return;
 
  $('itemMsg').textContent='완전삭제 처리 중...';
 
  const {error}=await db.rpc('admin_delete_item',{
    p_username:session.username,
-   p_password:password,
+   p_password:password.trim(),
    p_item_id:item.id
  });
 
  if(error){
-   $('itemMsg').textContent=error.message.includes('ADMIN_AUTH_FAILED')
-     ?'❌ 관리자 비밀번호가 맞지 않습니다.'
-     :error.message.includes('ITEM_HAS_HISTORY_OR_STOCK')
-      ?'⚠️ 현재고 또는 입출고 이력이 있어 완전삭제할 수 없습니다. 사용중지를 이용하세요.'
-      :'❌ 완전삭제 실패: '+error.message;
+   const msg=String(error.message||'');
+   if(msg.includes('ADMIN_AUTH_FAILED')){
+     $('itemMsg').textContent='❌ 관리자 비밀번호가 맞지 않습니다.';
+   }else if(msg.includes('ITEM_HAS_HISTORY_OR_STOCK')){
+     $('itemMsg').textContent='⚠️ 현재고 또는 입출고 이력이 있어 완전삭제할 수 없습니다. 사용중지를 이용하세요.';
+   }else{
+     $('itemMsg').textContent='❌ 완전삭제 실패: '+msg;
+   }
    return;
  }
 
