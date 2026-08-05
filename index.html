@@ -124,7 +124,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <section id="itemsTab" class="tabpane hidden">
     <div class="card">
-      <h2>품목 등록·수정</h2>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">품목 등록·수정</h2>
+        <button id="deleteItemXBtn" type="button" class="danger"
+          style="width:44px;height:44px;padding:0;border-radius:50%;font-size:22px;font-weight:900"
+          title="선택 품목 완전삭제">×</button>
+      </div>
 
       <div class="label">기존 품목 수정</div>
       <div class="row">
@@ -172,7 +177,6 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <button id="saveItemBtn" style="margin-top:12px">품목 저장</button>
       <div class="row" style="margin-top:10px">
         <button id="archiveItemBtn" type="button" class="secondary">사용중지</button>
-        <button id="deleteItemBtn" type="button" class="danger">완전삭제</button>
       </div>
       <div class="muted" style="margin-top:6px">
         사용중지: 기록을 유지하고 목록에서 숨김 · 완전삭제: 현재고 0, 입출고 이력 없음인 품목만 가능
@@ -410,6 +414,53 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <section id="statsTab" class="tabpane hidden">
     <div class="card">
+      <h2>선택형 엑셀 내보내기</h2>
+      <div class="muted">
+        품목등록·입고·출고 자료를 자재구분, 기간, 품번·품명, 담당자 기준으로 골라 저장합니다.
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <div class="label">자료 구분</div>
+          <select id="filterExportType">
+            <option value="items">품목등록 목록</option>
+            <option value="inbound">입고내역</option>
+            <option value="outbound">출고내역</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">자재구분</div>
+          <select id="filterCategory">
+            <option value="">전체 자재구분</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">품번 또는 품명</div>
+          <input id="filterKeyword" placeholder="비우면 전체">
+        </div>
+        <div id="filterHandlerWrap">
+          <div class="label">출고 담당자</div>
+          <select id="filterHandler">
+            <option value="">전체 담당자</option>
+          </select>
+        </div>
+        <div id="filterStartWrap">
+          <div class="label">시작일</div>
+          <input id="filterStartDate" type="date">
+        </div>
+        <div id="filterEndWrap">
+          <div class="label">종료일</div>
+          <input id="filterEndDate" type="date">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="exportFilteredExcelBtn">선택 조건으로 엑셀 저장</button>
+      </div>
+      <div id="filterExportMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
       <h2>창고 재고조사표</h2>
       <div class="muted">
         등록된 모든 품목을 품번·품명·자재위치·전산수량 기준으로 정리합니다.
@@ -619,6 +670,18 @@ async function loadAll(){
    {name:'후드'},{name:'전선'},{name:'PVC'},{name:'포장재'},{name:'기타'}
  ];
  handlers=(h&&h.length)?h:DEFAULT_HANDLERS;
+ if($('filterCategory')){
+   const selected=$('filterCategory').value;
+   $('filterCategory').innerHTML='<option value="">전체 자재구분</option>'+
+     categories.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
+   $('filterCategory').value=selected;
+ }
+ if($('filterHandler')){
+   const selected=$('filterHandler').value;
+   $('filterHandler').innerHTML='<option value="">전체 담당자</option>'+
+     handlers.map(x=>`<option value="${esc(x.display_name)}">${esc(x.display_name)}</option>`).join('');
+   $('filterHandler').value=selected;
+ }
 
  $('category').innerHTML=categories.map(x=>`<option>${esc(x.name)}</option>`).join('');
  $('catList').innerHTML=categories.map(x=>`<span class="badge">${esc(x.name)}</span>`).join('');
@@ -937,34 +1000,41 @@ $('archiveItemBtn').onclick=async()=>{
  clearItemForm();
 };
 
-$('deleteItemBtn').onclick=async()=>{
+
+
+$('deleteItemXBtn').onclick=async()=>{
  const item=getSelectedEditItem();
  if(!item){
    $('itemMsg').textContent='⚠️ 기존 품목 수정에서 삭제할 품목을 먼저 선택하세요.';
    return;
  }
 
- const confirmText=prompt(
-   `완전삭제는 복구할 수 없습니다.\n${item.part_no} · ${item.item_name}\n삭제하려면 품번을 그대로 입력하세요.`
+ const password=prompt(
+   `❌ 완전삭제\n${item.part_no} · ${item.item_name}\n관리자 비밀번호를 입력하세요.`
  );
 
- if(confirmText!==item.part_no){
-   $('itemMsg').textContent='⚠️ 품번이 일치하지 않아 삭제를 취소했습니다.';
+ if(password===null) return;
+ if(!password){
+   $('itemMsg').textContent='⚠️ 관리자 비밀번호를 입력하세요.';
    return;
  }
 
+ if(!confirm('완전삭제는 복구할 수 없습니다. 정말 삭제할까요?')) return;
+
  $('itemMsg').textContent='완전삭제 처리 중...';
 
- const {data,error}=await db.rpc('admin_delete_item',{
+ const {error}=await db.rpc('admin_delete_item',{
    p_username:session.username,
-   p_password:session.password,
+   p_password:password,
    p_item_id:item.id
  });
 
  if(error){
-   $('itemMsg').textContent=error.message.includes('ITEM_HAS_HISTORY_OR_STOCK')
-     ?'⚠️ 현재고 또는 입출고 이력이 있어 완전삭제할 수 없습니다. 사용중지를 이용하세요.'
-     :'❌ 완전삭제 실패: '+error.message;
+   $('itemMsg').textContent=error.message.includes('ADMIN_AUTH_FAILED')
+     ?'❌ 관리자 비밀번호가 맞지 않습니다.'
+     :error.message.includes('ITEM_HAS_HISTORY_OR_STOCK')
+      ?'⚠️ 현재고 또는 입출고 이력이 있어 완전삭제할 수 없습니다. 사용중지를 이용하세요.'
+      :'❌ 완전삭제 실패: '+error.message;
    return;
  }
 
@@ -1414,6 +1484,185 @@ $('outSave').onclick=async()=>{
    await loadAll();selectOutboundItem();
  }
 };
+
+
+function setFilteredExportDefaults(){
+ const today=todayKST();
+ const d=new Date();
+ const first=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+ if($('filterStartDate') && !$('filterStartDate').value) $('filterStartDate').value=first;
+ if($('filterEndDate') && !$('filterEndDate').value) $('filterEndDate').value=today;
+ updateFilterExportUI();
+}
+
+function updateFilterExportUI(){
+ const type=$('filterExportType').value;
+ const isItems=type==='items';
+ $('filterStartWrap').classList.toggle('hidden',isItems);
+ $('filterEndWrap').classList.toggle('hidden',isItems);
+ $('filterHandlerWrap').classList.toggle('hidden',type!=='outbound');
+}
+
+$('filterExportType').onchange=updateFilterExportUI;
+setTimeout(setFilteredExportDefaults,0);
+
+function makeWorkbookSheet(rows,name,widths=[]){
+ const ws=XLSX.utils.json_to_sheet(rows);
+ if(widths.length) ws['!cols']=widths.map(w=>({wch:w}));
+ if(rows.length){
+   const colCount=Object.keys(rows[0]).length;
+   const endCol=XLSX.utils.encode_col(colCount-1);
+   ws['!autofilter']={ref:`A1:${endCol}${rows.length+1}`};
+   ws['!freeze']={xSplit:0,ySplit:1};
+ }
+ return {ws,name};
+}
+
+function filterItemsForExport(){
+ const category=$('filterCategory').value;
+ const keyword=norm($('filterKeyword').value);
+
+ return items.filter(x=>{
+   const categoryOk=!category || x.category===category;
+   const keywordOk=!keyword || norm(`${x.part_no} ${x.item_name}`).includes(keyword);
+   return categoryOk && keywordOk;
+ });
+}
+
+function itemExportRows(){
+ const filtered=filterItemsForExport();
+ const rows=[];
+
+ filtered.forEach(item=>{
+   const locs=item.item_locations||[];
+   if(locs.length){
+     locs.forEach(loc=>rows.push({
+       '품번':item.part_no||'',
+       '품명':item.item_name||'',
+       '자재구분':item.category||'기타',
+       '최소수량':Number(item.min_stock||0),
+       '현재 총수량':total(item),
+       '자재위치':loc.location_display||loc.location_code||'',
+       '위치별 수량':Number(loc.qty||0),
+       '단위':item.unit||'EA',
+       '최초 등록일':item.registered_on||'',
+       '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+       '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+     }));
+   }else{
+     rows.push({
+       '품번':item.part_no||'',
+       '품명':item.item_name||'',
+       '자재구분':item.category||'기타',
+       '최소수량':Number(item.min_stock||0),
+       '현재 총수량':0,
+       '자재위치':'위치 미등록',
+       '위치별 수량':0,
+       '단위':item.unit||'EA',
+       '최초 등록일':item.registered_on||'',
+       '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+       '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+     });
+   }
+ });
+ return rows;
+}
+
+async function movementExportRows(type){
+ const start=$('filterStartDate').value;
+ const end=$('filterEndDate').value;
+ if(!start || !end) throw new Error('시작일과 종료일을 입력하세요.');
+
+ const startIso=new Date(`${start}T00:00:00+09:00`).toISOString();
+ const endExclusive=new Date(new Date(`${end}T00:00:00+09:00`).getTime()+86400000).toISOString();
+
+ const {data,error}=await db.rpc('admin_get_stock_report',{
+   p_username:session.username,
+   p_password:session.password,
+   p_start:startIso,
+   p_end:endExclusive
+ });
+ if(error) throw error;
+
+ const category=$('filterCategory').value;
+ const keyword=norm($('filterKeyword').value);
+ const handler=$('filterHandler').value;
+ const movementType=type==='inbound'?'IN':'OUT';
+
+ return (data||[]).filter(x=>{
+   const typeOk=x.movement_type===movementType;
+   const categoryOk=!category || x.category===category;
+   const keywordOk=!keyword || norm(`${x.part_no} ${x.item_name}`).includes(keyword);
+   const handlerOk=type!=='outbound' || !handler || x.actor_name===handler;
+   return typeOk && categoryOk && keywordOk && handlerOk;
+ }).map(x=>({
+   [type==='inbound'?'입고일':'출고일']:new Date(x.created_at).toLocaleDateString('ko-KR'),
+   '품번':x.part_no||'',
+   '품명':x.item_name||'',
+   '자재구분':x.category||'기타',
+   [type==='inbound'?'입고수량':'출고수량']:Number(x.qty||0),
+   '단위':x.unit||'EA',
+   '자재위치':x.location_display||'',
+   '담당자':x.actor_name||'',
+   '비고':x.note||'',
+   '위치 최종수량':Number(x.stock_after_location||0),
+   '총 최종수량':Number(x.stock_after_total||0)
+ }));
+}
+
+$('exportFilteredExcelBtn').onclick=async()=>{
+ const type=$('filterExportType').value;
+ $('filterExportMsg').textContent='엑셀 자료를 정리하는 중...';
+
+ try{
+   let rows=[];
+   let sheetName='';
+   let fileLabel='';
+
+   if(type==='items'){
+     rows=itemExportRows();
+     sheetName='품목등록 목록';
+     fileLabel='품목등록';
+   }else{
+     rows=await movementExportRows(type);
+     sheetName=type==='inbound'?'입고내역':'출고내역';
+     fileLabel=sheetName;
+   }
+
+   if(!rows.length){
+     $('filterExportMsg').textContent='⚠️ 선택 조건에 해당하는 자료가 없습니다.';
+     return;
+   }
+
+   const wb=XLSX.utils.book_new();
+   const {ws}=makeWorkbookSheet(
+     rows,
+     sheetName,
+     [16,24,14,13,15,12,32,14,14,14,14]
+   );
+   XLSX.utils.book_append_sheet(wb,ws,sheetName);
+
+   const conditions=[
+     ['자료 구분',sheetName],
+     ['자재구분',$('filterCategory').value||'전체'],
+     ['품번·품명',$('filterKeyword').value||'전체'],
+     ['출고 담당자',type==='outbound'?($('filterHandler').value||'전체'):'해당 없음'],
+     ['시작일',type==='items'?'해당 없음':$('filterStartDate').value],
+     ['종료일',type==='items'?'해당 없음':$('filterEndDate').value],
+     ['생성일',todayKST()],
+     ['총 행 수',rows.length]
+   ];
+   const guide=XLSX.utils.aoa_to_sheet(conditions);
+   guide['!cols']=[{wch:18},{wch:40}];
+   XLSX.utils.book_append_sheet(wb,guide,'내보내기 조건');
+
+   XLSX.writeFile(wb,`미림테크놀러지_${fileLabel}_${todayKST()}.xlsx`);
+   $('filterExportMsg').textContent=`✅ ${sheetName} 엑셀 저장 완료 · ${rows.length}건`;
+ }catch(error){
+   $('filterExportMsg').textContent='❌ 엑셀 저장 실패: '+error.message;
+ }
+};
+
 
 let reportRows=[];
 function setReportDefaults(){
