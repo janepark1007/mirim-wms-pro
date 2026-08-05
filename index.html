@@ -22,29 +22,22 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 .loginwrap{min-height:calc(100vh - 72px);display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:center}
 @media(max-width:800px){.loginwrap{grid-template-columns:1fr}.intro{display:none}}
 .loginbox{max-width:520px;margin:auto}.logoLarge{width:220px;max-width:80%}.loginTitle{font-size:32px;margin:8px 0}.label{font-weight:800;margin:6px 0}.step{display:inline-block;background:var(--g);color:#fff;border-radius:7px;padding:5px 9px;margin-right:8px;font-size:13px}
-.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef2f6;margin:3px}
-.toolbar{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.search-card{background:#fff;border-radius:22px;padding:20px;margin-bottom:16px;box-shadow:0 8px 24px #0f172a12}
-.search-main{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start}
-.search-image{width:100%;height:220px;object-fit:contain;border:1px solid var(--line);border-radius:18px;background:#fff}
-.search-noimage{height:220px;display:flex;align-items:center;justify-content:center;border:1px dashed #9aa6b2;border-radius:18px;color:#777;background:#fafafa}
-.search-identity{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.search-box{background:#eef8f1;border-radius:14px;padding:14px}
-.search-box .title{font-size:13px;color:var(--mut);margin-bottom:4px}
-.search-box .value{font-size:24px;font-weight:900;word-break:break-word}
-.search-total{background:linear-gradient(135deg,#0b7a43,#10a85d);color:#fff;border-radius:16px;padding:16px}
-.search-total .title{font-size:13px;opacity:.85}
-.search-total .value{font-size:30px;font-weight:900}
-.location-list{margin-top:16px;display:grid;gap:10px}
-.location-row{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;background:#f3faf5;border:1px solid #d7ecde;border-radius:14px;padding:14px}
-.location-icon{font-size:24px;text-align:center}
-.location-name{font-size:18px;font-weight:900}
-.location-code{font-size:12px;color:var(--mut);margin-top:3px}
-.location-qty{text-align:right}
-.location-qty .title{font-size:12px;color:var(--mut)}
-.location-qty .value{font-size:22px;font-weight:900;color:var(--g)}
-.search-foot{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-.search-chip{background:#eef2f6;border-radius:999px;padding:7px 11px;font-size:13px}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef2f6;margin:3px}.toolbar{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.search-priority-card{background:#fff;border-radius:22px;padding:20px;margin-bottom:16px;box-shadow:0 8px 24px #0f172a12}
+.search-priority-main{display:grid;grid-template-columns:220px 1fr;gap:20px}
+.search-priority-image{width:100%;height:220px;object-fit:contain;border:1px solid var(--line);border-radius:18px;background:#fff}
+.search-priority-info{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.search-priority-box{background:#eef8f1;border-radius:14px;padding:14px}
+.search-priority-box small{color:var(--mut)}
+.search-priority-box strong{display:block;font-size:24px;margin-top:4px}
+.search-priority-total{background:linear-gradient(135deg,#0b7a43,#11a65c);color:#fff;border-radius:14px;padding:14px}
+.search-priority-total strong{display:block;font-size:30px;margin-top:4px}
+.search-priority-locations{margin-top:16px;display:grid;gap:10px}
+.search-priority-location{display:grid;grid-template-columns:46px 1fr auto;gap:12px;align-items:center;background:#f2faf5;border:1px solid #d8ebde;border-radius:14px;padding:14px}
+.search-priority-location .name{font-size:18px;font-weight:900}
+.search-priority-location .code{font-size:12px;color:var(--mut)}
+.search-priority-location .qty{font-size:22px;font-weight:900;color:var(--g);text-align:right}
+@media(max-width:720px){.search-priority-main{grid-template-columns:1fr}.search-priority-image{height:240px}.search-priority-info{grid-template-columns:1fr 1fr}.search-priority-total{grid-column:1/-1}.search-priority-location{grid-template-columns:40px 1fr}.search-priority-location .qty{grid-column:2;text-align:left}}
  table th,table td{padding:9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap} table th{background:#eef7f1}
 </style>
 </head>
@@ -143,13 +136,21 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           </div>
           <div><div class="label">번호</div>
             <select id="itemLocNumber">
+              <option value="">해당사항 없음</option>
               <option value="001">001</option><option value="002">002</option>
               <option value="003">003</option><option value="004">004</option>
               <option value="005">005</option><option value="006">006</option>
             </select>
           </div>
+          <div><div class="label">노랑박스</div>
+            <select id="itemYellowBox">
+              <option value="">해당사항 없음</option>
+              <option value="A">A</option><option value="B">B</option>
+            </select>
+          </div>
           <div><div class="label">상단·하단</div>
             <select id="itemLocLevel">
+              <option value="">해당사항 없음</option>
               <option value="상단">상단</option><option value="하단">하단</option>
             </select>
           </div>
@@ -492,53 +493,33 @@ function renderSearch(list){
  $('searchResults').innerHTML=list.length?list.map(x=>{
    const locations=x.item_locations||[];
    const totalQty=total(x);
-
-   return `<div class="search-card">
-     <div class="search-main">
+   return `<div class="search-priority-card">
+     <div class="search-priority-main">
        <div>
          ${x.photo_url
-           ? `<img class="search-image" src="${esc(x.photo_url)}" alt="${esc(x.item_name)}">`
+           ? `<img class="search-priority-image" src="${esc(x.photo_url)}" alt="${esc(x.item_name)}">`
            : `<div class="search-noimage">📷 사진 없음</div>`}
        </div>
-
        <div>
-         <div class="search-identity">
-           <div class="search-box">
-             <div class="title">품번</div>
-             <div class="value">${esc(x.part_no)}</div>
-           </div>
-
-           <div class="search-box">
-             <div class="title">품명</div>
-             <div class="value">${esc(x.item_name)}</div>
-           </div>
-
-           <div class="search-total">
-             <div class="title">현재 총수량</div>
-             <div class="value">${totalQty} ${esc(x.unit)}</div>
-           </div>
+         <div class="search-priority-info">
+           <div class="search-priority-box"><small>품번</small><strong>${esc(x.part_no)}</strong></div>
+           <div class="search-priority-box"><small>품명</small><strong>${esc(x.item_name)}</strong></div>
+           <div class="search-priority-total"><small>현재 총수량</small><strong>${totalQty} ${esc(x.unit)}</strong></div>
          </div>
 
          <div class="label" style="margin-top:18px">창고·생산 위치별 최종수량</div>
-
-         <div class="location-list">
+         <div class="search-priority-locations">
            ${locations.length
-             ? locations.map((l,i)=>`
-               <div class="location-row">
-                 <div class="location-icon">📍</div>
+             ? locations.map(l=>`
+               <div class="search-priority-location">
+                 <div style="font-size:23px">📍</div>
                  <div>
-                   <div class="location-name">${esc(l.location_display)}</div>
-                   <div class="location-code">위치코드: ${esc(l.location_code||l.location_display)}</div>
+                   <div class="name">${esc(l.location_display)}</div>
+                   <div class="code">위치코드: ${esc(l.location_code||l.location_display)}</div>
                  </div>
-                 <div class="location-qty">
-                   <div class="title">최종수량</div>
-                   <div class="value">${esc(l.qty)} ${esc(x.unit)}</div>
-                 </div>
+                 <div class="qty">${esc(l.qty)} ${esc(x.unit)}</div>
                </div>`).join('')
-             : `<div class="location-row">
-                  <div class="location-icon">⚠️</div>
-                  <div><div class="location-name">위치 확인 필요</div></div>
-                </div>`}
+             : `<div class="search-priority-location"><div>⚠️</div><div class="name">위치 확인 필요</div></div>`}
          </div>
 
          <div class="search-foot">
@@ -660,23 +641,38 @@ function setupLocationOptions(){
  $('prodDrawer').innerHTML=drawerHtml;
 }
 
+setupLocationOptions();
+
 function buildItemLocationCode(){
  const type=$('itemLocType').value;
  $('itemWarehouseFields').classList.toggle('hidden',type==='생산');
  $('itemProductionFields').classList.toggle('hidden',type!=='생산');
 
- $('itemLocationCode').value=type==='생산'
-   ? `생산-${$('itemProdLine').value}-서랍-${$('itemProdDrawer').value}`
-   : [
-      type,
-      $('itemLocArea').value+'구역',
-      $('itemLocTier').value+'단',
-      $('itemLocNumber').value,
-      $('itemLocLevel').value
-     ].join('-');
+ if(type==='생산'){
+   $('itemLocationCode').value=`생산-${$('itemProdLine').value}-${$('itemProdDrawer').value}`;
+   return;
+ }
+
+ const number=$('itemLocNumber').value;
+ const level=$('itemLocLevel').value;
+
+ if(number){
+   $('itemLocLevel').value='';
+   if(!$('itemYellowBox').value) $('itemYellowBox').value='A';
+   $('itemLocationCode').value=[
+     type,$('itemLocArea').value,$('itemLocTier').value+'단',
+     number,$('itemYellowBox').value
+   ].join('-');
+ }else{
+   $('itemYellowBox').value='';
+   $('itemLocationCode').value=[
+     type,$('itemLocArea').value,$('itemLocTier').value+'단',
+     level||''
+   ].filter(Boolean).join('-');
+ }
 }
 
-['itemLocType','itemLocArea','itemLocTier','itemLocLevel','itemLocNumber','itemProdLine','itemProdDrawer'].forEach(id=>{
+['itemLocType','itemLocArea','itemLocTier','itemLocNumber','itemYellowBox','itemLocLevel','itemProdLine','itemProdDrawer'].forEach(id=>{
  $(id).addEventListener('input',buildItemLocationCode);
  $(id).addEventListener('change',buildItemLocationCode);
 });
@@ -827,6 +823,28 @@ $('deleteLocBtn').onclick=async()=>{
    updateSelectedItemLocationPanel(itemId);
  }
 };
+
+
+async function loadDisposalCandidates(){
+ $('disposalMsg').textContent='확인 중...';
+ const {data,error}=await db.rpc('admin_list_disposal_candidates',{
+   p_username:session.username,p_password:session.password
+ });
+ if(error){$('disposalMsg').textContent='❌ '+error.message;return}
+ const rows=data||[];
+ $('disposalMsg').textContent=rows.length?`⚠️ 폐기 검토 대상 ${rows.length}개`:'✅ 대상 없음';
+ $('disposalList').innerHTML=rows.map(x=>`
+   <div class="card">
+     <div class="grid">
+       <div><div class="muted">품번</div><b>${esc(x.part_no)}</b></div>
+       <div><div class="muted">품명</div><b>${esc(x.item_name)}</b></div>
+       <div><div class="muted">현재고</div><b>${x.current_stock} ${esc(x.unit)}</b></div>
+       <div><div class="muted">마지막 활동일</div><b>${new Date(x.last_activity_at).toLocaleDateString('ko-KR')}</b></div>
+     </div>
+     <div class="bad" style="margin-top:10px">미사용 ${x.inactive_days}일 · 현물 확인 후 폐기 여부 결정</div>
+   </div>`).join('');
+}
+if($('loadDisposalBtn')) $('loadDisposalBtn').onclick=loadDisposalCandidates;
 
 $('addCategoryBtn').onclick=async()=>{
  const {error}=await db.rpc('admin_add_category',{p_username:session.username,p_password:session.password,p_name:$('newCategory').value});
