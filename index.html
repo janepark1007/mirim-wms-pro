@@ -414,8 +414,13 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   </section>
 
   <section id="statsTab" class="tabpane hidden">
+    <div class="ok" style="margin-bottom:12px">
+      아래 첫 번째 영역에서 <b>자재구분 품목 / 입고내역 / 출고내역</b>을 각각 별도 엑셀 파일로 저장할 수 있습니다.
+      월별·연도별 통계는 그 아래에 따로 있습니다.
+    </div>
+
     <div class="card">
-      <h2>자료별 엑셀 내보내기</h2>
+      <h2>자재구분·입고·출고 개별 엑셀 내보내기</h2>
       <div class="muted">
         월별·연도별 통계 외에 자재구분별 품목, 입고내역, 출고내역을 각각 별도 파일로 저장합니다.
       </div>
@@ -566,7 +571,24 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div id="catList" style="margin-top:12px"></div>
       <div id="catMsg" class="muted"></div>
     </div>
-  </section>
+  
+<div class="card" style="margin-top:16px">
+      <h2>출고 담당자 관리</h2>
+      <div class="muted">
+        출고 담당자가 늘어나면 이름을 추가하세요. 추가 즉시 출고 담당자 선택 목록에 반영됩니다.
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <div class="label required-label">담당자 이름</div>
+          <input id="newHandlerName" placeholder="예: 홍길동 대리">
+        </div>
+        <div>
+          <div class="label">표시 순서</div>
+          <input id="newHandlerOrder" type="number" min="0" placeholder="비우면 맨 아래">
+        </div>
+      </div>
+</section>
 </section>
 </main>
 
@@ -1098,6 +1120,55 @@ $('deleteItemXBtn').onclick=async()=>{
  await loadAll();
  clearItemForm();
 };
+
+$('addHandlerBtn').onclick=async()=>{
+ const name=$('newHandlerName').value.trim();
+ const orderRaw=$('newHandlerOrder').value.trim();
+
+ if(!name){
+   $('handlerAdminMsg').textContent='⚠️ 담당자 이름을 입력하세요.';
+   return;
+ }
+
+ $('handlerAdminMsg').textContent='담당자 추가 중...';
+
+ const {error}=await db.rpc('admin_add_material_handler',{
+   p_username:session.username,
+   p_password:session.password,
+   p_display_name:name,
+   p_sort_order:orderRaw===''?null:Number(orderRaw)
+ });
+
+ if(error){
+   $('handlerAdminMsg').textContent=String(error.message||'').includes('duplicate')
+     ?'⚠️ 이미 등록된 담당자 이름입니다.'
+     :'❌ 담당자 추가 실패: '+error.message;
+   return;
+ }
+
+ $('newHandlerName').value='';
+ $('newHandlerOrder').value='';
+ $('handlerAdminMsg').textContent='✅ 출고 담당자 추가 완료';
+ await loadAll();
+};
+
+async function archiveHandler(id,name){
+ if(!confirm(`${name} 담당자를 사용중지할까요?\n기존 출고 기록은 그대로 유지됩니다.`)) return;
+
+ const {error}=await db.rpc('admin_archive_material_handler',{
+   p_username:session.username,
+   p_password:session.password,
+   p_handler_id:id
+ });
+
+ if(error){
+   $('handlerAdminMsg').textContent='❌ 사용중지 실패: '+error.message;
+   return;
+ }
+
+ $('handlerAdminMsg').textContent='✅ 담당자 사용중지 완료';
+ await loadAll();
+}
 
 $('addCategoryBtn').onclick=async()=>{
  const {error}=await db.rpc('admin_add_category',{p_username:session.username,p_password:session.password,p_name:$('newCategory').value});
