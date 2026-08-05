@@ -415,6 +415,39 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <section id="statsTab" class="tabpane hidden">
     <div class="card">
+      <h2>자료별 엑셀 내보내기</h2>
+      <div class="muted">
+        월별·연도별 통계 외에 자재구분별 품목, 입고내역, 출고내역을 각각 별도 파일로 저장합니다.
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <div class="label">자재구분 선택</div>
+          <select id="quickCategory">
+            <option value="">전체 자재구분</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">시작일</div>
+          <input id="quickStartDate" type="date">
+        </div>
+        <div>
+          <div class="label">종료일</div>
+          <input id="quickEndDate" type="date">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <button id="exportCategoryItemsBtn">자재구분 품목 엑셀</button>
+        <button id="exportInboundBtn" class="secondary">입고내역 엑셀</button>
+        <button id="exportOutboundBtn" class="secondary">출고내역 엑셀</button>
+        <button id="exportThreeFilesBtn" class="secondary">3개 파일 한 번에 저장</button>
+      </div>
+
+      <div id="quickExportMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
       <h2>선택형 엑셀 내보내기</h2>
       <div class="muted">
         품목등록·입고·출고 자료를 자재구분, 기간, 품번·품명, 담당자 기준으로 골라 저장합니다.
@@ -671,6 +704,12 @@ async function loadAll(){
    {name:'후드'},{name:'전선'},{name:'PVC'},{name:'포장재'},{name:'기타'}
  ];
  handlers=(h&&h.length)?h:DEFAULT_HANDLERS;
+ if($('quickCategory')){
+   const previous=$('quickCategory').value;
+   $('quickCategory').innerHTML='<option value="">전체 자재구분</option>'+
+     categories.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
+   $('quickCategory').value=previous;
+ }
  if($('filterCategory')){
    const selected=$('filterCategory').value;
    $('filterCategory').innerHTML='<option value="">전체 자재구분</option>'+
@@ -1677,6 +1716,224 @@ $('exportFilteredExcelBtn').onclick=async()=>{
    $('filterExportMsg').textContent=`✅ ${sheetName} 엑셀 저장 완료 · ${rows.length}건`;
  }catch(error){
    $('filterExportMsg').textContent='❌ 엑셀 저장 실패: '+error.message;
+ }
+};
+
+
+
+function setQuickExportDefaults(){
+ const today=todayKST();
+ const d=new Date();
+ const first=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+ if($('quickStartDate') && !$('quickStartDate').value) $('quickStartDate').value=first;
+ if($('quickEndDate') && !$('quickEndDate').value) $('quickEndDate').value=today;
+}
+setTimeout(setQuickExportDefaults,0);
+
+function cleanFilePart(value){
+ return String(value||'전체')
+   .replace(/[\\/:*?"<>|]/g,'_')
+   .replace(/\s+/g,'_');
+}
+
+function styleWorksheet(ws,rows){
+ if(rows.length){
+   const keys=Object.keys(rows[0]);
+   ws['!autofilter']={ref:`A1:${XLSX.utils.encode_col(keys.length-1)}${rows.length+1}`};
+   ws['!freeze']={xSplit:0,ySplit:1};
+ }
+ ws['!cols']=[
+   {wch:14},{wch:20},{wch:24},{wch:14},{wch:14},{wch:14},
+   {wch:30},{wch:14},{wch:14},{wch:16},{wch:28}
+ ];
+ return ws;
+}
+
+function categoryItemRows(){
+ const category=$('quickCategory').value;
+ const rows=[];
+
+ items
+   .filter(x=>!category || x.category===category)
+   .forEach(item=>{
+     const locs=item.item_locations||[];
+     if(locs.length){
+       locs.forEach(loc=>rows.push({
+         '품번':item.part_no||'',
+         '품명':item.item_name||'',
+         '자재구분':item.category||'기타',
+         '최소수량':Number(item.min_stock||0),
+         '현재 총수량':total(item),
+         '자재위치':loc.location_display||loc.location_code||'',
+         '위치별 수량':Number(loc.qty||0),
+         '단위':item.unit||'EA',
+         '최초 등록일':item.registered_on||'',
+         '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+         '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+       }));
+     }else{
+       rows.push({
+         '품번':item.part_no||'',
+         '품명':item.item_name||'',
+         '자재구분':item.category||'기타',
+         '최소수량':Number(item.min_stock||0),
+         '현재 총수량':0,
+         '자재위치':'위치 미등록',
+         '위치별 수량':0,
+         '단위':item.unit||'EA',
+         '최초 등록일':item.registered_on||'',
+         '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+         '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+       });
+     }
+   });
+
+ return rows;
+}
+
+async function quickMovementRows(type){
+ const start=$('quickStartDate').value;
+ const end=$('quickEndDate').value;
+ const category=$('quickCategory').value;
+
+ if(!start || !end) throw new Error('시작일과 종료일을 입력하세요.');
+
+ const startIso=new Date(`${start}T00:00:00+09:00`).toISOString();
+ const endExclusive=new Date(
+   new Date(`${end}T00:00:00+09:00`).getTime()+86400000
+ ).toISOString();
+
+ const {data,error}=await db.rpc('admin_get_stock_report',{
+   p_username:session.username,
+   p_password:session.password,
+   p_start:startIso,
+   p_end:endExclusive
+ });
+ if(error) throw error;
+
+ const movementType=type==='IN'?'IN':'OUT';
+
+ return (data||[])
+   .filter(x=>
+     x.movement_type===movementType &&
+     (!category || x.category===category)
+   )
+   .map(x=>({
+     [type==='IN'?'입고일':'출고일']:new Date(x.created_at).toLocaleDateString('ko-KR'),
+     '품번':x.part_no||'',
+     '품명':x.item_name||'',
+     '자재구분':x.category||'기타',
+     [type==='IN'?'입고수량':'출고수량']:Number(x.qty||0),
+     '단위':x.unit||'EA',
+     '자재위치':x.location_display||'',
+     '담당자':x.actor_name||'',
+     '비고':x.note||'',
+     '위치 최종수량':Number(x.stock_after_location||0),
+     '총 최종수량':Number(x.stock_after_total||0)
+   }));
+}
+
+function saveRowsAsExcel(rows,sheetName,fileName){
+ if(!rows.length) return false;
+ const wb=XLSX.utils.book_new();
+ const ws=styleWorksheet(XLSX.utils.json_to_sheet(rows),rows);
+ XLSX.utils.book_append_sheet(wb,ws,sheetName);
+ XLSX.writeFile(wb,fileName);
+ return true;
+}
+
+$('exportCategoryItemsBtn').onclick=()=>{
+ const category=$('quickCategory').value||'전체';
+ const rows=categoryItemRows();
+
+ if(!saveRowsAsExcel(
+   rows,
+   '자재구분 품목',
+   `미림테크놀러지_자재구분_${cleanFilePart(category)}_${todayKST()}.xlsx`
+ )){
+   $('quickExportMsg').textContent='⚠️ 해당 자재구분의 품목이 없습니다.';
+   return;
+ }
+
+ $('quickExportMsg').textContent=`✅ 자재구분 품목 엑셀 저장 완료 · ${rows.length}행`;
+};
+
+$('exportInboundBtn').onclick=async()=>{
+ $('quickExportMsg').textContent='입고내역을 정리하는 중...';
+ try{
+   const rows=await quickMovementRows('IN');
+   const category=$('quickCategory').value||'전체';
+
+   if(!saveRowsAsExcel(
+     rows,
+     '입고내역',
+     `미림테크놀러지_입고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )){
+     $('quickExportMsg').textContent='⚠️ 선택 기간의 입고내역이 없습니다.';
+     return;
+   }
+
+   $('quickExportMsg').textContent=`✅ 입고내역 엑셀 저장 완료 · ${rows.length}건`;
+ }catch(error){
+   $('quickExportMsg').textContent='❌ 입고내역 저장 실패: '+error.message;
+ }
+};
+
+$('exportOutboundBtn').onclick=async()=>{
+ $('quickExportMsg').textContent='출고내역을 정리하는 중...';
+ try{
+   const rows=await quickMovementRows('OUT');
+   const category=$('quickCategory').value||'전체';
+
+   if(!saveRowsAsExcel(
+     rows,
+     '출고내역',
+     `미림테크놀러지_출고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )){
+     $('quickExportMsg').textContent='⚠️ 선택 기간의 출고내역이 없습니다.';
+     return;
+   }
+
+   $('quickExportMsg').textContent=`✅ 출고내역 엑셀 저장 완료 · ${rows.length}건`;
+ }catch(error){
+   $('quickExportMsg').textContent='❌ 출고내역 저장 실패: '+error.message;
+ }
+};
+
+$('exportThreeFilesBtn').onclick=async()=>{
+ $('quickExportMsg').textContent='3개 파일을 정리하는 중...';
+
+ try{
+   const category=$('quickCategory').value||'전체';
+   const categoryRows=categoryItemRows();
+   const inboundRows=await quickMovementRows('IN');
+   const outboundRows=await quickMovementRows('OUT');
+
+   let saved=0;
+
+   if(saveRowsAsExcel(
+     categoryRows,
+     '자재구분 품목',
+     `미림테크놀러지_자재구분_${cleanFilePart(category)}_${todayKST()}.xlsx`
+   )) saved++;
+
+   if(saveRowsAsExcel(
+     inboundRows,
+     '입고내역',
+     `미림테크놀러지_입고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )) saved++;
+
+   if(saveRowsAsExcel(
+     outboundRows,
+     '출고내역',
+     `미림테크놀러지_출고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )) saved++;
+
+   $('quickExportMsg').textContent=saved
+     ?`✅ ${saved}개 엑셀 파일 저장 완료`
+     :'⚠️ 선택 조건에 해당하는 자료가 없습니다.';
+ }catch(error){
+   $('quickExportMsg').textContent='❌ 파일 저장 실패: '+error.message;
  }
 };
 
