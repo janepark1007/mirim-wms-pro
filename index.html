@@ -179,7 +179,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <div class="label required-label" style="margin-top:12px">최종 품목 선택</div>
       <select id="inFinalSelect">
-        <option value="">품번 또는 품명을 입력하면 자동으로 표시됩니다.</option>
+        <option value="">품번 또는 품명을 입력하면 자동 선택됩니다.</option>
       </select>
       <input id="inItemId" type="hidden">
 
@@ -777,26 +777,51 @@ function populateCandidateSelect(selectId,partValue,nameValue){
  return list;
 }
 
+
+function resolveRegisteredItem(partValue,nameValue){
+ const p=norm(partValue);
+ const n=norm(nameValue);
+
+ let found=null;
+
+ if(p && n){
+   found=items.find(x=>norm(x.part_no)===p && norm(x.item_name)===n)||null;
+ }
+ if(!found && p){
+   const exactPart=items.filter(x=>norm(x.part_no)===p);
+   if(exactPart.length===1) found=exactPart[0];
+ }
+ if(!found && n){
+   const exactName=items.filter(x=>norm(x.item_name)===n);
+   if(exactName.length===1) found=exactName[0];
+ }
+ if(!found){
+   const candidates=filterItemCandidates(partValue,nameValue);
+   if(candidates.length===1) found=candidates[0];
+ }
+ return found;
+}
+
 function fillInboundCandidates(){
- const list=populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
+ const partValue=$('inPartSearch').value;
+ const nameValue=$('inNameSearch').value;
+ populateCandidateSelect('inFinalSelect',partValue,nameValue);
+
  $('inItemId').value='';
  $('inPart').value='';
  $('inName').value='';
  $('inCategory').value='';
  $('inCurrentStock').value='';
- $('inLoc').innerHTML='';
+ $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
  renderMovementItemPreview('in',null);
 
- const p=norm($('inPartSearch').value);
- const n=norm($('inNameSearch').value);
- const exact=list.filter(x=>
-   (p && norm(x.part_no)===p) ||
-   (n && norm(x.item_name)===n)
- );
- const target=exact.length===1?exact[0]:(list.length===1?list[0]:null);
+ const target=resolveRegisteredItem(partValue,nameValue);
  if(target){
    $('inFinalSelect').value=target.id;
    selectInboundItem();
+   $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
+ }else{
+   $('inMsg').textContent='⚠️ 검색 결과에서 최종 품목을 선택하세요.';
  }
 }
 $('inPartSearch').oninput=fillInboundCandidates;
@@ -902,11 +927,18 @@ function selectInboundItem(){
 $('inFinalSelect').onchange=selectInboundItem;
 
 $('inSave').onclick=async()=>{
- const x=items.find(v=>v.id===$('inItemId').value);
+ let x=items.find(v=>v.id===$('inItemId').value);
+ if(!x){
+   x=resolveRegisteredItem($('inPartSearch').value,$('inNameSearch').value);
+   if(x){
+     $('inFinalSelect').value=x.id;
+     selectInboundItem();
+   }
+ }
  const qty=Number($('inQty').value);
  const mode=$('inLocationMode').value;
 
- if(!x){$('inMsg').textContent='⚠️ 등록된 품번 또는 품명을 선택하세요.';return}
+ if(!x){$('inMsg').textContent='⚠️ 등록된 품목과 정확히 일치하지 않습니다. 품번 또는 품명을 다시 확인하세요.';return}
  if(!qty||qty<=0){$('inMsg').textContent='⚠️ 입고수량을 입력하세요.';return}
  if(mode==='existing' && !$('inLoc').value){
    $('inMsg').textContent='⚠️ 기존 자재위치를 선택하세요.';
