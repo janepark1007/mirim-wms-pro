@@ -92,6 +92,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   #rememberLogin{width:22px!important;height:22px!important}
 }
 
+
+#inPhotoEditBtn{width:auto;min-width:150px}
+@media(max-width:720px){
+  #inPhotoEditBtn{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -273,6 +279,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <div><small>품명</small><strong id="inNameText">-</strong></div>
           <div><small>자재구분</small><strong id="inCategoryText">-</strong></div>
           <div><small>현재 총수량</small><strong id="inStockText">-</strong></div>
+          <div style="grid-column:1/-1">
+            <small>품목 사진</small>
+            <button id="inPhotoEditBtn" type="button" class="secondary">📷 사진 추가·변경</button>
+            <input id="inPhotoEditFile" type="file" accept="image/*" capture="environment" class="hidden">
+            <div id="inPhotoEditMsg" class="muted" style="margin-top:6px"></div>
+          </div>
         </div>
       </div>
 
@@ -1585,6 +1597,23 @@ async function fillInboundCandidates(){
  });
 });
 
+
+async function imageFileToDataUrl(file){
+ const im=new Image();
+ im.src=URL.createObjectURL(file);
+ await im.decode();
+
+ const canvas=document.createElement('canvas');
+ const max=800;
+ const scale=Math.min(1,max/Math.max(im.width,im.height));
+ canvas.width=Math.round(im.width*scale);
+ canvas.height=Math.round(im.height*scale);
+ canvas.getContext('2d').drawImage(im,0,0,canvas.width,canvas.height);
+
+ URL.revokeObjectURL(im.src);
+ return canvas.toDataURL('image/jpeg',0.72);
+}
+
 function renderMovementItemPreview(prefix,found){
  const preview=$(prefix+'ItemPreview');
  if(!preview) return;
@@ -1682,6 +1711,66 @@ function selectInboundItem(){
  renderMovementLocations('inLocationInfo',found);
  renderMovementItemPreview('in',found);
 }
+
+$('inPhotoEditBtn').onclick=()=>{
+ const itemId=$('inItemId').value;
+ if(!itemId){
+   $('inPhotoEditMsg').textContent='⚠️ 품목을 먼저 선택하세요.';
+   return;
+ }
+ $('inPhotoEditFile').click();
+};
+
+$('inPhotoEditFile').onchange=async e=>{
+ const file=e.target.files?.[0];
+ if(!file) return;
+
+ const item=items.find(x=>String(x.id)===String($('inItemId').value));
+ if(!item){
+   $('inPhotoEditMsg').textContent='⚠️ 선택된 품목을 찾지 못했습니다.';
+   return;
+ }
+
+ $('inPhotoEditMsg').textContent='사진 저장 중...';
+
+ try{
+   const photoUrl=await imageFileToDataUrl(file);
+
+   const {error}=await db.rpc('admin_upsert_item',{
+     p_username:session.username,
+     p_password:session.password,
+     p_item_id:item.id,
+     p_part_no:item.part_no,
+     p_item_name:item.item_name,
+     p_category:item.category||'기타',
+     p_maker:item.maker||'',
+     p_specification:item.specification||'',
+     p_unit:item.unit||'EA',
+     p_min_stock:Number(item.min_stock||0),
+     p_note:item.note||'',
+     p_photo_url:photoUrl
+   });
+
+   if(error){
+     $('inPhotoEditMsg').textContent='❌ 사진 저장 실패: '+error.message;
+     return;
+   }
+
+   $('inPhotoEditMsg').textContent='✅ 사진 추가·변경 완료';
+   await loadAll();
+
+   const refreshed=items.find(x=>String(x.id)===String(item.id));
+   if(refreshed){
+     $('inFinalSelect').value=refreshed.id;
+     selectInboundItem();
+   }
+ }catch(error){
+   $('inPhotoEditMsg').textContent='❌ 사진 처리 실패: '+error.message;
+ }finally{
+   $('inPhotoEditFile').value='';
+ }
+};
+
 $('inFinalSelect').onchange=selectInboundItem;
 $('inReloadItems').onclick=async()=>{
  await loadAll();
