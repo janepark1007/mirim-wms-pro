@@ -39,6 +39,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 .search-priority-location .qty{font-size:22px;font-weight:900;color:var(--g);text-align:right}
 @media(max-width:720px){.search-priority-main{grid-template-columns:1fr}.search-priority-image{height:240px}.search-priority-info{grid-template-columns:1fr 1fr}.search-priority-total{grid-column:1/-1}.search-priority-location{grid-template-columns:40px 1fr}.search-priority-location .qty{grid-column:2;text-align:left}}
  table th,table td{padding:9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap} table th{background:#eef7f1}
+
+.search-chip{background:#eef2f6;border-radius:999px;padding:7px 11px;font-size:13px}
+.required-label::before{content:"*";color:#d92d20;font-weight:900;margin-right:5px}
+.required-field{background:#fff8e8!important;border-color:#f0b429!important}
+.required-field:focus{outline:3px solid #fde68a;border-color:#d97706!important}
+
 </style>
 </head>
 <body>
@@ -78,7 +84,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <section id="searchTab" class="tabpane">
     <div class="card">
-      <div class="label">품번 또는 품명 검색</div>
+      <div class="label required-label">품번 또는 품명 검색</div>
       <div class="row"><input id="searchQ" placeholder="품번·품명 일부 입력"><button id="searchBtn">검색</button></div>
     </div>
     <div id="searchResults"></div>
@@ -118,63 +124,74 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         </div>
       </div>
 
-      <div class="label" style="margin-top:14px">자재위치 *</div>
-      <select id="itemLocType">
-        <option value="1층 자재실">1층 자재실</option>
-        <option value="2층 자재실">2층 자재실</option>
-        <option value="생산">생산</option>
-      </select>
+      <div id="newItemPrimaryLocation">
+        <div class="ok" style="margin-top:14px">
+          새 품목의 최초 보관 위치입니다. 기존 품목에 위치를 더 추가할 때는 아래의 <b>추가 위치 등록</b>을 사용하세요.
+        </div>
+        <div class="label" style="margin-top:14px">자재위치 *</div>
+        <select id="itemLocType">
+          <option value="1층 자재실">1층 자재실</option>
+          <option value="2층 자재실">2층 자재실</option>
+          <option value="생산">생산</option>
+        </select>
 
-      <div id="itemWarehouseFields" style="margin-top:12px">
-        <div class="grid">
-          <div><div class="label">구역</div><select id="itemLocArea"></select></div>
-          <div><div class="label">단</div>
-            <select id="itemLocTier">
-              <option value="1">1단</option><option value="2">2단</option>
-              <option value="3">3단</option><option value="4">4단</option>
-            </select>
-          </div>
-          <div><div class="label">번호</div>
-            <select id="itemLocNumber">
-              <option value="">해당사항 없음</option>
-              <option value="001">001</option><option value="002">002</option>
-              <option value="003">003</option><option value="004">004</option>
-              <option value="005">005</option><option value="006">006</option>
-            </select>
-          </div>
-          <div><div class="label">노랑박스</div>
-            <select id="itemYellowBox">
-              <option value="">해당사항 없음</option>
-              <option value="A">A</option><option value="B">B</option>
-            </select>
-          </div>
-          <div><div class="label">상단·하단</div>
-            <select id="itemLocLevel">
-              <option value="">해당사항 없음</option>
-              <option value="상단">상단</option><option value="하단">하단</option>
-            </select>
+        <div id="itemWarehouseFields" style="margin-top:12px">
+          <div class="grid">
+            <div><div class="label">구역</div><select id="itemLocArea"></select></div>
+            <div><div class="label">단</div>
+                <select id="itemLocTier">
+                  <option value="1">1단</option><option value="2">2단</option>
+                  <option value="3">3단</option><option value="4">4단</option>
+                </select>
+            </div>
+            <div><div class="label">번호</div>
+                <select id="itemLocNumber">
+                  <option value="">해당사항 없음</option>
+                  <option value="001">001</option><option value="002">002</option>
+                  <option value="003">003</option><option value="004">004</option>
+                  <option value="005">005</option><option value="006">006</option>
+                </select>
+            </div>
+            <div><div class="label">노랑박스</div>
+                <select id="itemYellowBox">
+                  <option value="">해당사항 없음</option>
+                  <option value="A">A</option><option value="B">B</option>
+                </select>
+            </div>
+            <div><div class="label">상단·하단</div>
+                <select id="itemLocLevel">
+                  <option value="">해당사항 없음</option>
+                  <option value="상단">상단</option><option value="하단">하단</option>
+                </select>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="itemProductionFields" class="hidden" style="margin-top:12px">
-        <div class="grid">
-          <div>
-            <div class="label">생산 D라인</div>
-            <select id="itemProdLine">
-              <option value="D-1">D-1</option><option value="D-2">D-2</option>
-              <option value="D-3">D-3</option><option value="D-4">D-4</option>
-              <option value="D-5">D-5</option><option value="D-6">D-6</option>
-            </select>
-          </div>
-          <div>
-            <div class="label">서랍번호</div>
-            <select id="itemProdDrawer"></select>
+        <div id="itemProductionFields" class="hidden" style="margin-top:12px">
+          <div class="grid">
+            <div>
+                <div class="label">생산 D라인</div>
+                <select id="itemProdLine">
+                  <option value="D-1">D-1</option><option value="D-2">D-2</option>
+                  <option value="D-3">D-3</option><option value="D-4">D-4</option>
+                  <option value="D-5">D-5</option><option value="D-6">D-6</option>
+                </select>
+            </div>
+            <div>
+                <div class="label">서랍번호</div>
+                <select id="itemProdDrawer"></select>
+            </div>
           </div>
         </div>
+
+        <input id="itemLocationCode" readonly placeholder="위치를 선택하면 자동 생성됩니다." style="margin-top:12px">
+
       </div>
 
-      <input id="itemLocationCode" readonly placeholder="위치를 선택하면 자동 생성됩니다." style="margin-top:12px">
+      <div id="existingItemLocationGuide" class="hidden bad" style="margin-top:14px">
+        기존 품목 수정 중입니다. 위쪽 기본 위치는 다시 입력하지 않습니다.
+        아래 <b>위치 등록·변경</b>에서 현재 위치를 확인하거나 추가·변경하세요.
+      </div>
 
       <div class="grid" style="margin-top:12px">
         <div>
@@ -205,7 +222,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
     <div class="card">
       <h2>위치 등록·변경</h2>
-      <div id="selectedItemForLocation" class="ok">위에서 기존 품목을 선택하거나 새 품목을 저장하세요.</div>
+      <div id="selectedItemForLocation" class="ok">선택 품목 없음 — 위의 ‘기존 품목 수정’에서 품목을 선택하거나 새 품목을 먼저 저장하세요.</div>
       <input id="locItem" type="hidden">
 
       <div class="label" style="margin-top:12px">기존 위치 선택</div>
@@ -289,16 +306,16 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <div class="grid">
         <div>
-          <div class="label">품번 검색</div>
+          <div class="label required-label">품번 검색</div>
           <input id="inPartSearch" placeholder="품번 전체 또는 일부 입력">
         </div>
         <div>
-          <div class="label">품명 검색</div>
+          <div class="label required-label">품명 검색</div>
           <input id="inNameSearch" placeholder="품명 전체 또는 일부 입력">
         </div>
       </div>
 
-      <div class="label" style="margin-top:12px">최종 품목 선택 *</div>
+      <div class="label required-label" style="margin-top:12px">최종 품목 선택</div>
       <select id="inFinalSelect">
         <option value="">품번 또는 품명을 입력하면 후보가 표시됩니다.</option>
       </select>
@@ -311,8 +328,14 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <input id="inCurrentStock" readonly placeholder="현재고">
       </div>
 
-      <div class="label" style="margin-top:12px">입고 위치 *</div>
-      <select id="inLoc"></select>
+      <div class="label" style="margin-top:12px">현재 등록 위치 정보</div>
+      <div id="inLocationInfo" class="muted">품목을 선택하면 모든 위치와 수량이 표시됩니다.</div>
+
+      <div class="label" style="margin-top:12px">입고 위치 (선택)</div>
+      <select id="inLoc">
+        <option value="">미정 · 입고대기 위치로 저장</option>
+      </select>
+      <div class="muted">아직 어디에 둘지 모르면 선택하지 않아도 됩니다.</div>
 
       <div class="grid" style="margin-top:12px">
         <input id="inQty" type="number" min="1" placeholder="입고수량 *">
@@ -330,7 +353,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <p><span class="step">STEP 1</span><b>출고 담당자 선택(필수)</b></p>
       <select id="handler"></select>
       <button id="handlerNextBtn" type="button" style="margin-top:10px">다음: 품목 선택</button>
-      <div id="handlerMsg" class="muted" style="margin-top:8px">담당자 이름만 선택하면 됩니다.</div>
+      <div id="handlerMsg" class="muted" style="margin-top:8px">담당자 이름을 선택하면 다음 단계가 열립니다.</div>
     </div>
 
     <div id="outStep2" class="card" style="opacity:.45;pointer-events:none">
@@ -338,16 +361,16 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <div class="grid">
         <div>
-          <div class="label">품번 검색</div>
+          <div class="label required-label">품번 검색</div>
           <input id="outPartSearch" placeholder="품번 전체 또는 일부 입력">
         </div>
         <div>
-          <div class="label">품명 검색</div>
+          <div class="label required-label">품명 검색</div>
           <input id="outNameSearch" placeholder="품명 전체 또는 일부 입력">
         </div>
       </div>
 
-      <div class="label" style="margin-top:12px">최종 품목 선택 *</div>
+      <div class="label required-label" style="margin-top:12px">최종 품목 선택</div>
       <select id="outFinalSelect">
         <option value="">품번 또는 품명을 입력하면 후보가 표시됩니다.</option>
       </select>
@@ -360,7 +383,10 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <input id="outCurrentStock" readonly placeholder="현재고">
       </div>
 
-      <div class="label" style="margin-top:12px">출고 위치 *</div>
+      <div class="label" style="margin-top:12px">현재 등록 위치 정보</div>
+      <div id="outLocationInfo" class="muted">품목을 선택하면 모든 위치와 수량이 표시됩니다.</div>
+
+      <div class="label required-label" style="margin-top:12px">출고 위치</div>
       <select id="outLoc"></select>
 
       <input id="outQty" type="number" min="1" placeholder="출고수량 *" style="margin-top:10px">
@@ -443,7 +469,24 @@ if(!cfg.url||!cfg.publishableKey||cfg.url.includes('YOUR_')) alert('config.js �
 const db=supabase.createClient(cfg.url,cfg.publishableKey);
 let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, photoData=null;
 
+const DEFAULT_HANDLERS=[
+  '미림대표님','정부장님','박부장님','이연주부장님','김부장님',
+  '최순정대리님','엑셀-조영애','김미화대리님','신대리님','유차장님',
+  '이천희팀장님','이과장님','압착','엑셀-수정','엑셀-매화'
+].map((display_name,i)=>({id:`default-${i+1}`,display_name,sort_order:i+1}));
+
+setTimeout(markRequiredFields,0);
+
+
 const $=id=>document.getElementById(id);
+function markRequiredFields(){
+  const ids=['searchQ', 'inPartSearch', 'inNameSearch', 'inFinalSelect', 'inQty', 'handler', 'outPartSearch', 'outNameSearch', 'outFinalSelect', 'outLoc', 'outQty', 'partNo', 'itemName', 'category', 'minStock'];
+  ids.forEach(id=>{
+    const el=$(id);
+    if(el) el.classList.add('required-field');
+  });
+}
+
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const norm=v=>String(v||'').toLowerCase().replace(/\s+/g,'').trim();
 const total=x=>(x.item_locations||[]).reduce((s,l)=>s+Number(l.qty||0),0);
@@ -473,7 +516,7 @@ async function loadAll(){
   db.rpc('list_material_categories'),
   db.rpc('list_material_handlers')
  ]);
- items=i||[];categories=c||[];handlers=h||[];
+ items=i||[];categories=c||[];handlers=(h&&h.length)?h:DEFAULT_HANDLERS;
  $('category').innerHTML=categories.map(x=>`<option>${esc(x.name)}</option>`).join('');
  $('catList').innerHTML=categories.map(x=>`<span class="badge">${esc(x.name)}</span>`).join('');
  const opt=items.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(x.item_name)}</option>`).join('');
@@ -482,12 +525,13 @@ async function loadAll(){
  $('inOptions').innerHTML=searchOptions;
  $('outOptions').innerHTML=searchOptions;
  const previousHandler=$('handler').value;
- $('handler').innerHTML='<option value="">담당자 선택 *</option>'+handlers.map(x=>`<option value="${x.id}">${esc(x.display_name)}</option>`).join('');
+ $('handler').innerHTML='<option value="">출고 담당자 이름을 선택하세요 *</option>'+handlers.map(x=>`<option value="${x.id}">${esc(x.display_name)}</option>`).join('');
  if(previousHandler && handlers.some(h=>h.id===previousHandler)){
    $('handler').value=previousHandler;
  }
  selectHandler(false);
  renderSearch(items);
+ markRequiredFields();
 }
 function renderSearch(list){
  $('searchResults').innerHTML=list.length?list.map(x=>{
@@ -553,6 +597,8 @@ function clearItemForm(){
  $('partNo').readOnly=false;
  $('saveItemBtn').textContent='품목 저장';
  $('editModeMsg').textContent='새 품목 등록 모드입니다.';
+ $('newItemPrimaryLocation').classList.remove('hidden');
+ $('existingItemLocationGuide').classList.add('hidden');
  buildItemLocationCode();
 }
 
@@ -561,7 +607,7 @@ function updateSelectedItemLocationPanel(itemId){
  $('locItem').value=x?.id||'';
  $('selectedItemForLocation').innerHTML=x
    ? `<b>${esc(x.part_no)} · ${esc(x.item_name)}</b>`
-   : '위에서 기존 품목을 선택하거나 새 품목을 저장하세요.';
+   : '선택 품목 없음 — 위의 ‘기존 품목 수정’에서 품목을 선택하거나 새 품목을 먼저 저장하세요.';
 
  const locs=x?.item_locations||[];
  $('editLocationSelect').innerHTML='<option value="">새 위치 추가</option>'+
@@ -591,6 +637,8 @@ function loadItemForEdit(){
  $('partNo').readOnly=true;
  $('saveItemBtn').textContent='품목 수정 저장';
  $('editModeMsg').textContent=`수정 중: ${x.part_no} · ${x.item_name}`;
+ $('newItemPrimaryLocation').classList.add('hidden');
+ $('existingItemLocationGuide').classList.remove('hidden');
  updateSelectedItemLocationPanel(x.id);
 
  const loc=(x.item_locations||[])[0];
@@ -869,16 +917,37 @@ function populateCandidateSelect(selectId,partValue,nameValue){
 }
 
 function fillInboundCandidates(){
- populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
+ const list=populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
  $('inItemId').value='';
  $('inPart').value='';
  $('inName').value='';
  $('inCategory').value='';
  $('inCurrentStock').value='';
  $('inLoc').innerHTML='';
+
+ const p=norm($('inPartSearch').value);
+ const n=norm($('inNameSearch').value);
+ const exact=list.filter(x=>
+   (p && norm(x.part_no)===p) ||
+   (n && norm(x.item_name)===n)
+ );
+ const target=exact.length===1?exact[0]:(list.length===1?list[0]:null);
+ if(target){
+   $('inFinalSelect').value=target.id;
+   selectInboundItem();
+ }
 }
 $('inPartSearch').oninput=fillInboundCandidates;
 $('inNameSearch').oninput=fillInboundCandidates;
+
+function renderMovementLocations(targetId,found){
+ const locs=found?.item_locations||[];
+ $(targetId).innerHTML=found
+   ? (locs.length
+      ? locs.map(l=>`<div class="loc">📍 <b>${esc(l.location_display)}</b> · ${l.qty} ${esc(found.unit)}</div>`).join('')
+      : '<div class="loc">⚠️ 등록된 위치 없음</div>')
+   : '품목을 선택하면 모든 위치와 수량이 표시됩니다.';
+}
 
 function selectInboundItem(){
  const found=items.find(x=>x.id===$('inFinalSelect').value)||null;
@@ -887,12 +956,13 @@ function selectInboundItem(){
  $('inName').value=found?.item_name||'';
  $('inCategory').value=found?.category||'';
  $('inCurrentStock').value=found?`${total(found)} ${found.unit}`:'';
- $('inLoc').innerHTML=(found?.item_locations||[]).map(l=>
-   `<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`
- ).join('');
- if(found && !(found.item_locations||[]).length){
-   $('inLoc').innerHTML='<option value="">⚠️ 등록된 위치 없음</option>';
- }
+
+ $('inLoc').innerHTML='<option value="">미정 · 입고대기 위치로 저장</option>'+
+   (found?.item_locations||[]).map(l=>
+    `<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`
+   ).join('');
+
+ renderMovementLocations('inLocationInfo',found);
 }
 $('inFinalSelect').onchange=selectInboundItem;
 
@@ -900,16 +970,24 @@ $('inSave').onclick=async()=>{
  const x=items.find(v=>v.id===$('inItemId').value);
  const n=Number($('inQty').value);
  if(!x){$('inMsg').textContent='⚠️ 최종 품목을 선택하세요.';return}
- if(!$('inLoc').value){$('inMsg').textContent='⚠️ 입고 위치를 선택하세요.';return}
  if(!n||n<=0){$('inMsg').textContent='⚠️ 입고수량을 입력하세요.';return}
 
- const {error}=await db.rpc('admin_apply_movement',{
-   p_username:session.username,p_password:session.password,p_type:'IN',
-   p_item_id:x.id,p_location_id:$('inLoc').value,p_qty:n,
+ const {error}=await db.rpc('admin_apply_inbound_optional',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:x.id,
+   p_location_id:$('inLoc').value||null,
+   p_qty:n,
    p_actor_name:session.displayName,
    p_note:[$('inPartner').value,$('inNote').value].filter(Boolean).join(' / ')
  });
- $('inMsg').textContent=error?'❌ '+error.message:'✅ 입고 저장 완료';
+
+ $('inMsg').textContent=error
+   ?'❌ '+error.message
+   :($('inLoc').value
+      ?'✅ 선택 위치로 입고 저장 완료'
+      :'✅ 입고대기 위치로 저장 완료 — 보관 위치가 정해지면 위치 변경하세요.');
+
  if(!error){
    $('inQty').value='';$('inPartner').value='';$('inNote').value='';
    await loadAll();selectInboundItem();
@@ -941,13 +1019,25 @@ $('handlerNextBtn').onclick=()=>{
 };
 
 function fillOutboundCandidates(){
- populateCandidateSelect('outFinalSelect',$('outPartSearch').value,$('outNameSearch').value);
+ const list=populateCandidateSelect('outFinalSelect',$('outPartSearch').value,$('outNameSearch').value);
  $('outItemId').value='';
  $('outPart').value='';
  $('outName').value='';
  $('outCategory').value='';
  $('outCurrentStock').value='';
  $('outLoc').innerHTML='';
+
+ const p=norm($('outPartSearch').value);
+ const n=norm($('outNameSearch').value);
+ const exact=list.filter(x=>
+   (p && norm(x.part_no)===p) ||
+   (n && norm(x.item_name)===n)
+ );
+ const target=exact.length===1?exact[0]:(list.length===1?list[0]:null);
+ if(target){
+   $('outFinalSelect').value=target.id;
+   selectOutboundItem();
+ }
 }
 $('outPartSearch').oninput=fillOutboundCandidates;
 $('outNameSearch').oninput=fillOutboundCandidates;
@@ -965,6 +1055,7 @@ function selectOutboundItem(){
  if(found && !(found.item_locations||[]).length){
    $('outLoc').innerHTML='<option value="">⚠️ 등록된 위치 없음</option>';
  }
+ renderMovementLocations('outLocationInfo',found);
 }
 $('outFinalSelect').onchange=selectOutboundItem;
 
