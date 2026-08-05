@@ -64,6 +64,14 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 .stock-check-btn{margin-top:10px;width:auto;padding:9px 13px}
 @media(max-width:720px){.activity-dates{grid-template-columns:1fr 1fr}}
 
+
+@media print{
+  body>*{display:none!important}
+  #inventoryPrintArea{display:block!important;position:absolute;left:0;top:0;width:100%;padding:0}
+  #inventoryPrintArea table{width:100%;border-collapse:collapse;font-size:10px}
+  #inventoryPrintArea th,#inventoryPrintArea td{border:1px solid #333;padding:5px}
+  #inventoryPrintArea h1{font-size:18px;margin:0 0 10px}
+}
 </style>
 </head>
 <body>
@@ -379,7 +387,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       </div>
 
       <div class="label" style="margin-top:12px">기본·자재위치 정보</div>
-      <div id="outLocationInfo" class="muted">품목을 선택하면 기본 위치와 자재위치의 수량이 모두 표시됩니다.</div>
+      <div id="outLocationInfo" class="muted">품목을 선택하면 현재 등록된 모든 자재위치와 위치별 수량이 표시됩니다.</div>
 
       <div class="label required-label" style="margin-top:12px">출고 위치</div>
       <select id="outLoc"></select>
@@ -401,6 +409,19 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   </section>
 
   <section id="statsTab" class="tabpane hidden">
+    <div class="card">
+      <h2>창고 재고조사표</h2>
+      <div class="muted">
+        등록된 모든 품목을 품번·품명·자재위치·전산수량 기준으로 정리합니다.
+        출력 후 실제수량과 차이를 손으로 기록할 수 있습니다.
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button id="exportInventoryCheckBtn">재고조사표 엑셀 저장</button>
+        <button id="printInventoryCheckBtn" class="secondary">재고조사표 인쇄</button>
+      </div>
+      <div id="inventoryCheckMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
     <div class="card">
       <h2>월말·연말 자재 통계</h2>
       <div class="grid">
@@ -1297,7 +1318,7 @@ async function fillOutboundCandidates(){
 
  if(target){
    $('outFinalSelect').value=target.id;
-   selectOutboundItem();
+   await selectOutboundItem();
    $('outMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
  }else if(partValue || nameValue){
    $('outMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
@@ -1311,23 +1332,61 @@ async function fillOutboundCandidates(){
  });
 });
 
-function selectOutboundItem(){
- const found=items.find(x=>x.id===$('outFinalSelect').value)||null;
+async function selectOutboundItem(){
+ const itemId=$('outFinalSelect').value;
+ let found=items.find(x=>String(x.id)===String(itemId))||null;
+
  $('outItemId').value=found?.id||'';
  $('outPart').value=found?.part_no||'';
  $('outName').value=found?.item_name||'';
  $('outCategory').value=found?.category||'';
  $('outCurrentStock').value=found?`${total(found)} ${found.unit}`:'';
- $('outLoc').innerHTML=(found?.item_locations||[]).map(l=>
-   `<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`
- ).join('');
- if(found && !(found.item_locations||[]).length){
-   $('outLoc').innerHTML='<option value="">⚠️ 등록된 위치 없음</option>';
+
+ if(!found){
+   $('outLoc').innerHTML='<option value="">⚠️ 품목을 먼저 선택하세요.</option>';
+   renderMovementLocations('outLocationInfo',null);
+   renderMovementItemPreview('out',null);
+   return;
  }
- renderMovementLocations('outLocationInfo',found);
+
+ // 항상 Supabase에서 현재 위치를 다시 불러와 최신 위치·수량을 표시
+ const {data:locations,error:locError}=await db
+   .from('item_locations')
+   .select('id,item_id,location_code,location_display,qty')
+   .eq('item_id',found.id)
+   .order('location_display');
+
+ if(!locError){
+   found.item_locations=locations||[];
+   const idx=items.findIndex(x=>String(x.id)===String(found.id));
+   if(idx>=0) items[idx]=found;
+ }
+
+ const locs=found.item_locations||[];
+ $('outCurrentStock').value=`${total(found)} ${found.unit}`;
+
+ $('outLoc').innerHTML=locs.length
+   ? '<option value="">출고할 위치를 선택하세요.</option>'+
+     locs.map(l=>`<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`).join('')
+   : '<option value="">⚠️ 등록된 자재위치 없음</option>';
+
+ $('outLocationInfo').innerHTML=locs.length
+   ? locs.map((l,i)=>`
+       <div class="loc">
+         📍 <b>자재위치 ${i+1}: ${esc(l.location_display)}</b>
+         · 현재 ${l.qty} ${esc(found.unit)}
+       </div>`).join('')
+   : '<div class="loc">⚠️ 등록된 자재위치가 없습니다. 먼저 입고에서 위치를 등록하세요.</div>';
+
  renderMovementItemPreview('out',found);
+
+ if(locError){
+   $('outMsg').textContent='⚠️ 자재위치 조회 실패: '+locError.message;
+ }else if(locs.length){
+   $('outMsg').textContent=`✅ 현재 자재위치 ${locs.length}곳 확인 완료`;
+ }
 }
-$('outFinalSelect').onchange=selectOutboundItem;
+$('outFinalSelect').onchange=()=>selectOutboundItem();
 $('outReloadItems').onclick=async()=>{
  await loadAll();
  await fillOutboundCandidates();
@@ -1456,6 +1515,124 @@ $('exportExcelBtn').onclick=async()=>{
  $('reportMsg').textContent='✅ 엑셀 파일 저장 완료';
 };
 
+
+function inventoryCheckRows(){
+ const rows=[];
+ items.forEach(item=>{
+   const locs=item.item_locations||[];
+   if(locs.length){
+     locs.forEach((loc,idx)=>{
+       rows.push({
+         '순번':rows.length+1,
+         '품번':item.part_no||'',
+         '품명':item.item_name||'',
+         '자재구분':item.category||'기타',
+         '자재위치':loc.location_display||loc.location_code||'',
+         '전산수량':Number(loc.qty||0),
+         '실제수량':'',
+         '차이수량':'',
+         '확인자':'',
+         '확인일':'',
+         '비고':''
+       });
+     });
+   }else{
+     rows.push({
+       '순번':rows.length+1,
+       '품번':item.part_no||'',
+       '품명':item.item_name||'',
+       '자재구분':item.category||'기타',
+       '자재위치':'⚠️ 위치 미등록',
+       '전산수량':0,
+       '실제수량':'',
+       '차이수량':'',
+       '확인자':'',
+       '확인일':'',
+       '비고':''
+     });
+   }
+ });
+ return rows.sort((a,b)=>
+   String(a.자재위치).localeCompare(String(b.자재위치),'ko') ||
+   String(a.품번).localeCompare(String(b.품번),'ko')
+ ).map((r,i)=>({...r,'순번':i+1}));
+}
+
+$('exportInventoryCheckBtn').onclick=()=>{
+ const rows=inventoryCheckRows();
+ if(!rows.length){
+   $('inventoryCheckMsg').textContent='⚠️ 등록된 품목이 없습니다.';
+   return;
+ }
+
+ const wb=XLSX.utils.book_new();
+ const ws=XLSX.utils.json_to_sheet(rows);
+
+ ws['!cols']=[
+   {wch:7},{wch:18},{wch:24},{wch:14},{wch:34},
+   {wch:12},{wch:12},{wch:12},{wch:12},{wch:14},{wch:24}
+ ];
+ ws['!freeze']={xSplit:0,ySplit:1};
+ ws['!autofilter']={ref:`A1:K${rows.length+1}`};
+
+ XLSX.utils.book_append_sheet(wb,ws,'창고 재고조사표');
+
+ const summary=[
+   ['미림테크놀러지 창고 재고조사표'],
+   ['출력일',todayKST()],
+   ['총 등록 품목 수',items.length],
+   ['총 위치 행 수',rows.length],
+   [],
+   ['사용방법'],
+   ['1','전산수량을 기준으로 창고 실물을 확인합니다.'],
+   ['2','실제수량과 차이수량을 기록합니다.'],
+   ['3','확인자·확인일·비고를 작성합니다.']
+ ];
+ const guide=XLSX.utils.aoa_to_sheet(summary);
+ guide['!cols']=[{wch:18},{wch:55}];
+ XLSX.utils.book_append_sheet(wb,guide,'안내');
+
+ XLSX.writeFile(wb,`미림테크놀러지_창고재고조사표_${todayKST()}.xlsx`);
+ $('inventoryCheckMsg').textContent=`✅ 재고조사표 저장 완료 · ${items.length}종목 / ${rows.length}위치`;
+};
+
+$('printInventoryCheckBtn').onclick=()=>{
+ const rows=inventoryCheckRows();
+ if(!rows.length){
+   $('inventoryCheckMsg').textContent='⚠️ 등록된 품목이 없습니다.';
+   return;
+ }
+
+ $('inventoryPrintArea').innerHTML=`
+   <h1>미림테크놀러지 창고 재고조사표</h1>
+   <div style="margin-bottom:8px">출력일: ${todayKST()} · 총 ${items.length}종목 · ${rows.length}위치</div>
+   <table>
+     <thead>
+       <tr>
+         <th>순번</th><th>품번</th><th>품명</th><th>자재구분</th>
+         <th>자재위치</th><th>전산수량</th><th>실제수량</th>
+         <th>차이수량</th><th>확인자</th><th>확인일</th><th>비고</th>
+       </tr>
+     </thead>
+     <tbody>
+       ${rows.map(r=>`<tr>
+         <td>${r['순번']}</td>
+         <td>${esc(r['품번'])}</td>
+         <td>${esc(r['품명'])}</td>
+         <td>${esc(r['자재구분'])}</td>
+         <td>${esc(r['자재위치'])}</td>
+         <td>${r['전산수량']}</td>
+         <td></td><td></td><td></td><td></td><td></td>
+       </tr>`).join('')}
+     </tbody>
+   </table>`;
+
+ window.print();
+};
+
+
 db.channel('mirim-wms-live').on('postgres_changes',{event:'*',schema:'public',table:'items'},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'item_locations'},loadAll).subscribe();
 </script>
+
+<div id="inventoryPrintArea" style="display:none"></div>
 </body></html>
