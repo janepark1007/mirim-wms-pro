@@ -72,6 +72,20 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   #inventoryPrintArea th,#inventoryPrintArea td{border:1px solid #333;padding:5px}
   #inventoryPrintArea h1{font-size:18px;margin:0 0 10px}
 }
+
+.coop-notice{background:#fff8e8;border:1.5px solid #f0b429;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 4px 14px #7a5b0014}
+.coop-notice-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.coop-notice-title{font-size:20px;font-weight:900;color:#8a4b00}
+.coop-notice-close{width:38px!important;min-width:38px!important;height:38px;padding:0!important;border-radius:50%;background:#fff;color:#8a4b00;border:1px solid #f0b429;font-size:20px;line-height:38px}
+.coop-notice-body{margin-top:10px;display:grid;gap:8px;font-size:15px;line-height:1.55}
+.coop-notice-item{background:#fff;border-radius:10px;padding:10px 12px;word-break:keep-all;overflow-wrap:anywhere}
+@media(max-width:720px){
+  .coop-notice{padding:13px;border-radius:14px}
+  .coop-notice-title{font-size:18px}
+  .coop-notice-body{font-size:14px}
+  .coop-notice-item{padding:9px 10px}
+}
+
 </style>
 </head>
 <body>
@@ -110,6 +124,20 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   </div>
 
   <section id="searchTab" class="tabpane">
+
+    <div id="cooperationNotice" class="coop-notice">
+      <div class="coop-notice-head">
+        <div class="coop-notice-title">📢 협조사항</div>
+        <button id="closeCooperationNotice" type="button" class="coop-notice-close" aria-label="협조사항 닫기">×</button>
+      </div>
+      <div class="coop-notice-body">
+        <div class="coop-notice-item">📝 입고·출고 시 창고에 있는 노트에 꼭 기재해 주세요.</div>
+        <div class="coop-notice-item">📱 노트에 바로 기재하지 못한 경우 자재 담당자에게 메모 또는 문자로 알려 주세요.</div>
+        <div class="coop-notice-item">📍 자재 위치를 변경한 경우에도 반드시 자재 담당자에게 알려 주세요.</div>
+        <div class="coop-notice-item">⚠️ 위치나 수량이 다르면 임의로 수정하지 말고 자재 담당자에게 확인해 주세요.</div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
         <h2 style="margin:0">자재 검색</h2>
@@ -129,6 +157,16 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <button id="deleteItemXBtn" type="button" class="danger"
           style="width:44px;height:44px;padding:0;border-radius:50%;font-size:22px;font-weight:900"
           title="선택 품목 완전삭제">×</button>
+        <button id="forceDeleteItemBtn" type="button"
+          style="width:auto;min-width:150px;height:44px;padding:0 14px;border-radius:12px;
+                 background:#7a271a;color:#fff;font-size:14px;font-weight:900"
+          title="테스트 품목 강제삭제">🚨 테스트 강제삭제</button>
+      </div>
+
+      
+      <div class="bad" style="margin:8px 0 12px">
+        🚨 테스트 강제삭제는 해당 품목의 재고·위치·입고·출고 이력까지 모두 삭제합니다.
+        실제 업무 품목에는 사용하지 마세요.
       </div>
 
       <div class="label">기존 품목 수정</div>
@@ -588,7 +626,14 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <input id="newHandlerOrder" type="number" min="0" placeholder="비우면 맨 아래">
         </div>
       </div>
-</section>
+
+      <button id="addHandlerBtn" style="margin-top:10px">담당자 추가</button>
+      <div id="handlerAdminMsg" class="muted" style="margin-top:8px"></div>
+
+      <div class="label" style="margin-top:16px">현재 출고 담당자</div>
+      <div id="handlerAdminList"></div>
+    </div>
+  </section>
 </section>
 </main>
 
@@ -611,7 +656,23 @@ setTimeout(markRequiredFields,0);
 setTimeout(setDefaultDates,0);
 
 
+
 const $=id=>document.getElementById(id);
+
+function setupCooperationNotice(){
+ const notice=$('cooperationNotice');
+ const closeBtn=$('closeCooperationNotice');
+ if(!notice || !closeBtn) return;
+
+ const hidden=sessionStorage.getItem('mirim_coop_notice_hidden')==='1';
+ notice.classList.toggle('hidden',hidden);
+
+ closeBtn.onclick=()=>{
+   notice.classList.add('hidden');
+   sessionStorage.setItem('mirim_coop_notice_hidden','1');
+ };
+}
+
 function todayKST(){
   return new Intl.DateTimeFormat('en-CA',{
     timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
@@ -673,7 +734,7 @@ async function login(){
  $('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
  $('who').innerHTML='<b>'+esc(session.displayName)+'</b> · '+(session.role==='admin'?'관리자':'검색 전용');
  document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',session.role!=='admin'));
- await loadAll(); switchTab('search');
+ setupCooperationNotice(); await loadAll(); switchTab('search');
 }
 $('loginBtn').onclick=login;$('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 $('logoutBtn').onclick=()=>location.reload();
@@ -726,6 +787,19 @@ async function loadAll(){
    {name:'후드'},{name:'전선'},{name:'PVC'},{name:'포장재'},{name:'기타'}
  ];
  handlers=(h&&h.length)?h:DEFAULT_HANDLERS;
+ if($('handlerAdminList')){
+   $('handlerAdminList').innerHTML=handlers.length
+     ? handlers.map((h,i)=>`
+       <div class="loc" style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px">
+         <div style="font-weight:900">${i+1}</div>
+         <div><b>${esc(h.display_name)}</b></div>
+         <button type="button" class="danger"
+           style="width:auto;padding:7px 10px"
+           onclick="archiveHandler('${h.id}','${esc(h.display_name).replaceAll("'","&#39;")}')">사용중지</button>
+       </div>`).join('')
+     : '<div class="muted">등록된 담당자가 없습니다.</div>';
+ }
+
  if($('quickCategory')){
    const previous=$('quickCategory').value;
    $('quickCategory').innerHTML='<option value="">전체 자재구분</option>'+
@@ -1169,6 +1243,55 @@ async function archiveHandler(id,name){
  $('handlerAdminMsg').textContent='✅ 담당자 사용중지 완료';
  await loadAll();
 }
+
+
+$('forceDeleteItemBtn').onclick=async()=>{
+ const item=getSelectedEditItem ? getSelectedEditItem() : selectedItemForDelete();
+
+ if(!item){
+   $('itemMsg').textContent='⚠️ 기존 품목 수정에서 강제삭제할 품목을 먼저 선택하세요.';
+   return;
+ }
+
+ const password=prompt(
+   `🚨 테스트 품목 강제삭제\n\n품번: ${item.part_no}\n품명: ${item.item_name}\n\n관리자 비밀번호를 입력하세요.`
+ );
+
+ if(password===null) return;
+ if(!password.trim()){
+   $('itemMsg').textContent='⚠️ 관리자 비밀번호를 입력하세요.';
+   return;
+ }
+
+ const confirmWord=prompt(
+   `이 작업은 재고·위치·입고·출고 이력까지 모두 삭제하며 복구할 수 없습니다.\n\n계속하려면 아래 문구를 정확히 입력하세요.\n\n강제삭제`
+ );
+
+ if(confirmWord!=='강제삭제'){
+   $('itemMsg').textContent='⚠️ 확인 문구가 일치하지 않아 강제삭제를 취소했습니다.';
+   return;
+ }
+
+ $('itemMsg').textContent='강제삭제 처리 중...';
+
+ const {error}=await db.rpc('admin_force_delete_item',{
+   p_username:session.username,
+   p_password:password.trim(),
+   p_item_id:item.id
+ });
+
+ if(error){
+   const message=String(error.message||'');
+   $('itemMsg').textContent=message.includes('ADMIN_AUTH_FAILED')
+     ?'❌ 관리자 비밀번호가 맞지 않습니다.'
+     :'❌ 강제삭제 실패: '+message;
+   return;
+ }
+
+ $('itemMsg').textContent='✅ 테스트 품목 강제삭제 완료';
+ await loadAll();
+ clearItemForm();
+};
 
 $('addCategoryBtn').onclick=async()=>{
  const {error}=await db.rpc('admin_add_category',{p_username:session.username,p_password:session.password,p_name:$('newCategory').value});
