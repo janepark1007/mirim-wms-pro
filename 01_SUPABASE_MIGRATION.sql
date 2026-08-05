@@ -1,280 +1,2296 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b7a43">
+<title>미림테크놀러지 자재·창고 관리 시스템</title>
+<style>
+:root{--g:#0b7a43;--g2:#0f9a55;--ink:#111827;--mut:#667085;--bg:#f3f6f9;--line:#d8e0e8;--red:#c9362b;--amber:#b7791f}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink)}
+header{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:8px 18px;position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:10px}.brand img{width:78px;height:48px;object-fit:contain}.brand strong{font-size:22px}.brand small{display:block;color:var(--mut)}
+main{max-width:1180px;margin:auto;padding:18px}.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 5px 18px #0f172a12}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(max-width:720px){header{height:auto}.brand strong{font-size:18px}.grid{grid-template-columns:1fr}.tabs{overflow:auto;flex-wrap:nowrap}.result{grid-template-columns:1fr}.photo,.noimg{height:220px}}
+input,select,textarea,button{width:100%;padding:13px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;background:#fff}
+textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-weight:800;cursor:pointer}.secondary{background:#eef2f6;color:#111}.danger{background:#b42318}
+.tabs{display:flex;gap:8px;margin-bottom:14px}.tab{width:auto;padding:12px 16px}.tab.active{background:var(--g)}.tab:not(.active){background:#e7edf3;color:#111}
+.hidden{display:none!important}.muted{color:var(--mut);font-size:13px}.ok{background:#ecfdf3;color:#067647;padding:11px;border-radius:12px}.bad{background:#fef3f2;color:#b42318;padding:11px;border-radius:12px}
+.result{display:grid;grid-template-columns:180px 1fr;gap:16px}.photo{width:100%;height:180px;object-fit:contain;border:1px solid var(--line);border-radius:14px;background:#fafafa}
+.noimg{height:180px;display:flex;align-items:center;justify-content:center;border:1px dashed #9aa6b2;border-radius:14px;color:#777}
+.loc{padding:10px;background:#eef7f1;border-radius:10px;margin-top:8px}.stock{font-size:23px;color:var(--g);font-weight:900}
+.loginwrap{min-height:calc(100vh - 72px);display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:center}
+@media(max-width:800px){.loginwrap{grid-template-columns:1fr}.intro{display:none}}
+.loginbox{max-width:520px;margin:auto}.logoLarge{width:220px;max-width:80%}.loginTitle{font-size:32px;margin:8px 0}.label{font-weight:800;margin:6px 0}.step{display:inline-block;background:var(--g);color:#fff;border-radius:7px;padding:5px 9px;margin-right:8px;font-size:13px}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef2f6;margin:3px}.toolbar{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.search-priority-card{background:#fff;border-radius:22px;padding:20px;margin-bottom:16px;box-shadow:0 8px 24px #0f172a12}
+.search-priority-main{display:grid;grid-template-columns:220px 1fr;gap:20px}
+.search-priority-image{width:100%;height:220px;object-fit:contain;border:1px solid var(--line);border-radius:18px;background:#fff}
+.search-priority-info{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.search-priority-box{background:#eef8f1;border-radius:14px;padding:14px}
+.search-priority-box small{color:var(--mut)}
+.search-priority-box strong{display:block;font-size:24px;margin-top:4px}
+.search-priority-total{background:linear-gradient(135deg,#0b7a43,#11a65c);color:#fff;border-radius:14px;padding:14px}
+.search-priority-total strong{display:block;font-size:30px;margin-top:4px}
+.search-priority-locations{margin-top:16px;display:grid;gap:10px}
+.search-priority-location{display:grid;grid-template-columns:46px 1fr auto;gap:12px;align-items:center;background:#f2faf5;border:1px solid #d8ebde;border-radius:14px;padding:14px}
+.search-priority-location .name{font-size:18px;font-weight:900}
+.search-priority-location .code{font-size:12px;color:var(--mut)}
+.search-priority-location .qty{font-size:22px;font-weight:900;color:var(--g);text-align:right}
+@media(max-width:720px){.search-priority-main{grid-template-columns:1fr}.search-priority-image{height:240px}.search-priority-info{grid-template-columns:1fr 1fr}.search-priority-total{grid-column:1/-1}.search-priority-location{grid-template-columns:40px 1fr}.search-priority-location .qty{grid-column:2;text-align:left}}
+ table th,table td{padding:9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap} table th{background:#eef7f1}
 
--- MIRIM TECHNOLOGY WMS V1 - production-ready extension for the existing Supabase project
--- Run once in Supabase SQL Editor.
--- This migration keeps the existing items/item_locations/stock_movements data.
+.search-chip{background:#eef2f6;border-radius:999px;padding:7px 11px;font-size:13px}
+.required-label::before{content:"*";color:#d92d20;font-weight:900;margin-right:5px}
+.required-field{background:#fff8e8!important;border-color:#f0b429!important}
+.required-field:focus{outline:3px solid #fde68a;border-color:#d97706!important}
 
-create extension if not exists pgcrypto;
 
--- 1) Existing items table extensions
-alter table public.items
-  add column if not exists specification text,
-  add column if not exists updated_at timestamptz not null default now();
+.movement-preview{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:start;margin-top:12px;padding:14px;background:#f4faf6;border:1px solid #d8ebde;border-radius:16px}
+.movement-preview img{width:150px;height:150px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:14px}
+.movement-preview .no-photo{width:150px;height:150px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed #9aa6b2;border-radius:14px;color:#777}
+.movement-preview .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.movement-preview .meta>div{background:#fff;border-radius:12px;padding:10px}
+.movement-preview .meta small{display:block;color:var(--mut);margin-bottom:3px}
+.movement-preview .meta strong{font-size:18px}
+@media(max-width:720px){.movement-preview{grid-template-columns:1fr}.movement-preview img,.movement-preview .no-photo{width:100%;height:220px}.movement-preview .meta{grid-template-columns:1fr 1fr}}
 
--- Allow administrator-defined categories.
-alter table public.items drop constraint if exists items_category_check;
 
--- 2) Categories
-create table if not exists public.material_categories (
-  id uuid primary key default gen_random_uuid(),
-  name text not null unique,
-  is_active boolean not null default true,
-  sort_order integer not null default 999,
-  created_at timestamptz not null default now()
-);
+.activity-dates{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:8px;margin-top:12px}
+.activity-date{background:#f7f9fb;border:1px solid var(--line);border-radius:12px;padding:10px}
+.activity-date small{display:block;color:var(--mut);margin-bottom:4px}
+.activity-date strong{font-size:15px}
+.disposal-warning{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff1f0;color:#b42318;font-weight:800}
+.stock-check-btn{margin-top:10px;width:auto;padding:9px 13px}
+@media(max-width:720px){.activity-dates{grid-template-columns:1fr 1fr}}
 
-insert into public.material_categories(name, sort_order)
-values
-('하우징',1),('하팅',2),('커넥터',3),('터미널',4),('후드',5),
-('전선',6),('PVC',7),('포장재',8),('나사',9),('타이',10),('기타',99)
-on conflict (name) do nothing;
 
--- 3) Login accounts
-create table if not exists public.app_users (
-  id uuid primary key default gen_random_uuid(),
-  username text not null unique,
-  password_hash text not null,
-  role text not null check (role in ('admin','production')),
-  display_name text not null,
-  is_active boolean not null default true,
-  created_at timestamptz not null default now()
-);
+@media print{
+  body>*{display:none!important}
+  #inventoryPrintArea{display:block!important;position:absolute;left:0;top:0;width:100%;padding:0}
+  #inventoryPrintArea table{width:100%;border-collapse:collapse;font-size:10px}
+  #inventoryPrintArea th,#inventoryPrintArea td{border:1px solid #333;padding:5px}
+  #inventoryPrintArea h1{font-size:18px;margin:0 0 10px}
+}
 
-insert into public.app_users(username,password_hash,role,display_name)
-values
-('admin', crypt('5859', gen_salt('bf')), 'admin', '주관리자'),
-('mirim', crypt('1234', gen_salt('bf')), 'production', '생산 PC')
-on conflict (username) do update
-set role=excluded.role, display_name=excluded.display_name, is_active=true;
+.coop-notice{background:#fff8e8;border:1.5px solid #f0b429;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 4px 14px #7a5b0014}
+.coop-notice-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.coop-notice-title{font-size:20px;font-weight:900;color:#8a4b00}
+.coop-notice-close{width:38px!important;min-width:38px!important;height:38px;padding:0!important;border-radius:50%;background:#fff;color:#8a4b00;border:1px solid #f0b429;font-size:20px;line-height:38px}
+.coop-notice-body{margin-top:10px;display:grid;gap:8px;font-size:15px;line-height:1.55}
+.coop-notice-item{background:#fff;border-radius:10px;padding:10px 12px;word-break:keep-all;overflow-wrap:anywhere}
+@media(max-width:720px){
+  .coop-notice{padding:13px;border-radius:14px}
+  .coop-notice-title{font-size:18px}
+  .coop-notice-body{font-size:14px}
+  .coop-notice-item{padding:9px 10px}
+}
 
--- 4) Outbound responsible people
-create table if not exists public.material_handlers (
-  id uuid primary key default gen_random_uuid(),
-  display_name text not null unique,
-  login_no_hash text not null,
-  is_active boolean not null default true,
-  sort_order integer not null default 999,
-  created_at timestamptz not null default now()
-);
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
+</header>
+<main>
+<section id="loginView" class="loginwrap">
+  <div class="intro card">
+    <img class="logoLarge" src="./mirim-logo.png" alt="MIRIM">
+    <h1>미림테크놀러지</h1>
+    <h2 style="color:var(--g)">자재·창고 관리 시스템</h2>
+    <p>정확한 자재 정보와 실시간 재고 관리로<br>효율적인 자재 관리와 생산 활동을 지원합니다.</p>
+    <div><span class="badge">정확한 자재 관리</span><span class="badge">체계적인 위치 관리</span><span class="badge">실시간 재고 확인</span></div>
+  </div>
+  <div class="card loginbox">
+    <h1 class="loginTitle">로그인</h1>
+    <p class="muted">관리자 또는 생산 PC 계정으로 로그인하세요.</p>
+    <input id="loginId" placeholder="아이디"><br><br>
+    <input id="loginPw" type="password" inputmode="numeric" placeholder="비밀번호"><br><br>
+    <button id="loginBtn">로그인</button>
+    <div id="loginMsg" class="muted" style="margin-top:10px"></div>
+  </div>
+</section>
 
-insert into public.material_handlers(display_name,login_no_hash,sort_order)
-values
-('이혜정팀장님', crypt('0', gen_salt('bf')), 0),
-('미림대표님', crypt('1', gen_salt('bf')), 1),
-('정부장님', crypt('2', gen_salt('bf')), 2),
-('박부장님', crypt('3', gen_salt('bf')), 3),
-('이연주부장님', crypt('4', gen_salt('bf')), 4),
-('김부장님', crypt('5', gen_salt('bf')), 5),
-('최순정대리님', crypt('6', gen_salt('bf')), 6),
-('엑셀-조영애', crypt('7', gen_salt('bf')), 7),
-('김미화대리님', crypt('8', gen_salt('bf')), 8),
-('신대리님', crypt('9', gen_salt('bf')), 9),
-('유차장님', crypt('10', gen_salt('bf')), 10),
-('이천희팀장님', crypt('11', gen_salt('bf')), 11),
-('이과장님', crypt('12', gen_salt('bf')), 12),
-('압착', crypt('13', gen_salt('bf')), 13),
-('엑셀-수정', crypt('14', gen_salt('bf')), 14),
-('엑셀-매화', crypt('15', gen_salt('bf')), 15)
-on conflict (display_name) do nothing;
+<section id="appView" class="hidden">
+  <div class="toolbar card"><div id="who"></div><button id="logoutBtn" class="secondary" style="width:auto">로그아웃</button></div>
+  <div id="tabs" class="tabs">
+    <button class="tab active" data-tab="search">🔎 검색</button>
+    <button class="tab adminOnly" data-tab="items">📦 품목 등록</button>
+    <button class="tab adminOnly" data-tab="inbound">📥 입고</button>
+    <button class="tab adminOnly" data-tab="outbound">📤 출고</button>
+    <button class="tab adminOnly" data-tab="stats">📊 통계·엑셀</button>
+    <button class="tab adminOnly" data-tab="disposal">⏰ 1년 폐기알림</button>
+    <button class="tab adminOnly" data-tab="categories">📂 자재구분</button>
+  </div>
 
--- 5) Login verification
-create or replace function public.verify_app_login(p_username text, p_password text)
-returns table(role text, display_name text)
-language sql
-security definer
-set search_path = public
-as $$
-  select u.role, u.display_name
-  from public.app_users u
-  where u.username = trim(p_username)
-    and u.is_active = true
-    and u.password_hash = crypt(p_password, u.password_hash);
-$$;
+  <section id="searchTab" class="tabpane">
 
--- 6) Read-only lookup helpers
-create or replace function public.list_material_categories()
-returns table(id uuid, name text, sort_order integer)
-language sql
-security definer
-set search_path = public
-as $$
-  select c.id, c.name, c.sort_order
-  from public.material_categories c
-  where c.is_active = true
-  order by c.sort_order, c.name;
-$$;
+    <div id="cooperationNotice" class="coop-notice">
+      <div class="coop-notice-head">
+        <div class="coop-notice-title">📢 협조사항</div>
+        <button id="closeCooperationNotice" type="button" class="coop-notice-close" aria-label="협조사항 닫기">×</button>
+      </div>
+      <div class="coop-notice-body">
+        <div class="coop-notice-item">📝 입고·출고 시 창고에 있는 노트에 꼭 기재해 주세요.</div>
+        <div class="coop-notice-item">📱 노트에 바로 기재하지 못한 경우 자재 담당자에게 메모 또는 문자로 알려 주세요.</div>
+        <div class="coop-notice-item">📍 자재 위치를 변경한 경우에도 반드시 자재 담당자에게 알려 주세요.</div>
+        <div class="coop-notice-item">⚠️ 위치나 수량이 다르면 임의로 수정하지 말고 자재 담당자에게 확인해 주세요.</div>
+      </div>
+    </div>
 
-create or replace function public.list_material_handlers()
-returns table(id uuid, display_name text, sort_order integer)
-language sql
-security definer
-set search_path = public
-as $$
-  select h.id, h.display_name, h.sort_order
-  from public.material_handlers h
-  where h.is_active = true
-  order by h.sort_order, h.display_name;
-$$;
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="margin:0">자재 검색</h2>
+        <div id="itemCountBadge" class="badge" style="font-size:16px;padding:10px 14px">총 0종목 등록</div>
+      </div>
+      <div class="label required-label">품번 또는 품명 검색</div>
+      <div class="row"><input id="searchQ" placeholder="품번·품명 일부 입력"><button id="searchBtn">검색</button></div>
+      <div id="searchCountText" class="muted" style="margin-top:8px">전체 0종목</div>
+    </div>
+    <div id="searchResults"></div>
+  </section>
 
--- 7) Administrator item/category/location operations
-create or replace function public.admin_upsert_item(
-  p_username text,
-  p_password text,
-  p_item_id uuid,
-  p_part_no text,
-  p_item_name text,
-  p_category text,
-  p_maker text,
-  p_specification text,
-  p_unit text,
-  p_min_stock numeric,
-  p_note text,
-  p_photo_url text
-) returns uuid
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_id uuid;
-begin
-  if not exists (
-    select 1 from public.app_users
-    where username=trim(p_username) and role='admin' and is_active=true
-      and password_hash=crypt(p_password,password_hash)
-  ) then raise exception 'ADMIN_AUTH_FAILED'; end if;
+  <section id="itemsTab" class="tabpane hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">품목 등록·수정</h2>
+        <button id="deleteItemXBtn" type="button" class="danger"
+          style="width:44px;height:44px;padding:0;border-radius:50%;font-size:22px;font-weight:900"
+          title="선택 품목 완전삭제">×</button>
+      </div>
 
-  if coalesce(trim(p_part_no),'')='' or coalesce(trim(p_item_name),'')='' then
-    raise exception 'PART_AND_NAME_REQUIRED';
-  end if;
+      <div class="label">기존 품목 수정</div>
+      <div class="row">
+        <select id="editItemSelect">
+          <option value="">새 품목 등록</option>
+        </select>
+        <button id="cancelEditBtn" class="secondary" type="button">수정 취소</button>
+      </div>
+      <div class="muted" style="margin:8px 0 6px">삭제할 품목을 선택한 뒤 오른쪽 위 빨간 × 버튼을 누르세요.</div>
+      <div id="editModeMsg" class="muted" style="margin:8px 0 6px">새 품목 등록 모드입니다.</div>
+      <div class="ok" style="margin-bottom:14px">
+        품번 또는 품명을 모르면 비워 두거나 0을 입력하세요. 임시값으로 등록한 뒤 나중에 수정할 수 있습니다.
+      </div>
 
-  if p_item_id is null then
-    insert into public.items(part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,is_active)
-    values(trim(p_part_no),trim(p_item_name),coalesce(nullif(trim(p_category),''),'기타'),
-           nullif(trim(p_maker),''),nullif(trim(p_specification),''),
-           coalesce(nullif(trim(p_unit),''),'EA'),greatest(coalesce(p_min_stock,0),0),
-           nullif(trim(p_note),''),nullif(p_photo_url,''),true)
-    returning id into v_id;
-  else
-    update public.items
-    set part_no=trim(p_part_no), item_name=trim(p_item_name),
-        category=coalesce(nullif(trim(p_category),''),'기타'),
-        maker=nullif(trim(p_maker),''), specification=nullif(trim(p_specification),''),
-        unit=coalesce(nullif(trim(p_unit),''),'EA'),
-        min_stock=greatest(coalesce(p_min_stock,0),0),
-        note=nullif(trim(p_note),''),
-        photo_url=case when p_photo_url is null then photo_url else nullif(p_photo_url,'') end,
-        updated_at=now(), is_active=true
-    where id=p_item_id
-    returning id into v_id;
-  end if;
-  return v_id;
-end;
-$$;
+      <input id="itemId" type="hidden">
 
-create or replace function public.admin_add_category(
-  p_username text,p_password text,p_name text
-) returns uuid
-language plpgsql security definer set search_path=public
-as $$
-declare v_id uuid;
-begin
-  if not exists (select 1 from public.app_users where username=trim(p_username) and role='admin' and is_active=true and password_hash=crypt(p_password,password_hash))
-  then raise exception 'ADMIN_AUTH_FAILED'; end if;
-  insert into public.material_categories(name,is_active)
-  values(trim(p_name),true)
-  on conflict(name) do update set is_active=true
-  returning id into v_id;
-  return v_id;
-end $$;
+      <div class="grid">
+        <div>
+          <div class="label required-label">품번</div>
+          <input id="partNo" placeholder="품번 입력">
+        </div>
+        <div>
+          <div class="label required-label">품명</div>
+          <input id="itemName" placeholder="품명 입력">
+        </div>
+        <div>
+          <div class="label required-label">자재구분</div>
+          <select id="category"></select>
+        </div>
+        <div>
+          <div class="label required-label">최소수량</div>
+          <input id="minStock" type="number" min="0" placeholder="최소수량 입력">
+        </div>
+      </div>
 
-create or replace function public.admin_add_location(
-  p_username text,p_password text,p_item_id uuid,p_location_code text,p_location_display text,p_qty numeric
-) returns uuid
-language plpgsql security definer set search_path=public
-as $$
-declare v_id uuid;
-begin
-  if not exists (select 1 from public.app_users where username=trim(p_username) and role='admin' and is_active=true and password_hash=crypt(p_password,password_hash))
-  then raise exception 'ADMIN_AUTH_FAILED'; end if;
-  if coalesce(trim(p_location_code),'')='' then raise exception 'LOCATION_REQUIRED'; end if;
-  insert into public.item_locations(item_id,location_code,location_display,qty)
-  values(p_item_id,trim(p_location_code),coalesce(nullif(trim(p_location_display),''),trim(p_location_code)),greatest(coalesce(p_qty,0),0))
-  on conflict(item_id,location_code) do update
-  set location_display=excluded.location_display, qty=excluded.qty
-  returning id into v_id;
-  return v_id;
-end $$;
+      <input id="unit" type="hidden" value="EA">
+      <input id="maker" type="hidden">
+      <input id="spec" type="hidden">
+      <input id="note" type="hidden">
+      <input id="registeredOn" type="hidden">
 
--- 8) Atomic administrator inbound/outbound
-create or replace function public.admin_apply_movement(
-  p_username text,p_password text,p_type text,p_item_id uuid,p_location_id uuid,
-  p_qty numeric,p_actor_name text,p_note text
-) returns public.stock_movements
-language plpgsql security definer set search_path=public
-as $$
-declare v_loc public.item_locations; v_total numeric; v_signed numeric; v_row public.stock_movements;
-begin
-  if not exists (select 1 from public.app_users where username=trim(p_username) and role='admin' and is_active=true and password_hash=crypt(p_password,password_hash))
-  then raise exception 'ADMIN_AUTH_FAILED'; end if;
-  if p_type not in ('IN','OUT') then raise exception 'INVALID_MOVEMENT_TYPE'; end if;
-  if p_qty is null or p_qty<=0 then raise exception 'INVALID_QTY'; end if;
-  if coalesce(trim(p_actor_name),'')='' then raise exception 'ACTOR_REQUIRED'; end if;
+      <div class="label" style="margin-top:14px">품목 사진</div>
+      <input id="photoFile" type="file" accept="image/*" capture="environment">
+      <div class="muted">품목 사진은 검색·입고·출고 화면에 함께 표시됩니다.</div>
 
-  select * into v_loc from public.item_locations
-  where id=p_location_id and item_id=p_item_id for update;
-  if not found then raise exception 'LOCATION_NOT_FOUND'; end if;
-  if p_type='OUT' and v_loc.qty<p_qty then raise exception 'INSUFFICIENT_STOCK'; end if;
+      <button id="saveItemBtn" style="margin-top:12px">품목 저장</button>
+      <div class="row" style="margin-top:10px">
+        <button id="archiveItemBtn" type="button" class="secondary">사용중지</button>
+      </div>
+      <div class="muted" style="margin-top:6px">
+        사용중지: 기록을 유지하고 목록에서 숨김 · 완전삭제: 현재고 0, 입출고 이력 없음인 품목만 가능
+      </div>
+      <div id="itemMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+  </section>
 
-  v_signed:=case when p_type='OUT' then -p_qty else p_qty end;
-  update public.item_locations set qty=qty+v_signed where id=p_location_id returning * into v_loc;
-  select coalesce(sum(qty),0) into v_total from public.item_locations where item_id=p_item_id;
+  <section id="inboundTab" class="tabpane hidden">
+    <div class="card">
+      <h2>입고 등록</h2>
 
-  insert into public.stock_movements(movement_type,item_id,location_id,qty,signed_qty,actor_name,note,stock_after_location,stock_after_total)
-  values(p_type,p_item_id,p_location_id,p_qty,v_signed,trim(p_actor_name),nullif(trim(p_note),''),v_loc.qty,v_total)
-  returning * into v_row;
-  return v_row;
-end $$;
+      <div class="grid">
+        <div>
+          <div class="label required-label">품번 검색</div>
+          <input id="inPartSearch" placeholder="품번 입력 → 품명 자동표시">
+        </div>
+        <div>
+          <div class="label required-label">품명 검색</div>
+          <input id="inNameSearch" placeholder="품명 입력 → 품번 자동표시">
+        </div>
+      </div>
 
--- 9) Responsible person number verification for outbound
-create or replace function public.verify_material_handler(p_handler_id uuid,p_login_no text)
-returns table(id uuid, display_name text)
-language sql security definer set search_path=public
-as $$
-  select h.id,h.display_name from public.material_handlers h
-  where h.id=p_handler_id and h.is_active=true and h.login_no_hash=crypt(p_login_no,h.login_no_hash);
-$$;
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
+        <div class="label required-label">최종 품목 선택</div>
+        <button id="inReloadItems" type="button" class="secondary" style="width:auto;padding:7px 10px">등록 품목 새로고침</button>
+      </div>
+      <select id="inFinalSelect">
+        <option value="">품번 또는 품명을 입력하면 자동 선택됩니다.</option>
+      </select>
+      <input id="inItemId" type="hidden">
 
--- 10) RLS and grants
-alter table public.material_categories enable row level security;
-alter table public.app_users enable row level security;
-alter table public.material_handlers enable row level security;
+      <div id="inItemPreview" class="movement-preview hidden">
+        <div id="inPhotoWrap"><div class="no-photo">📷 사진 없음</div></div>
+        <div class="meta">
+          <div><small>품번</small><strong id="inPartText">-</strong></div>
+          <div><small>품명</small><strong id="inNameText">-</strong></div>
+          <div><small>자재구분</small><strong id="inCategoryText">-</strong></div>
+          <div><small>현재 총수량</small><strong id="inStockText">-</strong></div>
+        </div>
+      </div>
 
-revoke all on public.app_users from anon, authenticated;
-revoke all on public.material_handlers from anon, authenticated;
-revoke all on public.material_categories from anon, authenticated;
+      <input id="inPart" type="hidden">
+      <input id="inName" type="hidden">
+      <input id="inCategory" type="hidden">
+      <input id="inCurrentStock" type="hidden">
 
-revoke all on function public.verify_app_login(text,text) from public;
-grant execute on function public.verify_app_login(text,text) to anon, authenticated;
-revoke all on function public.list_material_categories() from public;
-grant execute on function public.list_material_categories() to anon, authenticated;
-revoke all on function public.list_material_handlers() from public;
-grant execute on function public.list_material_handlers() to anon, authenticated;
-revoke all on function public.admin_upsert_item(text,text,uuid,text,text,text,text,text,text,numeric,text,text) from public;
-grant execute on function public.admin_upsert_item(text,text,uuid,text,text,text,text,text,text,numeric,text,text) to anon, authenticated;
-revoke all on function public.admin_add_category(text,text,text) from public;
-grant execute on function public.admin_add_category(text,text,text) to anon, authenticated;
-revoke all on function public.admin_add_location(text,text,uuid,text,text,numeric) from public;
-grant execute on function public.admin_add_location(text,text,uuid,text,text,numeric) to anon, authenticated;
-revoke all on function public.admin_apply_movement(text,text,text,uuid,uuid,numeric,text,text) from public;
-grant execute on function public.admin_apply_movement(text,text,text,uuid,uuid,numeric,text,text) to anon, authenticated;
-revoke all on function public.verify_material_handler(uuid,text) from public;
-grant execute on function public.verify_material_handler(uuid,text) to anon, authenticated;
+      <div class="label" style="margin-top:14px">현재 등록 자재위치</div>
+      <div id="inLocationInfo" class="muted">품목을 선택하면 등록된 모든 위치와 수량이 표시됩니다.</div>
 
--- Realtime, idempotent
-do $$
-begin
-  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='items')
-  then alter publication supabase_realtime add table public.items; end if;
-  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='item_locations')
-  then alter publication supabase_realtime add table public.item_locations; end if;
-end $$;
+      <div class="label required-label" style="margin-top:14px">입고 자재위치</div>
+      <select id="inLocationMode">
+        <option value="existing">기존 위치 선택</option>
+        <option value="new">새 위치 등록</option>
+        <option value="pending">위치 미정 · 입고대기</option>
+      </select>
+
+      <div id="inExistingLocationFields" style="margin-top:10px">
+        <select id="inLoc">
+          <option value="">등록된 위치를 선택하세요.</option>
+        </select>
+      </div>
+
+      <div id="inNewLocationFields" class="hidden" style="margin-top:10px">
+        <div class="label">위치 유형</div>
+        <select id="inLocType">
+          <option value="1층자재실">1층자재실</option>
+          <option value="2층자재실">2층자재실</option>
+          <option value="생산">생산</option>
+        </select>
+
+        <div id="inWarehouseFields" class="grid" style="margin-top:10px">
+          <div>
+            <div class="label">구역</div>
+            <select id="inLocArea"></select>
+          </div>
+          <div>
+            <div class="label">단</div>
+            <select id="inLocTier">
+              <option value="1단">1단</option><option value="2단">2단</option>
+              <option value="3단">3단</option><option value="4단">4단</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">번호</div>
+            <select id="inLocNumber">
+              <option value="">해당사항 없음</option>
+              <option value="001">001</option><option value="002">002</option>
+              <option value="003">003</option><option value="004">004</option>
+              <option value="005">005</option><option value="006">006</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">노랑박스</div>
+            <select id="inYellowBox">
+              <option value="">해당사항 없음</option>
+              <option value="A">A</option><option value="B">B</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">상단·하단</div>
+            <select id="inLocLevel">
+              <option value="">해당사항 없음</option>
+              <option value="상단">상단</option><option value="하단">하단</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="inProductionFields" class="grid hidden" style="margin-top:10px">
+          <div>
+            <div class="label">생산 D라인</div>
+            <select id="inProdLine">
+              <option value="D-1">D-1</option><option value="D-2">D-2</option>
+              <option value="D-3">D-3</option><option value="D-4">D-4</option>
+              <option value="D-5">D-5</option><option value="D-6">D-6</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">서랍번호</div>
+            <select id="inProdDrawer"></select>
+          </div>
+        </div>
+
+        <div class="label" style="margin-top:10px">생성 자재위치</div>
+        <input id="inLocationCode" readonly>
+      </div>
+
+      <div class="grid" style="margin-top:14px">
+        <div>
+          <div class="label required-label">입고일자</div>
+          <input id="inDate" type="date">
+        </div>
+        <div>
+          <div class="label required-label">입고수량</div>
+          <input id="inQty" type="number" min="1" placeholder="입고수량">
+        </div>
+        <div>
+          <div class="label">거래처·입고처</div>
+          <input id="inPartner" placeholder="거래처·입고처">
+        </div>
+      </div>
+
+      <textarea id="inNote" placeholder="비고"></textarea>
+      <button id="inSave">입고 저장</button>
+      <div id="inMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section id="outboundTab" class="tabpane hidden">
+    <div class="card">
+      <h2>출고 등록</h2>
+      <p><span class="step">STEP 1</span><b>출고 담당자 선택(필수)</b></p>
+      <select id="handler">
+        <option value="">출고 담당자 이름을 선택하세요 *</option>
+        <option value="default-1">미림대표님</option>
+        <option value="default-2">정부장님</option>
+        <option value="default-3">박부장님</option>
+        <option value="default-4">이연주부장님</option>
+        <option value="default-5">김부장님</option>
+        <option value="default-6">최순정대리님</option>
+        <option value="default-7">엑셀-조영애</option>
+        <option value="default-8">김미화대리님</option>
+        <option value="default-9">신대리님</option>
+        <option value="default-10">유차장님</option>
+        <option value="default-11">이천희팀장님</option>
+        <option value="default-12">이과장님</option>
+        <option value="default-13">압착</option>
+        <option value="default-14">엑셀-수정</option>
+        <option value="default-15">엑셀-매화</option>
+      </select>
+      <div id="handlerMsg" class="muted" style="margin-top:8px">담당자 이름을 선택한 뒤 아래에서 품번 또는 품명을 입력하세요.</div>
+    </div>
+
+    <div id="outStep2" class="card">
+      <h3>품목 검색 및 출고수량 입력</h3>
+
+      <div class="grid">
+        <div>
+          <div class="label required-label">품번 검색</div>
+          <input id="outPartSearch" placeholder="품번 입력 → 품명 자동표시">
+        </div>
+        <div>
+          <div class="label required-label">품명 검색</div>
+          <input id="outNameSearch" placeholder="품명 입력 → 품번 자동표시">
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
+        <div class="label required-label">최종 품목 선택</div>
+        <button id="outReloadItems" type="button" class="secondary" style="width:auto;padding:7px 10px">등록 품목 새로고침</button>
+      </div>
+      <select id="outFinalSelect">
+        <option value="">품번 또는 품명을 입력하면 후보가 표시됩니다.</option>
+      </select>
+      <input id="outItemId" type="hidden">
+
+      <div id="outItemPreview" class="movement-preview hidden">
+        <div id="outPhotoWrap"><div class="no-photo">📷 사진 없음</div></div>
+        <div class="meta">
+          <div><small>품번</small><strong id="outPartText">-</strong></div>
+          <div><small>품명</small><strong id="outNameText">-</strong></div>
+          <div><small>자재구분</small><strong id="outCategoryText">-</strong></div>
+          <div><small>현재 총수량</small><strong id="outStockText">-</strong></div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:10px">
+        <input id="outPart" readonly placeholder="선택 품번">
+        <input id="outName" readonly placeholder="선택 품명">
+        <input id="outCategory" readonly placeholder="자재구분">
+        <input id="outCurrentStock" readonly placeholder="현재고">
+      </div>
+
+      <div class="label" style="margin-top:12px">기본·자재위치 정보</div>
+      <div id="outLocationInfo" class="muted">품목을 선택하면 현재 등록된 모든 자재위치와 위치별 수량이 표시됩니다.</div>
+
+      <div class="label required-label" style="margin-top:12px">출고 위치</div>
+      <select id="outLoc"></select>
+
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <div class="label required-label">출고일자</div>
+          <input id="outDate" type="date">
+        </div>
+        <div>
+          <div class="label required-label">출고수량</div>
+          <input id="outQty" type="number" min="1" placeholder="출고수량">
+        </div>
+      </div>
+      <textarea id="outNote" placeholder="비고"></textarea>
+      <button id="outSave">출고 저장</button>
+      <div id="outMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section id="statsTab" class="tabpane hidden">
+    <div class="ok" style="margin-bottom:12px">
+      아래 첫 번째 영역에서 <b>자재구분 품목 / 입고내역 / 출고내역</b>을 각각 별도 엑셀 파일로 저장할 수 있습니다.
+      월별·연도별 통계는 그 아래에 따로 있습니다.
+    </div>
+
+    <div class="card">
+      <h2>자재구분·입고·출고 개별 엑셀 내보내기</h2>
+      <div class="muted">
+        월별·연도별 통계 외에 자재구분별 품목, 입고내역, 출고내역을 각각 별도 파일로 저장합니다.
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <div class="label">자재구분 선택</div>
+          <select id="quickCategory">
+            <option value="">전체 자재구분</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">시작일</div>
+          <input id="quickStartDate" type="date">
+        </div>
+        <div>
+          <div class="label">종료일</div>
+          <input id="quickEndDate" type="date">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <button id="exportCategoryItemsBtn">자재구분 품목 엑셀</button>
+        <button id="exportInboundBtn" class="secondary">입고내역 엑셀</button>
+        <button id="exportOutboundBtn" class="secondary">출고내역 엑셀</button>
+        <button id="exportThreeFilesBtn" class="secondary">3개 파일 한 번에 저장</button>
+      </div>
+
+      <div id="quickExportMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>선택형 엑셀 내보내기</h2>
+      <div class="muted">
+        품목등록·입고·출고 자료를 자재구분, 기간, 품번·품명, 담당자 기준으로 골라 저장합니다.
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <div class="label">자료 구분</div>
+          <select id="filterExportType">
+            <option value="items">품목등록 목록</option>
+            <option value="inbound">입고내역</option>
+            <option value="outbound">출고내역</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">자재구분</div>
+          <select id="filterCategory">
+            <option value="">전체 자재구분</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">품번 또는 품명</div>
+          <input id="filterKeyword" placeholder="비우면 전체">
+        </div>
+        <div id="filterHandlerWrap">
+          <div class="label">출고 담당자</div>
+          <select id="filterHandler">
+            <option value="">전체 담당자</option>
+          </select>
+        </div>
+        <div id="filterStartWrap">
+          <div class="label">시작일</div>
+          <input id="filterStartDate" type="date">
+        </div>
+        <div id="filterEndWrap">
+          <div class="label">종료일</div>
+          <input id="filterEndDate" type="date">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="exportFilteredExcelBtn">선택 조건으로 엑셀 저장</button>
+      </div>
+      <div id="filterExportMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>창고 재고조사표</h2>
+      <div class="muted">
+        등록된 모든 품목을 품번·품명·자재위치·전산수량 기준으로 정리합니다.
+        출력 후 실제수량과 차이를 손으로 기록할 수 있습니다.
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button id="exportInventoryCheckBtn">재고조사표 엑셀 저장</button>
+        <button id="printInventoryCheckBtn" class="secondary">재고조사표 인쇄</button>
+      </div>
+      <div id="inventoryCheckMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>월말·연말 자재 통계</h2>
+      <div class="grid">
+        <div>
+          <div class="label">조회 기준</div>
+          <select id="reportType">
+            <option value="month">월별</option>
+            <option value="year">연도별</option>
+          </select>
+        </div>
+        <div id="reportMonthWrap">
+          <div class="label">조회 월</div>
+          <input id="reportMonth" type="month">
+        </div>
+        <div id="reportYearWrap" class="hidden">
+          <div class="label">조회 연도</div>
+          <input id="reportYear" type="number" min="2020" max="2100">
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button id="loadReportBtn">통계 확인</button>
+        <button id="exportExcelBtn" class="secondary">엑셀 파일로 내보내기</button>
+      </div>
+      <div id="reportMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h3>기간 요약</h3>
+      <div id="reportSummary" class="grid"></div>
+    </div>
+
+    <div class="card">
+      <h3>품목별 입출고</h3>
+      <div style="overflow:auto">
+        <table id="reportTable" style="width:100%;border-collapse:collapse"></table>
+      </div>
+    </div>
+  </section>
+
+  <section id="disposalTab" class="tabpane hidden">
+    <div class="card">
+      <h2>1년 미사용 자재 폐기 검토</h2>
+      <div class="bad">
+        마지막 입고·출고 또는 등록일로부터 1년이 지난 품목을 표시합니다.
+        실제 폐기 전에는 반드시 현재고와 현물을 확인하세요.
+      </div>
+      <button id="loadDisposalBtn" style="margin-top:12px">폐기 검토 목록 확인</button>
+      <div id="disposalMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+    <div id="disposalList"></div>
+  </section>
+
+  <section id="categoriesTab" class="tabpane hidden">
+    <div class="card">
+      <h2>자재구분 추가</h2>
+      <div class="row"><input id="newCategory" placeholder="새 자재구분"><button id="addCategoryBtn">추가</button></div>
+      <div id="catList" style="margin-top:12px"></div>
+      <div id="catMsg" class="muted"></div>
+    </div>
+  
+<div class="card" style="margin-top:16px">
+      <h2>출고 담당자 관리</h2>
+      <div class="muted">
+        출고 담당자가 늘어나면 이름을 추가하세요. 추가 즉시 출고 담당자 선택 목록에 반영됩니다.
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <div class="label required-label">담당자 이름</div>
+          <input id="newHandlerName" placeholder="예: 홍길동 대리">
+        </div>
+        <div>
+          <div class="label">표시 순서</div>
+          <input id="newHandlerOrder" type="number" min="0" placeholder="비우면 맨 아래">
+        </div>
+      </div>
+
+      <button id="addHandlerBtn" style="margin-top:10px">담당자 추가</button>
+      <div id="handlerAdminMsg" class="muted" style="margin-top:8px"></div>
+
+      <div class="label" style="margin-top:16px">현재 출고 담당자</div>
+      <div id="handlerAdminList"></div>
+    </div>
+  </section>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="./config.js"></script>
+<script>
+const cfg=window.MIRIM_SUPABASE||{};
+if(!cfg.url||!cfg.publishableKey||cfg.url.includes('YOUR_')) alert('config.js 연결정보를 확인하세요.');
+const db=supabase.createClient(cfg.url,cfg.publishableKey);
+let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, photoData=null;
+
+const DEFAULT_HANDLERS=[
+  '미림대표님','정부장님','박부장님','이연주부장님','김부장님',
+  '최순정대리님','엑셀-조영애','김미화대리님','신대리님','유차장님',
+  '이천희팀장님','이과장님','압착','엑셀-수정','엑셀-매화'
+].map((display_name,i)=>({id:`default-${i+1}`,display_name,sort_order:i+1}));
+
+setTimeout(markRequiredFields,0);
+setTimeout(setDefaultDates,0);
+
+
+
+const $=id=>document.getElementById(id);
+
+function setupCooperationNotice(){
+ const notice=$('cooperationNotice');
+ const closeBtn=$('closeCooperationNotice');
+ if(!notice || !closeBtn) return;
+
+ const hidden=sessionStorage.getItem('mirim_coop_notice_hidden')==='1';
+ notice.classList.toggle('hidden',hidden);
+
+ closeBtn.onclick=()=>{
+   notice.classList.add('hidden');
+   sessionStorage.setItem('mirim_coop_notice_hidden','1');
+ };
+}
+
+function todayKST(){
+  return new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
+  }).format(new Date());
+}
+function formatDateKST(value){
+ if(!value) return '기록 없음';
+ const d=new Date(value);
+ if(Number.isNaN(d.getTime())) return String(value);
+ return new Intl.DateTimeFormat('ko-KR',{
+   timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
+ }).format(d);
+}
+
+function inactiveDays(item){
+ const values=[item.last_inbound_at,item.last_outbound_at,item.registered_on].filter(Boolean);
+ if(!values.length) return null;
+ const latest=Math.max(...values.map(v=>new Date(v).getTime()));
+ return Math.floor((Date.now()-latest)/86400000);
+}
+
+async function markStockChecked(itemId){
+ if(!session || session.role!=='admin') return;
+ const {error}=await db.rpc('admin_mark_stock_checked',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:itemId
+ });
+ if(error){
+   alert('재고 확인일 저장 실패: '+error.message);
+   return;
+ }
+ await loadAll();
+}
+
+function setDefaultDates(){
+  ['registeredOn','inDate','outDate'].forEach(id=>{
+    const el=$(id);
+    if(el && !el.value) el.value=todayKST();
+  });
+}
+
+function markRequiredFields(){
+  const ids=['searchQ', 'inPartSearch', 'inNameSearch', 'inFinalSelect', 'inQty', 'handler', 'outPartSearch', 'outNameSearch', 'outFinalSelect', 'outLoc', 'outQty', 'partNo', 'itemName', 'category', 'minStock', 'registeredOn', 'inDate', 'outDate'];
+  ids.forEach(id=>{
+    const el=$(id);
+    if(el) el.classList.add('required-field');
+  });
+}
+
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const norm=v=>String(v||'').toLowerCase().replace(/\s+/g,'').trim();
+const total=x=>(x.item_locations||[]).reduce((s,l)=>s+Number(l.qty||0),0);
+
+async function login(){
+ const {data,error}=await db.rpc('verify_app_login',{p_username:$('loginId').value,p_password:$('loginPw').value});
+ if(error||!data?.length){$('loginMsg').textContent='❌ 아이디 또는 비밀번호를 확인하세요.';return}
+ session={username:$('loginId').value,password:$('loginPw').value,role:data[0].role,displayName:data[0].display_name};
+ $('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
+ $('who').innerHTML='<b>'+esc(session.displayName)+'</b> · '+(session.role==='admin'?'관리자':'검색 전용');
+ document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',session.role!=='admin'));
+ setupCooperationNotice(); await loadAll(); switchTab('search');
+}
+$('loginBtn').onclick=login;$('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+$('logoutBtn').onclick=()=>location.reload();
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+function switchTab(name){
+ document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+ document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hidden'));
+ $(name+'Tab').classList.remove('hidden');
+}
+
+async function loadAll(){
+ let itemData=[];
+ let itemError=null;
+
+ // 날짜 확장열이 설치된 경우
+ let result=await db.from('items')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,registered_on,last_inbound_at,last_outbound_at,last_stock_check_at,item_locations(id,location_code,location_display,qty)')
+   .eq('is_active',true)
+   .order('part_no');
+
+ itemData=result.data||[];
+ itemError=result.error;
+
+ // 날짜 SQL을 아직 실행하지 않았어도 품목 검색은 반드시 되도록 기본열로 재조회
+ if(itemError){
+   result=await db.from('items')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+     .eq('is_active',true)
+     .order('part_no');
+
+   itemData=(result.data||[]).map(x=>({
+     ...x,
+     registered_on:null,
+     last_inbound_at:null,
+     last_outbound_at:null,
+     last_stock_check_at:null
+   }));
+   itemError=result.error;
+ }
+
+ const [{data:c},{data:h}]=await Promise.all([
+   db.rpc('list_material_categories'),
+   db.rpc('list_material_handlers')
+ ]);
+
+ items=itemData||[];
+ categories=(c&&c.length)?c:[
+   {name:'하우징'},{name:'하팅'},{name:'커넥터'},{name:'터미널'},
+   {name:'후드'},{name:'전선'},{name:'PVC'},{name:'포장재'},{name:'기타'}
+ ];
+ handlers=(h&&h.length)?h:DEFAULT_HANDLERS;
+ if($('handlerAdminList')){
+   $('handlerAdminList').innerHTML=handlers.length
+     ? handlers.map((h,i)=>`
+       <div class="loc" style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px">
+         <div style="font-weight:900">${i+1}</div>
+         <div><b>${esc(h.display_name)}</b></div>
+         <button type="button" class="danger"
+           style="width:auto;padding:7px 10px"
+           onclick="archiveHandler('${h.id}','${esc(h.display_name).replaceAll("'","&#39;")}')">사용중지</button>
+       </div>`).join('')
+     : '<div class="muted">등록된 담당자가 없습니다.</div>';
+ }
+
+ if($('quickCategory')){
+   const previous=$('quickCategory').value;
+   $('quickCategory').innerHTML='<option value="">전체 자재구분</option>'+
+     categories.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
+   $('quickCategory').value=previous;
+ }
+ if($('filterCategory')){
+   const selected=$('filterCategory').value;
+   $('filterCategory').innerHTML='<option value="">전체 자재구분</option>'+
+     categories.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
+   $('filterCategory').value=selected;
+ }
+ if($('filterHandler')){
+   const selected=$('filterHandler').value;
+   $('filterHandler').innerHTML='<option value="">전체 담당자</option>'+
+     handlers.map(x=>`<option value="${esc(x.display_name)}">${esc(x.display_name)}</option>`).join('');
+   $('filterHandler').value=selected;
+ }
+
+ $('category').innerHTML=categories.map(x=>`<option>${esc(x.name)}</option>`).join('');
+ $('catList').innerHTML=categories.map(x=>`<span class="badge">${esc(x.name)}</span>`).join('');
+
+ const opt=items.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(x.item_name)}</option>`).join('');
+ $('editItemSelect').innerHTML='<option value="">새 품목 등록</option>'+opt;
+
+ const searchOptions=items.map(x=>`<option value="${esc(x.part_no)} | ${esc(x.item_name)}"></option>`).join('');
+ if($('inOptions')) $('inOptions').innerHTML=searchOptions;
+ if($('outOptions')) $('outOptions').innerHTML=searchOptions;
+
+ const previousHandler=$('handler').value;
+ if(handlers.length){
+   $('handler').innerHTML='<option value="">출고 담당자 이름을 선택하세요 *</option>'+
+     handlers.map(x=>`<option value="${x.id}">${esc(x.display_name)}</option>`).join('');
+ }
+ if(previousHandler && handlers.some(h=>String(h.id)===String(previousHandler))){
+   $('handler').value=previousHandler;
+ }
+
+ selectHandler(false);
+ if($('itemCountBadge')) $('itemCountBadge').textContent=`총 ${items.length}종목 등록`;
+ if($('searchCountText')) $('searchCountText').textContent=`전체 ${items.length}종목`;
+ renderSearch(items);
+ setDefaultDates();
+ markRequiredFields();
+
+ if(itemError){
+   console.error('품목 목록 조회 오류:',itemError);
+ }
+}
+
+function renderSearch(list){
+ $('searchResults').innerHTML=list.length?list.map(x=>{
+   const locations=x.item_locations||[];
+   const totalQty=total(x);
+   const days=inactiveDays(x);
+   const disposal=days!==null && days>=365;
+
+   return `<div class="search-priority-card">
+     <div class="search-priority-main">
+       <div>
+         ${x.photo_url
+           ? `<img class="search-priority-image" src="${esc(x.photo_url)}" alt="${esc(x.item_name)}">`
+           : `<div class="search-noimage">📷 사진 없음</div>`}
+       </div>
+
+       <div>
+         <div class="search-priority-info">
+           <div class="search-priority-box">
+             <small>품번</small>
+             <strong>${esc(x.part_no)}</strong>
+           </div>
+           <div class="search-priority-box">
+             <small>품명</small>
+             <strong>${esc(x.item_name)}</strong>
+           </div>
+           <div class="search-priority-total">
+             <small>현재 총수량</small>
+             <strong>${totalQty} ${esc(x.unit)}</strong>
+           </div>
+         </div>
+
+         <div class="activity-dates">
+           <div class="activity-date">
+             <small>최초 등록일</small>
+             <strong>${formatDateKST(x.registered_on)}</strong>
+           </div>
+           <div class="activity-date">
+             <small>최근 입고일</small>
+             <strong>${formatDateKST(x.last_inbound_at)}</strong>
+           </div>
+           <div class="activity-date">
+             <small>최근 출고일</small>
+             <strong>${formatDateKST(x.last_outbound_at)}</strong>
+           </div>
+           <div class="activity-date">
+             <small>최근 재고확인일</small>
+             <strong>${formatDateKST(x.last_stock_check_at)}</strong>
+           </div>
+         </div>
+
+         ${disposal
+           ? `<div class="disposal-warning">⚠️ 최근 활동 후 ${days}일 경과 · 1년 이상 미사용 자재 폐기 검토</div>`
+           : ''}
+
+         ${session?.role==='admin'
+           ? `<button class="secondary stock-check-btn" onclick="markStockChecked('${x.id}')">재고확인 완료 기록</button>`
+           : ''}
+
+         <div class="label" style="margin-top:18px">전체 자재위치 및 위치별 최종수량</div>
+         <div class="search-priority-locations">
+           ${locations.length
+             ? locations.map((l,i)=>`
+               <div class="search-priority-location">
+                 <div style="font-size:23px">📍</div>
+                 <div>
+                   <div class="name">자재위치 ${i+1} · ${esc(l.location_display)}</div>
+                   <div class="code">위치코드: ${esc(l.location_code||l.location_display)}</div>
+                 </div>
+                 <div class="qty">${esc(l.qty)} ${esc(x.unit)}</div>
+               </div>`).join('')
+             : `<div class="search-priority-location">
+                  <div>⚠️</div>
+                  <div class="name">자재위치 확인 필요</div>
+                </div>`}
+         </div>
+
+         <div class="search-foot">
+           <span class="search-chip">자재구분: ${esc(x.category||'기타')}</span>
+           <span class="search-chip">최소수량: ${esc(x.min_stock??0)} ${esc(x.unit)}</span>
+           <span class="search-chip">등록 위치: ${locations.length}곳</span>
+         </div>
+       </div>
+     </div>
+   </div>`;
+ }).join(''):'<div class="card">⚠️ 검색 결과가 없습니다.</div>';
+}
+$('searchBtn').onclick=()=>{const k=norm($('searchQ').value);renderSearch(!k?items:items.filter(x=>norm(x.part_no+' '+x.item_name+' '+x.category+' '+(x.maker||'')).includes(k)))};
+$('searchQ').oninput=()=>{
+ const q=norm($('searchQ').value);
+ const filtered=q
+   ? items.filter(x=>norm([
+       x.part_no,x.item_name,x.maker,x.category,x.specification
+     ].join(' ')).includes(q))
+   : items;
+
+ if($('searchCountText')){
+   $('searchCountText').textContent=q
+     ? `검색 결과 ${filtered.length}종목 / 전체 ${items.length}종목`
+     : `전체 ${items.length}종목`;
+ }
+
+ renderSearch(filtered);
+};
+
+
+function clearItemForm(){
+ $('itemId').value='';
+ $('editItemSelect').value='';
+ $('partNo').value='';
+ $('itemName').value='';
+ $('minStock').value='';
+ $('registeredOn').value=todayKST();
+ $('unit').value='EA';
+ $('photoFile').value='';
+ photoData=null;
+ $('partNo').readOnly=false;
+ $('saveItemBtn').textContent='품목 저장';
+ $('editModeMsg').textContent='새 품목 등록 모드입니다.';
+}
+
+function loadItemForEdit(){
+ const id=$('editItemSelect').value;
+ if(!id){clearItemForm();return}
+ const x=items.find(v=>v.id===id);
+ if(!x) return;
+
+ $('itemId').value=x.id;
+ $('partNo').value=x.part_no||'';
+ $('itemName').value=x.item_name||'';
+ $('category').value=x.category||'기타';
+ $('minStock').value=x.min_stock??0;
+ $('registeredOn').value=x.registered_on||todayKST();
+ $('unit').value=x.unit||'EA';
+ $('partNo').readOnly=true;
+ $('saveItemBtn').textContent='품목 수정 저장';
+ $('editModeMsg').textContent=`수정 중: ${x.part_no} · ${x.item_name}`;
+}
+
+$('editItemSelect').onchange=loadItemForEdit;
+$('cancelEditBtn').onclick=clearItemForm;
+
+$('photoFile').onchange=async e=>{
+ const f=e.target.files[0];if(!f){photoData=null;return}
+ const im=new Image();im.src=URL.createObjectURL(f);await im.decode();
+ const c=document.createElement('canvas'),max=800,scale=Math.min(1,max/Math.max(im.width,im.height));
+ c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+ photoData=c.toDataURL('image/jpeg',.72);
+};
+
+
+function makeTemporaryPartNo(){
+ const d=new Date();
+ const stamp=[
+   d.getFullYear(),
+   String(d.getMonth()+1).padStart(2,'0'),
+   String(d.getDate()).padStart(2,'0'),
+   String(d.getHours()).padStart(2,'0'),
+   String(d.getMinutes()).padStart(2,'0'),
+   String(d.getSeconds()).padStart(2,'0'),
+   String(d.getMilliseconds()).padStart(3,'0')
+ ].join('');
+ return `0-${stamp}`;
+}
+
+async function saveItemSimple(){
+ const editing=!!$('itemId').value;
+
+ let partNo=$('partNo').value.trim();
+ let itemName=$('itemName').value.trim();
+ const category=$('category').value;
+ const minStock=Number($('minStock').value||0);
+
+ // 모르는 값은 0으로 임시등록
+ if(!itemName) itemName='0';
+
+ // 품번은 중복금지이므로 단순 0 대신 0-날짜시간으로 자동 생성
+ if(!partNo || (!editing && partNo==='0')){
+   partNo=makeTemporaryPartNo();
+ }
+
+ if(!category){
+   $('itemMsg').textContent='⚠️ 자재구분을 선택하세요.';
+   return;
+ }
+
+ $('partNo').value=partNo;
+ $('itemName').value=itemName;
+ $('itemMsg').textContent=editing?'품목 수정 중...':'품목 등록 중...';
+
+ const {data:itemId,error:itemError}=await db.rpc('admin_upsert_item',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:editing?$('itemId').value:null,
+   p_part_no:partNo,
+   p_item_name:itemName,
+   p_category:category,
+   p_maker:'',
+   p_specification:'',
+   p_unit:'EA',
+   p_min_stock:minStock,
+   p_note:'',
+   p_photo_url:photoData
+ });
+
+ if(itemError){
+   $('itemMsg').textContent=itemError.message.includes('duplicate key')
+     ?'⚠️ 이미 등록된 품번입니다. 기존 품목 수정에서 선택하세요.'
+     :'❌ '+itemError.message;
+   return;
+ }
+
+ // 날짜 기능 SQL이 설치되지 않아도 품목등록 자체는 성공 처리
+ try{
+   await db.rpc('admin_set_item_registered_on',{
+     p_username:session.username,
+     p_password:session.password,
+     p_item_id:itemId,
+     p_registered_on:$('registeredOn')?.value||todayKST()
+   });
+ }catch(_){}
+
+ $('itemMsg').textContent=editing
+   ?'✅ 품목 수정 완료'
+   :(partNo.startsWith('0-') || itemName==='0'
+      ?`✅ 임시 품목 등록 완료 · 품번 ${partNo} / 품명 ${itemName} · 나중에 수정하세요.`
+      :'✅ 품목 등록 완료');
+
+ await loadAll();
+
+ const justSaved=items.find(x=>String(x.id)===String(itemId))||
+                 items.find(x=>x.part_no===partNo);
+ if(justSaved){
+   if($('inPartSearch')) $('inPartSearch').value=justSaved.part_no;
+   if($('outPartSearch')) $('outPartSearch').value=justSaved.part_no;
+   await fillInboundCandidates();
+   await fillOutboundCandidates();
+ }
+
+ // 등록 직후 입고·출고에서도 바로 검색되도록 값 유지
+ const saved=items.find(x=>String(x.id)===String(itemId))||
+             items.find(x=>x.part_no===partNo);
+ if(saved){
+   if($('inPartSearch')) $('inPartSearch').value=saved.part_no;
+   if($('outPartSearch')) $('outPartSearch').value=saved.part_no;
+ }
+
+ clearItemForm();
+}
+
+$('saveItemBtn').onclick=saveItemSimple;
+
+
+function getSelectedEditItem(){
+ const id=$('itemId').value || $('editItemSelect').value;
+ return items.find(x=>String(x.id)===String(id))||null;
+}
+
+$('archiveItemBtn').onclick=async()=>{
+ const item=getSelectedEditItem();
+ if(!item){
+   $('itemMsg').textContent='⚠️ 기존 품목 수정에서 사용중지할 품목을 먼저 선택하세요.';
+   return;
+ }
+
+ if(!confirm(`${item.part_no} · ${item.item_name}\n이 품목을 사용중지할까요?\n검색·입고·출고 목록에서 숨겨지고 기록은 유지됩니다.`)){
+   return;
+ }
+
+ $('itemMsg').textContent='사용중지 처리 중...';
+
+ const {data,error}=await db.rpc('admin_archive_item',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:item.id
+ });
+
+ if(error){
+   $('itemMsg').textContent='❌ 사용중지 실패: '+error.message;
+   return;
+ }
+
+ $('itemMsg').textContent='✅ 품목 사용중지 완료';
+ await loadAll();
+ clearItemForm();
+};
+
+
+
+
+
+
+function selectedItemForDelete(){
+ const id=String($('itemId')?.value || $('editItemSelect')?.value || '');
+ return items.find(x=>String(x.id)===id)||null;
+}
+
+$('deleteItemXBtn').onclick=async()=>{
+ const item=selectedItemForDelete();
+
+ if(!item){
+   $('itemMsg').textContent='⚠️ 기존 품목 수정에서 삭제할 품목을 먼저 선택하세요.';
+   return;
+ }
+
+ const password=prompt(
+   `❌ 품목 완전삭제\n\n품번: ${item.part_no}\n품명: ${item.item_name}\n\n관리자 비밀번호를 입력하세요.`
+ );
+
+ if(password===null) return;
+
+ if(!password.trim()){
+   $('itemMsg').textContent='⚠️ 관리자 비밀번호를 입력하세요.';
+   return;
+ }
+
+ const really=confirm(
+   `완전삭제는 복구할 수 없습니다.\n\n${item.part_no} · ${item.item_name}\n\n정말 삭제할까요?`
+ );
+ if(!really) return;
+
+ $('itemMsg').textContent='완전삭제 처리 중...';
+
+ const {error}=await db.rpc('admin_delete_item',{
+   p_username:session.username,
+   p_password:password.trim(),
+   p_item_id:item.id
+ });
+
+ if(error){
+   const msg=String(error.message||'');
+   if(msg.includes('ADMIN_AUTH_FAILED')){
+     $('itemMsg').textContent='❌ 관리자 비밀번호가 맞지 않습니다.';
+   }else if(msg.includes('ITEM_HAS_HISTORY_OR_STOCK')){
+     $('itemMsg').textContent='⚠️ 현재고 또는 입출고 이력이 있어 완전삭제할 수 없습니다. 사용중지를 이용하세요.';
+   }else{
+     $('itemMsg').textContent='❌ 완전삭제 실패: '+msg;
+   }
+   return;
+ }
+
+ $('itemMsg').textContent='✅ 품목 완전삭제 완료';
+ await loadAll();
+ clearItemForm();
+};
+
+$('addHandlerBtn').onclick=async()=>{
+ const name=$('newHandlerName').value.trim();
+ const orderRaw=$('newHandlerOrder').value.trim();
+
+ if(!name){
+   $('handlerAdminMsg').textContent='⚠️ 담당자 이름을 입력하세요.';
+   return;
+ }
+
+ $('handlerAdminMsg').textContent='담당자 추가 중...';
+
+ const {error}=await db.rpc('admin_add_material_handler',{
+   p_username:session.username,
+   p_password:session.password,
+   p_display_name:name,
+   p_sort_order:orderRaw===''?null:Number(orderRaw)
+ });
+
+ if(error){
+   $('handlerAdminMsg').textContent=String(error.message||'').includes('duplicate')
+     ?'⚠️ 이미 등록된 담당자 이름입니다.'
+     :'❌ 담당자 추가 실패: '+error.message;
+   return;
+ }
+
+ $('newHandlerName').value='';
+ $('newHandlerOrder').value='';
+ $('handlerAdminMsg').textContent='✅ 출고 담당자 추가 완료';
+ await loadAll();
+};
+
+async function archiveHandler(id,name){
+ if(!confirm(`${name} 담당자를 사용중지할까요?\n기존 출고 기록은 그대로 유지됩니다.`)) return;
+
+ const {error}=await db.rpc('admin_archive_material_handler',{
+   p_username:session.username,
+   p_password:session.password,
+   p_handler_id:id
+ });
+
+ if(error){
+   $('handlerAdminMsg').textContent='❌ 사용중지 실패: '+error.message;
+   return;
+ }
+
+ $('handlerAdminMsg').textContent='✅ 담당자 사용중지 완료';
+ await loadAll();
+}
+
+$('addCategoryBtn').onclick=async()=>{
+ const {error}=await db.rpc('admin_add_category',{p_username:session.username,p_password:session.password,p_name:$('newCategory').value});
+ $('catMsg').textContent=error?'❌ '+error.message:'✅ 자재구분 추가 완료';if(!error){$('newCategory').value='';await loadAll()}
+};
+function filterItemCandidates(partValue,nameValue){
+ const p=norm(partValue);
+ const n=norm(nameValue);
+ return items.filter(x=>{
+   const partOk=!p || norm(x.part_no).includes(p);
+   const nameOk=!n || norm(x.item_name).includes(n);
+   return partOk && nameOk;
+ });
+}
+
+function populateCandidateSelect(selectId,partValue,nameValue){
+ const list=filterItemCandidates(partValue,nameValue);
+ const el=$(selectId);
+ el.innerHTML='<option value="">최종 품목을 선택하세요.</option>'+
+   list.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(x.item_name)} · ${esc(x.category||'기타')}</option>`).join('');
+ return list;
+}
+
+
+
+async function fetchRegisteredItemDirect(partValue,nameValue){
+ const p=String(partValue||'').trim();
+ const n=String(nameValue||'').trim();
+ if(!p && !n) return null;
+
+ let query=db.from('items')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+   .eq('is_active',true);
+
+ if(p) query=query.eq('part_no',p);
+ if(n) query=query.eq('item_name',n);
+
+ let {data,error}=await query.limit(2);
+
+ if((error || !data?.length) && p && !n){
+   ({data,error}=await db.from('items')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+     .eq('is_active',true)
+     .ilike('part_no',p)
+     .limit(2));
+ }
+
+ if((error || !data?.length) && n && !p){
+   ({data,error}=await db.from('items')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+     .eq('is_active',true)
+     .ilike('item_name',n)
+     .limit(2));
+ }
+
+ if(error || !data || data.length!==1) return null;
+
+ const found=data[0];
+ const idx=items.findIndex(x=>String(x.id)===String(found.id));
+ if(idx>=0) items[idx]=found;
+ else items.push(found);
+
+ return found;
+}
+
+
+function syncPairedSearch(prefix){
+ const partEl=$(prefix+'PartSearch');
+ const nameEl=$(prefix+'NameSearch');
+ if(!partEl || !nameEl) return null;
+
+ const p=norm(partEl.value);
+ const n=norm(nameEl.value);
+ let found=null;
+
+ if(p){
+   const exactPart=items.filter(x=>norm(x.part_no)===p);
+   if(exactPart.length===1) found=exactPart[0];
+ }
+ if(!found && n){
+   const exactName=items.filter(x=>norm(x.item_name)===n);
+   if(exactName.length===1) found=exactName[0];
+ }
+
+ if(found){
+   partEl.value=found.part_no||'';
+   nameEl.value=found.item_name||'';
+ }
+ return found;
+}
+
+function resolveRegisteredItem(partValue,nameValue){
+ const p=norm(partValue);
+ const n=norm(nameValue);
+
+ let found=null;
+
+ if(p && n){
+   found=items.find(x=>norm(x.part_no)===p && norm(x.item_name)===n)||null;
+ }
+ if(!found && p){
+   const exactPart=items.filter(x=>norm(x.part_no)===p);
+   if(exactPart.length===1) found=exactPart[0];
+ }
+ if(!found && n){
+   const exactName=items.filter(x=>norm(x.item_name)===n);
+   if(exactName.length===1) found=exactName[0];
+ }
+ if(!found){
+   const candidates=filterItemCandidates(partValue,nameValue);
+   if(candidates.length===1) found=candidates[0];
+ }
+ return found;
+}
+
+async function fillInboundCandidates(){
+ let target=syncPairedSearch('in');
+ const partValue=$('inPartSearch').value.trim();
+ const nameValue=$('inNameSearch').value.trim();
+
+ populateCandidateSelect('inFinalSelect',partValue,nameValue);
+
+ $('inItemId').value='';
+ $('inPart').value='';
+ $('inName').value='';
+ $('inCategory').value='';
+ $('inCurrentStock').value='';
+ if($('inLoc')) $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
+ if(typeof renderMovementItemPreview==='function') renderMovementItemPreview('in',null);
+
+ if(!target) target=resolveRegisteredItem(partValue,nameValue);
+ if(!target && typeof fetchRegisteredItemDirect==='function'){
+   target=await fetchRegisteredItemDirect(partValue,nameValue);
+ }
+ if(!target && (partValue || nameValue)){
+   await loadAll();
+   target=syncPairedSearch('in')||resolveRegisteredItem(partValue,nameValue);
+ }
+
+ populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
+
+ if(target){
+   $('inFinalSelect').value=target.id;
+   selectInboundItem();
+   $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
+ }else if(partValue || nameValue){
+   $('inMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
+ }
+}
+['inPartSearch','inNameSearch'].forEach(id=>{
+ $(id).addEventListener('input',fillInboundCandidates);
+ $(id).addEventListener('change',fillInboundCandidates);
+ $(id).addEventListener('keyup',e=>{
+   if(e.key==='Enter') fillInboundCandidates();
+ });
+});
+
+function renderMovementItemPreview(prefix,found){
+ const preview=$(prefix+'ItemPreview');
+ if(!preview) return;
+ if(!found){
+   preview.classList.add('hidden');
+   return;
+ }
+ preview.classList.remove('hidden');
+ $(prefix+'PhotoWrap').innerHTML=found.photo_url
+   ? `<img src="${esc(found.photo_url)}" alt="${esc(found.item_name)}">`
+   : '<div class="no-photo">📷 사진 없음</div>';
+ $(prefix+'PartText').textContent=found.part_no||'-';
+ $(prefix+'NameText').textContent=found.item_name||'-';
+ $(prefix+'CategoryText').textContent=found.category||'기타';
+ $(prefix+'StockText').textContent=`${total(found)} ${found.unit||'EA'}`;
+}
+
+function setupInboundLocationOptions(){
+ const areaHtml='ABCDEFGHIJKLMNOPQ'.split('').map(x=>`<option value="${x}">${x}</option>`).join('');
+ $('inLocArea').innerHTML=areaHtml;
+
+ const drawerHtml=Array.from({length:100},(_,i)=>{
+   const v=String(i+1).padStart(3,'0');
+   return `<option value="${v}">${i+1}</option>`;
+ }).join('');
+ $('inProdDrawer').innerHTML=drawerHtml;
+}
+
+function buildInboundLocationCode(){
+ const type=$('inLocType').value;
+ $('inWarehouseFields').classList.toggle('hidden',type==='생산');
+ $('inProductionFields').classList.toggle('hidden',type!=='생산');
+
+ if(type==='생산'){
+   $('inLocationCode').value=`생산-${$('inProdLine').value}-${$('inProdDrawer').value}`;
+   return;
+ }
+
+ if($('inLocNumber').value){
+   $('inLocLevel').value='';
+   if(!$('inYellowBox').value) $('inYellowBox').value='A';
+   $('inLocationCode').value=[
+     type,$('inLocArea').value,$('inLocTier').value,
+     $('inLocNumber').value,$('inYellowBox').value
+   ].join('-');
+ }else{
+   $('inYellowBox').value='';
+   $('inLocationCode').value=[
+     type,$('inLocArea').value,$('inLocTier').value,
+     $('inLocLevel').value||''
+   ].filter(Boolean).join('-');
+ }
+}
+
+function updateInboundLocationMode(){
+ const mode=$('inLocationMode').value;
+ $('inExistingLocationFields').classList.toggle('hidden',mode!=='existing');
+ $('inNewLocationFields').classList.toggle('hidden',mode!=='new');
+ if(mode==='new') buildInboundLocationCode();
+}
+
+['inLocType','inLocArea','inLocTier','inLocNumber','inYellowBox','inLocLevel','inProdLine','inProdDrawer'].forEach(id=>{
+ $(id).addEventListener('input',buildInboundLocationCode);
+ $(id).addEventListener('change',buildInboundLocationCode);
+});
+$('inLocationMode').addEventListener('change',updateInboundLocationMode);
+
+setupInboundLocationOptions();
+buildInboundLocationCode();
+updateInboundLocationMode();
+
+function renderMovementLocations(targetId,found){
+ const locs=found?.item_locations||[];
+ $(targetId).innerHTML=found
+   ? (locs.length
+      ? locs.map(l=>`<div class="loc">📍 <b>${esc(l.location_display)}</b> · ${l.qty} ${esc(found.unit)}</div>`).join('')
+      : '<div class="loc">⚠️ 등록된 위치 없음</div>')
+   : '품목을 선택하면 기본 위치와 자재위치의 수량이 모두 표시됩니다.';
+}
+
+function selectInboundItem(){
+ const found=items.find(x=>x.id===$('inFinalSelect').value)||null;
+ $('inItemId').value=found?.id||'';
+ $('inPart').value=found?.part_no||'';
+ $('inName').value=found?.item_name||'';
+ $('inCategory').value=found?.category||'';
+ $('inCurrentStock').value=found?`${total(found)} ${found.unit}`:'';
+
+ const locs=found?.item_locations||[];
+ $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>'+
+   locs.map(l=>`<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`).join('');
+
+ $('inLocationMode').value=locs.length?'existing':'new';
+ updateInboundLocationMode();
+ renderMovementLocations('inLocationInfo',found);
+ renderMovementItemPreview('in',found);
+}
+$('inFinalSelect').onchange=selectInboundItem;
+$('inReloadItems').onclick=async()=>{
+ await loadAll();
+ await fillInboundCandidates();
+};
+
+$('inSave').onclick=async()=>{
+ let x=items.find(v=>v.id===$('inItemId').value);
+ if(!x){
+   x=resolveRegisteredItem($('inPartSearch').value,$('inNameSearch').value);
+   if(x){
+     $('inFinalSelect').value=x.id;
+     selectInboundItem();
+   }
+ }
+ const qty=Number($('inQty').value);
+ const mode=$('inLocationMode').value;
+
+ if(!x){$('inMsg').textContent='⚠️ 등록된 품목과 정확히 일치하지 않습니다. 품번 또는 품명을 다시 확인하세요.';return}
+ if(!qty||qty<=0){$('inMsg').textContent='⚠️ 입고수량을 입력하세요.';return}
+ if(mode==='existing' && !$('inLoc').value){
+   $('inMsg').textContent='⚠️ 기존 자재위치를 선택하세요.';
+   return;
+ }
+ if(mode==='new' && !$('inLocationCode').value){
+   $('inMsg').textContent='⚠️ 새 자재위치를 선택하세요.';
+   return;
+ }
+
+ const {error}=await db.rpc('admin_receive_item_to_location',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:x.id,
+   p_location_id:mode==='existing'?$('inLoc').value:null,
+   p_location_code:mode==='new'?$('inLocationCode').value:null,
+   p_qty:qty,
+   p_actor_name:session.displayName,
+   p_note:[$('inPartner').value,$('inNote').value].filter(Boolean).join(' / '),
+   p_movement_date:$('inDate').value||todayKST(),
+   p_use_pending:mode==='pending'
+ });
+
+ $('inMsg').textContent=error?'❌ '+error.message:'✅ 입고 및 자재위치 반영 완료';
+
+ if(!error){
+   $('inQty').value='';
+   $('inPartner').value='';
+   $('inNote').value='';
+   $('inDate').value=todayKST();
+   await loadAll();
+   selectInboundItem();
+ }
+};
+
+function selectHandler(){
+ const id=String($('handler').value||'');
+ verifiedHandler=handlers.find(h=>String(h.id)===id)||null;
+ $('handlerMsg').textContent=verifiedHandler
+   ? `✅ ${verifiedHandler.display_name} 선택 완료`
+   : '담당자 이름을 선택하세요.';
+}
+$('handler').addEventListener('change',selectHandler);
+$('handler').addEventListener('input',selectHandler);
+
+async function fillOutboundCandidates(){
+ let target=syncPairedSearch('out');
+ const partValue=$('outPartSearch').value.trim();
+ const nameValue=$('outNameSearch').value.trim();
+
+ populateCandidateSelect('outFinalSelect',partValue,nameValue);
+
+ $('outItemId').value='';
+ $('outPart').value='';
+ $('outName').value='';
+ $('outCategory').value='';
+ $('outCurrentStock').value='';
+ if($('outLoc')) $('outLoc').innerHTML='';
+ if(typeof renderMovementItemPreview==='function') renderMovementItemPreview('out',null);
+
+ if(!target) target=resolveRegisteredItem(partValue,nameValue);
+ if(!target && typeof fetchRegisteredItemDirect==='function'){
+   target=await fetchRegisteredItemDirect(partValue,nameValue);
+ }
+ if(!target && (partValue || nameValue)){
+   await loadAll();
+   target=syncPairedSearch('out')||resolveRegisteredItem(partValue,nameValue);
+ }
+
+ populateCandidateSelect('outFinalSelect',$('outPartSearch').value,$('outNameSearch').value);
+
+ if(target){
+   $('outFinalSelect').value=target.id;
+   await selectOutboundItem();
+   $('outMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
+ }else if(partValue || nameValue){
+   $('outMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
+ }
+}
+['outPartSearch','outNameSearch'].forEach(id=>{
+ $(id).addEventListener('input',fillOutboundCandidates);
+ $(id).addEventListener('change',fillOutboundCandidates);
+ $(id).addEventListener('keyup',e=>{
+   if(e.key==='Enter') fillOutboundCandidates();
+ });
+});
+
+async function selectOutboundItem(){
+ const itemId=$('outFinalSelect').value;
+ let found=items.find(x=>String(x.id)===String(itemId))||null;
+
+ $('outItemId').value=found?.id||'';
+ $('outPart').value=found?.part_no||'';
+ $('outName').value=found?.item_name||'';
+ $('outCategory').value=found?.category||'';
+ $('outCurrentStock').value=found?`${total(found)} ${found.unit}`:'';
+
+ if(!found){
+   $('outLoc').innerHTML='<option value="">⚠️ 품목을 먼저 선택하세요.</option>';
+   renderMovementLocations('outLocationInfo',null);
+   renderMovementItemPreview('out',null);
+   return;
+ }
+
+ // 항상 Supabase에서 현재 위치를 다시 불러와 최신 위치·수량을 표시
+ const {data:locations,error:locError}=await db
+   .from('item_locations')
+   .select('id,item_id,location_code,location_display,qty')
+   .eq('item_id',found.id)
+   .order('location_display');
+
+ if(!locError){
+   found.item_locations=locations||[];
+   const idx=items.findIndex(x=>String(x.id)===String(found.id));
+   if(idx>=0) items[idx]=found;
+ }
+
+ const locs=found.item_locations||[];
+ $('outCurrentStock').value=`${total(found)} ${found.unit}`;
+
+ $('outLoc').innerHTML=locs.length
+   ? '<option value="">출고할 위치를 선택하세요.</option>'+
+     locs.map(l=>`<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`).join('')
+   : '<option value="">⚠️ 등록된 자재위치 없음</option>';
+
+ $('outLocationInfo').innerHTML=locs.length
+   ? locs.map((l,i)=>`
+       <div class="loc">
+         📍 <b>자재위치 ${i+1}: ${esc(l.location_display)}</b>
+         · 현재 ${l.qty} ${esc(found.unit)}
+       </div>`).join('')
+   : '<div class="loc">⚠️ 등록된 자재위치가 없습니다. 먼저 입고에서 위치를 등록하세요.</div>';
+
+ renderMovementItemPreview('out',found);
+
+ if(locError){
+   $('outMsg').textContent='⚠️ 자재위치 조회 실패: '+locError.message;
+ }else if(locs.length){
+   $('outMsg').textContent=`✅ 현재 자재위치 ${locs.length}곳 확인 완료`;
+ }
+}
+$('outFinalSelect').onchange=()=>selectOutboundItem();
+$('outReloadItems').onclick=async()=>{
+ await loadAll();
+ await fillOutboundCandidates();
+};
+
+$('outSave').onclick=async()=>{
+ if(!verifiedHandler){$('outMsg').textContent='⚠️ 출고 담당자 이름을 선택하세요.';return}
+ const x=items.find(v=>v.id===$('outItemId').value);
+ const n=Number($('outQty').value);
+ if(!x){$('outMsg').textContent='⚠️ 최종 품목을 선택하세요.';return}
+ if(!$('outLoc').value){$('outMsg').textContent='⚠️ 출고 위치를 선택하세요.';return}
+ if(!n||n<=0){$('outMsg').textContent='⚠️ 출고수량을 입력하세요.';return}
+
+ const {error}=await db.rpc('admin_apply_movement_dated',{
+   p_username:session.username,p_password:session.password,p_type:'OUT',
+   p_item_id:x.id,p_location_id:$('outLoc').value,p_qty:n,
+   p_actor_name:verifiedHandler.display_name,p_note:$('outNote').value,
+   p_movement_date:$('outDate').value||todayKST()
+ });
+ $('outMsg').textContent=error
+   ?(error.message.includes('INSUFFICIENT')?'❌ 현재고보다 많이 출고할 수 없습니다.':'❌ '+error.message)
+   :'✅ 출고 저장 완료';
+ if(!error){
+   $('outQty').value='';$('outNote').value='';$('outDate').value=todayKST();
+   await loadAll();selectOutboundItem();
+ }
+};
+
+
+function setFilteredExportDefaults(){
+ const today=todayKST();
+ const d=new Date();
+ const first=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+ if($('filterStartDate') && !$('filterStartDate').value) $('filterStartDate').value=first;
+ if($('filterEndDate') && !$('filterEndDate').value) $('filterEndDate').value=today;
+ updateFilterExportUI();
+}
+
+function updateFilterExportUI(){
+ const type=$('filterExportType').value;
+ const isItems=type==='items';
+ $('filterStartWrap').classList.toggle('hidden',isItems);
+ $('filterEndWrap').classList.toggle('hidden',isItems);
+ $('filterHandlerWrap').classList.toggle('hidden',type!=='outbound');
+}
+
+$('filterExportType').onchange=updateFilterExportUI;
+setTimeout(setFilteredExportDefaults,0);
+
+function makeWorkbookSheet(rows,name,widths=[]){
+ const ws=XLSX.utils.json_to_sheet(rows);
+ if(widths.length) ws['!cols']=widths.map(w=>({wch:w}));
+ if(rows.length){
+   const colCount=Object.keys(rows[0]).length;
+   const endCol=XLSX.utils.encode_col(colCount-1);
+   ws['!autofilter']={ref:`A1:${endCol}${rows.length+1}`};
+   ws['!freeze']={xSplit:0,ySplit:1};
+ }
+ return {ws,name};
+}
+
+function filterItemsForExport(){
+ const category=$('filterCategory').value;
+ const keyword=norm($('filterKeyword').value);
+
+ return items.filter(x=>{
+   const categoryOk=!category || x.category===category;
+   const keywordOk=!keyword || norm(`${x.part_no} ${x.item_name}`).includes(keyword);
+   return categoryOk && keywordOk;
+ });
+}
+
+function itemExportRows(){
+ const filtered=filterItemsForExport();
+ const rows=[];
+
+ filtered.forEach(item=>{
+   const locs=item.item_locations||[];
+   if(locs.length){
+     locs.forEach(loc=>rows.push({
+       '품번':item.part_no||'',
+       '품명':item.item_name||'',
+       '자재구분':item.category||'기타',
+       '최소수량':Number(item.min_stock||0),
+       '현재 총수량':total(item),
+       '자재위치':loc.location_display||loc.location_code||'',
+       '위치별 수량':Number(loc.qty||0),
+       '단위':item.unit||'EA',
+       '최초 등록일':item.registered_on||'',
+       '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+       '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+     }));
+   }else{
+     rows.push({
+       '품번':item.part_no||'',
+       '품명':item.item_name||'',
+       '자재구분':item.category||'기타',
+       '최소수량':Number(item.min_stock||0),
+       '현재 총수량':0,
+       '자재위치':'위치 미등록',
+       '위치별 수량':0,
+       '단위':item.unit||'EA',
+       '최초 등록일':item.registered_on||'',
+       '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+       '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+     });
+   }
+ });
+ return rows;
+}
+
+async function movementExportRows(type){
+ const start=$('filterStartDate').value;
+ const end=$('filterEndDate').value;
+ if(!start || !end) throw new Error('시작일과 종료일을 입력하세요.');
+
+ const startIso=new Date(`${start}T00:00:00+09:00`).toISOString();
+ const endExclusive=new Date(new Date(`${end}T00:00:00+09:00`).getTime()+86400000).toISOString();
+
+ const {data,error}=await db.rpc('admin_get_stock_report',{
+   p_username:session.username,
+   p_password:session.password,
+   p_start:startIso,
+   p_end:endExclusive
+ });
+ if(error) throw error;
+
+ const category=$('filterCategory').value;
+ const keyword=norm($('filterKeyword').value);
+ const handler=$('filterHandler').value;
+ const movementType=type==='inbound'?'IN':'OUT';
+
+ return (data||[]).filter(x=>{
+   const typeOk=x.movement_type===movementType;
+   const categoryOk=!category || x.category===category;
+   const keywordOk=!keyword || norm(`${x.part_no} ${x.item_name}`).includes(keyword);
+   const handlerOk=type!=='outbound' || !handler || x.actor_name===handler;
+   return typeOk && categoryOk && keywordOk && handlerOk;
+ }).map(x=>({
+   [type==='inbound'?'입고일':'출고일']:new Date(x.created_at).toLocaleDateString('ko-KR'),
+   '품번':x.part_no||'',
+   '품명':x.item_name||'',
+   '자재구분':x.category||'기타',
+   [type==='inbound'?'입고수량':'출고수량']:Number(x.qty||0),
+   '단위':x.unit||'EA',
+   '자재위치':x.location_display||'',
+   '담당자':x.actor_name||'',
+   '비고':x.note||'',
+   '위치 최종수량':Number(x.stock_after_location||0),
+   '총 최종수량':Number(x.stock_after_total||0)
+ }));
+}
+
+$('exportFilteredExcelBtn').onclick=async()=>{
+ const type=$('filterExportType').value;
+ $('filterExportMsg').textContent='엑셀 자료를 정리하는 중...';
+
+ try{
+   let rows=[];
+   let sheetName='';
+   let fileLabel='';
+
+   if(type==='items'){
+     rows=itemExportRows();
+     sheetName='품목등록 목록';
+     fileLabel='품목등록';
+   }else{
+     rows=await movementExportRows(type);
+     sheetName=type==='inbound'?'입고내역':'출고내역';
+     fileLabel=sheetName;
+   }
+
+   if(!rows.length){
+     $('filterExportMsg').textContent='⚠️ 선택 조건에 해당하는 자료가 없습니다.';
+     return;
+   }
+
+   const wb=XLSX.utils.book_new();
+   const {ws}=makeWorkbookSheet(
+     rows,
+     sheetName,
+     [16,24,14,13,15,12,32,14,14,14,14]
+   );
+   XLSX.utils.book_append_sheet(wb,ws,sheetName);
+
+   const conditions=[
+     ['자료 구분',sheetName],
+     ['자재구분',$('filterCategory').value||'전체'],
+     ['품번·품명',$('filterKeyword').value||'전체'],
+     ['출고 담당자',type==='outbound'?($('filterHandler').value||'전체'):'해당 없음'],
+     ['시작일',type==='items'?'해당 없음':$('filterStartDate').value],
+     ['종료일',type==='items'?'해당 없음':$('filterEndDate').value],
+     ['생성일',todayKST()],
+     ['총 행 수',rows.length]
+   ];
+   const guide=XLSX.utils.aoa_to_sheet(conditions);
+   guide['!cols']=[{wch:18},{wch:40}];
+   XLSX.utils.book_append_sheet(wb,guide,'내보내기 조건');
+
+   XLSX.writeFile(wb,`미림테크놀러지_${fileLabel}_${todayKST()}.xlsx`);
+   $('filterExportMsg').textContent=`✅ ${sheetName} 엑셀 저장 완료 · ${rows.length}건`;
+ }catch(error){
+   $('filterExportMsg').textContent='❌ 엑셀 저장 실패: '+error.message;
+ }
+};
+
+
+
+function setQuickExportDefaults(){
+ const today=todayKST();
+ const d=new Date();
+ const first=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+ if($('quickStartDate') && !$('quickStartDate').value) $('quickStartDate').value=first;
+ if($('quickEndDate') && !$('quickEndDate').value) $('quickEndDate').value=today;
+}
+setTimeout(setQuickExportDefaults,0);
+
+function cleanFilePart(value){
+ return String(value||'전체')
+   .replace(/[\\/:*?"<>|]/g,'_')
+   .replace(/\s+/g,'_');
+}
+
+function styleWorksheet(ws,rows){
+ if(rows.length){
+   const keys=Object.keys(rows[0]);
+   ws['!autofilter']={ref:`A1:${XLSX.utils.encode_col(keys.length-1)}${rows.length+1}`};
+   ws['!freeze']={xSplit:0,ySplit:1};
+ }
+ ws['!cols']=[
+   {wch:14},{wch:20},{wch:24},{wch:14},{wch:14},{wch:14},
+   {wch:30},{wch:14},{wch:14},{wch:16},{wch:28}
+ ];
+ return ws;
+}
+
+function categoryItemRows(){
+ const category=$('quickCategory').value;
+ const rows=[];
+
+ items
+   .filter(x=>!category || x.category===category)
+   .forEach(item=>{
+     const locs=item.item_locations||[];
+     if(locs.length){
+       locs.forEach(loc=>rows.push({
+         '품번':item.part_no||'',
+         '품명':item.item_name||'',
+         '자재구분':item.category||'기타',
+         '최소수량':Number(item.min_stock||0),
+         '현재 총수량':total(item),
+         '자재위치':loc.location_display||loc.location_code||'',
+         '위치별 수량':Number(loc.qty||0),
+         '단위':item.unit||'EA',
+         '최초 등록일':item.registered_on||'',
+         '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+         '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+       }));
+     }else{
+       rows.push({
+         '품번':item.part_no||'',
+         '품명':item.item_name||'',
+         '자재구분':item.category||'기타',
+         '최소수량':Number(item.min_stock||0),
+         '현재 총수량':0,
+         '자재위치':'위치 미등록',
+         '위치별 수량':0,
+         '단위':item.unit||'EA',
+         '최초 등록일':item.registered_on||'',
+         '최근 입고일':item.last_inbound_at?formatDateKST(item.last_inbound_at):'',
+         '최근 출고일':item.last_outbound_at?formatDateKST(item.last_outbound_at):''
+       });
+     }
+   });
+
+ return rows;
+}
+
+async function quickMovementRows(type){
+ const start=$('quickStartDate').value;
+ const end=$('quickEndDate').value;
+ const category=$('quickCategory').value;
+
+ if(!start || !end) throw new Error('시작일과 종료일을 입력하세요.');
+
+ const startIso=new Date(`${start}T00:00:00+09:00`).toISOString();
+ const endExclusive=new Date(
+   new Date(`${end}T00:00:00+09:00`).getTime()+86400000
+ ).toISOString();
+
+ const {data,error}=await db.rpc('admin_get_stock_report',{
+   p_username:session.username,
+   p_password:session.password,
+   p_start:startIso,
+   p_end:endExclusive
+ });
+ if(error) throw error;
+
+ const movementType=type==='IN'?'IN':'OUT';
+
+ return (data||[])
+   .filter(x=>
+     x.movement_type===movementType &&
+     (!category || x.category===category)
+   )
+   .map(x=>({
+     [type==='IN'?'입고일':'출고일']:new Date(x.created_at).toLocaleDateString('ko-KR'),
+     '품번':x.part_no||'',
+     '품명':x.item_name||'',
+     '자재구분':x.category||'기타',
+     [type==='IN'?'입고수량':'출고수량']:Number(x.qty||0),
+     '단위':x.unit||'EA',
+     '자재위치':x.location_display||'',
+     '담당자':x.actor_name||'',
+     '비고':x.note||'',
+     '위치 최종수량':Number(x.stock_after_location||0),
+     '총 최종수량':Number(x.stock_after_total||0)
+   }));
+}
+
+function saveRowsAsExcel(rows,sheetName,fileName){
+ if(!rows.length) return false;
+ const wb=XLSX.utils.book_new();
+ const ws=styleWorksheet(XLSX.utils.json_to_sheet(rows),rows);
+ XLSX.utils.book_append_sheet(wb,ws,sheetName);
+ XLSX.writeFile(wb,fileName);
+ return true;
+}
+
+$('exportCategoryItemsBtn').onclick=()=>{
+ const category=$('quickCategory').value||'전체';
+ const rows=categoryItemRows();
+
+ if(!saveRowsAsExcel(
+   rows,
+   '자재구분 품목',
+   `미림테크놀러지_자재구분_${cleanFilePart(category)}_${todayKST()}.xlsx`
+ )){
+   $('quickExportMsg').textContent='⚠️ 해당 자재구분의 품목이 없습니다.';
+   return;
+ }
+
+ $('quickExportMsg').textContent=`✅ 자재구분 품목 엑셀 저장 완료 · ${rows.length}행`;
+};
+
+$('exportInboundBtn').onclick=async()=>{
+ $('quickExportMsg').textContent='입고내역을 정리하는 중...';
+ try{
+   const rows=await quickMovementRows('IN');
+   const category=$('quickCategory').value||'전체';
+
+   if(!saveRowsAsExcel(
+     rows,
+     '입고내역',
+     `미림테크놀러지_입고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )){
+     $('quickExportMsg').textContent='⚠️ 선택 기간의 입고내역이 없습니다.';
+     return;
+   }
+
+   $('quickExportMsg').textContent=`✅ 입고내역 엑셀 저장 완료 · ${rows.length}건`;
+ }catch(error){
+   $('quickExportMsg').textContent='❌ 입고내역 저장 실패: '+error.message;
+ }
+};
+
+$('exportOutboundBtn').onclick=async()=>{
+ $('quickExportMsg').textContent='출고내역을 정리하는 중...';
+ try{
+   const rows=await quickMovementRows('OUT');
+   const category=$('quickCategory').value||'전체';
+
+   if(!saveRowsAsExcel(
+     rows,
+     '출고내역',
+     `미림테크놀러지_출고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )){
+     $('quickExportMsg').textContent='⚠️ 선택 기간의 출고내역이 없습니다.';
+     return;
+   }
+
+   $('quickExportMsg').textContent=`✅ 출고내역 엑셀 저장 완료 · ${rows.length}건`;
+ }catch(error){
+   $('quickExportMsg').textContent='❌ 출고내역 저장 실패: '+error.message;
+ }
+};
+
+$('exportThreeFilesBtn').onclick=async()=>{
+ $('quickExportMsg').textContent='3개 파일을 정리하는 중...';
+
+ try{
+   const category=$('quickCategory').value||'전체';
+   const categoryRows=categoryItemRows();
+   const inboundRows=await quickMovementRows('IN');
+   const outboundRows=await quickMovementRows('OUT');
+
+   let saved=0;
+
+   if(saveRowsAsExcel(
+     categoryRows,
+     '자재구분 품목',
+     `미림테크놀러지_자재구분_${cleanFilePart(category)}_${todayKST()}.xlsx`
+   )) saved++;
+
+   if(saveRowsAsExcel(
+     inboundRows,
+     '입고내역',
+     `미림테크놀러지_입고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )) saved++;
+
+   if(saveRowsAsExcel(
+     outboundRows,
+     '출고내역',
+     `미림테크놀러지_출고내역_${cleanFilePart(category)}_${$('quickStartDate').value}_${$('quickEndDate').value}.xlsx`
+   )) saved++;
+
+   $('quickExportMsg').textContent=saved
+     ?`✅ ${saved}개 엑셀 파일 저장 완료`
+     :'⚠️ 선택 조건에 해당하는 자료가 없습니다.';
+ }catch(error){
+   $('quickExportMsg').textContent='❌ 파일 저장 실패: '+error.message;
+ }
+};
+
+
+let reportRows=[];
+function setReportDefaults(){
+ const d=new Date();
+ $('reportMonth').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+ $('reportYear').value=d.getFullYear();
+}
+setReportDefaults();
+
+$('reportType').onchange=()=>{
+ const monthly=$('reportType').value==='month';
+ $('reportMonthWrap').classList.toggle('hidden',!monthly);
+ $('reportYearWrap').classList.toggle('hidden',monthly);
+};
+
+function reportRange(){
+ if($('reportType').value==='month'){
+   const [y,m]=$('reportMonth').value.split('-').map(Number);
+   const start=new Date(y,m-1,1);
+   const end=new Date(y,m,1);
+   return {start:start.toISOString(),end:end.toISOString(),label:`${y}년 ${m}월`};
+ }
+ const y=Number($('reportYear').value);
+ return {
+   start:new Date(y,0,1).toISOString(),
+   end:new Date(y+1,0,1).toISOString(),
+   label:`${y}년`
+ };
+}
+
+function summarizeReport(rows){
+ const map=new Map();
+ rows.forEach(r=>{
+   const key=r.part_no;
+   if(!map.has(key)) map.set(key,{
+     품번:r.part_no,품명:r.item_name,자재구분:r.category||'기타',
+     입고수량:0,출고수량:0,현재고:Number(r.current_stock||0),단위:r.unit||'EA'
+   });
+   const x=map.get(key);
+   if(r.movement_type==='IN') x.입고수량+=Number(r.qty||0);
+   if(r.movement_type==='OUT') x.출고수량+=Number(r.qty||0);
+ });
+ return [...map.values()].sort((a,b)=>String(a.품번).localeCompare(String(b.품번)));
+}
+
+function renderReport(){
+ const summary=summarizeReport(reportRows);
+ const inQty=summary.reduce((s,x)=>s+x.입고수량,0);
+ const outQty=summary.reduce((s,x)=>s+x.출고수량,0);
+ $('reportSummary').innerHTML=`
+  <div class="loc"><b>품목 수</b><div class="stock">${summary.length}</div></div>
+  <div class="loc"><b>총 입고수량</b><div class="stock">${inQty}</div></div>
+  <div class="loc"><b>총 출고수량</b><div class="stock">${outQty}</div></div>
+  <div class="loc"><b>입출고 건수</b><div class="stock">${reportRows.length}</div></div>`;
+ $('reportTable').innerHTML='<thead><tr><th>품번</th><th>품명</th><th>자재구분</th><th>입고수량</th><th>출고수량</th><th>현재고</th><th>단위</th></tr></thead><tbody>'+
+   summary.map(x=>`<tr><td>${esc(x.품번)}</td><td>${esc(x.품명)}</td><td>${esc(x.자재구분)}</td><td>${x.입고수량}</td><td>${x.출고수량}</td><td>${x.현재고}</td><td>${esc(x.단위)}</td></tr>`).join('')+
+   '</tbody>';
+}
+
+$('loadReportBtn').onclick=async()=>{
+ const r=reportRange();
+ $('reportMsg').textContent='통계를 불러오는 중...';
+ const {data,error}=await db.rpc('admin_get_stock_report',{
+   p_username:session.username,p_password:session.password,
+   p_start:r.start,p_end:r.end
+ });
+ if(error){$('reportMsg').textContent='❌ '+error.message;return}
+ reportRows=data||[];
+ $('reportMsg').textContent=`✅ ${r.label} 통계 확인 완료`;
+ renderReport();
+};
+
+$('exportExcelBtn').onclick=async()=>{
+ if(!reportRows.length) await $('loadReportBtn').onclick();
+ if(!reportRows.length){$('reportMsg').textContent='⚠️ 내보낼 입출고 내역이 없습니다.';return}
+
+ const r=reportRange();
+ const summary=summarizeReport(reportRows);
+ const detail=reportRows.map(x=>({
+   일시:new Date(x.created_at).toLocaleString('ko-KR'),
+   구분:x.movement_type==='IN'?'입고':'출고',
+   품번:x.part_no,품명:x.item_name,자재구분:x.category||'기타',
+   수량:Number(x.qty||0),단위:x.unit||'EA',
+   위치:x.location_display,담당자:x.actor_name,비고:x.note||'',
+   위치재고:Number(x.stock_after_location||0),
+   총재고:Number(x.stock_after_total||0)
+ }));
+ const inventory=items.flatMap(x=>(x.item_locations||[]).map(l=>({
+   품번:x.part_no,품명:x.item_name,자재구분:x.category||'기타',
+   위치:l.location_display,현재수량:Number(l.qty||0),단위:x.unit,
+   최소수량:Number(x.min_stock||0)
+ })));
+
+ const wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(summary),'품목별 통계');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(detail),'입출고 내역');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(inventory),'현재재고');
+ XLSX.writeFile(wb,`미림테크놀러지_자재통계_${r.label.replaceAll(' ','_')}.xlsx`);
+ $('reportMsg').textContent='✅ 엑셀 파일 저장 완료';
+};
+
+
+function inventoryCheckRows(){
+ const rows=[];
+ items.forEach(item=>{
+   const locs=item.item_locations||[];
+   if(locs.length){
+     locs.forEach((loc,idx)=>{
+       rows.push({
+         '순번':rows.length+1,
+         '품번':item.part_no||'',
+         '품명':item.item_name||'',
+         '자재구분':item.category||'기타',
+         '자재위치':loc.location_display||loc.location_code||'',
+         '전산수량':Number(loc.qty||0),
+         '실제수량':'',
+         '차이수량':'',
+         '확인자':'',
+         '확인일':'',
+         '비고':''
+       });
+     });
+   }else{
+     rows.push({
+       '순번':rows.length+1,
+       '품번':item.part_no||'',
+       '품명':item.item_name||'',
+       '자재구분':item.category||'기타',
+       '자재위치':'⚠️ 위치 미등록',
+       '전산수량':0,
+       '실제수량':'',
+       '차이수량':'',
+       '확인자':'',
+       '확인일':'',
+       '비고':''
+     });
+   }
+ });
+ return rows.sort((a,b)=>
+   String(a.자재위치).localeCompare(String(b.자재위치),'ko') ||
+   String(a.품번).localeCompare(String(b.품번),'ko')
+ ).map((r,i)=>({...r,'순번':i+1}));
+}
+
+$('exportInventoryCheckBtn').onclick=()=>{
+ const rows=inventoryCheckRows();
+ if(!rows.length){
+   $('inventoryCheckMsg').textContent='⚠️ 등록된 품목이 없습니다.';
+   return;
+ }
+
+ const wb=XLSX.utils.book_new();
+ const ws=XLSX.utils.json_to_sheet(rows);
+
+ ws['!cols']=[
+   {wch:7},{wch:18},{wch:24},{wch:14},{wch:34},
+   {wch:12},{wch:12},{wch:12},{wch:12},{wch:14},{wch:24}
+ ];
+ ws['!freeze']={xSplit:0,ySplit:1};
+ ws['!autofilter']={ref:`A1:K${rows.length+1}`};
+
+ XLSX.utils.book_append_sheet(wb,ws,'창고 재고조사표');
+
+ const summary=[
+   ['미림테크놀러지 창고 재고조사표'],
+   ['출력일',todayKST()],
+   ['총 등록 품목 수',items.length],
+   ['총 위치 행 수',rows.length],
+   [],
+   ['사용방법'],
+   ['1','전산수량을 기준으로 창고 실물을 확인합니다.'],
+   ['2','실제수량과 차이수량을 기록합니다.'],
+   ['3','확인자·확인일·비고를 작성합니다.']
+ ];
+ const guide=XLSX.utils.aoa_to_sheet(summary);
+ guide['!cols']=[{wch:18},{wch:55}];
+ XLSX.utils.book_append_sheet(wb,guide,'안내');
+
+ XLSX.writeFile(wb,`미림테크놀러지_창고재고조사표_${todayKST()}.xlsx`);
+ $('inventoryCheckMsg').textContent=`✅ 재고조사표 저장 완료 · ${items.length}종목 / ${rows.length}위치`;
+};
+
+$('printInventoryCheckBtn').onclick=()=>{
+ const rows=inventoryCheckRows();
+ if(!rows.length){
+   $('inventoryCheckMsg').textContent='⚠️ 등록된 품목이 없습니다.';
+   return;
+ }
+
+ $('inventoryPrintArea').innerHTML=`
+   <h1>미림테크놀러지 창고 재고조사표</h1>
+   <div style="margin-bottom:8px">출력일: ${todayKST()} · 총 ${items.length}종목 · ${rows.length}위치</div>
+   <table>
+     <thead>
+       <tr>
+         <th>순번</th><th>품번</th><th>품명</th><th>자재구분</th>
+         <th>자재위치</th><th>전산수량</th><th>실제수량</th>
+         <th>차이수량</th><th>확인자</th><th>확인일</th><th>비고</th>
+       </tr>
+     </thead>
+     <tbody>
+       ${rows.map(r=>`<tr>
+         <td>${r['순번']}</td>
+         <td>${esc(r['품번'])}</td>
+         <td>${esc(r['품명'])}</td>
+         <td>${esc(r['자재구분'])}</td>
+         <td>${esc(r['자재위치'])}</td>
+         <td>${r['전산수량']}</td>
+         <td></td><td></td><td></td><td></td><td></td>
+       </tr>`).join('')}
+     </tbody>
+   </table>`;
+
+ window.print();
+};
+
+
+db.channel('mirim-wms-live').on('postgres_changes',{event:'*',schema:'public',table:'items'},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'item_locations'},loadAll).subscribe();
+</script>
+
+<div id="inventoryPrintArea" style="display:none"></div>
+</body></html>
