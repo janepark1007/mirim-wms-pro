@@ -68,21 +68,87 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <section id="itemsTab" class="tabpane hidden">
     <div class="card">
-      <h2>품목 등록</h2>
-      <input id="itemId" type="hidden">
-      <div class="grid">
-        <input id="partNo" placeholder="품번 *">
-        <input id="itemName" placeholder="품명 *">
-        <select id="category"></select>
-        <input id="maker" placeholder="제조사">
-        <input id="spec" placeholder="규격">
-        <select id="unit"><option>EA</option><option>BOX</option><option>M</option><option>ROLL</option></select>
-        <input id="minStock" type="number" min="0" placeholder="최소재고">
-        <input id="note" placeholder="비고">
+      <h2>품목 등록·수정</h2>
+
+      <div class="label">기존 품목 수정</div>
+      <div class="row">
+        <select id="editItemSelect">
+          <option value="">새 품목 등록</option>
+        </select>
+        <button id="cancelEditBtn" class="secondary" type="button">수정 취소</button>
       </div>
+      <div id="editModeMsg" class="muted" style="margin:8px 0 14px">새 품목 등록 모드입니다.</div>
+
+      <input id="itemId" type="hidden">
+
+      <div class="grid">
+        <div>
+          <div class="label">품번 *</div>
+          <input id="partNo" placeholder="예: 510002530">
+        </div>
+        <div>
+          <div class="label">품명 *</div>
+          <input id="itemName" placeholder="예: 253020-1">
+        </div>
+        <div>
+          <div class="label">자재구분 *</div>
+          <select id="category"></select>
+        </div>
+        <div>
+          <div class="label">최소수량 *</div>
+          <input id="minStock" type="number" min="0" placeholder="예: 100">
+        </div>
+      </div>
+
+      <div class="label" style="margin-top:14px">자재위치 *</div>
+      <select id="itemLocType">
+        <option value="1층 자재실">1층 자재실</option>
+        <option value="2층 자재실">2층 자재실</option>
+        <option value="생산라인">생산라인</option>
+      </select>
+
+      <div id="itemWarehouseFields" style="margin-top:12px">
+        <div class="grid">
+          <input id="itemLocArea" placeholder="구역 예: A">
+          <input id="itemLocTier" placeholder="단 예: 1">
+          <input id="itemLocNumber" placeholder="번호 예: 001">
+          <input id="itemLocCell" placeholder="칸 예: A">
+        </div>
+      </div>
+
+      <div id="itemProductionFields" class="hidden" style="margin-top:12px">
+        <div class="grid">
+          <select id="itemProdLine">
+            <option value="D1">D1</option><option value="D2">D2</option>
+            <option value="D3">D3</option><option value="D4">D4</option>
+            <option value="D5">D5</option><option value="D6">D6</option>
+            <option value="D7">D7</option><option value="D8">D8</option>
+          </select>
+          <input id="itemProdDrawer" placeholder="서랍·세부 위치 예: 서랍 1">
+        </div>
+      </div>
+
+      <input id="itemLocationCode" readonly placeholder="위치를 선택하면 자동 생성됩니다." style="margin-top:12px">
+
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <div class="label">초기수량</div>
+          <input id="itemInitialQty" type="number" min="0" placeholder="예: 0">
+        </div>
+        <div>
+          <div class="label">관리단위</div>
+          <select id="unit"><option>EA</option><option>BOX</option><option>M</option><option>ROLL</option></select>
+        </div>
+      </div>
+
+      <input id="maker" type="hidden">
+      <input id="spec" type="hidden">
+      <input id="note" type="hidden">
+
       <div class="label" style="margin-top:12px">품목 사진</div>
       <input id="photoFile" type="file" accept="image/*" capture="environment">
       <div class="muted">휴대폰 사진은 자동으로 축소해 저장합니다.</div>
+
       <button id="saveItemBtn" style="margin-top:12px">품목 저장</button>
       <div id="itemMsg" class="muted" style="margin-top:8px"></div>
     </div>
@@ -90,9 +156,73 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div class="card">
       <h2>위치 등록</h2>
       <select id="locItem"></select><br><br>
-      <div class="grid">
-        <input id="locCode" placeholder="위치코드 * 예: 2층-A구역-1단-001-A">
-        <input id="locDisplay" placeholder="표시명 (비우면 위치코드 사용)">
+
+      <div class="label">위치 유형</div>
+      <select id="locType">
+        <option value="1층 자재실">1층 자재실</option>
+        <option value="2층 자재실">2층 자재실</option>
+        <option value="생산라인">생산라인</option>
+      </select>
+
+      <div id="warehouseFields" style="margin-top:12px">
+        <div class="grid">
+          <div>
+            <div class="label">구역</div>
+            <input id="locArea" list="areaOptions" placeholder="예: A, B, J">
+            <datalist id="areaOptions">
+              <option value="A"><option value="B"><option value="C"><option value="D">
+              <option value="E"><option value="F"><option value="G"><option value="H">
+              <option value="I"><option value="J"><option value="K"><option value="L">
+            </datalist>
+          </div>
+          <div>
+            <div class="label">단</div>
+            <input id="locTier" list="tierOptions" inputmode="numeric" placeholder="예: 1">
+            <datalist id="tierOptions">
+              <option value="1"><option value="2"><option value="3"><option value="4">
+              <option value="5"><option value="6"><option value="7"><option value="8">
+              <option value="9"><option value="10">
+            </datalist>
+          </div>
+          <div>
+            <div class="label">번호</div>
+            <input id="locNumber" placeholder="예: 001">
+          </div>
+          <div>
+            <div class="label">칸</div>
+            <input id="locCell" list="cellOptions" placeholder="예: A">
+            <datalist id="cellOptions">
+              <option value="A"><option value="B"><option value="C"><option value="D">
+              <option value="E"><option value="F"><option value="G"><option value="H">
+            </datalist>
+          </div>
+        </div>
+      </div>
+
+      <div id="productionFields" class="hidden" style="margin-top:12px">
+        <div class="grid">
+          <div>
+            <div class="label">생산라인</div>
+            <select id="prodLine">
+              <option value="D1">D1</option><option value="D2">D2</option>
+              <option value="D3">D3</option><option value="D4">D4</option>
+              <option value="D5">D5</option><option value="D6">D6</option>
+              <option value="D7">D7</option><option value="D8">D8</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">서랍·세부 위치</div>
+            <input id="prodDrawer" placeholder="예: 서랍 1, 선반 A">
+          </div>
+        </div>
+      </div>
+
+      <div class="label" style="margin-top:12px">생성 위치코드</div>
+      <input id="locCode" readonly placeholder="위치정보를 선택하면 자동 생성됩니다.">
+      <div class="muted">같은 품목이 여러 곳에 있으면 위치별로 각각 저장하세요.</div>
+
+      <div class="grid" style="margin-top:12px">
+        <input id="locDisplay" placeholder="표시명 (비우면 생성 위치코드 사용)">
         <input id="locQty" type="number" min="0" placeholder="초기 수량">
       </div>
       <button id="saveLocBtn" style="margin-top:12px">위치 저장</button>
@@ -103,9 +233,22 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   <section id="inboundTab" class="tabpane hidden">
     <div class="card">
       <h2>입고 등록</h2>
-      <select id="inItem"></select><br><br>
-      <select id="inLoc"></select><br><br>
-      <div class="grid">
+      <div class="label">품번 또는 품명 검색 *</div>
+      <input id="inSearch" list="inOptions" placeholder="품번 또는 품명 입력">
+      <datalist id="inOptions"></datalist>
+      <input id="inItemId" type="hidden">
+
+      <div class="grid" style="margin-top:12px">
+        <input id="inPart" readonly placeholder="품번">
+        <input id="inName" readonly placeholder="품명">
+        <input id="inCategory" readonly placeholder="자재구분">
+        <input id="inCurrentStock" readonly placeholder="현재고">
+      </div>
+
+      <div class="label" style="margin-top:12px">입고 위치 *</div>
+      <select id="inLoc"></select>
+
+      <div class="grid" style="margin-top:12px">
         <input id="inQty" type="number" min="1" placeholder="입고수량 *">
         <input id="inPartner" placeholder="거래처·입고처">
       </div>
@@ -119,22 +262,26 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div class="card">
       <h2>출고 등록</h2>
       <p><span class="step">STEP 1</span><b>출고 담당자 선택(필수)</b></p>
-      <div class="grid">
-        <select id="handler"></select>
-        <input id="handlerNo" inputmode="numeric" placeholder="담당자 번호 *">
-      </div>
-      <div id="handlerMsg" class="muted" style="margin-top:8px">담당자를 확인해야 품목 검색을 진행할 수 있습니다.</div>
+      <select id="handler"></select>
+      <div id="handlerMsg" class="muted" style="margin-top:8px">담당자 이름만 선택하면 됩니다.</div>
     </div>
+
     <div id="outStep2" class="card" style="opacity:.45;pointer-events:none">
       <p><span class="step">STEP 2</span><b>품번 또는 품명 검색</b></p>
       <input id="outSearch" list="outOptions" placeholder="품번 또는 품명 입력">
       <datalist id="outOptions"></datalist>
       <input id="outItemId" type="hidden">
+
       <div class="grid" style="margin-top:10px">
         <input id="outPart" readonly placeholder="품번">
         <input id="outName" readonly placeholder="품명">
+        <input id="outCategory" readonly placeholder="자재구분">
+        <input id="outCurrentStock" readonly placeholder="현재고">
       </div>
-      <select id="outLoc" style="margin-top:10px"></select>
+
+      <div class="label" style="margin-top:12px">출고 위치 *</div>
+      <select id="outLoc"></select>
+
       <input id="outQty" type="number" min="1" placeholder="출고수량 *" style="margin-top:10px">
       <textarea id="outNote" placeholder="비고"></textarea>
       <button id="outSave">출고 저장</button>
@@ -195,10 +342,13 @@ async function loadAll(){
  $('category').innerHTML=categories.map(x=>`<option>${esc(x.name)}</option>`).join('');
  $('catList').innerHTML=categories.map(x=>`<span class="badge">${esc(x.name)}</span>`).join('');
  const opt=items.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(x.item_name)}</option>`).join('');
- $('locItem').innerHTML=opt;$('inItem').innerHTML=opt;
- $('outOptions').innerHTML=items.map(x=>`<option value="${esc(x.part_no)} | ${esc(x.item_name)}"></option>`).join('');
+ $('locItem').innerHTML=opt;
+ $('editItemSelect').innerHTML='<option value="">새 품목 등록</option>'+opt;
+ const searchOptions=items.map(x=>`<option value="${esc(x.part_no)} | ${esc(x.item_name)}"></option>`).join('');
+ $('inOptions').innerHTML=searchOptions;
+ $('outOptions').innerHTML=searchOptions;
  $('handler').innerHTML='<option value="">담당자 선택 *</option>'+handlers.map(x=>`<option value="${x.id}">${esc(x.display_name)}</option>`).join('');
- updateInLoc(); renderSearch(items);
+ renderSearch(items);
 }
 function renderSearch(list){
  $('searchResults').innerHTML=list.length?list.map(x=>`<div class="card result">
@@ -212,6 +362,70 @@ function renderSearch(list){
 $('searchBtn').onclick=()=>{const k=norm($('searchQ').value);renderSearch(!k?items:items.filter(x=>norm(x.part_no+' '+x.item_name+' '+x.category+' '+(x.maker||'')).includes(k)))};
 $('searchQ').addEventListener('input',()=> $('searchBtn').click());
 
+
+function clearItemForm(){
+ $('itemId').value='';
+ $('editItemSelect').value='';
+ ['partNo','itemName','minStock','itemLocArea','itemLocTier','itemLocNumber','itemLocCell',
+  'itemProdDrawer','itemInitialQty'].forEach(id=>$(id).value='');
+ $('itemLocType').value='1층 자재실';
+ $('itemProdLine').value='D1';
+ $('unit').value='EA';
+ $('photoFile').value='';
+ photoData=null;
+ $('partNo').readOnly=false;
+ $('saveItemBtn').textContent='품목 저장';
+ $('editModeMsg').textContent='새 품목 등록 모드입니다.';
+ buildItemLocationCode();
+}
+
+function loadItemForEdit(){
+ const id=$('editItemSelect').value;
+ if(!id){
+   clearItemForm();
+   return;
+ }
+
+ const x=items.find(v=>v.id===id);
+ if(!x) return;
+
+ $('itemId').value=x.id;
+ $('partNo').value=x.part_no||'';
+ $('itemName').value=x.item_name||'';
+ $('category').value=x.category||'기타';
+ $('minStock').value=x.min_stock??0;
+ $('unit').value=x.unit||'EA';
+ $('partNo').readOnly=true;
+ $('saveItemBtn').textContent='품목 수정 저장';
+ $('editModeMsg').textContent=`수정 중: ${x.part_no} · ${x.item_name}`;
+
+ const loc=(x.item_locations||[])[0];
+ if(loc){
+   $('itemInitialQty').value=loc.qty??0;
+   const code=loc.location_code||'';
+
+   if(code.startsWith('생산-')){
+     $('itemLocType').value='생산라인';
+     const parts=code.split('-');
+     $('itemProdLine').value=parts[1]||'D1';
+     $('itemProdDrawer').value=parts.slice(2).join('-');
+   }else{
+     $('itemLocType').value=code.startsWith('2층')?'2층 자재실':'1층 자재실';
+     const parts=code.split('-');
+     $('itemLocArea').value=(parts[1]||'').replace('구역','');
+     $('itemLocTier').value=(parts[2]||'').replace('단','');
+     $('itemLocNumber').value=parts[3]||'';
+     $('itemLocCell').value=parts[4]||'';
+   }
+ }else{
+   $('itemInitialQty').value='';
+ }
+ buildItemLocationCode();
+}
+
+$('editItemSelect').onchange=loadItemForEdit;
+$('cancelEditBtn').onclick=clearItemForm;
+
 $('photoFile').onchange=async e=>{
  const f=e.target.files[0];if(!f){photoData=null;return}
  const im=new Image();im.src=URL.createObjectURL(f);await im.decode();
@@ -219,58 +433,286 @@ $('photoFile').onchange=async e=>{
  c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
  photoData=c.toDataURL('image/jpeg',.72);
 };
+
+function buildItemLocationCode(){
+ const type=$('itemLocType').value;
+ $('itemWarehouseFields').classList.toggle('hidden',type==='생산라인');
+ $('itemProductionFields').classList.toggle('hidden',type!=='생산라인');
+
+ let code='';
+ if(type==='생산라인'){
+   const drawer=$('itemProdDrawer').value.trim();
+   code=['생산',$('itemProdLine').value,drawer].filter(Boolean).join('-');
+ }else{
+   const floor=type.startsWith('1층')?'1층':'2층';
+   const area=$('itemLocArea').value.trim().toUpperCase();
+   const tier=$('itemLocTier').value.trim();
+   const num=padLocationNumber($('itemLocNumber').value);
+   const cell=$('itemLocCell').value.trim().toUpperCase();
+   code=[
+     floor,
+     area?area+'구역':'',
+     tier?tier+'단':'',
+     num,
+     cell
+   ].filter(Boolean).join('-');
+ }
+ $('itemLocationCode').value=code;
+}
+['itemLocType','itemLocArea','itemLocTier','itemLocNumber','itemLocCell','itemProdLine','itemProdDrawer'].forEach(id=>{
+ $(id).addEventListener('input',buildItemLocationCode);
+ $(id).addEventListener('change',buildItemLocationCode);
+});
+buildItemLocationCode();
+
 $('saveItemBtn').onclick=async()=>{
- $('itemMsg').textContent='저장 중...';
- const {data,error}=await db.rpc('admin_upsert_item',{
-  p_username:session.username,p_password:session.password,p_item_id:null,p_part_no:$('partNo').value,p_item_name:$('itemName').value,
-  p_category:$('category').value,p_maker:$('maker').value,p_specification:$('spec').value,p_unit:$('unit').value,
-  p_min_stock:Number($('minStock').value||0),p_note:$('note').value,p_photo_url:photoData
+ buildItemLocationCode();
+
+ const editing=!!$('itemId').value;
+
+ if(!$('partNo').value.trim() || !$('itemName').value.trim()){
+   $('itemMsg').textContent='⚠️ 품번과 품명을 입력하세요.';
+   return;
+ }
+ if(!$('category').value){
+   $('itemMsg').textContent='⚠️ 자재구분을 선택하세요.';
+   return;
+ }
+ if(!editing && !$('itemLocationCode').value){
+   $('itemMsg').textContent='⚠️ 자재위치를 입력하세요.';
+   return;
+ }
+
+ $('itemMsg').textContent=editing?'수정 저장 중...':'저장 중...';
+
+ const {data:itemId,error:itemError}=await db.rpc('admin_upsert_item',{
+  p_username:session.username,
+  p_password:session.password,
+  p_item_id:editing?$('itemId').value:null,
+  p_part_no:$('partNo').value,
+  p_item_name:$('itemName').value,
+  p_category:$('category').value,
+  p_maker:'',
+  p_specification:'',
+  p_unit:$('unit').value,
+  p_min_stock:Number($('minStock').value||0),
+  p_note:'',
+  p_photo_url:photoData
  });
- $('itemMsg').textContent=error?'❌ '+error.message:'✅ 품목 저장 완료';
- if(!error){['partNo','itemName','maker','spec','minStock','note'].forEach(id=>$(id).value='');$('photoFile').value='';photoData=null;await loadAll()}
+
+ if(itemError){
+   $('itemMsg').textContent=itemError.message.includes('duplicate key')
+     ? '⚠️ 이미 등록된 품번입니다. 위의 기존 품목 수정에서 선택하세요.'
+     : '❌ '+itemError.message;
+   return;
+ }
+
+ if(!editing){
+   const {error:locError}=await db.rpc('admin_add_location',{
+     p_username:session.username,
+     p_password:session.password,
+     p_item_id:itemId,
+     p_location_code:$('itemLocationCode').value,
+     p_location_display:$('itemLocationCode').value,
+     p_qty:Number($('itemInitialQty').value||0)
+   });
+
+   if(locError){
+     $('itemMsg').textContent='⚠️ 품목은 저장됐지만 위치 저장 실패: '+locError.message;
+     await loadAll();
+     return;
+   }
+ }
+
+ $('itemMsg').textContent=editing
+   ? '✅ 품목 수정 완료'
+   : '✅ 품목과 위치 저장 완료';
+
+ await loadAll();
+ clearItemForm();
 };
+
 $('saveLocBtn').onclick=async()=>{
- const {error}=await db.rpc('admin_add_location',{p_username:session.username,p_password:session.password,p_item_id:$('locItem').value,p_location_code:$('locCode').value,p_location_display:$('locDisplay').value,p_qty:Number($('locQty').value||0)});
+ buildLocationCode();
+ if(!$('locCode').value){
+   $('locMsg').textContent='⚠️ 위치정보를 입력하세요.';
+   return;
+ }
+ const {error}=await db.rpc('admin_add_location',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:$('locItem').value,
+   p_location_code:$('locCode').value,
+   p_location_display:$('locDisplay').value,
+   p_qty:Number($('locQty').value||0)
+ });
  $('locMsg').textContent=error?'❌ '+error.message:'✅ 위치 저장 완료';
- if(!error){$('locCode').value='';$('locDisplay').value='';$('locQty').value='';await loadAll()}
+ if(!error){
+   ['locArea','locTier','locNumber','locCell','prodDrawer','locDisplay','locQty'].forEach(id=>$(id).value='');
+   $('locType').value='1층 자재실';
+   $('prodLine').value='D1';
+   buildLocationCode();
+   await loadAll();
+ }
 };
 $('addCategoryBtn').onclick=async()=>{
  const {error}=await db.rpc('admin_add_category',{p_username:session.username,p_password:session.password,p_name:$('newCategory').value});
  $('catMsg').textContent=error?'❌ '+error.message:'✅ 자재구분 추가 완료';if(!error){$('newCategory').value='';await loadAll()}
 };
-function updateInLoc(){
- const x=items.find(v=>v.id===$('inItem').value)||items[0];
- $('inLoc').innerHTML=(x?.item_locations||[]).map(l=>`<option value="${l.id}">${esc(l.location_display)} · ${l.qty} ${esc(x.unit)}</option>`).join('');
+function findRegisteredItem(value){
+ const n=norm(value);
+ if(!n) return null;
+
+ let found=items.find(x=>
+   n===norm(x.part_no) ||
+   n===norm(x.item_name) ||
+   n===norm(x.part_no+' | '+x.item_name)
+ );
+
+ if(!found){
+   const matches=items.filter(x=>
+     norm(x.part_no+' '+x.item_name).includes(n)
+   );
+   if(matches.length===1) found=matches[0];
+ }
+ return found||null;
 }
-$('inItem').onchange=updateInLoc;
+
+function fillInboundItem(){
+ const found=findRegisteredItem($('inSearch').value);
+ $('inItemId').value=found?.id||'';
+ $('inPart').value=found?.part_no||'';
+ $('inName').value=found?.item_name||'';
+ $('inCategory').value=found?.category||'';
+ $('inCurrentStock').value=found?`${total(found)} ${found.unit}`:'';
+ $('inLoc').innerHTML=(found?.item_locations||[]).map(l=>
+   `<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`
+ ).join('');
+ if(found && !(found.item_locations||[]).length){
+   $('inLoc').innerHTML='<option value="">⚠️ 등록된 위치 없음</option>';
+ }
+}
+
+$('inSearch').oninput=fillInboundItem;
+$('inSearch').onchange=fillInboundItem;
+
 $('inSave').onclick=async()=>{
- const x=items.find(v=>v.id===$('inItem').value),n=Number($('inQty').value);
- const {error}=await db.rpc('admin_apply_movement',{p_username:session.username,p_password:session.password,p_type:'IN',p_item_id:x?.id,p_location_id:$('inLoc').value,p_qty:n,p_actor_name:session.displayName,p_note:[$('inPartner').value,$('inNote').value].filter(Boolean).join(' / ')});
- $('inMsg').textContent=error?'❌ '+error.message:'✅ 입고 저장 완료';if(!error){$('inQty').value='';$('inPartner').value='';$('inNote').value='';await loadAll()}
+ const x=items.find(v=>v.id===$('inItemId').value);
+ const n=Number($('inQty').value);
+
+ if(!x){
+   $('inMsg').textContent='⚠️ 등록된 품번 또는 품명을 선택하세요.';
+   return;
+ }
+ if(!$('inLoc').value){
+   $('inMsg').textContent='⚠️ 입고 위치를 선택하세요.';
+   return;
+ }
+ if(!n || n<=0){
+   $('inMsg').textContent='⚠️ 입고수량을 입력하세요.';
+   return;
+ }
+
+ const {error}=await db.rpc('admin_apply_movement',{
+   p_username:session.username,
+   p_password:session.password,
+   p_type:'IN',
+   p_item_id:x.id,
+   p_location_id:$('inLoc').value,
+   p_qty:n,
+   p_actor_name:session.displayName,
+   p_note:[$('inPartner').value,$('inNote').value].filter(Boolean).join(' / ')
+ });
+
+ $('inMsg').textContent=error?'❌ '+error.message:'✅ 입고 저장 완료';
+
+ if(!error){
+   $('inQty').value='';
+   $('inPartner').value='';
+   $('inNote').value='';
+   await loadAll();
+   fillInboundItem();
+ }
 };
 
-async function verifyHandler(){
- verifiedHandler=null;$('outStep2').style.opacity=.45;$('outStep2').style.pointerEvents='none';
- if(!$('handler').value||!$('handlerNo').value){$('handlerMsg').textContent='담당자와 번호를 입력하세요.';return}
- const {data,error}=await db.rpc('verify_material_handler',{p_handler_id:$('handler').value,p_login_no:$('handlerNo').value});
- if(error||!data?.length){$('handlerMsg').textContent='❌ 담당자 번호가 맞지 않습니다.';return}
- verifiedHandler=data[0];$('handlerMsg').textContent='✅ '+verifiedHandler.display_name+' 확인 완료';
- $('outStep2').style.opacity=1;$('outStep2').style.pointerEvents='auto';
+function selectHandler(){
+ const id=$('handler').value;
+ const found=handlers.find(h=>h.id===id)||null;
+ verifiedHandler=found;
+
+ const enabled=!!found;
+ $('outStep2').style.opacity=enabled?1:.45;
+ $('outStep2').style.pointerEvents=enabled?'auto':'none';
+ $('handlerMsg').textContent=enabled
+   ? `✅ ${found.display_name} 선택 완료`
+   : '담당자 이름을 먼저 선택하세요.';
 }
-$('handler').onchange=verifyHandler;$('handlerNo').oninput=verifyHandler;
+
+$('handler').onchange=selectHandler;
+
 function updateOutItem(){
- const n=norm($('outSearch').value);let found=items.find(x=>n===norm(x.part_no)||n===norm(x.part_no+' | '+x.item_name)||n===norm(x.item_name));
- if(!found){const a=items.filter(x=>norm(x.part_no+' '+x.item_name).includes(n));if(a.length===1)found=a[0]}
- $('outItemId').value=found?.id||'';$('outPart').value=found?.part_no||'';$('outName').value=found?.item_name||'';
- $('outLoc').innerHTML=(found?.item_locations||[]).map(l=>`<option value="${l.id}">${esc(l.location_display)} · ${l.qty} ${esc(found.unit)}</option>`).join('');
+ const found=findRegisteredItem($('outSearch').value);
+ $('outItemId').value=found?.id||'';
+ $('outPart').value=found?.part_no||'';
+ $('outName').value=found?.item_name||'';
+ $('outCategory').value=found?.category||'';
+ $('outCurrentStock').value=found?`${total(found)} ${found.unit}`:'';
+ $('outLoc').innerHTML=(found?.item_locations||[]).map(l=>
+   `<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`
+ ).join('');
+ if(found && !(found.item_locations||[]).length){
+   $('outLoc').innerHTML='<option value="">⚠️ 등록된 위치 없음</option>';
+ }
 }
-$('outSearch').oninput=updateOutItem;$('outSearch').onchange=updateOutItem;
+
+$('outSearch').oninput=updateOutItem;
+$('outSearch').onchange=updateOutItem;
+
 $('outSave').onclick=async()=>{
- if(!verifiedHandler){$('outMsg').textContent='❌ 담당자를 먼저 확인하세요.';return}
- const x=items.find(v=>v.id===$('outItemId').value),n=Number($('outQty').value);
- const {error}=await db.rpc('admin_apply_movement',{p_username:session.username,p_password:session.password,p_type:'OUT',p_item_id:x?.id,p_location_id:$('outLoc').value,p_qty:n,p_actor_name:verifiedHandler.display_name,p_note:$('outNote').value});
- $('outMsg').textContent=error?(error.message.includes('INSUFFICIENT')?'❌ 현재고보다 많이 출고할 수 없습니다.':'❌ '+error.message):'✅ 출고 저장 완료';
- if(!error){$('outQty').value='';$('outNote').value='';await loadAll()}
+ if(!verifiedHandler){
+   $('outMsg').textContent='⚠️ 출고 담당자 이름을 선택하세요.';
+   return;
+ }
+
+ const x=items.find(v=>v.id===$('outItemId').value);
+ const n=Number($('outQty').value);
+
+ if(!x){
+   $('outMsg').textContent='⚠️ 등록된 품번 또는 품명을 선택하세요.';
+   return;
+ }
+ if(!$('outLoc').value){
+   $('outMsg').textContent='⚠️ 출고 위치를 선택하세요.';
+   return;
+ }
+ if(!n || n<=0){
+   $('outMsg').textContent='⚠️ 출고수량을 입력하세요.';
+   return;
+ }
+
+ const {error}=await db.rpc('admin_apply_movement',{
+   p_username:session.username,
+   p_password:session.password,
+   p_type:'OUT',
+   p_item_id:x.id,
+   p_location_id:$('outLoc').value,
+   p_qty:n,
+   p_actor_name:verifiedHandler.display_name,
+   p_note:$('outNote').value
+ });
+
+ $('outMsg').textContent=error
+   ? (error.message.includes('INSUFFICIENT')
+      ? '❌ 현재고보다 많이 출고할 수 없습니다.'
+      : '❌ '+error.message)
+   : '✅ 출고 저장 완료';
+
+ if(!error){
+   $('outQty').value='';
+   $('outNote').value='';
+   await loadAll();
+   updateOutItem();
+ }
 };
 db.channel('mirim-wms-live').on('postgres_changes',{event:'*',schema:'public',table:'items'},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'item_locations'},loadAll).subscribe();
 </script>
