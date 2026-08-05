@@ -180,11 +180,11 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div class="grid">
         <div>
           <div class="label required-label">품번 검색</div>
-          <input id="inPartSearch" placeholder="등록된 품번 입력">
+          <input id="inPartSearch" placeholder="품번 입력 → 품명 자동표시">
         </div>
         <div>
           <div class="label required-label">품명 검색</div>
-          <input id="inNameSearch" placeholder="등록된 품명 입력">
+          <input id="inNameSearch" placeholder="품명 입력 → 품번 자동표시">
         </div>
       </div>
 
@@ -344,11 +344,11 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div class="grid">
         <div>
           <div class="label required-label">품번 검색</div>
-          <input id="outPartSearch" placeholder="품번 전체 또는 일부 입력">
+          <input id="outPartSearch" placeholder="품번 입력 → 품명 자동표시">
         </div>
         <div>
           <div class="label required-label">품명 검색</div>
-          <input id="outNameSearch" placeholder="품명 전체 또는 일부 입력">
+          <input id="outNameSearch" placeholder="품명 입력 → 품번 자동표시">
         </div>
       </div>
 
@@ -1016,6 +1016,32 @@ async function fetchRegisteredItemDirect(partValue,nameValue){
  return found;
 }
 
+
+function syncPairedSearch(prefix){
+ const partEl=$(prefix+'PartSearch');
+ const nameEl=$(prefix+'NameSearch');
+ if(!partEl || !nameEl) return null;
+
+ const p=norm(partEl.value);
+ const n=norm(nameEl.value);
+ let found=null;
+
+ if(p){
+   const exactPart=items.filter(x=>norm(x.part_no)===p);
+   if(exactPart.length===1) found=exactPart[0];
+ }
+ if(!found && n){
+   const exactName=items.filter(x=>norm(x.item_name)===n);
+   if(exactName.length===1) found=exactName[0];
+ }
+
+ if(found){
+   partEl.value=found.part_no||'';
+   nameEl.value=found.item_name||'';
+ }
+ return found;
+}
+
 function resolveRegisteredItem(partValue,nameValue){
  const p=norm(partValue);
  const n=norm(nameValue);
@@ -1041,6 +1067,7 @@ function resolveRegisteredItem(partValue,nameValue){
 }
 
 async function fillInboundCandidates(){
+ let target=syncPairedSearch('in');
  const partValue=$('inPartSearch').value.trim();
  const nameValue=$('inNameSearch').value.trim();
 
@@ -1051,26 +1078,26 @@ async function fillInboundCandidates(){
  $('inName').value='';
  $('inCategory').value='';
  $('inCurrentStock').value='';
- $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
- renderMovementItemPreview('in',null);
+ if($('inLoc')) $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
+ if(typeof renderMovementItemPreview==='function') renderMovementItemPreview('in',null);
 
- let target=resolveRegisteredItem(partValue,nameValue);
- if(!target){
+ if(!target) target=resolveRegisteredItem(partValue,nameValue);
+ if(!target && typeof fetchRegisteredItemDirect==='function'){
    target=await fetchRegisteredItemDirect(partValue,nameValue);
  }
  if(!target && (partValue || nameValue)){
    await loadAll();
-   target=resolveRegisteredItem(partValue,nameValue);
+   target=syncPairedSearch('in')||resolveRegisteredItem(partValue,nameValue);
  }
 
- populateCandidateSelect('inFinalSelect',partValue,nameValue);
+ populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
 
  if(target){
    $('inFinalSelect').value=target.id;
    selectInboundItem();
    $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
  }else if(partValue || nameValue){
-   $('inMsg').textContent='⚠️ 등록된 품번 또는 품명을 정확히 입력하세요.';
+   $('inMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
  }
 }
 ['inPartSearch','inNameSearch'].forEach(id=>{
@@ -1243,6 +1270,7 @@ $('handler').addEventListener('change',selectHandler);
 $('handler').addEventListener('input',selectHandler);
 
 async function fillOutboundCandidates(){
+ let target=syncPairedSearch('out');
  const partValue=$('outPartSearch').value.trim();
  const nameValue=$('outNameSearch').value.trim();
 
@@ -1253,26 +1281,26 @@ async function fillOutboundCandidates(){
  $('outName').value='';
  $('outCategory').value='';
  $('outCurrentStock').value='';
- $('outLoc').innerHTML='';
- renderMovementItemPreview('out',null);
+ if($('outLoc')) $('outLoc').innerHTML='';
+ if(typeof renderMovementItemPreview==='function') renderMovementItemPreview('out',null);
 
- let target=resolveRegisteredItem(partValue,nameValue);
- if(!target){
+ if(!target) target=resolveRegisteredItem(partValue,nameValue);
+ if(!target && typeof fetchRegisteredItemDirect==='function'){
    target=await fetchRegisteredItemDirect(partValue,nameValue);
  }
  if(!target && (partValue || nameValue)){
    await loadAll();
-   target=resolveRegisteredItem(partValue,nameValue);
+   target=syncPairedSearch('out')||resolveRegisteredItem(partValue,nameValue);
  }
 
- populateCandidateSelect('outFinalSelect',partValue,nameValue);
+ populateCandidateSelect('outFinalSelect',$('outPartSearch').value,$('outNameSearch').value);
 
  if(target){
    $('outFinalSelect').value=target.id;
    selectOutboundItem();
    $('outMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
  }else if(partValue || nameValue){
-   $('outMsg').textContent='⚠️ 등록된 품번 또는 품명을 정확히 입력하세요.';
+   $('outMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
  }
 }
 ['outPartSearch','outNameSearch'].forEach(id=>{
