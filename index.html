@@ -98,6 +98,45 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   #inPhotoEditBtn{width:100%}
 }
 
+
+/* ===== 검색 표시 전용 패치 ===== */
+.search-priority-box strong.search-fit-text{
+  display:block;
+  width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.15;
+  min-width:0;
+}
+.search-priority-box strong.search-fit-lg{font-size:clamp(22px,3.1vw,34px)}
+.search-priority-box strong.search-fit-md{font-size:clamp(18px,2.5vw,28px)}
+.search-priority-box strong.search-fit-sm{font-size:clamp(14px,2.0vw,22px)}
+
+.search-recent-wrap{display:grid;gap:10px;margin-top:12px}
+.search-recent-head{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:0 4px;
+}
+.search-recent-head strong{font-size:16px}
+.search-recent-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+  padding:14px 16px;
+  border:1px solid #d9e5dd;
+  border-radius:16px;
+  background:#f7fbf8;
+}
+.search-recent-card small{display:block;color:#667085;margin-bottom:4px}
+.search-recent-card b{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  min-width:0;
+}
+@media(max-width:720px){
+  .search-recent-card{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -205,6 +244,16 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div class="ok" style="margin-bottom:14px">
         품번 또는 품명을 모르면 비워 두거나 0을 입력하세요. 임시값으로 등록한 뒤 나중에 수정할 수 있습니다.
       </div>
+      <div class="card" style="background:#f7fbf8;border:1px solid #d8ebde;box-shadow:none;padding:14px;margin:0 0 14px">
+        <div class="label">등록 방식</div>
+        <div class="row">
+          <button id="itemModeExisting" type="button">📦 현 보유품목 등록</button>
+          <button id="itemModeNew" type="button" class="secondary">🆕 새 품목 등록</button>
+        </div>
+        <div id="itemModeHelp" class="muted" style="margin-top:8px">
+          현 보유품목: 현재 창고에 이미 있는 자재를 품목+최소수량+현 재고수량+위치로 등록합니다. 현 재고수량은 입고통계에 집계되지 않습니다.
+        </div>
+      </div>
 
       <input id="itemId" type="hidden">
 
@@ -222,7 +271,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <select id="category"></select>
         </div>
         <div>
-          <div class="label required-label">최소수량</div>
+          <div class="label required-label">최소수량</div><div class="muted" style="margin:-4px 0 6px">부족재고 판단 기준</div>
           <input id="minStock" type="number" min="0" placeholder="최소수량 입력">
         </div>
       </div>
@@ -232,6 +281,70 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <input id="spec" type="hidden">
       <input id="note" type="hidden">
       <input id="registeredOn" type="hidden">
+
+
+      <div id="initialStockFields" class="card" style="background:#fffaf0;border:1px solid #f0d6a0;box-shadow:none;padding:14px;margin-top:14px">
+        <h3 style="margin-top:0">현재 창고 재고·위치</h3>
+        <div class="grid">
+          <div>
+            <div class="label required-label">현 재고수량</div>
+            <input id="initialQty" type="number" min="0" placeholder="현재 창고 실재고 수량">
+          </div>
+          <div>
+            <div class="label">위치 유형</div>
+            <select id="initialLocType">
+              <option value="1층자재실">1층자재실</option>
+              <option value="2층자재실">2층자재실</option>
+              <option value="생산">생산</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="initialWarehouseFields" class="grid" style="margin-top:10px">
+          <div><div class="label">구역</div><select id="initialLocArea"></select></div>
+          <div><div class="label">단</div>
+            <select id="initialLocTier">
+              <option value="1단">1단</option><option value="2단">2단</option>
+              <option value="3단">3단</option><option value="4단">4단</option>
+            </select>
+          </div>
+          <div><div class="label">번호</div>
+            <select id="initialLocNumber">
+              <option value="">해당사항 없음</option>
+              <option value="001">001</option><option value="002">002</option>
+              <option value="003">003</option><option value="004">004</option>
+              <option value="005">005</option><option value="006">006</option>
+            </select>
+          </div>
+          <div><div class="label">노랑박스</div>
+            <select id="initialYellowBox">
+              <option value="">해당사항 없음</option>
+              <option value="A">A</option><option value="B">B</option>
+            </select>
+          </div>
+          <div><div class="label">상단·하단</div>
+            <select id="initialLocLevel">
+              <option value="">해당사항 없음</option>
+              <option value="상단">상단</option><option value="하단">하단</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="initialProductionFields" class="grid hidden" style="margin-top:10px">
+          <div><div class="label">생산 D라인</div>
+            <select id="initialProdLine">
+              <option value="D-1">D-1</option><option value="D-2">D-2</option>
+              <option value="D-3">D-3</option><option value="D-4">D-4</option>
+              <option value="D-5">D-5</option><option value="D-6">D-6</option>
+            </select>
+          </div>
+          <div><div class="label">서랍번호</div><select id="initialProdDrawer"></select></div>
+        </div>
+
+        <div class="label" style="margin-top:10px">생성 자재위치</div>
+        <input id="initialLocationCode" readonly>
+        <div class="muted" style="margin-top:6px">⚠️ 기존 창고의 초기재고로 저장되며 입고통계에는 포함되지 않습니다.</div>
+      </div>
 
       <div class="label" style="margin-top:14px">품목 사진</div>
       <input id="photoFile" type="file" accept="image/*" capture="environment">
@@ -375,11 +488,22 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <div class="grid" style="margin-top:14px">
         <div>
-          <div class="label required-label">입고일자</div>
+          
+<div id="stockCorrectionBox" class="card" style="background:#fff8e8;border:1px solid #efc15d;box-shadow:none;padding:14px;margin:14px 0">
+  <div class="label">📦 현 재고수정</div>
+  <div class="muted" style="margin-bottom:8px">기존 위치의 현재수량을 불러와 실제 창고수량으로 정정합니다. 입고내역에는 추가되지 않습니다.</div>
+  <div class="grid">
+    <div><div class="label">현재 등록수량</div><input id="stockCurrentQty" readonly placeholder="기존 위치를 선택하세요"></div>
+    <div><div class="label">실제 확인수량</div><input id="stockCorrectQty" type="number" min="0" placeholder="실제 수량"></div>
+  </div>
+  <button id="stockCorrectBtn" type="button" class="secondary" style="margin-top:10px">현 재고수정 저장</button>
+  <div id="stockCorrectMsg" class="muted" style="margin-top:8px"></div>
+</div>
+<div class="label required-label">입고일자</div>
           <input id="inDate" type="date">
         </div>
         <div>
-          <div class="label required-label">입고수량</div>
+          <div class="label required-label">입고수량</div><div class="muted" style="margin:-4px 0 6px">이번에 실제로 들어온 수량만 입력 · 입고통계에 집계</div>
           <input id="inQty" type="number" min="1" placeholder="입고수량">
         </div>
         <div>
@@ -676,6 +800,7 @@ if(!cfg.url||!cfg.publishableKey||cfg.url.includes('YOUR_')) alert('config.js �
 const db=supabase.createClient(cfg.url,cfg.publishableKey);
 
 let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, photoData=null;
+let itemRegisterMode='existing';
 
 const LOGIN_STORAGE_KEY='mirim_wms_saved_login_v1';
 
@@ -988,14 +1113,62 @@ async function loadAll(){
 
  selectHandler(false);
  if($('itemCountBadge')) $('itemCountBadge').textContent=`총 ${items.length}종목 등록`;
- if($('searchCountText')) $('searchCountText').textContent=`전체 ${items.length}종목`;
- renderSearch(items);
+ renderRecentThree();
  setDefaultDates();
  markRequiredFields();
 
  if(itemError){
    console.error('품목 목록 조회 오류:',itemError);
  }
+}
+
+
+function searchFitClass(value){
+ const len=String(value??'').trim().length;
+ if(len>=18) return 'search-fit-sm';
+ if(len>=11) return 'search-fit-md';
+ return 'search-fit-lg';
+}
+
+function getRecentThreeItems(){
+ return items
+   .map((x,i)=>({x,i}))
+   .sort((a,b)=>{
+     const av=new Date(a.x.created_at||a.x.registered_on||a.x.first_registered_at||0).getTime()||0;
+     const bv=new Date(b.x.created_at||b.x.registered_on||b.x.first_registered_at||0).getTime()||0;
+     if(bv!==av) return bv-av;
+     return b.i-a.i;
+   })
+   .slice(0,3)
+   .map(v=>v.x);
+}
+
+function renderRecentThree(){
+ const recent=getRecentThreeItems();
+
+ if($('searchCountText')){
+   $('searchCountText').textContent=`최근 등록 ${recent.length}종목 / 전체 ${items.length}종목`;
+ }
+
+ $('searchResults').innerHTML=recent.length
+   ? `<div class="search-recent-wrap">
+       <div class="search-recent-head">
+         <strong>최근 등록 품목</strong>
+         <span class="muted">최신 3개</span>
+       </div>
+       ${recent.map(x=>`
+         <div class="search-recent-card">
+           <div>
+             <small>품번</small>
+             <b title="${esc(x.part_no||'')}">${esc(x.part_no||'-')}</b>
+           </div>
+           <div>
+             <small>품명</small>
+             <b title="${esc(x.item_name||'')}">${esc(x.item_name||'-')}</b>
+           </div>
+         </div>`).join('')}
+     </div>`
+   : '<div class="card">등록된 품목이 없습니다.</div>';
 }
 
 function renderSearch(list){
@@ -1017,11 +1190,11 @@ function renderSearch(list){
          <div class="search-priority-info">
            <div class="search-priority-box">
              <small>품번</small>
-             <strong>${esc(x.part_no)}</strong>
+             <strong class="search-fit-text ${searchFitClass(x.part_no)}">${esc(x.part_no)}</strong>
            </div>
            <div class="search-priority-box">
              <small>품명</small>
-             <strong>${esc(x.item_name)}</strong>
+             <strong class="search-fit-text ${searchFitClass(x.item_name)}">${esc(x.item_name)}</strong>
            </div>
            <div class="search-priority-total">
              <small>현재 총수량</small>
@@ -1084,24 +1257,94 @@ function renderSearch(list){
    </div>`;
  }).join(''):'<div class="card">⚠️ 검색 결과가 없습니다.</div>';
 }
-$('searchBtn').onclick=()=>{const k=norm($('searchQ').value);renderSearch(!k?items:items.filter(x=>norm(x.part_no+' '+x.item_name+' '+x.category+' '+(x.maker||'')).includes(k)))};
+$('searchBtn').onclick=()=>{
+ const k=norm($('searchQ').value);
+ if(!k){ renderRecentThree(); return; }
+ const filtered=items.filter(x=>norm(x.part_no+' '+x.item_name+' '+x.category+' '+(x.maker||'')).includes(k));
+ if($('searchCountText')) $('searchCountText').textContent=`검색 결과 ${filtered.length}종목 / 전체 ${items.length}종목`;
+ renderSearch(filtered);
+};
 $('searchQ').oninput=()=>{
  const q=norm($('searchQ').value);
- const filtered=q
-   ? items.filter(x=>norm([
-       x.part_no,x.item_name,x.maker,x.category,x.specification
-     ].join(' ')).includes(q))
-   : items;
+
+ if(!q){
+   renderRecentThree();
+   return;
+ }
+
+ const filtered=items.filter(x=>norm([
+   x.part_no,x.item_name,x.maker,x.category,x.specification
+ ].join(' ')).includes(q));
 
  if($('searchCountText')){
-   $('searchCountText').textContent=q
-     ? `검색 결과 ${filtered.length}종목 / 전체 ${items.length}종목`
-     : `전체 ${items.length}종목`;
+   $('searchCountText').textContent=`검색 결과 ${filtered.length}종목 / 전체 ${items.length}종목`;
  }
 
  renderSearch(filtered);
 };
 
+
+
+function setupInitialLocationOptions(){
+ const areas='ABCDEFGHIJKLMNOPQ'.split('').map(x=>`<option value="${x}">${x}</option>`).join('');
+ $('initialLocArea').innerHTML=areas;
+ $('initialProdDrawer').innerHTML=Array.from({length:100},(_,i)=>{
+   const v=String(i+1).padStart(3,'0');
+   return `<option value="${v}">${i+1}</option>`;
+ }).join('');
+}
+
+function buildInitialLocationCode(){
+ const type=$('initialLocType').value;
+ $('initialWarehouseFields').classList.toggle('hidden',type==='생산');
+ $('initialProductionFields').classList.toggle('hidden',type!=='생산');
+
+ if(type==='생산'){
+   $('initialLocationCode').value=`생산-${$('initialProdLine').value}-${$('initialProdDrawer').value}`;
+   return;
+ }
+
+ if($('initialLocNumber').value){
+   $('initialLocLevel').value='';
+   if(!$('initialYellowBox').value) $('initialYellowBox').value='A';
+   $('initialLocationCode').value=[
+     type,$('initialLocArea').value,$('initialLocTier').value,
+     $('initialLocNumber').value,$('initialYellowBox').value
+   ].join('-');
+ }else{
+   $('initialYellowBox').value='';
+   $('initialLocationCode').value=[
+     type,$('initialLocArea').value,$('initialLocTier').value,
+     $('initialLocLevel').value||''
+   ].filter(Boolean).join('-');
+ }
+}
+
+function setItemRegisterMode(mode){
+ itemRegisterMode=mode==='new'?'new':'existing';
+ const existing=itemRegisterMode==='existing';
+
+ $('initialStockFields').classList.toggle('hidden',!existing);
+ $('itemModeExisting').classList.toggle('secondary',!existing);
+ $('itemModeNew').classList.toggle('secondary',existing);
+
+ $('itemModeHelp').textContent=existing
+   ? '현 보유품목: 현재 창고에 이미 있는 자재를 품목+최소수량+현 재고수량+위치로 등록합니다. 현 재고수량은 입고통계에 집계되지 않습니다.'
+   : '새 품목: 품목정보만 먼저 등록합니다. 현재고 0으로 시작하고 실제 입고는 나중에 입고 메뉴에서 등록합니다.';
+}
+
+$('itemModeExisting').onclick=()=>setItemRegisterMode('existing');
+$('itemModeNew').onclick=()=>setItemRegisterMode('new');
+
+['initialLocType','initialLocArea','initialLocTier','initialLocNumber','initialYellowBox','initialLocLevel','initialProdLine','initialProdDrawer']
+ .forEach(id=>{
+   $(id).addEventListener('input',buildInitialLocationCode);
+   $(id).addEventListener('change',buildInitialLocationCode);
+ });
+
+setupInitialLocationOptions();
+buildInitialLocationCode();
+setItemRegisterMode('existing');
 
 function clearItemForm(){
  $('itemId').value='';
@@ -1113,6 +1356,17 @@ function clearItemForm(){
  $('unit').value='EA';
  $('photoFile').value='';
  photoData=null;
+ if($('initialQty')) $('initialQty').value='';
+ if($('initialLocType')) $('initialLocType').value='1층자재실';
+ if($('initialLocArea')) $('initialLocArea').value='A';
+ if($('initialLocTier')) $('initialLocTier').value='1단';
+ if($('initialLocNumber')) $('initialLocNumber').value='';
+ if($('initialYellowBox')) $('initialYellowBox').value='';
+ if($('initialLocLevel')) $('initialLocLevel').value='';
+ if($('initialProdLine')) $('initialProdLine').value='D-1';
+ if($('initialProdDrawer')) $('initialProdDrawer').value='001';
+ buildInitialLocationCode();
+ setItemRegisterMode('existing');
  $('partNo').readOnly=false;
  $('saveItemBtn').textContent='품목 저장';
  $('editModeMsg').textContent='새 품목 등록 모드입니다.';
@@ -1131,9 +1385,11 @@ function loadItemForEdit(){
  $('minStock').value=x.min_stock??0;
  $('registeredOn').value=x.registered_on||todayKST();
  $('unit').value=x.unit||'EA';
- $('partNo').readOnly=true;
+ $('partNo').readOnly=false;
  $('saveItemBtn').textContent='품목 수정 저장';
- $('editModeMsg').textContent=`수정 중: ${x.part_no} · ${x.item_name}`;
+ $('initialStockFields').classList.add('hidden');
+ $('itemModeHelp').textContent='기존 품목 수정 모드입니다. 초기재고 등록은 새 품목 등록 시에만 사용합니다.';
+ $('editModeMsg').textContent=`수정 중: ${x.part_no} · ${x.item_name} · 품번/품명 수정 가능`;
 }
 
 $('editItemSelect').onchange=loadItemForEdit;
@@ -1219,32 +1475,55 @@ async function saveItemSimple(){
    });
  }catch(_){}
 
+ // 새 품목 중 '현 보유품목 등록'을 선택한 경우만 초기재고 저장
+ if(!editing && itemRegisterMode==='existing'){
+   const initialQty=Number($('initialQty').value||0);
+   const locationCode=$('initialLocationCode').value.trim();
+
+   if(initialQty<0){
+     $('itemMsg').textContent='⚠️ 현재 수량을 0 이상으로 입력하세요.';
+     return;
+   }
+
+   if(initialQty>0 && !locationCode){
+     $('itemMsg').textContent='⚠️ 현재 자재위치를 선택하세요.';
+     return;
+   }
+
+   if(initialQty>0){
+     const {error:initError}=await db.rpc('admin_set_initial_stock',{
+       p_username:session.username,
+       p_password:session.password,
+       p_item_id:itemId,
+       p_location_code:locationCode,
+       p_qty:initialQty
+     });
+
+     if(initError){
+       $('itemMsg').textContent='⚠️ 품목은 등록되었지만 초기재고 저장 실패: '+initError.message;
+       await loadAll();
+       return;
+     }
+   }
+ }
+
  $('itemMsg').textContent=editing
    ?'✅ 품목 수정 완료'
    :(partNo.startsWith('0-') || itemName==='0'
       ?`✅ 임시 품목 등록 완료 · 품번 ${partNo} / 품명 ${itemName} · 나중에 수정하세요.`
       :'✅ 품목 등록 완료');
-
  await loadAll();
 
- const justSaved=items.find(x=>String(x.id)===String(itemId))||
-                 items.find(x=>x.part_no===partNo);
- if(justSaved){
-   if($('inPartSearch')) $('inPartSearch').value=justSaved.part_no;
-   if($('outPartSearch')) $('outPartSearch').value=justSaved.part_no;
-   await fillInboundCandidates();
-   await fillOutboundCandidates();
- }
-
- // 등록 직후 입고·출고에서도 바로 검색되도록 값 유지
- const saved=items.find(x=>String(x.id)===String(itemId))||
-             items.find(x=>x.part_no===partNo);
- if(saved){
-   if($('inPartSearch')) $('inPartSearch').value=saved.part_no;
-   if($('outPartSearch')) $('outPartSearch').value=saved.part_no;
- }
-
+ // 품목등록과 입고/출고는 완전히 분리
+ // 품목만 먼저 등록할 수 있고, 실제 입고는 나중에 별도로 처리
  clearItemForm();
+ $('itemMsg').textContent=editing
+   ? '✅ 품목 수정 완료'
+   : (itemRegisterMode==='existing'
+      ? '✅ 현 보유품목 등록 완료 · 초기재고는 입고통계에 포함되지 않습니다.'
+      : '✅ 새 품목 등록 완료 · 입고는 나중에 별도로 등록할 수 있습니다.');
+ setTimeout(()=>$('partNo').focus(),80);
+
 }
 
 $('saveItemBtn').onclick=saveItemSimple;
@@ -1816,12 +2095,29 @@ $('inSave').onclick=async()=>{
  $('inMsg').textContent=error?'❌ '+error.message:'✅ 입고 및 자재위치 반영 완료';
 
  if(!error){
+   await loadAll();
+
+   // 입고 저장 후 다음 건을 바로 입력할 수 있도록 화면 초기화
+   $('inPartSearch').value='';
+   $('inNameSearch').value='';
+   $('inFinalSelect').innerHTML='<option value="">품번 또는 품명을 입력하면 자동 선택됩니다.</option>';
+   $('inItemId').value='';
+   $('inPart').value='';
+   $('inName').value='';
+   $('inCategory').value='';
+   $('inCurrentStock').value='';
    $('inQty').value='';
    $('inPartner').value='';
    $('inNote').value='';
    $('inDate').value=todayKST();
-   await loadAll();
-   selectInboundItem();
+   $('inLocationMode').value='existing';
+   $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
+   $('inLocationInfo').textContent='품목을 선택하면 등록된 모든 위치와 수량이 표시됩니다.';
+   renderMovementItemPreview('in',null);
+   updateInboundLocationMode();
+
+   $('inMsg').textContent='✅ 입고 저장 완료 · 다음 품목을 입력하세요.';
+   setTimeout(()=>$('inPartSearch').focus(),80);
  }
 };
 
@@ -1955,8 +2251,27 @@ $('outSave').onclick=async()=>{
    ?(error.message.includes('INSUFFICIENT')?'❌ 현재고보다 많이 출고할 수 없습니다.':'❌ '+error.message)
    :'✅ 출고 저장 완료';
  if(!error){
-   $('outQty').value='';$('outNote').value='';$('outDate').value=todayKST();
-   await loadAll();selectOutboundItem();
+   await loadAll();
+
+   // 출고 저장 후 다음 건을 바로 입력할 수 있도록 화면 초기화
+   $('outPartSearch').value='';
+   $('outNameSearch').value='';
+   $('outFinalSelect').innerHTML='<option value="">품번 또는 품명을 입력하면 후보가 표시됩니다.</option>';
+   $('outItemId').value='';
+   $('outPart').value='';
+   $('outName').value='';
+   $('outCategory').value='';
+   $('outCurrentStock').value='';
+   $('outQty').value='';
+   $('outNote').value='';
+   $('outDate').value=todayKST();
+   $('outLoc').innerHTML='<option value="">품목을 먼저 선택하세요.</option>';
+   $('outLocationInfo').textContent='품목을 선택하면 현재 등록된 모든 자재위치와 위치별 수량이 표시됩니다.';
+   renderMovementItemPreview('out',null);
+
+   // 담당자는 연속 출고가 많으므로 그대로 유지
+   $('outMsg').textContent='✅ 출고 저장 완료 · 다음 품목을 입력하세요.';
+   setTimeout(()=>$('outPartSearch').focus(),80);
  }
 };
 
@@ -2574,6 +2889,61 @@ $('printInventoryCheckBtn').onclick=()=>{
 
 
 db.channel('mirim-wms-live').on('postgres_changes',{event:'*',schema:'public',table:'items'},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'item_locations'},loadAll).subscribe();
+
+// ===== 현 재고수정: 입고와 분리 =====
+function refreshStockCorrection(){
+ const sel=$('inLoc');
+ $('stockCurrentQty').value='';
+ $('stockCorrectQty').value='';
+ if(!sel || !sel.value) return;
+ const opt=sel.options[sel.selectedIndex];
+ const txt=(opt&&opt.textContent)||'';
+ const mt=txt.match(/현재\s*([0-9.,]+)\s*EA/i);
+ if(mt){
+   const q=Number(mt[1].replace(/,/g,''));
+   $('stockCurrentQty').value=q;
+   $('stockCorrectQty').value=q;
+ }
+}
+if($('inLoc')) $('inLoc').addEventListener('change',refreshStockCorrection);
+
+$('stockCorrectBtn').onclick=async()=>{
+ const itemId=$('inItemId').value;
+ const locId=$('inLoc').value;
+ const qty=Number($('stockCorrectQty').value);
+ $('stockCorrectMsg').textContent='';
+
+ if(!itemId){ $('stockCorrectMsg').textContent='⚠️ 먼저 품목을 선택하세요.'; return; }
+ if(!locId){ $('stockCorrectMsg').textContent='⚠️ 수정할 기존 위치를 선택하세요.'; return; }
+ if(!Number.isFinite(qty)||qty<0){ $('stockCorrectMsg').textContent='⚠️ 실제 확인수량을 입력하세요.'; return; }
+
+ if(!confirm(`선택 위치의 현재고를 ${qty} EA로 수정할까요?\n입고내역에는 추가되지 않습니다.`)) return;
+
+ $('stockCorrectBtn').disabled=true;
+ const {error}=await db.rpc('admin_correct_location_stock',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:itemId,
+   p_location_id:locId,
+   p_qty:qty
+ });
+ $('stockCorrectBtn').disabled=false;
+
+ if(error){ $('stockCorrectMsg').textContent='❌ 재고수정 실패: '+error.message; return; }
+
+ $('stockCorrectMsg').textContent='✅ 현 재고수정 완료 · 입고내역에는 추가되지 않았습니다.';
+ await loadAll();
+
+ // 현재 품목을 다시 찾아 화면 수량 갱신
+ const x=items.find(v=>v.id===itemId);
+ if(x){
+   $('inItemId').value=x.id;
+   if($('inPart')) $('inPart').value=x.part_no||'';
+   if($('inName')) $('inName').value=x.item_name||'';
+ }
+ if(typeof selectInboundItem==='function') selectInboundItem();
+};
+
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
