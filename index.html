@@ -1354,6 +1354,10 @@ function clearItemForm(){
  if($('partNoDuplicateMsg')) $('partNoDuplicateMsg').textContent='';
  $('itemName').value='';
  $('minStock').value='';
+ if($('category')){
+   // 신규 등록 시 자재구분을 첫 선택값으로 초기화
+   $('category').selectedIndex=0;
+ }
  $('registeredOn').value=todayKST();
  $('unit').value='EA';
  $('photoFile').value='';
@@ -1560,12 +1564,25 @@ async function saveItemSimple(){
  // 품목등록과 입고/출고는 완전히 분리
  // 품목만 먼저 등록할 수 있고, 실제 입고는 나중에 별도로 처리
  clearItemForm();
+
+ // 저장 후 새 품목 등록 화면을 확실히 보여줌
+ if(typeof switchTab==='function') switchTab('items');
+
+ const itemsTab=$('itemsTab');
+ if(itemsTab){
+   const topCard=itemsTab.querySelector('.card');
+   setTimeout(()=>{
+     (topCard||itemsTab).scrollIntoView({behavior:'smooth',block:'start'});
+   },60);
+ }
+
  $('itemMsg').textContent=editing
-   ? '✅ 품목 수정 완료 · 새 품목 입력창으로 전환되었습니다.'
+   ? '✅ 품목 수정 완료 · 새 품목 등록 화면으로 초기화되었습니다.'
    : (savedRegisterMode==='existing'
-      ? '✅ 현 보유품목 등록 완료 · 새 품목 입력창으로 전환되었습니다.'
-      : '✅ 새 품목 등록 완료 · 새 품목 입력창으로 전환되었습니다.');
- setTimeout(()=>$('partNo').focus(),80);
+      ? '✅ 현 보유품목 등록 완료 · 새 품목 등록 화면으로 초기화되었습니다.'
+      : '✅ 새 품목 등록 완료 · 새 품목 등록 화면으로 초기화되었습니다.');
+
+ setTimeout(()=>$('partNo').focus(),180);
 
 }
 
@@ -2160,7 +2177,17 @@ $('inSave').onclick=async()=>{
    updateInboundLocationMode();
 
    $('inMsg').textContent='✅ 입고 저장 완료 · 다음 품목을 입력하세요.';
-   setTimeout(()=>$('inPartSearch').focus(),80);
+
+   // 다음 입고 입력을 바로 시작할 수 있도록 입고 화면 상단으로 이동
+   if(typeof switchTab==='function') switchTab('inbound');
+   const inboundTab=$('inboundTab');
+   if(inboundTab){
+     const firstCard=inboundTab.querySelector('.card');
+     setTimeout(()=>{
+       (firstCard||inboundTab).scrollIntoView({behavior:'smooth',block:'start'});
+     },60);
+   }
+   setTimeout(()=>$('inPartSearch').focus(),180);
  }
 };
 
@@ -2314,7 +2341,15 @@ $('outSave').onclick=async()=>{
 
    // 담당자는 연속 출고가 많으므로 그대로 유지
    $('outMsg').textContent='✅ 출고 저장 완료 · 다음 품목을 입력하세요.';
-   setTimeout(()=>$('outPartSearch').focus(),80);
+
+   // 다음 출고 품목 입력을 바로 시작할 수 있도록 품목검색 영역으로 이동
+   if(typeof switchTab==='function') switchTab('outbound');
+   const outStep2=$('outStep2');
+   const outboundTab=$('outboundTab');
+   setTimeout(()=>{
+     (outStep2||outboundTab)?.scrollIntoView({behavior:'smooth',block:'start'});
+   },60);
+   setTimeout(()=>$('outPartSearch').focus(),180);
  }
 };
 
