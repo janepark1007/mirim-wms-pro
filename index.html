@@ -509,10 +509,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <input id="inLocationCode" readonly>
       </div>
 
-      <div class="grid" style="margin-top:14px">
-        <div>
-          
-<div id="stockCorrectionBox" class="card" style="background:#fff8e8;border:1px solid #efc15d;box-shadow:none;padding:14px;margin:14px 0">
+      <div id="stockCorrectionBox" class="card" style="background:#fff8e8;border:1px solid #efc15d;box-shadow:none;padding:14px;margin:16px 0">
   <div class="label">📦 현 재고수정</div>
   <div class="muted" style="margin-bottom:8px">기존 위치의 현재수량을 불러와 실제 창고수량으로 정정합니다. 입고내역에는 추가되지 않습니다.</div>
   <div class="grid">
@@ -522,7 +519,10 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   <button id="stockCorrectBtn" type="button" class="secondary" style="margin-top:10px">현 재고수정 저장</button>
   <div id="stockCorrectMsg" class="muted" style="margin-top:8px"></div>
 </div>
-<div class="label required-label">입고일자</div>
+
+      <div class="grid" style="margin-top:14px">
+        <div>
+          <div class="label required-label">입고일자</div>
           <input id="inDate" type="date">
         </div>
         <div>
