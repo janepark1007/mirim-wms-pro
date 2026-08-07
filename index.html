@@ -580,7 +580,9 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   <div class="label">📦 현 재고수정</div>
   <div class="muted" style="margin-bottom:8px">기존 위치의 현재수량을 불러와 실제 창고수량으로 정정합니다. 입고내역에는 추가되지 않습니다.</div>
   <div class="grid">
-    <div><div class="label">현재 등록수량</div><input id="stockCurrentQty" readonly placeholder="기존 위치를 선택하세요"></div>
+    <div><div class="label">현재 등록수량</div><select id="stockCurrentQty">
+          <option value="">기존 위치를 선택하면 현재수량이 자동 표시됩니다.</option>
+        </select></div>
     <div><div class="label">실제 확인수량</div><input id="stockCorrectQty" type="number" min="0" placeholder="실제 수량"></div>
   </div>
   <button id="stockCorrectBtn" type="button" class="secondary" style="margin-top:10px">현 재고수정 저장</button>
@@ -2591,6 +2593,7 @@ async function selectInboundItem(){
  }
 
  updateInboundLocationMode();
+ refreshStockCorrection();
  renderMovementLocations('inLocationInfo',found);
  renderMovementItemPreview('in',found);
 
@@ -3532,34 +3535,42 @@ db.channel('mirim-wms-live').on('postgres_changes',{event:'*',schema:'public',ta
 // ===== 현 재고수정: 입고와 분리 =====
 function refreshStockCorrection(){
  const sel=$('inLoc');
- $('stockCurrentQty').value='';
+ const qtySel=$('stockCurrentQty');
+ qtySel.innerHTML='<option value="">기존 위치를 선택하면 현재수량이 자동 표시됩니다.</option>';
  $('stockCorrectQty').value='';
  $('stockCorrectMsg').textContent='';
 
  if(!sel || !sel.value) return;
 
  const item=items.find(x=>String(x.id)===String($('inItemId').value));
- const loc=(item?.item_locations||[]).find(x=>String(x.id)===String(sel.value));
+ const locs=(item?.item_locations||[]);
+ const loc=locs.find(x=>String(x.id)===String(sel.value));
 
  if(loc){
    const q=Number(loc.qty||0);
-   $('stockCurrentQty').value=q;
-   $('stockCorrectQty').value=q;
-   $('stockCorrectMsg').textContent=`✅ 현재 등록수량 ${q} ${item?.unit||'EA'} 자동 불러오기 완료`;
-   return;
- }
 
- // 예외 시 화면 옵션 텍스트에서 보조 확인
- const opt=sel.options[sel.selectedIndex];
- const txt=(opt&&opt.textContent)||'';
- const mt=txt.match(/현재\s*([0-9.,]+)\s*(?:EA|M|ROLL|BOX)?/i);
- if(mt){
-   const q=Number(mt[1].replace(/,/g,''));
-   $('stockCurrentQty').value=q;
+   // 선택된 위치의 현재 WMS 수량 자동 표시
+   qtySel.innerHTML=`<option value="${q}" selected>${q} ${esc(item?.unit||'EA')}</option>`;
+
+   // 여러 위치가 있는 품목은 다른 등록 위치의 수량도 확인/선택 가능
+   locs.filter(x=>String(x.id)!==String(loc.id)).forEach(x=>{
+     const oq=Number(x.qty||0);
+     const opt=document.createElement('option');
+     opt.value=oq;
+     opt.textContent=`${oq} ${item?.unit||'EA'} · ${x.location_display||x.location_code||'다른 위치'}`;
+     qtySel.appendChild(opt);
+   });
+
    $('stockCorrectQty').value=q;
+   $('stockCorrectMsg').textContent=`✅ 선택 위치 현재수량 ${q} ${item?.unit||'EA'} 자동 불러오기 완료`;
+   return;
  }
 }
 if($('inLoc')) $('inLoc').addEventListener('change',refreshStockCorrection);
+if($('stockCurrentQty')) $('stockCurrentQty').addEventListener('change',()=>{
+ const v=$('stockCurrentQty').value;
+ if(v!=='') $('stockCorrectQty').value=Number(v);
+});
 
 $('stockCorrectBtn').onclick=async()=>{
  const itemId=$('inItemId').value;
