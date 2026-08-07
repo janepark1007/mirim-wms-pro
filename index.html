@@ -137,6 +137,23 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   .search-recent-card{grid-template-columns:1fr}
 }
 
+
+/* ERP 대조 */
+#erpTab table th,#erpTab table td{
+  border-bottom:1px solid #e5e7eb;
+  padding:9px 8px;
+  text-align:left;
+  font-size:13px;
+  white-space:nowrap;
+}
+#erpTab table th{background:#f5f7f6;font-weight:900;position:sticky;top:0}
+.erp-diff-ok{color:#067647;font-weight:900}
+.erp-diff-warn{color:#b42318;font-weight:900}
+.erp-queue-item{
+  display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;
+  padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:8px;
+}
+
 </style>
 </head>
 <body>
@@ -182,6 +199,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <button class="tab adminOnly" data-tab="inbound">📥 입고</button>
     <button class="tab adminOnly" data-tab="outbound">📤 출고</button>
     <button class="tab adminOnly" data-tab="stats">📊 통계·엑셀</button>
+    <button class="tab adminOnly" data-tab="erp">🔄 ERP 대조</button>
     <button class="tab adminOnly" data-tab="disposal">⏰ 1년 폐기알림</button>
     <button class="tab adminOnly" data-tab="categories">📂 자재구분</button>
   </div>
@@ -744,6 +762,103 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     </div>
   </section>
 
+  
+  <section id="erpTab" class="tabpane hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">🔄 ERP 재고대조</h2>
+        <span class="badge">관리자 전용</span>
+      </div>
+      <div class="ok" style="margin-top:12px">
+        WMS의 <b>자재실 + 생산 + 기타 등록위치</b> 수량을 모두 합산하여 ERP 현재고와 비교합니다.
+      </div>
+      <div class="bad" style="margin-top:10px">
+        ⚠️ 현재 버전은 ERP 품목연결·현재고 대조와 ERP 반영대기 기록까지 제공합니다.
+        ECOUNT에 실제 품목등록/출고차감을 자동 전송하려면 ECOUNT Open API 인증정보와
+        회사에서 사용할 출고 전표 유형을 추가 설정해야 합니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ERP 품목 연결 및 현재고 입력</h3>
+      <div class="grid">
+        <div>
+          <div class="label">WMS 품목 선택</div>
+          <select id="erpItemSelect">
+            <option value="">품목을 선택하세요.</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">WMS 품번</div>
+          <input id="erpWmsPart" readonly>
+        </div>
+        <div>
+          <div class="label">WMS 품명</div>
+          <input id="erpWmsName" readonly>
+        </div>
+        <div>
+          <div class="label">ERP 품목코드</div>
+          <input id="erpItemCode" placeholder="ERP 품목코드가 있으면 입력">
+        </div>
+        <div>
+          <div class="label">ERP 품목명</div>
+          <input id="erpItemName" placeholder="ERP에서 사용하는 품목명">
+        </div>
+        <div>
+          <div class="label required-label">ERP 현재고</div>
+          <input id="erpStockQty" type="number" step="0.001" placeholder="ERP 재고현황 수량">
+        </div>
+      </div>
+
+      <div class="label" style="margin-top:10px">비고</div>
+      <input id="erpNote" placeholder="ERP 연결 메모">
+
+      <button id="erpSaveLinkBtn" type="button" style="margin-top:12px">ERP 연결·현재고 저장</button>
+      <div id="erpSaveMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h3>선택 품목 재고 비교</h3>
+      <div class="grid">
+        <div class="ok"><small>자재실</small><div id="erpWarehouseQty" style="font-size:28px;font-weight:900">0 EA</div></div>
+        <div class="ok"><small>생산</small><div id="erpProductionQty" style="font-size:28px;font-weight:900">0 EA</div></div>
+        <div class="ok"><small>기타 위치</small><div id="erpOtherQty" style="font-size:28px;font-weight:900">0 EA</div></div>
+        <div class="ok"><small>WMS 실제 총수량</small><div id="erpWmsTotalQty" style="font-size:28px;font-weight:900">0 EA</div></div>
+        <div class="ok"><small>ERP 현재고</small><div id="erpCurrentQtyCard" style="font-size:28px;font-weight:900">-</div></div>
+        <div id="erpDiffCard" class="ok"><small>차이수량 (WMS - ERP)</small><div id="erpDiffQty" style="font-size:28px;font-weight:900">-</div></div>
+      </div>
+      <div id="erpLocationDetail" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">전체 품목 ERP/WMS 차이</h3>
+        <button id="erpReloadBtn" type="button" class="secondary" style="width:auto">새로고침</button>
+      </div>
+      <div style="overflow:auto;margin-top:12px">
+        <table style="width:100%;border-collapse:collapse;min-width:1050px">
+          <thead>
+            <tr>
+              <th>품번</th><th>품명</th><th>ERP 품목</th><th>ERP 재고</th>
+              <th>자재실</th><th>생산</th><th>기타</th><th>WMS 총수량</th>
+              <th>차이</th><th>상태</th><th>ERP 확인일</th>
+            </tr>
+          </thead>
+          <tbody id="erpCompareBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ERP 반영 대기</h3>
+      <div class="muted">
+        신규 품목 등록과 WMS 출고가 발생하면 ERP에 반영해야 할 작업을 기록합니다.
+        ECOUNT API 자동전송이 연결되기 전에는 이 목록을 보고 ERP에서 직접 확인할 수 있습니다.
+      </div>
+      <div id="erpQueueList" style="margin-top:12px"></div>
+    </div>
+  </section>
+
   <section id="disposalTab" class="tabpane hidden">
     <div class="card">
       <h2>1년 미사용 자재 폐기 검토</h2>
@@ -801,6 +916,7 @@ if(!cfg.url||!cfg.publishableKey||cfg.url.includes('YOUR_')) alert('config.js �
 const db=supabase.createClient(cfg.url,cfg.publishableKey);
 
 let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, photoData=null;
+let erpLinks=[], erpQueue=[];
 let itemRegisterMode='existing';
 
 const LOGIN_STORAGE_KEY='mirim_wms_saved_login_v1';
@@ -1014,6 +1130,135 @@ async function tryAutoLogin(){
 setTimeout(tryAutoLogin,0);
 
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+function erpQtyBreakdown(item){
+ const result={warehouse:0,production:0,other:0,total:0};
+ (item?.item_locations||[]).forEach(l=>{
+   const qty=Number(l.qty||0);
+   const key=String(l.location_code||l.location_display||'');
+   result.total+=qty;
+   if(key.includes('생산')) result.production+=qty;
+   else if(key.includes('자재실')) result.warehouse+=qty;
+   else result.other+=qty;
+ });
+ return result;
+}
+
+function erpLinkForItem(itemId){
+ return erpLinks.find(x=>String(x.item_id)===String(itemId))||null;
+}
+
+function renderErpSelected(){
+ if(!$('erpItemSelect')) return;
+ const item=items.find(x=>String(x.id)===String($('erpItemSelect').value));
+ const link=item?erpLinkForItem(item.id):null;
+
+ $('erpWmsPart').value=item?.part_no||'';
+ $('erpWmsName').value=item?.item_name||'';
+ $('erpItemCode').value=link?.erp_item_code||'';
+ $('erpItemName').value=link?.erp_item_name||'';
+ $('erpStockQty').value=(link?.erp_stock_qty??'');
+ $('erpNote').value=link?.note||'';
+
+ const q=erpQtyBreakdown(item);
+ $('erpWarehouseQty').textContent=`${q.warehouse} ${item?.unit||'EA'}`;
+ $('erpProductionQty').textContent=`${q.production} ${item?.unit||'EA'}`;
+ $('erpOtherQty').textContent=`${q.other} ${item?.unit||'EA'}`;
+ $('erpWmsTotalQty').textContent=`${q.total} ${item?.unit||'EA'}`;
+
+ if(link && link.erp_stock_qty!==null && link.erp_stock_qty!==undefined){
+   const erp=Number(link.erp_stock_qty||0);
+   const diff=q.total-erp;
+   $('erpCurrentQtyCard').textContent=`${erp} ${item?.unit||'EA'}`;
+   $('erpDiffQty').textContent=`${diff} ${item?.unit||'EA'}`;
+   $('erpDiffCard').className=Math.abs(diff)<0.000001?'ok':'bad';
+ }else{
+   $('erpCurrentQtyCard').textContent='⚠️ 미입력';
+   $('erpDiffQty').textContent='⚠️ 확인 필요';
+   $('erpDiffCard').className='bad';
+ }
+
+ $('erpLocationDetail').innerHTML=item
+   ? `<div class="label">등록 위치 상세</div>`+
+     ((item.item_locations||[]).length
+       ? item.item_locations.map(l=>`<div class="loc">📍 ${esc(l.location_display||l.location_code)} · <b>${Number(l.qty||0)} ${esc(item.unit||'EA')}</b></div>`).join('')
+       : '<div class="muted">등록 위치 없음</div>')
+   : '<div class="muted">품목을 선택하세요.</div>';
+}
+
+function renderErpCompare(){
+ if(!$('erpCompareBody')) return;
+ $('erpCompareBody').innerHTML=items.map(item=>{
+   const q=erpQtyBreakdown(item);
+   const link=erpLinkForItem(item.id);
+   const has=link && link.erp_stock_qty!==null && link.erp_stock_qty!==undefined;
+   const erp=has?Number(link.erp_stock_qty||0):null;
+   const diff=has?q.total-erp:null;
+   const ok=has && Math.abs(diff)<0.000001;
+   return `<tr>
+     <td>${esc(item.part_no||'')}</td>
+     <td>${esc(item.item_name||'')}</td>
+     <td>${esc(link?.erp_item_code||link?.erp_item_name||'⚠️ 미연결')}</td>
+     <td>${has?erp:'⚠️ 미입력'}</td>
+     <td>${q.warehouse}</td>
+     <td>${q.production}</td>
+     <td>${q.other}</td>
+     <td><b>${q.total}</b></td>
+     <td class="${has?(ok?'erp-diff-ok':'erp-diff-warn'):''}">${has?diff:'-'}</td>
+     <td class="${has?(ok?'erp-diff-ok':'erp-diff-warn'):''}">${!has?'⚠️ 확인 필요':(ok?'🟢 일치':'⚠️ 수량차이')}</td>
+     <td>${link?.checked_at?formatDateKST(link.checked_at):'-'}</td>
+   </tr>`;
+ }).join('');
+}
+
+function renderErpQueue(){
+ if(!$('erpQueueList')) return;
+ const pending=(erpQueue||[]).filter(x=>x.status==='PENDING').slice(0,100);
+ $('erpQueueList').innerHTML=pending.length
+   ? pending.map(x=>{
+      const item=items.find(i=>String(i.id)===String(x.item_id));
+      const type=x.action_type==='ITEM_CREATE'?'신규품목':'출고반영';
+      return `<div class="erp-queue-item">
+        <b>${type}</b>
+        <div>${esc(item?.part_no||'')} · ${esc(item?.item_name||'')} ${x.qty?`· ${Number(x.qty)} ${esc(item?.unit||'EA')}`:''}</div>
+        <span class="muted">${formatDateKST(x.created_at)}</span>
+      </div>`;
+     }).join('')
+   : '<div class="ok">✅ ERP 반영 대기 건이 없습니다.</div>';
+}
+
+async function loadErpData(){
+ if(!session || session.role!=='admin') return;
+
+ const [linksRes,queueRes]=await Promise.all([
+   db.rpc('admin_list_erp_item_links',{
+     p_username:session.username,
+     p_password:session.password
+   }),
+   db.rpc('admin_list_erp_sync_queue',{
+     p_username:session.username,
+     p_password:session.password
+   })
+ ]);
+
+ if(!linksRes.error) erpLinks=linksRes.data||[];
+ if(!queueRes.error) erpQueue=queueRes.data||[];
+
+ if($('erpItemSelect')){
+   const selected=$('erpItemSelect').value;
+   $('erpItemSelect').innerHTML='<option value="">품목을 선택하세요.</option>'+
+     items.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(x.item_name)}</option>`).join('');
+   if(selected && items.some(x=>String(x.id)===String(selected))) $('erpItemSelect').value=selected;
+ }
+ renderErpSelected();
+ renderErpCompare();
+ renderErpQueue();
+
+ if(linksRes.error && $('erpSaveMsg')){
+   $('erpSaveMsg').textContent='⚠️ ERP SQL 패치를 먼저 실행하세요: '+linksRes.error.message;
+ }
+}
+
 function switchTab(name){
  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
  document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hidden'));
@@ -1120,6 +1365,10 @@ async function loadAll(){
 
  if(itemError){
    console.error('품목 목록 조회 오류:',itemError);
+ }
+
+ if(session?.role==='admin'){
+   try{ await loadErpData(); }catch(e){ console.warn('ERP 대조 데이터 로드 보류:',e); }
  }
 }
 
@@ -1552,6 +1801,21 @@ async function saveItemSimple(){
        return;
      }
    }
+ }
+
+ // 신규 품목은 ERP 등록 확인 대상에 기록 (실제 ECOUNT 자동전송은 아직 하지 않음)
+ if(!editing){
+   try{
+     await db.rpc('admin_queue_erp_sync',{
+       p_username:session.username,
+       p_password:session.password,
+       p_action_type:'ITEM_CREATE',
+       p_item_id:itemId,
+       p_qty:null,
+       p_movement_date:null,
+       p_note:'WMS 신규 품목 등록'
+     });
+   }catch(_){}
  }
 
  $('itemMsg').textContent=editing
@@ -2321,6 +2585,19 @@ $('outSave').onclick=async()=>{
    ?(error.message.includes('INSUFFICIENT')?'❌ 현재고보다 많이 출고할 수 없습니다.':'❌ '+error.message)
    :'✅ 출고 저장 완료';
  if(!error){
+   // ERP 출고 반영 대기 기록 (실제 ECOUNT 자동차감은 API 설정 후)
+   try{
+     await db.rpc('admin_queue_erp_sync',{
+       p_username:session.username,
+       p_password:session.password,
+       p_action_type:'OUTBOUND',
+       p_item_id:x.id,
+       p_qty:n,
+       p_movement_date:$('outDate').value||todayKST(),
+       p_note:`출고 담당자: ${verifiedHandler.display_name}`
+     });
+   }catch(_){}
+
    await loadAll();
 
    // 출고 저장 후 다음 건을 바로 입력할 수 있도록 화면 초기화
@@ -3020,6 +3297,57 @@ $('stockCorrectBtn').onclick=async()=>{
    if($('inName')) $('inName').value=x.item_name||'';
  }
  if(typeof selectInboundItem==='function') selectInboundItem();
+};
+
+
+if($('erpItemSelect')) $('erpItemSelect').onchange=renderErpSelected;
+
+if($('erpSaveLinkBtn')) $('erpSaveLinkBtn').onclick=async()=>{
+ const itemId=$('erpItemSelect').value;
+ const item=items.find(x=>String(x.id)===String(itemId));
+ const qtyRaw=$('erpStockQty').value.trim();
+
+ if(!item){
+   $('erpSaveMsg').textContent='⚠️ WMS 품목을 선택하세요.';
+   return;
+ }
+ if(qtyRaw===''){
+   $('erpSaveMsg').textContent='⚠️ ERP 현재고를 입력하세요.';
+   return;
+ }
+
+ const qty=Number(qtyRaw);
+ if(!Number.isFinite(qty) || qty<0){
+   $('erpSaveMsg').textContent='⚠️ ERP 현재고를 0 이상 숫자로 입력하세요.';
+   return;
+ }
+
+ $('erpSaveMsg').textContent='ERP 연결정보 저장 중...';
+ const {error}=await db.rpc('admin_upsert_erp_item_link',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:item.id,
+   p_erp_item_code:$('erpItemCode').value.trim()||null,
+   p_erp_item_name:$('erpItemName').value.trim()||item.item_name,
+   p_erp_stock_qty:qty,
+   p_note:$('erpNote').value.trim()||null
+ });
+
+ if(error){
+   $('erpSaveMsg').textContent='❌ ERP 연결 저장 실패: '+error.message;
+   return;
+ }
+
+ $('erpSaveMsg').textContent='✅ ERP 현재고 저장 완료 · WMS 실제 총수량과 차이를 계산했습니다.';
+ await loadErpData();
+ $('erpItemSelect').value=item.id;
+ renderErpSelected();
+};
+
+if($('erpReloadBtn')) $('erpReloadBtn').onclick=async()=>{
+ $('erpSaveMsg').textContent='ERP 대조 새로고침 중...';
+ await loadAll();
+ $('erpSaveMsg').textContent='✅ 새로고침 완료';
 };
 
 </script>
