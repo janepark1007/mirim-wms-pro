@@ -2252,8 +2252,8 @@ async function fillInboundCandidates(){
 
  if(target){
    $('inFinalSelect').value=target.id;
-   selectInboundItem();
-   $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
+   await selectInboundItem();
+   $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택 · 최신 위치/수량 확인`;
  }else if(partValue || nameValue){
    $('inMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
  }
@@ -2363,22 +2363,76 @@ function renderMovementLocations(targetId,found){
    : '품목을 선택하면 기본 위치와 자재위치의 수량이 모두 표시됩니다.';
 }
 
-function selectInboundItem(){
- const found=items.find(x=>x.id===$('inFinalSelect').value)||null;
- $('inItemId').value=found?.id||'';
- $('inPart').value=found?.part_no||'';
- $('inName').value=found?.item_name||'';
- $('inCategory').value=found?.category||'';
- $('inCurrentStock').value=found?`${total(found)} ${found.unit}`:'';
+async function selectInboundItem(){
+ const selectedId=String($('inFinalSelect').value||'');
+ let found=items.find(x=>String(x.id)===selectedId)||null;
 
- const locs=found?.item_locations||[];
- $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>'+
-   locs.map(l=>`<option value="${l.id}">${esc(l.location_display)} · 현재 ${l.qty} ${esc(found.unit)}</option>`).join('');
+ if(!found){
+   $('inItemId').value='';
+   $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
+   $('inLocationInfo').textContent='품목을 선택하면 등록된 모든 위치와 수량이 표시됩니다.';
+   if($('stockCurrentQty')) $('stockCurrentQty').value='';
+   if($('stockCorrectQty')) $('stockCorrectQty').value='';
+   renderMovementItemPreview('in',null);
+   return;
+ }
 
- $('inLocationMode').value=locs.length?'existing':'new';
+ // 품목 선택 때마다 DB에서 최신 위치/수량을 직접 다시 불러옴
+ const {data:fresh,error:freshError}=await db.from('items')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+   .eq('id',found.id)
+   .eq('is_active',true)
+   .maybeSingle();
+
+ if(!freshError && fresh){
+   found=fresh;
+   const idx=items.findIndex(x=>String(x.id)===String(found.id));
+   if(idx>=0) items[idx]=found;
+   else items.push(found);
+ }
+
+ $('inItemId').value=found.id||'';
+ $('inPart').value=found.part_no||'';
+ $('inName').value=found.item_name||'';
+ $('inCategory').value=found.category||'';
+ $('inCurrentStock').value=`${total(found)} ${found.unit||'EA'}`;
+
+ const locs=(found.item_locations||[])
+   .slice()
+   .sort((a,b)=>String(a.location_display||a.location_code||'').localeCompare(String(b.location_display||b.location_code||''),'ko'));
+
+ if(locs.length){
+   $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>'+
+     locs.map(l=>`<option value="${l.id}">${esc(l.location_display||l.location_code||'위치')} · 현재 ${Number(l.qty||0)} ${esc(found.unit||'EA')}</option>`).join('');
+
+   $('inLocationMode').value='existing';
+
+   // 기존 위치가 한 곳이면 자동 선택 및 현재 등록수량 자동 표시
+   if(locs.length===1){
+     $('inLoc').value=String(locs[0].id);
+     if($('stockCurrentQty')) $('stockCurrentQty').value=Number(locs[0].qty||0);
+     if($('stockCorrectQty')) $('stockCorrectQty').value=Number(locs[0].qty||0);
+     if($('stockCorrectMsg')) $('stockCorrectMsg').textContent='✅ 기존 위치 1곳 자동 선택 · 현재 등록수량을 불러왔습니다.';
+   }else{
+     if($('stockCurrentQty')) $('stockCurrentQty').value='';
+     if($('stockCorrectQty')) $('stockCorrectQty').value='';
+     if($('stockCorrectMsg')) $('stockCorrectMsg').textContent=`현재 등록 위치 ${locs.length}곳 · 수정할 위치를 선택하세요.`;
+   }
+ }else{
+   $('inLoc').innerHTML='<option value="">등록된 위치 없음</option>';
+   $('inLocationMode').value='new';
+   if($('stockCurrentQty')) $('stockCurrentQty').value='';
+   if($('stockCorrectQty')) $('stockCorrectQty').value='';
+   if($('stockCorrectMsg')) $('stockCorrectMsg').textContent='⚠️ 이 품목은 등록된 위치가 없습니다. 새 위치 등록을 먼저 사용하세요.';
+ }
+
  updateInboundLocationMode();
  renderMovementLocations('inLocationInfo',found);
  renderMovementItemPreview('in',found);
+
+ if(freshError){
+   $('inMsg').textContent='⚠️ 최신 위치 조회 실패 · 화면의 기존 정보를 표시합니다: '+freshError.message;
+ }
 }
 
 $('inPhotoEditBtn').onclick=()=>{
@@ -2431,7 +2485,7 @@ $('inPhotoEditFile').onchange=async e=>{
    const refreshed=items.find(x=>String(x.id)===String(item.id));
    if(refreshed){
      $('inFinalSelect').value=refreshed.id;
-     selectInboundItem();
+     await selectInboundItem();
    }
  }catch(error){
    $('inPhotoEditMsg').textContent='❌ 사진 처리 실패: '+error.message;
@@ -2452,7 +2506,7 @@ $('inSave').onclick=async()=>{
    x=resolveRegisteredItem($('inPartSearch').value,$('inNameSearch').value);
    if(x){
      $('inFinalSelect').value=x.id;
-     selectInboundItem();
+     await selectInboundItem();
    }
  }
  const qty=Number($('inQty').value);
@@ -3316,10 +3370,25 @@ function refreshStockCorrection(){
  const sel=$('inLoc');
  $('stockCurrentQty').value='';
  $('stockCorrectQty').value='';
+ $('stockCorrectMsg').textContent='';
+
  if(!sel || !sel.value) return;
+
+ const item=items.find(x=>String(x.id)===String($('inItemId').value));
+ const loc=(item?.item_locations||[]).find(x=>String(x.id)===String(sel.value));
+
+ if(loc){
+   const q=Number(loc.qty||0);
+   $('stockCurrentQty').value=q;
+   $('stockCorrectQty').value=q;
+   $('stockCorrectMsg').textContent=`✅ 현재 등록수량 ${q} ${item?.unit||'EA'} 자동 불러오기 완료`;
+   return;
+ }
+
+ // 예외 시 화면 옵션 텍스트에서 보조 확인
  const opt=sel.options[sel.selectedIndex];
  const txt=(opt&&opt.textContent)||'';
- const mt=txt.match(/현재\s*([0-9.,]+)\s*EA/i);
+ const mt=txt.match(/현재\s*([0-9.,]+)\s*(?:EA|M|ROLL|BOX)?/i);
  if(mt){
    const q=Number(mt[1].replace(/,/g,''));
    $('stockCurrentQty').value=q;
