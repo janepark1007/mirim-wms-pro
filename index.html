@@ -257,7 +257,11 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         </select>
         <button id="cancelEditBtn" class="secondary" type="button">수정 취소</button>
       </div>
-      <div class="muted" style="margin:8px 0 6px">삭제할 품목을 선택한 뒤 오른쪽 위 빨간 × 버튼을 누르세요.</div>
+      <div style="margin-top:8px">
+        <input id="editItemSearch" type="search" placeholder="🔎 수정할 품번 또는 품명 검색">
+      </div>
+      <div id="editItemCount" class="muted" style="margin:6px 0 6px">기존 품목 불러오는 중...</div>
+      <div class="muted" style="margin:8px 0 6px">기존 품목을 선택하면 등록정보가 자동으로 채워집니다. 삭제할 품목은 선택 후 오른쪽 위 빨간 × 버튼을 누르세요.</div>
       <div id="editModeMsg" class="muted" style="margin:8px 0 6px">새 품목 등록 모드입니다.</div>
       <div class="ok" style="margin-bottom:14px">
         품번 또는 품명을 모르면 비워 두거나 0을 입력하세요. 임시값으로 등록한 뒤 나중에 수정할 수 있습니다.
@@ -1265,6 +1269,36 @@ function switchTab(name){
  $(name+'Tab').classList.remove('hidden');
 }
 
+
+function renderEditItemOptions(keyword=''){
+ if(!$('editItemSelect')) return;
+
+ const current=String($('editItemSelect').value||'');
+ const q=norm(keyword);
+
+ const list=!q
+   ? items
+   : items.filter(x=>
+       norm(x.part_no).includes(q) ||
+       norm(x.item_name).includes(q)
+     );
+
+ $('editItemSelect').innerHTML=
+   '<option value="">새 품목 등록</option>'+
+   list.map(x=>`<option value="${x.id}">${esc(x.part_no||'-')} · ${esc(x.item_name||'-')}</option>`).join('');
+
+ if(current && list.some(x=>String(x.id)===current)){
+   $('editItemSelect').value=current;
+ }
+
+ if($('editItemCount')){
+   $('editItemCount').textContent=
+     items.length
+       ? `기존 품목 ${list.length}개 표시 / 전체 ${items.length}개`
+       : '⚠️ 기존 품목을 불러오지 못했습니다.';
+ }
+}
+
 async function loadAll(){
  let itemData=[];
  let itemError=null;
@@ -1341,8 +1375,7 @@ async function loadAll(){
  $('category').innerHTML=categories.map(x=>`<option>${esc(x.name)}</option>`).join('');
  $('catList').innerHTML=categories.map(x=>`<span class="badge">${esc(x.name)}</span>`).join('');
 
- const opt=items.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(x.item_name)}</option>`).join('');
- $('editItemSelect').innerHTML='<option value="">새 품목 등록</option>'+opt;
+ renderEditItemOptions($('editItemSearch')?.value||'');
 
  const searchOptions=items.map(x=>`<option value="${esc(x.part_no)} | ${esc(x.item_name)}"></option>`).join('');
  if($('inOptions')) $('inOptions').innerHTML=searchOptions;
@@ -1625,13 +1658,18 @@ function clearItemForm(){
  $('partNo').readOnly=false;
  $('saveItemBtn').textContent='품목 저장';
  $('editModeMsg').textContent='새 품목 등록 모드입니다.';
+ if($('editItemSearch')) $('editItemSearch').value='';
+ if(typeof renderEditItemOptions==='function') renderEditItemOptions('');
 }
 
 function loadItemForEdit(){
  const id=$('editItemSelect').value;
  if(!id){clearItemForm();return}
- const x=items.find(v=>v.id===id);
- if(!x) return;
+ const x=items.find(v=>String(v.id)===String(id));
+ if(!x){
+   $('editModeMsg').textContent='⚠️ 선택한 기존 품목 정보를 불러오지 못했습니다. 새로고침 후 다시 선택하세요.';
+   return;
+ }
 
  $('itemId').value=x.id;
  $('partNo').value=x.part_no||'';
@@ -1649,7 +1687,18 @@ function loadItemForEdit(){
 }
 
 $('editItemSelect').onchange=loadItemForEdit;
-$('cancelEditBtn').onclick=clearItemForm;
+
+if($('editItemSearch')){
+ $('editItemSearch').addEventListener('input',()=>{
+   renderEditItemOptions($('editItemSearch').value);
+ });
+}
+
+$('cancelEditBtn').onclick=()=>{
+ if($('editItemSearch')) $('editItemSearch').value='';
+ clearItemForm();
+ renderEditItemOptions('');
+};
 
 $('photoFile').onchange=async e=>{
  const f=e.target.files[0];if(!f){photoData=null;return}
