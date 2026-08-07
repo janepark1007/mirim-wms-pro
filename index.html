@@ -261,6 +261,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <div>
           <div class="label required-label">품번</div>
           <input id="partNo" placeholder="품번 입력">
+          <div id="partNoDuplicateMsg" class="muted" style="margin-top:5px"></div>
         </div>
         <div>
           <div class="label required-label">품명</div>
@@ -1350,6 +1351,7 @@ function clearItemForm(){
  $('itemId').value='';
  $('editItemSelect').value='';
  $('partNo').value='';
+ if($('partNoDuplicateMsg')) $('partNoDuplicateMsg').textContent='';
  $('itemName').value='';
  $('minStock').value='';
  $('registeredOn').value=todayKST();
@@ -1390,6 +1392,7 @@ function loadItemForEdit(){
  $('initialStockFields').classList.add('hidden');
  $('itemModeHelp').textContent='기존 품목 수정 모드입니다. 초기재고 등록은 새 품목 등록 시에만 사용합니다.';
  $('editModeMsg').textContent=`수정 중: ${x.part_no} · ${x.item_name} · 품번/품명 수정 가능`;
+ if($('partNoDuplicateMsg')) $('partNoDuplicateMsg').textContent='';
 }
 
 $('editItemSelect').onchange=loadItemForEdit;
@@ -1403,6 +1406,36 @@ $('photoFile').onchange=async e=>{
  photoData=c.toDataURL('image/jpeg',.72);
 };
 
+
+
+function findDuplicatePartNo(partNo, editingItemId=''){
+ const p=norm(partNo);
+ if(!p || p==='0') return null;
+ return items.find(x=>
+   norm(x.part_no)===p &&
+   String(x.id)!==String(editingItemId||'')
+ ) || null;
+}
+
+function checkPartNoDuplicate(){
+ const partNo=$('partNo').value.trim();
+ const editingId=$('itemId').value||'';
+ const dup=findDuplicatePartNo(partNo,editingId);
+
+ if(!$('partNoDuplicateMsg')) return dup;
+
+ if(dup){
+   $('partNoDuplicateMsg').textContent=`⚠️ 이미 등록된 품번입니다 · ${dup.part_no} · ${dup.item_name}`;
+   $('partNoDuplicateMsg').style.color='#b42318';
+ }else{
+   $('partNoDuplicateMsg').textContent='';
+   $('partNoDuplicateMsg').style.color='';
+ }
+ return dup;
+}
+
+$('partNo').addEventListener('input',checkPartNoDuplicate);
+$('partNo').addEventListener('blur',checkPartNoDuplicate);
 
 function makeTemporaryPartNo(){
  const d=new Date();
@@ -1420,6 +1453,7 @@ function makeTemporaryPartNo(){
 
 async function saveItemSimple(){
  const editing=!!$('itemId').value;
+ const savedRegisterMode=itemRegisterMode;
 
  let partNo=$('partNo').value.trim();
  let itemName=$('itemName').value.trim();
@@ -1436,6 +1470,15 @@ async function saveItemSimple(){
 
  if(!category){
    $('itemMsg').textContent='⚠️ 자재구분을 선택하세요.';
+   return;
+ }
+
+ const duplicateItem=findDuplicatePartNo(partNo,editing?$('itemId').value:'');
+ if(duplicateItem){
+   $('partNoDuplicateMsg').textContent=`⚠️ 이미 등록된 품번입니다 · ${duplicateItem.part_no} · ${duplicateItem.item_name}`;
+   $('partNoDuplicateMsg').style.color='#b42318';
+   $('itemMsg').textContent='⚠️ 품번이 중복되어 저장할 수 없습니다. 기존 품목을 확인하세요.';
+   $('partNo').focus();
    return;
  }
 
@@ -1518,10 +1561,10 @@ async function saveItemSimple(){
  // 품목만 먼저 등록할 수 있고, 실제 입고는 나중에 별도로 처리
  clearItemForm();
  $('itemMsg').textContent=editing
-   ? '✅ 품목 수정 완료'
-   : (itemRegisterMode==='existing'
-      ? '✅ 현 보유품목 등록 완료 · 초기재고는 입고통계에 포함되지 않습니다.'
-      : '✅ 새 품목 등록 완료 · 입고는 나중에 별도로 등록할 수 있습니다.');
+   ? '✅ 품목 수정 완료 · 새 품목 입력창으로 전환되었습니다.'
+   : (savedRegisterMode==='existing'
+      ? '✅ 현 보유품목 등록 완료 · 새 품목 입력창으로 전환되었습니다.'
+      : '✅ 새 품목 등록 완료 · 새 품목 입력창으로 전환되었습니다.');
  setTimeout(()=>$('partNo').focus(),80);
 
 }
