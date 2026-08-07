@@ -369,6 +369,73 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <div class="muted" style="margin-top:6px">⚠️ 기존 창고의 초기재고로 저장되며 입고통계에는 포함되지 않습니다.</div>
       </div>
 
+
+      <div id="editLocationFields" class="card hidden" style="background:#f7fbff;border:1px solid #b7d7f0;box-shadow:none;padding:14px;margin-top:14px">
+        <h3 style="margin-top:0">📍 현 위치 변경</h3>
+        <div class="muted" style="margin-bottom:10px">
+          기존 위치의 재고수량은 그대로 유지하고 위치코드만 변경합니다. 입고·출고 통계에는 포함되지 않습니다.
+        </div>
+
+        <div class="label required-label">현재 등록 위치</div>
+        <select id="editCurrentLocation">
+          <option value="">수정할 위치를 선택하세요.</option>
+        </select>
+        <div id="editCurrentLocationQty" class="muted" style="margin-top:6px">현재 위치를 선택하면 수량이 표시됩니다.</div>
+
+        <div class="label" style="margin-top:12px">새 위치 유형</div>
+        <select id="editLocType">
+          <option value="1층자재실">1층자재실</option>
+          <option value="2층자재실">2층자재실</option>
+          <option value="생산">생산</option>
+        </select>
+
+        <div id="editWarehouseFields" class="grid" style="margin-top:10px">
+          <div><div class="label">구역</div><select id="editLocArea"></select></div>
+          <div><div class="label">단</div>
+            <select id="editLocTier">
+              <option value="1단">1단</option><option value="2단">2단</option>
+              <option value="3단">3단</option><option value="4단">4단</option>
+            </select>
+          </div>
+          <div><div class="label">번호</div>
+            <select id="editLocNumber">
+              <option value="">해당사항 없음</option>
+              <option value="001">001</option><option value="002">002</option>
+              <option value="003">003</option><option value="004">004</option>
+              <option value="005">005</option><option value="006">006</option>
+            </select>
+          </div>
+          <div><div class="label">노랑박스</div>
+            <select id="editYellowBox">
+              <option value="">해당사항 없음</option>
+              <option value="A">A</option><option value="B">B</option>
+            </select>
+          </div>
+          <div><div class="label">상단·하단</div>
+            <select id="editLocLevel">
+              <option value="">해당사항 없음</option>
+              <option value="상단">상단</option><option value="하단">하단</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="editProductionFields" class="grid hidden" style="margin-top:10px">
+          <div><div class="label">생산 D라인</div>
+            <select id="editProdLine">
+              <option value="D-1">D-1</option><option value="D-2">D-2</option>
+              <option value="D-3">D-3</option><option value="D-4">D-4</option>
+              <option value="D-5">D-5</option><option value="D-6">D-6</option>
+            </select>
+          </div>
+          <div><div class="label">서랍번호</div><select id="editProdDrawer"></select></div>
+        </div>
+
+        <div class="label" style="margin-top:10px">변경될 자재위치</div>
+        <input id="editLocationCode" readonly>
+        <button id="editLocationSaveBtn" type="button" class="secondary" style="margin-top:10px">현 위치 변경 저장</button>
+        <div id="editLocationMsg" class="muted" style="margin-top:8px"></div>
+      </div>
+
       <div class="label" style="margin-top:14px">품목 사진</div>
       <input id="photoFile" type="file" accept="image/*" capture="environment">
       <div class="muted">품목 사진은 검색·입고·출고 화면에 함께 표시됩니다.</div>
@@ -1629,6 +1696,100 @@ setupInitialLocationOptions();
 buildInitialLocationCode();
 setItemRegisterMode('existing');
 
+
+function setupEditLocationOptions(){
+ if(!$('editLocArea')) return;
+
+ $('editLocArea').innerHTML='ABCDEFGHIJKLMNOPQ'.split('')
+   .map(x=>`<option value="${x}">${x}</option>`).join('');
+
+ $('editProdDrawer').innerHTML=Array.from({length:100},(_,i)=>{
+   const v=String(i+1).padStart(3,'0');
+   return `<option value="${v}">${i+1}</option>`;
+ }).join('');
+}
+
+function buildEditLocationCode(){
+ if(!$('editLocType')) return;
+
+ const type=$('editLocType').value;
+ $('editWarehouseFields').classList.toggle('hidden',type==='생산');
+ $('editProductionFields').classList.toggle('hidden',type!=='생산');
+
+ if(type==='생산'){
+   $('editLocationCode').value=`생산-${$('editProdLine').value}-${$('editProdDrawer').value}`;
+   return;
+ }
+
+ if($('editLocNumber').value){
+   $('editLocLevel').value='';
+   if(!$('editYellowBox').value) $('editYellowBox').value='A';
+   $('editLocationCode').value=[
+     type,$('editLocArea').value,$('editLocTier').value,
+     $('editLocNumber').value,$('editYellowBox').value
+   ].join('-');
+ }else{
+   $('editYellowBox').value='';
+   $('editLocationCode').value=[
+     type,$('editLocArea').value,$('editLocTier').value,
+     $('editLocLevel').value||''
+   ].filter(Boolean).join('-');
+ }
+}
+
+function renderEditLocations(item){
+ if(!$('editCurrentLocation')) return;
+
+ const locs=(item?.item_locations||[]).slice()
+   .sort((a,b)=>String(a.location_display||a.location_code||'').localeCompare(String(b.location_display||b.location_code||''),'ko'));
+
+ $('editCurrentLocation').innerHTML='<option value="">수정할 위치를 선택하세요.</option>'+
+   locs.map(l=>`<option value="${l.id}">${esc(l.location_display||l.location_code||'위치')} · 현재 ${Number(l.qty||0)} ${esc(item?.unit||'EA')}</option>`).join('');
+
+ $('editCurrentLocationQty').textContent=locs.length
+   ? `현재 등록 위치 ${locs.length}곳`
+   : '⚠️ 등록된 위치가 없습니다.';
+ $('editLocationMsg').textContent='';
+
+ if(locs.length===1){
+   $('editCurrentLocation').value=String(locs[0].id);
+   $('editCurrentLocationQty').textContent=`현재 수량 ${Number(locs[0].qty||0)} ${item?.unit||'EA'} · 수량은 변경되지 않습니다.`;
+ }
+}
+
+function resetEditLocationForm(){
+ if(!$('editLocationFields')) return;
+ $('editLocationFields').classList.add('hidden');
+ $('editCurrentLocation').innerHTML='<option value="">수정할 위치를 선택하세요.</option>';
+ $('editCurrentLocationQty').textContent='현재 위치를 선택하면 수량이 표시됩니다.';
+ $('editLocationMsg').textContent='';
+ $('editLocType').value='1층자재실';
+ $('editLocArea').value='A';
+ $('editLocTier').value='1단';
+ $('editLocNumber').value='';
+ $('editYellowBox').value='';
+ $('editLocLevel').value='';
+ $('editProdLine').value='D-1';
+ $('editProdDrawer').value='001';
+ buildEditLocationCode();
+}
+
+setupEditLocationOptions();
+['editLocType','editLocArea','editLocTier','editLocNumber','editYellowBox','editLocLevel','editProdLine','editProdDrawer']
+ .forEach(id=>{
+   $(id).addEventListener('input',buildEditLocationCode);
+   $(id).addEventListener('change',buildEditLocationCode);
+ });
+buildEditLocationCode();
+
+$('editCurrentLocation').addEventListener('change',()=>{
+ const item=items.find(x=>String(x.id)===String($('itemId').value));
+ const loc=(item?.item_locations||[]).find(l=>String(l.id)===String($('editCurrentLocation').value));
+ $('editCurrentLocationQty').textContent=loc
+   ? `현재 수량 ${Number(loc.qty||0)} ${item?.unit||'EA'} · 위치만 변경되고 수량은 그대로 유지됩니다.`
+   : '현재 위치를 선택하면 수량이 표시됩니다.';
+});
+
 function clearItemForm(){
  $('itemId').value='';
  $('editItemSelect').value='';
@@ -1658,6 +1819,7 @@ function clearItemForm(){
  $('partNo').readOnly=false;
  $('saveItemBtn').textContent='품목 저장';
  $('editModeMsg').textContent='새 품목 등록 모드입니다.';
+ resetEditLocationForm();
  if($('editItemSearch')) $('editItemSearch').value='';
  if(typeof renderEditItemOptions==='function') renderEditItemOptions('');
 }
@@ -1681,7 +1843,9 @@ function loadItemForEdit(){
  $('partNo').readOnly=false;
  $('saveItemBtn').textContent='품목 수정 저장';
  $('initialStockFields').classList.add('hidden');
- $('itemModeHelp').textContent='기존 품목 수정 모드입니다. 초기재고 등록은 새 품목 등록 시에만 사용합니다.';
+ $('editLocationFields').classList.remove('hidden');
+ renderEditLocations(x);
+ $('itemModeHelp').textContent='기존 품목 수정 모드입니다. 품목정보와 현 위치를 수정할 수 있습니다.';
  $('editModeMsg').textContent=`수정 중: ${x.part_no} · ${x.item_name} · 품번/품명 수정 가능`;
  if($('partNoDuplicateMsg')) $('partNoDuplicateMsg').textContent='';
 }
@@ -3483,6 +3647,73 @@ if($('erpReloadBtn')) $('erpReloadBtn').onclick=async()=>{
  $('erpSaveMsg').textContent='ERP 대조 새로고침 중...';
  await loadAll();
  $('erpSaveMsg').textContent='✅ 새로고침 완료';
+};
+
+
+$('editLocationSaveBtn').onclick=async()=>{
+ const itemId=$('itemId').value;
+ const locationId=$('editCurrentLocation').value;
+ const newCode=$('editLocationCode').value.trim();
+
+ if(!itemId){
+   $('editLocationMsg').textContent='⚠️ 먼저 기존 품목을 선택하세요.';
+   return;
+ }
+ if(!locationId){
+   $('editLocationMsg').textContent='⚠️ 변경할 현재 위치를 선택하세요.';
+   return;
+ }
+ if(!newCode){
+   $('editLocationMsg').textContent='⚠️ 새 위치를 선택하세요.';
+   return;
+ }
+
+ const item=items.find(x=>String(x.id)===String(itemId));
+ const loc=(item?.item_locations||[]).find(l=>String(l.id)===String(locationId));
+ if(!loc){
+   $('editLocationMsg').textContent='⚠️ 현재 위치 정보를 다시 확인하세요.';
+   return;
+ }
+
+ const oldCode=loc.location_display||loc.location_code||'';
+ if(String(oldCode)===String(newCode)){
+   $('editLocationMsg').textContent='⚠️ 현재 위치와 변경 위치가 같습니다.';
+   return;
+ }
+
+ if(!confirm(
+   `자재 위치를 변경할까요?\n\n현재: ${oldCode}\n변경: ${newCode}\n수량: ${Number(loc.qty||0)} ${item?.unit||'EA'}\n\n수량은 그대로 유지됩니다.`
+ )) return;
+
+ $('editLocationSaveBtn').disabled=true;
+ $('editLocationMsg').textContent='위치 변경 저장 중...';
+
+ const {error}=await db.rpc('admin_change_item_location',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:itemId,
+   p_location_id:locationId,
+   p_new_location_code:newCode
+ });
+
+ $('editLocationSaveBtn').disabled=false;
+
+ if(error){
+   const msg=String(error.message||'');
+   $('editLocationMsg').textContent=msg.includes('DESTINATION_LOCATION_EXISTS')
+     ? '⚠️ 같은 품목이 이미 새 위치에 등록되어 있습니다. 두 위치 수량 합치기는 별도 확인이 필요합니다.'
+     : '❌ 위치 변경 실패: '+msg;
+   return;
+ }
+
+ await loadAll();
+
+ const refreshed=items.find(x=>String(x.id)===String(itemId));
+ if(refreshed){
+   $('editItemSelect').value=itemId;
+   loadItemForEdit();
+   $('editLocationMsg').textContent=`✅ 위치 변경 완료 · ${newCode} · 수량은 그대로 유지되었습니다.`;
+ }
 };
 
 </script>
