@@ -1931,15 +1931,34 @@ $('archiveItemBtn').onclick=async()=>{
    return;
  }
 
- $('itemMsg').textContent='✅ 품목 사용중지 완료';
  await loadAll();
- clearItemForm();
+ resetItemEditorAfterDelete('✅ 품목 사용중지 완료 · 새 품목 등록 화면으로 초기화되었습니다.');
 };
 
 
 
 
 
+
+
+function resetItemEditorAfterDelete(message){
+ clearItemForm();
+ if($('editItemSearch')) $('editItemSearch').value='';
+ if(typeof renderEditItemOptions==='function') renderEditItemOptions('');
+
+ if(typeof switchTab==='function') switchTab('items');
+
+ const itemsTab=$('itemsTab');
+ if(itemsTab){
+   const topCard=itemsTab.querySelector('.card');
+   setTimeout(()=>{
+     (topCard||itemsTab).scrollIntoView({behavior:'smooth',block:'start'});
+   },60);
+ }
+
+ if($('itemMsg')) $('itemMsg').textContent=message||'✅ 삭제 완료 · 새 품목 등록 화면으로 초기화되었습니다.';
+ setTimeout(()=>$('partNo')?.focus(),180);
+}
 
 function selectedItemForDelete(){
  const id=String($('itemId')?.value || $('editItemSelect')?.value || '');
@@ -1990,9 +2009,8 @@ $('deleteItemXBtn').onclick=async()=>{
    return;
  }
 
- $('itemMsg').textContent='✅ 품목 완전삭제 완료';
  await loadAll();
- clearItemForm();
+ resetItemEditorAfterDelete('✅ 품목 완전삭제 완료 · 새 품목 등록 화면으로 초기화되었습니다.');
 };
 
 $('addHandlerBtn').onclick=async()=>{
@@ -2088,9 +2106,8 @@ $('forceDeleteItemBtn').onclick=async()=>{
    return;
  }
 
- $('itemMsg').textContent='✅ 테스트 품목 강제삭제 완료';
  await loadAll();
- clearItemForm();
+ resetItemEditorAfterDelete('✅ 테스트 품목 강제삭제 완료 · 새 품목 등록 화면으로 초기화되었습니다.');
 };
 
 $('addCategoryBtn').onclick=async()=>{
