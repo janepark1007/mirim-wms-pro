@@ -369,7 +369,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <div><div class="label">노랑박스</div>
             <select id="initialYellowBox">
               <option value="">해당사항 없음</option>
-              <option value="A">A</option><option value="B">B</option>
+              <option value="">해당사항 없음</option><option value="A">A</option><option value="B">B</option>
             </select>
           </div>
           <div><div class="label">상단·하단</div>
@@ -435,7 +435,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <div><div class="label">노랑박스</div>
             <select id="editYellowBox">
               <option value="">해당사항 없음</option>
-              <option value="A">A</option><option value="B">B</option>
+              <option value="">해당사항 없음</option><option value="A">A</option><option value="B">B</option>
             </select>
           </div>
           <div><div class="label">상단·하단</div>
@@ -608,7 +608,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
             <div class="label">노랑박스</div>
             <select id="inYellowBox">
               <option value="">해당사항 없음</option>
-              <option value="A">A</option><option value="B">B</option>
+              <option value="">해당사항 없음</option><option value="A">A</option><option value="B">B</option>
             </select>
           </div>
           <div>
@@ -2723,6 +2723,10 @@ function setupInboundLocationOptions(){
  $('inProdDrawer').innerHTML=drawerHtml;
 }
 
+function optionalLocationValue(v){
+ return String(v||'').trim()==='해당사항 없음'?'':String(v||'').trim();
+}
+
 function buildInboundLocationCode(){
  const type=$('inLocType').value;
  $('inWarehouseFields').classList.toggle('hidden',type==='생산');
@@ -2738,13 +2742,13 @@ function buildInboundLocationCode(){
    if(!$('inYellowBox').value) $('inYellowBox').value='A';
    $('inLocationCode').value=[
      type,$('inLocArea').value,$('inLocTier').value,
-     $('inLocNumber').value,$('inYellowBox').value
-   ].join('-');
+     $('inLocNumber').value,optionalLocationValue($('inYellowBox').value)
+   ].filter(Boolean).join('-');
  }else{
    $('inYellowBox').value='';
    $('inLocationCode').value=[
      type,$('inLocArea').value,$('inLocTier').value,
-     $('inLocLevel').value||''
+     optionalLocationValue($('inLocLevel').value)
    ].filter(Boolean).join('-');
  }
 }
