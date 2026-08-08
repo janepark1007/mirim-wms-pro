@@ -295,6 +295,24 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 #erpMasterBody td:nth-child(2){max-width:480px;white-space:normal;word-break:break-word}
 #erpApplyName{font-size:14px}
 </style>
+
+<style>
+.search-recent-click{
+  width:100%; color:inherit; text-align:left; position:relative;
+  cursor:pointer; font-family:inherit;
+}
+.search-recent-click:hover,.search-item-click:hover{
+  border-color:#108048 !important;
+  box-shadow:0 3px 10px rgba(16,128,72,.13);
+}
+.search-recent-click:focus{outline:3px solid rgba(16,128,72,.18)}
+.recent-open-hint{
+  position:absolute; right:16px; bottom:8px;
+  color:#108048; font-size:12px; font-weight:900;
+}
+.search-item-click{cursor:pointer}
+.search-item-click small{color:#087a43}
+</style>
 </head>
 <body>
 <header>
@@ -2166,18 +2184,31 @@ function renderRecentThree(){
          <span class="muted">최신 3개</span>
        </div>
        ${recent.map(x=>`
-         <div class="search-recent-card">
+         <button type="button" class="search-recent-card search-recent-click"
+           onclick="openRegisteredItem('${x.id}')"
+           title="클릭해서 품목 상세보기">
            <div>
              <small>품번</small>
              <b title="${esc(x.part_no||'')}">${esc(x.part_no||'-')}</b>
            </div>
            <div>
-             <small>품명 · 클릭해서 전체보기</small>
-             <b class="recent-name-click" title="${esc(displayItemNameSpec(x))}" onclick="this.classList.toggle('expanded')">${esc(displayItemNameSpec(x))}</b>
+             <small>품명</small>
+             <b title="${esc(displayItemNameSpec(x))}">${esc(displayItemNameSpec(x))}</b>
            </div>
-         </div>`).join('')}
+           <span class="recent-open-hint">클릭해서 보기 ›</span>
+         </button>`).join('')}
      </div>`
    : '<div class="card">등록된 품목이 없습니다.</div>';
+}
+
+
+function openRegisteredItem(itemId){
+ const found=items.find(x=>String(x.id)===String(itemId));
+ if(!found) return;
+ $('searchQ').value=found.part_no||found.item_name||'';
+ if($('searchCountText')) $('searchCountText').textContent='선택한 등록품목 1종목';
+ renderSearch([found]);
+ $('searchResults').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderSearch(list){
@@ -2197,13 +2228,13 @@ function renderSearch(list){
 
        <div>
          <div class="search-priority-info">
-           <div class="search-priority-box">
-             <small>품번</small>
+           <div class="search-priority-box search-item-click" onclick="openRegisteredItem('${x.id}')">
+             <small>품번 · 클릭</small>
              <strong class="search-fit-text ${searchFitClass(x.part_no)}">${esc(x.part_no)}</strong>
            </div>
-           <div class="search-priority-box search-name-wide">
-             <small>품명 · 클릭하면 전체보기</small>
-             <strong class="search-name-click" title="${esc(displayItemNameSpec(x))}" onclick="this.classList.toggle('expanded')">${esc(displayItemNameSpec(x))}</strong>
+           <div class="search-priority-box search-name-wide search-item-click" onclick="openRegisteredItem('${x.id}')">
+             <small>품명 · 클릭해서 품목보기</small>
+             <strong class="search-name-click" title="${esc(displayItemNameSpec(x))}">${esc(displayItemNameSpec(x))}</strong>
            </div>
            <div class="search-priority-total">
              <small>현재 총수량</small>
