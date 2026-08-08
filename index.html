@@ -860,6 +860,47 @@ img{
  }
 }
 </style>
+
+<style>
+#cooperationNotice{
+ border:1px solid #f0b34a!important;
+ background:#fffaf0!important;
+ border-radius:16px!important;
+ padding:12px!important;
+}
+#cooperationNotice .coop-notice-title{
+ font-size:18px!important;
+ font-weight:900!important;
+ color:#8a4b00!important;
+ margin-bottom:10px!important;
+}
+#cooperationNotice .coop-notice-body{
+ display:grid!important;
+ gap:7px!important;
+}
+#cooperationNotice .coop-notice-item{
+ background:#fff!important;
+ border:1px solid #f2eadb!important;
+ border-radius:11px!important;
+ padding:10px 12px!important;
+ font-size:14px!important;
+ line-height:1.35!important;
+ color:#1f2937!important;
+}
+#cooperationNotice .coop-notice-item b{
+ color:#0b6b3a!important;
+ font-weight:900!important;
+}
+@media(max-width:720px){
+ #cooperationNotice{padding:9px!important}
+ #cooperationNotice .coop-notice-title{font-size:16px!important;margin-bottom:8px!important}
+ #cooperationNotice .coop-notice-item{
+   font-size:12px!important;
+   padding:8px 9px!important;
+   line-height:1.35!important;
+ }
+}
+</style>
 </head>
 <body>
 <header>
@@ -2260,17 +2301,21 @@ setTimeout(setDefaultDates,0);
 const $=id=>document.getElementById(id);
 
 function setupCooperationNotice(){
- const notice=$('cooperationNotice');
- const closeBtn=$('closeCooperationNotice');
- if(!notice || !closeBtn) return;
+ const box=$('cooperationNotice');
+ if(!box) return;
 
- const hidden=sessionStorage.getItem('mirim_coop_notice_hidden')==='1';
- notice.classList.toggle('hidden',hidden);
-
- closeBtn.onclick=()=>{
-   notice.classList.add('hidden');
-   sessionStorage.setItem('mirim_coop_notice_hidden','1');
- };
+ box.innerHTML=`
+   <div class="coop-notice-head">
+     <div class="coop-notice-title">📢 협조사항</div>
+   </div>
+   <div class="coop-notice-body">
+     <div class="coop-notice-item">🔎 <b>제품검색</b> · 품번 또는 품명 일부 입력 → 제품 찾기</div>
+     <div class="coop-notice-item">📸 <b>사진검색</b> · 제품 촬영 → 돋보기 사진검색 → 비슷한 제품 찾기</div>
+     <div class="coop-notice-item">📦 <b>출고</b> · 제품 확인 → 오른쪽 하단 <b>📦 작업</b> → 출고정보 입력</div>
+     <div class="coop-notice-item">🔢 <b>WMS 수량</b> · 없거나 실제수량과 다르면 → 자재 담당자 확인 요청</div>
+     <div class="coop-notice-item">📷 <b>사진 없음</b> · 자재 담당자에게 사진 등록 요청</div>
+     <div class="coop-notice-item">📍 <b>위치 다름/없음</b> · 임의 변경 금지 → 자재 담당자 확인 요청</div>
+   </div>`;
 }
 
 function todayKST(){
