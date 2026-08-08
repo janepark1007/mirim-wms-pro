@@ -221,6 +221,34 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 .stock-status-normal{background:#e9f8ef;color:#087a43}
 .stock-status-unchecked{background:#f1f3f5;color:#667085}
 </style>
+
+<style>
+.erp-summary-card{
+ cursor:pointer !important;
+ position:relative;
+ border:1px solid transparent;
+ transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;
+}
+.erp-summary-card::after{
+ content:"클릭해서 보기";
+ position:absolute;
+ right:12px;
+ bottom:8px;
+ font-size:11px;
+ font-weight:700;
+ opacity:.55;
+}
+.erp-summary-card:hover{
+ transform:translateY(-2px);
+ box-shadow:0 5px 14px rgba(0,0,0,.12);
+ border-color:rgba(16,128,72,.35);
+}
+.erp-summary-card:active{transform:translateY(0)}
+.erp-summary-card.active-filter{
+ border-color:#108048;
+ box-shadow:inset 0 0 0 2px #108048;
+}
+</style>
 </head>
 <body>
 <header>
@@ -4337,6 +4365,9 @@ function splitErpNameSpec(value){
 function erpMasterDisplay(x){
  return x.specification ? `${x.item_name||''} [${x.specification}]` : (x.item_name||'');
 }
+bindErpSummaryCards();
+setTimeout(bindErpSummaryCards,300);
+
 async function loadErpMaster(){
  if(!session || session.role!=='admin' || !$('erpMasterBody')) return;
  let allRows=[], from=0, pageSize=1000;
@@ -4359,6 +4390,35 @@ async function loadErpMaster(){
  renderErpMaster();
 }
 let erpMasterQuickFilter='';
+
+function bindErpSummaryCards(){
+ const map={
+  erpMasterTotalCount:'ALL',
+  erpMasterExposedCount:'EXPOSED',
+  erpMasterTempCount:'TEMP',
+  erpMasterHiddenCount:'HIDDEN',
+  erpMasterZeroCount:'ZERO',
+  erpMasterNegativeCount:'NEGATIVE'
+ };
+ Object.entries(map).forEach(([counterId,kind])=>{
+   const counter=$(counterId);
+   if(!counter) return;
+   const card=counter.closest('.erp-summary-card') || counter.parentElement;
+   if(!card) return;
+   card.classList.add('erp-summary-card');
+   card.setAttribute('role','button');
+   card.setAttribute('tabindex','0');
+   card.setAttribute('title','클릭하여 해당 품목만 보기');
+   card.style.cursor='pointer';
+   card.onclick=(e)=>{e.preventDefault();e.stopPropagation();applyErpSummaryFilter(kind);};
+   card.onkeydown=(e)=>{
+     if(e.key==='Enter'||e.key===' '){
+       e.preventDefault();e.stopPropagation();applyErpSummaryFilter(kind);
+     }
+   };
+ });
+}
+
 function applyErpSummaryFilter(kind){
  erpMasterQuickFilter='';
  if($('erpMasterSearch')) $('erpMasterSearch').value='';
@@ -4376,6 +4436,7 @@ function applyErpSummaryFilter(kind){
  $('erpMasterBody')?.closest('.card,div')?.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function renderErpMaster(){
+ setTimeout(bindErpSummaryCards,0);
  if(!$('erpMasterBody')) return;
  const q=norm($('erpMasterSearch')?.value||'');
  const f=$('erpMasterFilter')?.value||'ALL';
@@ -4585,19 +4646,6 @@ function vvipFilteredRows(){
 }
 
 
-const erpCardMap={
- erpMasterTotalCount:'ALL',
- erpMasterExposedCount:'EXPOSED',
- erpMasterTempCount:'TEMP',
- erpMasterHiddenCount:'HIDDEN',
- erpMasterZeroCount:'ZERO',
- erpMasterNegativeCount:'NEGATIVE'
-};
-document.querySelectorAll('.erp-summary-card').forEach(card=>{
- const kind=erpCardMap[card.dataset.filterCard];
- card.onclick=()=>applyErpSummaryFilter(kind);
- card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();applyErpSummaryFilter(kind);}};
-});
 
 function vvipStateLabel(x){
  if(Number(x.erp_stock_qty||0)<0) return '⚠️ ERP 음수';
