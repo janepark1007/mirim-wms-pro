@@ -952,9 +952,9 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div class="card">
       <h3>선택 품목 재고 비교</h3>
       <div class="grid">
-        <div class="ok"><small>자재실</small><div id="erpWarehouseQty" style="font-size:28px;font-weight:900">0 EA</div></div>
+        <div class="ok"><small>1층 자재실</small><div id="erpFloor1Qty" style="font-size:28px;font-weight:900">0 EA</div></div>
+        <div class="ok"><small>2층 자재실</small><div id="erpFloor2Qty" style="font-size:28px;font-weight:900">0 EA</div></div>
         <div class="ok"><small>생산</small><div id="erpProductionQty" style="font-size:28px;font-weight:900">0 EA</div></div>
-        <div class="ok"><small>기타 위치</small><div id="erpOtherQty" style="font-size:28px;font-weight:900">0 EA</div></div>
         <div class="ok"><small>WMS 실제 총수량</small><div id="erpWmsTotalQty" style="font-size:28px;font-weight:900">0 EA</div></div>
         <div class="ok"><small>ERP 현재고</small><div id="erpCurrentQtyCard" style="font-size:28px;font-weight:900">-</div></div>
         <div id="erpDiffCard" class="ok"><small>차이수량 (WMS - ERP)</small><div id="erpDiffQty" style="font-size:28px;font-weight:900">-</div></div>
@@ -1264,14 +1264,13 @@ setTimeout(tryAutoLogin,0);
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 
 function erpQtyBreakdown(item){
- const result={warehouse:0,production:0,other:0,total:0};
+ const result={floor1:0,floor2:0,production:0,total:0};
  (item?.item_locations||[]).forEach(l=>{
    const qty=Number(l.qty||0);
-   const key=String(l.location_code||l.location_display||'');
-   result.total+=qty;
-   if(key.includes('생산')) result.production+=qty;
-   else if(key.includes('자재실')) result.warehouse+=qty;
-   else result.other+=qty;
+   const key=String(l.location_code||l.location_display||'').replace(/\s/g,'');
+   if(key.includes('1층자재실')) { result.floor1+=qty; result.total+=qty; }
+   else if(key.includes('2층자재실')) { result.floor2+=qty; result.total+=qty; }
+   else if(key.includes('생산')) { result.production+=qty; result.total+=qty; }
  });
  return result;
 }
@@ -1349,10 +1348,10 @@ function renderErpSelected(){
  $('erpNote').value=link?.note||'';
 
  const q=erpQtyBreakdown(item);
- $('erpWarehouseQty').textContent=`${q.warehouse} ${item?.unit||'EA'}`;
+ $('erpFloor1Qty').textContent=`${q.floor1} ${item?.unit||'EA'}`;
+ $('erpFloor2Qty').textContent=`${q.floor2} ${item?.unit||'EA'}`;
  $('erpProductionQty').textContent=`${q.production} ${item?.unit||'EA'}`;
- $('erpOtherQty').textContent=`${q.other} ${item?.unit||'EA'}`;
- $('erpWmsTotalQty').textContent=`${q.total} ${item?.unit||'EA'}`;
+  $('erpWmsTotalQty').textContent=`${q.total} ${item?.unit||'EA'}`;
 
  if(link && link.erp_stock_qty!==null && link.erp_stock_qty!==undefined){
    const erp=Number(link.erp_stock_qty||0);
