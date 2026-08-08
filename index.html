@@ -3119,7 +3119,7 @@ function filterItemCandidates(partValue,nameValue){
 function populateCandidateSelect(selectId,partValue,nameValue){
  const list=filterItemCandidates(partValue,nameValue);
  const el=$(selectId);
- el.innerHTML='<option value="">최종 품목을 선택하세요.</option>'+
+ el.innerHTML='<option value="">비슷한 품목이 여러 개일 때만 선택하세요.</option>'+
    list.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(displayItemNameSpec(x))} · ${esc(x.category||'기타')}</option>`).join('');
  return list;
 }
@@ -3228,39 +3228,87 @@ function resolveRegisteredItem(partValue,nameValue){
 }
 
 async function fillInboundCandidates(){
- let target=syncPairedSearch('in');
  const partValue=$('inPartSearch').value.trim();
  const nameValue=$('inNameSearch').value.trim();
 
- populateCandidateSelect('inFinalSelect',partValue,nameValue);
+ // 검색값이 없으면 초기화
+ if(!partValue && !nameValue){
+   $('inFinalSelect').innerHTML='<option value="">품번 또는 품명을 입력하면 등록품목이 표시됩니다.</option>';
+   $('inItemId').value='';
+   $('inPart').value='';
+   $('inName').value='';
+   $('inCategory').value='';
+   $('inCurrentStock').value='';
+   $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
+   $('inLocationInfo').textContent='품목을 선택하면 등록된 모든 위치와 수량이 표시됩니다.';
+   renderMovementItemPreview('in',null);
+   return;
+ }
 
+ // 로컬 목록으로 먼저 후보 계산
+ let candidates=filterItemCandidates(partValue,nameValue);
+
+ // 로컬에서 못 찾으면 DB 최신값 재조회
+ if(!candidates.length){
+   await loadAll();
+   candidates=filterItemCandidates(partValue,nameValue);
+ }
+
+ // 후보 선택박스 갱신
+ $('inFinalSelect').innerHTML='<option value="">최종 품목을 선택하세요.</option>'+
+   candidates.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(displayItemNameSpec(x))} · ${esc(x.category||'기타')}</option>`).join('');
+
+ let target=null;
+
+ // 품번 정확일치 우선
+ if(partValue){
+   const exactPart=candidates.filter(x=>norm(x.part_no)===norm(partValue));
+   if(exactPart.length===1) target=exactPart[0];
+ }
+
+ // 품명/규격 정확일치
+ if(!target && nameValue){
+   const exactName=candidates.filter(x=>
+     norm(displayItemNameSpec(x))===norm(nameValue) ||
+     norm(x.item_name)===norm(nameValue) ||
+     norm(x.specification)===norm(nameValue)
+   );
+   if(exactName.length===1) target=exactName[0];
+ }
+
+ // 후보가 딱 하나면 자동선택
+ if(!target && candidates.length===1) target=candidates[0];
+
+ if(target){
+   // 두 검색칸 모두 자동 동기화
+   $('inPartSearch').value=target.part_no||'';
+   $('inNameSearch').value=displayItemNameSpec(target);
+   $('inFinalSelect').value=String(target.id);
+   await selectInboundItem();
+
+   // 위치 1곳이면 자동선택
+   const fresh=items.find(x=>String(x.id)===String(target.id))||target;
+   const locs=(fresh.item_locations||[]);
+   if(locs.length===1 && $('inLoc')){
+     $('inLoc').value=String(locs[0].id);
+   }
+
+   $('inMsg').textContent=`✅ 자동 선택 완료 · ${target.part_no} · ${displayItemNameSpec(target)}`;
+   return;
+ }
+
+ // 여러 후보일 때 안내
  $('inItemId').value='';
  $('inPart').value='';
  $('inName').value='';
  $('inCategory').value='';
  $('inCurrentStock').value='';
- if($('inLoc')) $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
- if(typeof renderMovementItemPreview==='function') renderMovementItemPreview('in',null);
+ $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
+ renderMovementItemPreview('in',null);
 
- if(!target) target=resolveRegisteredItem(partValue,nameValue);
- if(!target && typeof fetchRegisteredItemDirect==='function'){
-   target=await fetchRegisteredItemDirect(partValue,nameValue);
- }
- if(!target && (partValue || nameValue)){
-   await loadAll();
-   target=syncPairedSearch('in')||resolveRegisteredItem(partValue,nameValue);
- }
-
- const finalCandidates=populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
- if(!target && finalCandidates.length===1) target=finalCandidates[0];
-
- if(target){
-   $('inFinalSelect').value=target.id;
-   await selectInboundItem();
-   $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택 · 최신 위치/수량 확인`;
- }else if(partValue || nameValue){
-   $('inMsg').textContent='⚠️ WMS에 실제재고 적용된 품목을 찾지 못했습니다. ERP 기준자료에만 있는 품목이면 먼저 현장확인 후 WMS 실제재고 적용을 해주세요.';
- }
+ $('inMsg').textContent=candidates.length
+   ? `비슷한 등록품목 ${candidates.length}개가 있습니다. 아래 '최종 품목 선택'에서 하나를 선택하세요.`
+   : '⚠️ WMS에 실제재고 적용된 품목을 찾지 못했습니다. ERP 기준자료에만 있는 품목이면 먼저 현장확인 후 WMS 실제재고 적용을 해주세요.';
 }
 ['inPartSearch','inNameSearch'].forEach(id=>{
  $(id).addEventListener('input',fillInboundCandidates);
@@ -3270,6 +3318,8 @@ async function fillInboundCandidates(){
  });
 });
 
+
+$('inFinalSelect').addEventListener('change',selectInboundItem);
 
 async function imageFileToDataUrl(file){
  const im=new Image();
@@ -3414,6 +3464,8 @@ async function selectInboundItem(){
  $('inItemId').value=found.id||'';
  $('inPart').value=found.part_no||'';
  $('inName').value=found.item_name||'';
+ $('inPartSearch').value=found.part_no||'';
+ $('inNameSearch').value=displayItemNameSpec(found);
  $('inCategory').value=found.category||'';
  $('inCurrentStock').value=`${total(found)} ${found.unit||'EA'}`;
 
