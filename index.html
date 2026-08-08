@@ -346,6 +346,61 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
  line-height:1.45;
 }
 </style>
+
+<style>
+/* 모바일 ERP 기준자료 품명 표시 FIX */
+@media(max-width:720px){
+  #erpMasterTab .card > div[style*="overflow:auto"],
+  #erpMasterTab div[style*="overflow:auto"]{
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+  #erpMasterTab table{
+    table-layout:fixed !important;
+    width:1120px !important;
+    min-width:1120px !important;
+  }
+  #erpMasterTab th,
+  #erpMasterTab td{
+    white-space:nowrap !important;
+    word-break:normal !important;
+    overflow-wrap:normal !important;
+    font-size:12px !important;
+  }
+  #erpMasterTab th:nth-child(1),#erpMasterTab td:nth-child(1){width:130px !important}
+  #erpMasterTab th:nth-child(2),#erpMasterTab td:nth-child(2){
+    width:420px !important;
+    min-width:420px !important;
+    max-width:420px !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+    word-break:normal !important;
+    overflow-wrap:normal !important;
+  }
+  #erpMasterTab th:nth-child(3),#erpMasterTab td:nth-child(3){width:90px !important}
+  #erpMasterTab th:nth-child(4),#erpMasterTab td:nth-child(4){width:105px !important}
+  #erpMasterTab th:nth-child(5),#erpMasterTab td:nth-child(5){width:150px !important}
+  #erpMasterTab th:nth-child(6),#erpMasterTab td:nth-child(6){width:95px !important}
+  #erpMasterTab th:nth-child(7),#erpMasterTab td:nth-child(7){width:175px !important}
+  #erpMasterTab th:nth-child(8),#erpMasterTab td:nth-child(8){width:100px !important}
+
+  #erpMasterTab .erp-name-cell{
+    display:table-cell !important;
+    max-width:420px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    word-break:normal !important;
+  }
+  #erpMasterTab .erp-name-cell.expanded{
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    word-break:break-word !important;
+  }
+}
+</style>
 </head>
 <body>
 <header>
