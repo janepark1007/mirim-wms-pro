@@ -332,7 +332,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   <section id="itemsTab" class="tabpane hidden">
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
-        <h2 style="margin:0">품목 등록·수정</h2>
+        <h2 style="margin:0">품목 등록·수정</h2><div class="muted" style="margin-top:4px">ERP 연동 품목은 ERP 기준자료에서 현장확인 완료 시 자동 생성·갱신됩니다.</div>
         <button id="deleteItemXBtn" type="button" class="danger"
           style="width:44px;height:44px;padding:0;border-radius:50%;font-size:22px;font-weight:900"
           title="선택 품목 완전삭제">×</button>
@@ -1047,7 +1047,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   <div class="card">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div>
-        <h2 style="margin:0">🗃️ Axcelis ERP 기준자료</h2><div class="muted" style="margin-top:4px">🔄 품목코드·품목명(규격)·자재구분·위치·실제수량 자동연동</div>
+        <h2 style="margin:0">🗃️ Axcelis ERP 기준자료 · WMS 등록 기준</h2><div class="muted" style="margin-top:4px">✅ 이 화면을 등록 기준으로 사용 · 현장확인 완료 시 품목등록과 일반 검색에 자동 적용</div>
         <div class="muted" style="margin-top:6px">Axcelis ERP 재고현황 Excel을 한 번에 올립니다. 전체 품목은 관리자에만 보관되고 일반 검색·입고·출고에는 자동 노출되지 않습니다.</div>
       </div>
       <span class="badge">관리자 전용 · 기본 미노출</span>
@@ -1107,9 +1107,67 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div><div class="label">품목코드</div><input id="erpApplyCode" readonly></div>
       <div><div class="label">품목명(규격)</div><input id="erpApplyName" readonly></div>
       <div><div class="label">자재구분</div><select id="erpApplyCategory"></select></div>
-      <div><div class="label">자재위치</div><input id="erpApplyLocation" placeholder="모르면 비워두세요 · 나중에 수정 가능"></div>
       <div><div class="label">WMS 실제수량</div><input id="erpApplyQty" type="number" min="0" step="0.001" placeholder="현장 확인 전에는 비워두세요"></div>
       <div><div class="label">ERP 현재고</div><input id="erpApplyErpQty" readonly></div>
+    </div>
+
+    <div class="card" style="background:#fffaf0;border:1px solid #f0d6a0;box-shadow:none;padding:14px;margin-top:12px">
+      <h3 style="margin-top:0">📍 자재위치 선택</h3>
+      <div class="grid">
+        <div>
+          <div class="label">위치 유형</div>
+          <select id="erpLocType">
+            <option value="1층자재실">1층자재실</option>
+            <option value="2층자재실">2층자재실</option>
+            <option value="생산">생산</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="erpWarehouseFields" class="grid" style="margin-top:10px">
+        <div><div class="label">구역</div><select id="erpLocArea"></select></div>
+        <div><div class="label">단</div>
+          <select id="erpLocTier">
+            <option value="1단">1단</option><option value="2단">2단</option>
+            <option value="3단">3단</option><option value="4단">4단</option>
+          </select>
+        </div>
+        <div><div class="label">번호</div>
+          <select id="erpLocNumber">
+            <option value="">해당사항 없음</option>
+            <option value="001">001</option><option value="002">002</option>
+            <option value="003">003</option><option value="004">004</option>
+            <option value="005">005</option><option value="006">006</option>
+          </select>
+        </div>
+        <div><div class="label">A/B</div>
+          <select id="erpYellowBox">
+            <option value="">해당사항 없음</option>
+            <option value="A">A</option><option value="B">B</option>
+          </select>
+        </div>
+        <div><div class="label">상/하</div>
+          <select id="erpLocLevel">
+            <option value="">해당사항 없음</option>
+            <option value="상단">상단</option><option value="하단">하단</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="erpProductionFields" class="grid hidden" style="margin-top:10px">
+        <div><div class="label">생산 D라인</div>
+          <select id="erpProdLine">
+            <option value="D-1">D-1</option><option value="D-2">D-2</option>
+            <option value="D-3">D-3</option><option value="D-4">D-4</option>
+            <option value="D-5">D-5</option><option value="D-6">D-6</option>
+          </select>
+        </div>
+        <div><div class="label">선반번호</div><select id="erpProdDrawer"></select></div>
+      </div>
+
+      <div class="label" style="margin-top:10px">생성 자재위치</div>
+      <input id="erpApplyLocation" readonly placeholder="위치 선택 시 자동 생성">
+      <div class="muted" style="margin-top:6px">품목등록과 동일한 위치선택 방식입니다. 직접 타자하지 않아도 됩니다.</div>
     </div>
     <div class="ok" style="margin-top:10px">📝 지금 모르면 <b>임시등록</b>하세요. 자재구분·위치·실제수량은 나중에 이 품목을 검색해서 바로 수정할 수 있습니다.</div>
     <div class="bad" style="margin-top:8px">⚠️ 실제수량 미확인은 <b>0이 아닙니다.</b> 현장에서 실제로 0개임을 확인했을 때만 0을 입력하세요.</div>
@@ -4478,6 +4536,84 @@ function renderErpMaster(){
  }).join('');
  if(rows.length>500) $('erpMasterCount').textContent+=` · 전체 ${rows.length.toLocaleString()}개 중 화면은 앞 500개만 표시 (검색으로 바로 찾을 수 있습니다)`;
 }
+
+function setupErpLocationOptions(){
+ if(!$('erpLocArea')) return;
+ $('erpLocArea').innerHTML='ABCDEFGHIJKLMNOPQ'.split('')
+   .map(x=>`<option value="${x}">${x}</option>`).join('');
+ $('erpProdDrawer').innerHTML=Array.from({length:100},(_,i)=>{
+   const v=String(i+1).padStart(3,'0');
+   return `<option value="${v}">${i+1}</option>`;
+ }).join('');
+}
+function buildErpLocationCode(){
+ if(!$('erpLocType')) return;
+ const type=$('erpLocType').value;
+ $('erpWarehouseFields').classList.toggle('hidden',type==='생산');
+ $('erpProductionFields').classList.toggle('hidden',type!=='생산');
+
+ if(type==='생산'){
+   $('erpApplyLocation').value=`생산-${$('erpProdLine').value}-${$('erpProdDrawer').value}`;
+   return;
+ }
+ const number=$('erpLocNumber').value;
+ const level=$('erpLocLevel').value;
+ const ab=$('erpYellowBox').value;
+ const parts=[type,$('erpLocArea').value,$('erpLocTier').value];
+ if(number) parts.push(number);
+ if(ab) parts.push(ab);
+ if(level) parts.push(level);
+ $('erpApplyLocation').value=parts.filter(Boolean).join('-');
+}
+function resetErpLocationForm(){
+ if(!$('erpLocType')) return;
+ $('erpLocType').value='1층자재실';
+ $('erpLocArea').value='A';
+ $('erpLocTier').value='1단';
+ $('erpLocNumber').value='';
+ $('erpYellowBox').value='';
+ $('erpLocLevel').value='';
+ $('erpProdLine').value='D-1';
+ $('erpProdDrawer').value='001';
+ buildErpLocationCode();
+}
+function loadErpLocationFromText(value){
+ resetErpLocationForm();
+ const s=String(value||'').trim();
+ if(!s){ $('erpApplyLocation').value=''; return; }
+ if(s.startsWith('생산-')){
+   const p=s.split('-');
+   $('erpLocType').value='생산';
+   if(p.length>=3){
+     $('erpProdLine').value=`${p[1]}-${p[2]}`;
+     if(p[3]) $('erpProdDrawer').value=p[3];
+   }
+   buildErpLocationCode();
+   return;
+ }
+ const p=s.split('-');
+ if(['1층자재실','2층자재실'].includes(p[0])) $('erpLocType').value=p[0];
+ if(p[1]) $('erpLocArea').value=p[1];
+ if(p[2]) $('erpLocTier').value=p[2];
+ const rest=p.slice(3);
+ const num=rest.find(v=>/^\d{3}$/.test(v));
+ const ab=rest.find(v=>v==='A'||v==='B');
+ const level=rest.find(v=>v==='상단'||v==='하단');
+ $('erpLocNumber').value=num||'';
+ $('erpYellowBox').value=ab||'';
+ $('erpLocLevel').value=level||'';
+ buildErpLocationCode();
+}
+setupErpLocationOptions();
+['erpLocType','erpLocArea','erpLocTier','erpLocNumber','erpYellowBox','erpLocLevel','erpProdLine','erpProdDrawer']
+ .forEach(id=>{
+   const el=$(id);
+   if(!el) return;
+   el.addEventListener('input',buildErpLocationCode);
+   el.addEventListener('change',buildErpLocationCode);
+ });
+resetErpLocationForm();
+
 function prepareErpMasterApply(code){
  const x=erpMasterRows.find(v=>String(v.erp_item_code)===String(code));
  if(!x) return;
@@ -4486,7 +4622,7 @@ function prepareErpMasterApply(code){
  $('erpApplyName').value=erpMasterDisplay(x);
  $('erpApplyErpQty').value=Number(x.erp_stock_qty||0);
  $('erpApplyQty').value=x.wms_qty!==null && x.wms_qty!==undefined?String(x.wms_qty):'';
- $('erpApplyLocation').value=x.wms_location||'';
+ loadErpLocationFromText(x.wms_location||'');
  $('erpApplyCategory').innerHTML='<option value="">⚠️ 자재구분 미확인</option>'+categories.map(c=>`<option value="${esc(c.name||c.category||c)}">${esc(c.name||c.category||c)}</option>`).join('');
  if(x.wms_category) $('erpApplyCategory').value=x.wms_category;
  $('erpMasterApplyCard').classList.remove('hidden');
@@ -4597,7 +4733,7 @@ if($('erpMasterApplyBtn')) $('erpMasterApplyBtn').onclick=async()=>{
    local.wms_location=location;
    local.wms_qty=qty;
  }
- $('erpMasterApplyMsg').textContent='✅ 현장 확인 완료 · WMS 실제재고 적용 및 일반 검색 노출 완료';
+ $('erpMasterApplyMsg').textContent='✅ 현장 확인 완료 · 품목등록 자동생성/갱신 + 일반 검색 노출 완료';
  renderErpMaster();
  await loadAll(); await loadErpMaster();
 };
