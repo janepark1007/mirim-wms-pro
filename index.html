@@ -401,6 +401,25 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   }
 }
 </style>
+
+<style>
+#stockCorrectionBox.hidden{display:none!important}
+#inboundTab .ok b{font-weight:900}
+</style>
+
+<style>
+/* 입고·출고 최종본 UX */
+#inFinalSelect,#outFinalSelect,#inLoc,#outLoc,#handler{
+  min-height:46px;
+}
+#inboundTab .ok,#outboundTab .ok{
+  line-height:1.5;
+}
+@media(max-width:720px){
+  #inboundTab .grid,#outboundTab .grid{grid-template-columns:1fr!important}
+  #inFinalSelect,#outFinalSelect,#inLoc,#outLoc,#handler{font-size:15px}
+}
+</style>
 </head>
 <body>
 <header>
@@ -741,12 +760,15 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <section id="inboundTab" class="tabpane hidden">
     <div class="card">
-      <h2>입고 등록</h2>
+      <h2>입고 등록</h2><div class="ok" style="margin:8px 0 14px">
+          사용순서: <b>품번/품명 검색 → 품목 선택 → 입고 위치 선택 → 이번 입고수량 입력 → 입고 저장</b><br>
+          저장하면 해당 위치의 WMS 재고에 입고수량이 자동으로 더해집니다.
+        </div>
 
       <div class="grid">
         <div>
-          <div class="label required-label">품목코드 검색</div>
-          <input id="inPartSearch" placeholder="품목코드 입력 → 품명 자동표시">
+          <div class="label required-label">품번 검색</div>
+          <input id="inPartSearch" placeholder="품번 입력 → 품명 자동표시">
         </div>
         <div>
           <div class="label required-label">품명 검색</div>
@@ -864,18 +886,26 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <input id="inLocationCode" readonly>
       </div>
 
-      <div id="stockCorrectionBox" class="card" style="background:#fff8e8;border:1px solid #efc15d;box-shadow:none;padding:14px;margin:16px 0">
-  <div class="label">📦 현 재고수정</div>
-  <div class="muted" style="margin-bottom:8px">기존 위치의 현재수량을 불러와 실제 창고수량으로 정정합니다. 입고내역에는 추가되지 않습니다.</div>
-  <div class="grid">
-    <div><div class="label">현재 등록수량</div><select id="stockCurrentQty">
-          <option value="">기존 위치를 선택하면 현재수량이 자동 표시됩니다.</option>
-        </select></div>
-    <div><div class="label">실제 확인수량</div><input id="stockCorrectQty" type="number" min="0" placeholder="실제 수량"></div>
-  </div>
-  <button id="stockCorrectBtn" type="button" class="secondary" style="margin-top:10px">현 재고수정 저장</button>
-  <div id="stockCorrectMsg" class="muted" style="margin-top:8px"></div>
-</div>
+      <div class="card" style="background:#fff8e8;border:1px solid #efc15d;box-shadow:none;padding:12px;margin:14px 0">
+        <button id="toggleStockCorrectionBtn" type="button" class="secondary" style="width:100%">
+          ⚠️ 기존 재고가 틀릴 때만 재고수정 열기
+        </button>
+        <div id="stockCorrectionBox" class="hidden" style="margin-top:12px">
+          <div class="label">📦 기존 재고수정 · 입고와 별도 기능</div>
+          <div class="muted" style="margin-bottom:8px">
+            장부의 기존 WMS 재고가 실제 창고수량과 다를 때만 사용합니다.
+            <b>이번 입고수량을 입력하는 곳이 아닙니다.</b>
+          </div>
+          <div class="grid">
+            <div><div class="label">현재 WMS 등록수량</div><select id="stockCurrentQty">
+              <option value="">기존 위치를 선택하면 현재수량이 표시됩니다.</option>
+            </select></div>
+            <div><div class="label">창고에서 다시 센 실제수량</div><input id="stockCorrectQty" type="number" min="0" placeholder="재고가 틀릴 때만 입력"></div>
+          </div>
+          <button id="stockCorrectBtn" type="button" class="secondary" style="margin-top:10px">기존 재고수정 저장</button>
+          <div id="stockCorrectMsg" class="muted" style="margin-top:8px"></div>
+        </div>
+      </div>
 
       <div class="grid" style="margin-top:14px">
         <div>
@@ -883,7 +913,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <input id="inDate" type="date">
         </div>
         <div>
-          <div class="label required-label">입고수량</div><div class="muted" style="margin:-4px 0 6px">이번에 실제로 들어온 수량만 입력 · 입고통계에 집계</div>
+          <div class="label required-label">이번 입고수량</div><div class="muted" style="margin:-4px 0 6px">오늘 새로 들어온 수량만 입력하세요. 저장하면 기존 WMS 재고에 자동으로 더해집니다.</div>
           <input id="inQty" type="number" min="1" placeholder="입고수량">
         </div>
         <div>
@@ -900,7 +930,10 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <section id="outboundTab" class="tabpane hidden">
     <div class="card">
-      <h2>출고 등록</h2>
+      <h2>출고 등록</h2><div class="ok" style="margin:8px 0 14px">
+          사용순서: <b>담당자 선택 → 품번/품명 검색 → 품목 선택 → 출고 위치 선택 → 출고수량 입력 → 출고 저장</b><br>
+          저장하면 선택한 위치의 WMS 재고에서 출고수량이 자동으로 차감됩니다.
+        </div>
       <p><span class="step">STEP 1</span><b>출고 담당자 선택(필수)</b></p>
       <select id="handler">
         <option value="">출고 담당자 이름을 선택하세요 *</option>
@@ -924,7 +957,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     </div>
 
     <div id="outStep2" class="card">
-      <h3>품목 검색 및 출고수량 입력</h3>
+      <h3>품목 검색 · 출고 등록</h3>
 
       <div class="grid">
         <div>
@@ -942,7 +975,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <button id="outReloadItems" type="button" class="secondary" style="width:auto;padding:7px 10px">등록 품목 새로고침</button>
       </div>
       <select id="outFinalSelect">
-        <option value="">품목코드 또는 품명을 입력하면 후보가 표시됩니다.</option>
+        <option value="">품번 또는 품명을 입력하면 등록품목이 표시됩니다.</option>
       </select>
       <input id="outItemId" type="hidden">
 
@@ -967,6 +1000,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div id="outLocationInfo" class="muted">품목을 선택하면 현재 등록된 모든 자재위치와 위치별 수량이 표시됩니다.</div>
 
       <div class="label required-label" style="margin-top:12px">출고 위치</div>
+      <div class="muted" style="margin:-4px 0 6px">실제로 자재를 가져갈 위치를 선택하세요. 해당 위치 재고에서 차감됩니다.</div>
       <select id="outLoc"></select>
 
       <div class="grid" style="margin-top:10px">
@@ -975,8 +1009,9 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <input id="outDate" type="date">
         </div>
         <div>
-          <div class="label required-label">출고수량</div>
-          <input id="outQty" type="number" min="1" placeholder="출고수량">
+          <div class="label required-label">이번 출고수량</div>
+          <div class="muted" style="margin:-4px 0 6px">이번에 실제로 가져가는 수량만 입력하세요.</div>
+          <input id="outQty" type="number" min="1" placeholder="이번 출고수량">
         </div>
       </div>
       <textarea id="outNote" placeholder="비고"></textarea>
@@ -3216,14 +3251,15 @@ async function fillInboundCandidates(){
    target=syncPairedSearch('in')||resolveRegisteredItem(partValue,nameValue);
  }
 
- populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
+ const finalCandidates=populateCandidateSelect('inFinalSelect',$('inPartSearch').value,$('inNameSearch').value);
+ if(!target && finalCandidates.length===1) target=finalCandidates[0];
 
  if(target){
    $('inFinalSelect').value=target.id;
    await selectInboundItem();
    $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택 · 최신 위치/수량 확인`;
  }else if(partValue || nameValue){
-   $('inMsg').textContent='⚠️ 등록된 품목코드 또는 품명을 확인하세요.';
+   $('inMsg').textContent='⚠️ WMS에 실제재고 적용된 품목을 찾지 못했습니다. ERP 기준자료에만 있는 품목이면 먼저 현장확인 후 WMS 실제재고 적용을 해주세요.';
  }
 }
 ['inPartSearch','inNameSearch'].forEach(id=>{
@@ -3325,6 +3361,18 @@ $('inLocationMode').addEventListener('change',updateInboundLocationMode);
 setupInboundLocationOptions();
 buildInboundLocationCode();
 updateInboundLocationMode();
+
+
+if($('toggleStockCorrectionBtn')){
+ $('toggleStockCorrectionBtn').onclick=()=>{
+   const box=$('stockCorrectionBox');
+   const opening=box.classList.contains('hidden');
+   box.classList.toggle('hidden');
+   $('toggleStockCorrectionBtn').textContent=opening
+     ? '▲ 기존 재고수정 닫기'
+     : '⚠️ 기존 재고가 틀릴 때만 재고수정 열기';
+ };
+}
 
 function renderMovementLocations(targetId,found){
  const locs=found?.item_locations||[];
@@ -3582,14 +3630,15 @@ async function fillOutboundCandidates(){
    target=syncPairedSearch('out')||resolveRegisteredItem(partValue,nameValue);
  }
 
- populateCandidateSelect('outFinalSelect',$('outPartSearch').value,$('outNameSearch').value);
+ const finalCandidates=populateCandidateSelect('outFinalSelect',$('outPartSearch').value,$('outNameSearch').value);
+ if(!target && finalCandidates.length===1) target=finalCandidates[0];
 
  if(target){
    $('outFinalSelect').value=target.id;
    await selectOutboundItem();
    $('outMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
  }else if(partValue || nameValue){
-   $('outMsg').textContent='⚠️ 등록된 품목코드 또는 품명을 확인하세요.';
+   $('outMsg').textContent='⚠️ WMS에 실제재고 적용된 품목을 찾지 못했습니다. ERP 기준자료에만 있는 품목이면 먼저 현장확인 후 WMS 실제재고 적용을 해주세요.';
  }
 }
 ['outPartSearch','outNameSearch'].forEach(id=>{
@@ -3696,7 +3745,7 @@ $('outSave').onclick=async()=>{
    // 출고 저장 후 다음 건을 바로 입력할 수 있도록 화면 초기화
    $('outPartSearch').value='';
    $('outNameSearch').value='';
-   $('outFinalSelect').innerHTML='<option value="">품목코드 또는 품명을 입력하면 후보가 표시됩니다.</option>';
+   $('outFinalSelect').innerHTML='<option value="">품번 또는 품명을 입력하면 등록품목이 표시됩니다.</option>';
    $('outItemId').value='';
    $('outPart').value='';
    $('outName').value='';
