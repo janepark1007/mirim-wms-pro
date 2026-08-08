@@ -420,6 +420,29 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   #inFinalSelect,#outFinalSelect,#inLoc,#outLoc,#handler{font-size:15px}
 }
 </style>
+
+<style>
+#erpCompareBody .erp-compare-click-row{
+  cursor:pointer;
+  transition:background .12s ease, box-shadow .12s ease;
+}
+#erpCompareBody .erp-compare-click-row:hover{
+  background:#eef9f2;
+}
+#erpCompareBody .erp-compare-click-row:focus{
+  outline:3px solid rgba(16,128,72,.18);
+  outline-offset:-3px;
+}
+#erpCompareBody .erp-compare-click-row.selected{
+  background:#e5f7ec;
+  box-shadow:inset 4px 0 0 #108048;
+}
+#erpCompareBody .erp-compare-click-row td:first-child b::after{
+  content:"  ›";
+  color:#108048;
+  font-weight:900;
+}
+</style>
 </head>
 <body>
 <header>
@@ -1430,7 +1453,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
-        <h3 style="margin:0">전체 품목 ERP/WMS 차이</h3>
+        <h3 style="margin:0">전체 품목 ERP/WMS 차이</h3><div class="muted" style="margin-top:4px">품목 행을 클릭하면 위의 재고 비교 화면으로 바로 이동합니다.</div>
         <button id="erpReloadBtn" type="button" class="secondary" style="width:auto">새로고침</button>
       </div>
       <div style="overflow:auto;margin-top:12px">
@@ -2040,6 +2063,29 @@ function renderErpSelected(){
  syncErpAutoMatch();
 }
 
+
+function openErpCompareItem(itemId){
+ const item=items.find(x=>String(x.id)===String(itemId));
+ if(!item) return;
+
+ const link=erpLinkForItem(item.id);
+ $('erpItemSelect').value=item.id;
+ $('erpItemCode').value=link?.erp_item_code||item.part_no||'';
+ $('erpItemName').value=link?.erp_item_name||erpDisplayName(item);
+ $('erpStockQty').value=(link?.erp_stock_qty??'');
+ $('erpNote').value=link?.note||'';
+
+ renderErpSelected();
+
+ const compareCard=$('erpFloor1Qty')?.closest('.card');
+ if(compareCard) compareCard.scrollIntoView({behavior:'smooth',block:'start'});
+
+ document.querySelectorAll('.erp-compare-click-row').forEach(r=>r.classList.remove('selected'));
+ const row=[...document.querySelectorAll('.erp-compare-click-row')]
+   .find(r=>r.getAttribute('onclick')?.includes(`'${itemId}'`));
+ if(row) row.classList.add('selected');
+}
+
 function renderErpCompare(){
  if(!$('erpCompareBody')) return;
  $('erpCompareBody').innerHTML=items.map(item=>{
@@ -2051,7 +2097,10 @@ function renderErpCompare(){
    const ok=has && Math.abs(diff)<0.000001;
    const code=link?.erp_item_code||item.part_no||'';
    const nameSpec=link?.erp_item_name||erpDisplayName(item);
-   return `<tr>
+   return `<tr class="erp-compare-click-row" role="button" tabindex="0"
+     title="클릭해서 이 품목 재고 비교 보기"
+     onclick="openErpCompareItem('${item.id}')"
+     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openErpCompareItem('${item.id}')}">
      <td><b>${esc(code)}</b></td>
      <td>${esc(nameSpec||'-')}</td>
      <td>${has?erp:'⚠️ 미입력'}</td>
