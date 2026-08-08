@@ -205,6 +205,13 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 #excelbulkTab table th{background:#f5f7f6;font-weight:900;position:sticky;top:0}
 .bulk-ok{color:#067647;font-weight:900}.bulk-warn{color:#b54708;font-weight:900}.bulk-bad{color:#b42318;font-weight:900}
 </style>
+
+<style>
+.erp-summary-card{cursor:pointer;transition:.15s;user-select:none}
+.erp-summary-card:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.10)}
+.erp-summary-card:focus{outline:3px solid rgba(16,128,72,.22);outline-offset:2px}
+.erp-summary-card.active-filter{box-shadow:inset 0 0 0 3px #108048}
+</style>
 </head>
 <body>
 <header>
@@ -835,10 +842,10 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <div class="card">
     <div class="grid">
-      <div class="ok"><small>입고 건수</small><div id="historyInCount" style="font-size:27px;font-weight:900">0</div></div>
-      <div class="ok"><small>출고 건수</small><div id="historyOutCount" style="font-size:27px;font-weight:900">0</div></div>
-      <div class="ok"><small>총 입고수량</small><div id="historyInQty" style="font-size:27px;font-weight:900">0</div></div>
-      <div class="ok"><small>총 출고수량</small><div id="historyOutQty" style="font-size:27px;font-weight:900">0</div></div>
+      <div class="ok erp-summary-card" data-filter-card="erpMasterTotalCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>입고 건수</small><div id="historyInCount" style="font-size:27px;font-weight:900">0</div></div>
+      <div class="ok erp-summary-card" data-filter-card="erpMasterExposedCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>출고 건수</small><div id="historyOutCount" style="font-size:27px;font-weight:900">0</div></div>
+      <div class="ok erp-summary-card" data-filter-card="erpMasterTempCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>총 입고수량</small><div id="historyInQty" style="font-size:27px;font-weight:900">0</div></div>
+      <div class="ok erp-summary-card" data-filter-card="erpMasterHiddenCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>총 출고수량</small><div id="historyOutQty" style="font-size:27px;font-weight:900">0</div></div>
     </div>
   </div>
 
@@ -1039,12 +1046,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     </div>
     <div id="erpMasterCount" class="muted" style="margin-top:8px"></div>
     <div class="grid" style="margin-top:10px">
-      <div class="ok"><small>ERP 전체 품목</small><div id="erpMasterTotalCount" style="font-size:26px;font-weight:900">0</div></div>
-      <div class="ok"><small>WMS 실제재고 적용</small><div id="erpMasterExposedCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok erp-summary-card" data-filter-card="erpMasterZeroCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>ERP 전체 품목</small><div id="erpMasterTotalCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok erp-summary-card" data-filter-card="erpMasterNegativeCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>WMS 실제재고 적용</small><div id="erpMasterExposedCount" style="font-size:26px;font-weight:900">0</div></div>
       <div class="ok"><small>📝 임시등록</small><div id="erpMasterTempCount" style="font-size:26px;font-weight:900">0</div></div>
       <div class="ok"><small>아직 미등록</small><div id="erpMasterHiddenCount" style="font-size:26px;font-weight:900">0</div></div>
       <div class="ok"><small>ERP 0재고 품목</small><div id="erpMasterZeroCount" style="font-size:26px;font-weight:900">0</div></div>
-      <div class="bad"><small>⚠️ ERP 음수재고 품목</small><div id="erpMasterNegativeCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="bad"><small>⚠️ ERP 음수재고 품목<br><span style="font-size:12px;font-weight:500">ERP 장부수량이 0보다 작은 품목 · 출고/입고 등록시점·누락·재고차이 확인 필요</span></small><div id="erpMasterNegativeCount" style="font-size:26px;font-weight:900">0</div></div>
     </div>
     <div style="overflow:auto;margin-top:10px;max-height:520px">
       <table style="width:100%;border-collapse:collapse;min-width:900px">
@@ -4335,6 +4342,23 @@ async function loadErpMaster(){
  $('erpMasterUpdatedAt').textContent='ERP 최종 갱신일: '+(latest?formatLoginTime(latest):'-');
  renderErpMaster();
 }
+let erpMasterQuickFilter='';
+function applyErpSummaryFilter(kind){
+ erpMasterQuickFilter='';
+ if($('erpMasterSearch')) $('erpMasterSearch').value='';
+ if(kind==='ALL') $('erpMasterFilter').value='ALL';
+ if(kind==='EXPOSED') $('erpMasterFilter').value='EXPOSED';
+ if(kind==='TEMP') $('erpMasterFilter').value='TEMP';
+ if(kind==='HIDDEN') $('erpMasterFilter').value='HIDDEN';
+ if(kind==='ZERO'){ $('erpMasterFilter').value='ALL'; erpMasterQuickFilter='ZERO'; }
+ if(kind==='NEGATIVE'){ $('erpMasterFilter').value='ALL'; erpMasterQuickFilter='NEGATIVE'; }
+ document.querySelectorAll('.erp-summary-card').forEach(x=>x.classList.remove('active-filter'));
+ const map={ALL:'erpMasterTotalCount',EXPOSED:'erpMasterExposedCount',TEMP:'erpMasterTempCount',HIDDEN:'erpMasterHiddenCount',ZERO:'erpMasterZeroCount',NEGATIVE:'erpMasterNegativeCount'};
+ const el=document.querySelector(`[data-filter-card="${map[kind]}"]`);
+ if(el) el.classList.add('active-filter');
+ renderErpMaster();
+ $('erpMasterBody')?.closest('.card,div')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 function renderErpMaster(){
  if(!$('erpMasterBody')) return;
  const q=norm($('erpMasterSearch')?.value||'');
@@ -4343,7 +4367,10 @@ function renderErpMaster(){
  let rows=erpMasterRows.filter(x=>{
    const searchOk=!q || norm(`${x.erp_item_code} ${erpMasterDisplay(x)}`).includes(q);
    const stateOk=f==='ALL'||stateOf(x)===f;
-   return searchOk&&stateOk;
+   const quickOk=!erpMasterQuickFilter
+     || (erpMasterQuickFilter==='ZERO' && Number(x.erp_stock_qty||0)===0)
+     || (erpMasterQuickFilter==='NEGATIVE' && Number(x.erp_stock_qty||0)<0);
+   return searchOk&&stateOk&&quickOk;
  });
  const exposedCount=erpMasterRows.filter(x=>stateOf(x)==='EXPOSED').length;
  const tempCount=erpMasterRows.filter(x=>stateOf(x)==='TEMP').length;
@@ -4436,7 +4463,7 @@ if($('erpMasterFile')) $('erpMasterFile').onchange=async e=>{
 };
 if($('erpMasterReloadBtn')) $('erpMasterReloadBtn').onclick=loadErpMaster;
 if($('erpMasterSearch')) $('erpMasterSearch').oninput=renderErpMaster;
-if($('erpMasterFilter')) $('erpMasterFilter').onchange=renderErpMaster;
+if($('erpMasterFilter')) $('erpMasterFilter').onchange=()=>{erpMasterQuickFilter='';document.querySelectorAll('.erp-summary-card').forEach(x=>x.classList.remove('active-filter'));renderErpMaster();};
 if($('erpMasterTempBtn')) $('erpMasterTempBtn').onclick=async()=>{
  const code=$('erpMasterSelectedCode').value;
  if(!code){$('erpMasterApplyMsg').textContent='⚠️ 품목을 먼저 선택하세요.';return;}
@@ -4540,6 +4567,21 @@ function vvipFilteredRows(){
    return statusOk&&qOk&&categoryOk&&dateOk;
  });
 }
+
+
+const erpCardMap={
+ erpMasterTotalCount:'ALL',
+ erpMasterExposedCount:'EXPOSED',
+ erpMasterTempCount:'TEMP',
+ erpMasterHiddenCount:'HIDDEN',
+ erpMasterZeroCount:'ZERO',
+ erpMasterNegativeCount:'NEGATIVE'
+};
+document.querySelectorAll('.erp-summary-card').forEach(card=>{
+ const kind=erpCardMap[card.dataset.filterCard];
+ card.onclick=()=>applyErpSummaryFilter(kind);
+ card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();applyErpSummaryFilter(kind);}};
+});
 
 function vvipStateLabel(x){
  if(x.analysis_status==='UNCHECKED') return '⚠️ 미확인';
