@@ -1047,19 +1047,19 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   <div class="card">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div>
-        <h2 style="margin:0">🗃️ Axcelis ERP 기준자료</h2>
+        <h2 style="margin:0">🗃️ Axcelis ERP 기준자료</h2><div class="muted" style="margin-top:4px">🔄 품목코드·품목명(규격)·자재구분·위치·실제수량 자동연동</div>
         <div class="muted" style="margin-top:6px">Axcelis ERP 재고현황 Excel을 한 번에 올립니다. 전체 품목은 관리자에만 보관되고 일반 검색·입고·출고에는 자동 노출되지 않습니다.</div>
       </div>
       <span class="badge">관리자 전용 · 기본 미노출</span>
     </div>
     <div class="ok" style="margin-top:12px">
-      ERP Excel 갱신은 <b>품목코드 · 품목명[규격] · ERP 현재고</b>만 갱신합니다.
+      ERP Excel 갱신은 <b>품목코드 · 품목명[규격] · ERP 현재고</b>만 갱신합니다. <br><b>자동연동:</b> ERP 품목코드·품목명(규격)은 WMS 품목에 자동 반영되고, WMS 자재구분·위치·실제수량 수정은 ERP 기준자료 화면에 자동 반영됩니다.
       기존 WMS의 <b>1층 자재실 · 2층 자재실 · 생산 수량과 위치</b>는 변경하지 않습니다.
     </div>
     <input id="erpMasterFile" type="file" accept=".xlsx,.xls" class="hidden">
     <div class="row" style="margin-top:12px;align-items:center">
       <button id="erpMasterChooseBtn" type="button" style="width:auto">Axcelis 재고현황 Excel 일괄등록</button>
-      <button id="erpMasterReloadBtn" type="button" class="secondary" style="width:auto">목록 새로고침</button>
+      <button id="erpMasterReloadBtn" type="button" class="secondary" style="width:auto">🔄 품목등록 정보 다시 불러오기</button>
       <span id="erpMasterUpdatedAt" class="muted">ERP 최종 갱신일: -</span>
     </div>
     <div id="erpMasterUploadMsg" class="muted" style="margin-top:8px"></div>
@@ -1093,7 +1093,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div style="overflow:auto;margin-top:10px;max-height:520px">
       <table style="width:100%;border-collapse:collapse;min-width:900px">
         <thead><tr>
-          <th>품목코드</th><th>품목명[규격]</th><th>ERP 현재고</th><th>상태</th><th>ERP 갱신일</th><th>작업</th>
+          <th>품목코드</th><th>품목명[규격]</th><th>ERP 현재고</th><th>자재구분</th><th>현재 WMS 위치</th><th>상태</th><th>ERP 갱신일</th><th>작업</th>
         </tr></thead>
         <tbody id="erpMasterBody"></tbody>
       </table>
@@ -4372,7 +4372,7 @@ async function loadErpMaster(){
  if(!session || session.role!=='admin' || !$('erpMasterBody')) return;
  let allRows=[], from=0, pageSize=1000;
  while(true){
-   const {data,error}=await db.rpc('admin_list_erp_master_items_v2',{
+   const {data,error}=await db.rpc('admin_list_erp_master_items_v3',{
      p_username:session.username,p_password:session.password
    }).range(from,from+pageSize-1);
    if(error){
@@ -4469,6 +4469,8 @@ function renderErpMaster(){
      <td>${esc(x.erp_item_code)}</td>
      <td>${esc(erpMasterDisplay(x))}</td>
      <td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
+     <td>${esc(x.wms_category||'⚠️ 미확인')}</td>
+     <td>${esc(x.wms_location||'⚠️ 미확인')}</td>
      <td>${stateText}</td>
      <td>${esc(formatLoginTime(x.erp_updated_at))}</td>
      <td><button type="button" class="secondary" style="width:auto;padding:6px 9px" onclick="prepareErpMasterApply('${String(x.erp_item_code).replace(/'/g,"\\'")}')">${btnText}</button></td>
@@ -4489,7 +4491,7 @@ function prepareErpMasterApply(code){
  if(x.wms_category) $('erpApplyCategory').value=x.wms_category;
  $('erpMasterApplyCard').classList.remove('hidden');
  $('erpMasterApplyMsg').textContent=x.wms_item_id
-   ?'기존 등록정보를 불러왔습니다. 필요한 부분만 수정한 뒤 저장하세요.'
+   ?'🔄 품목등록/WMS의 최신 자재구분·위치를 자동으로 불러왔습니다. 실제수량을 확인한 뒤 적용하세요.'
    :'모르는 항목은 비워두고 임시등록할 수 있습니다.';
  $('erpMasterApplyCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
