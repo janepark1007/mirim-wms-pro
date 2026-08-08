@@ -176,6 +176,14 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   z-index:1;
 }
 
+
+/* VVIP 주관리자 */
+#vvipTab table th,#vvipTab table td{
+  border-bottom:1px solid #e5e7eb;padding:9px 8px;text-align:left;font-size:13px;white-space:nowrap;
+}
+#vvipTab table th{background:#f5f7f6;font-weight:900;position:sticky;top:0;z-index:1}
+.vvip-status{font-weight:900}
+
 /* ERP 대조 */
 #erpTab table th,#erpTab table td{
   border-bottom:1px solid #e5e7eb;
@@ -247,6 +255,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
      <button class="tab adminOnly" data-tab="erpmaster">🗃️ ERP 기준자료</button>
     <button class="tab adminOnly" data-tab="disposal">⏰ 1년 폐기알림</button>
     <button class="tab adminOnly" data-tab="categories">📂 자재구분</button>
+    <button class="tab vvipOnly hidden" data-tab="vvip">👑 VVIP 재고분석</button>
   </div>
 
   <section id="searchTab" class="tabpane">
@@ -1198,6 +1207,72 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div id="handlerAdminList"></div>
     </div>
   </section>
+
+  <section id="vvipTab" class="tabpane hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <h2 style="margin:0">👑 VVIP 주관리자 · 재고차이 대시보드</h2>
+          <div class="muted" style="margin-top:6px">ERP 기준재고와 실제 WMS 재고를 비교해서 처음 봐도 바로 상태를 알 수 있게 표시합니다.</div>
+        </div>
+        <span class="badge">VVIP 전용</span>
+      </div>
+      <div class="ok" style="margin-top:12px">
+        실제수량을 아직 확인하지 않은 품목은 부족·초과로 계산하지 않고 <b>⚠️ 미확인</b>으로 분리합니다.
+      </div>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <button id="vvipReloadBtn" type="button" style="width:auto">재고분석 새로고침</button>
+        <button id="vvipExcelBtn" type="button" class="secondary" style="width:auto">대표님 보고용 Excel</button>
+      </div>
+      <div id="vvipMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <div class="grid">
+        <div class="ok"><small>ERP 전체 품목</small><div id="vvipTotal" style="font-size:28px;font-weight:900">0</div></div>
+        <div class="ok"><small>실제확인 완료</small><div id="vvipChecked" style="font-size:28px;font-weight:900">0</div></div>
+        <div class="bad"><small>⚠️ 미확인</small><div id="vvipUnchecked" style="font-size:28px;font-weight:900">0</div></div>
+        <div class="ok"><small>🟢 정상</small><div id="vvipNormal" style="font-size:28px;font-weight:900">0</div></div>
+        <div class="bad"><small>🟡 실제부족</small><div id="vvipShortage" style="font-size:28px;font-weight:900">0</div></div>
+        <div class="ok"><small>🔵 실제초과</small><div id="vvipExcess" style="font-size:28px;font-weight:900">0</div></div>
+        <div class="bad"><small>🔴 실제없음</small><div id="vvipNoStock" style="font-size:28px;font-weight:900">0</div></div>
+        <div class="bad"><small>⚠️ ERP 음수</small><div id="vvipNegative" style="font-size:28px;font-weight:900">0</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid">
+        <div>
+          <div class="label">상태 필터</div>
+          <select id="vvipStatus">
+            <option value="ALL">전체</option>
+            <option value="UNCHECKED">⚠️ 미확인</option>
+            <option value="NORMAL">🟢 정상</option>
+            <option value="SHORTAGE">🟡 실제부족</option>
+            <option value="EXCESS">🔵 실제초과</option>
+            <option value="NO_STOCK">🔴 실제없음</option>
+            <option value="ERP_NEGATIVE">⚠️ ERP 음수</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">품목 검색</div>
+          <input id="vvipKeyword" placeholder="품목코드 또는 품목명(규격)">
+        </div>
+      </div>
+      <div id="vvipCount" class="muted" style="margin-top:8px"></div>
+      <div style="overflow:auto;margin-top:10px;max-height:620px">
+        <table style="width:100%;border-collapse:collapse;min-width:1250px">
+          <thead><tr>
+            <th>상태</th><th>품목코드</th><th>품목명(규격)</th><th>자재구분</th>
+            <th>ERP 재고</th><th>1층</th><th>2층</th><th>생산</th>
+            <th>WMS 실제</th><th>차이</th><th>마지막 확인일</th>
+          </tr></thead>
+          <tbody id="vvipBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
 </section>
 </main>
 
@@ -1214,6 +1289,7 @@ let erpLinks=[], erpQueue=[];
 let erpMasterRows=[];
 let bulkRows=[];
 let historyRows=[];
+let vvipRows=[];
 let itemRegisterMode='existing';
 
 const LOGIN_STORAGE_KEY='mirim_wms_saved_login_v1';
@@ -1350,10 +1426,21 @@ async function login(options={}){
    $('loginMsg').textContent='자동 로그인 중...';
  }
 
- const {data,error}=await db.rpc('verify_app_login',{
+ let {data,error}=await db.rpc('verify_app_login',{
    p_username:username,
    p_password:password
  });
+
+ if(error || !data?.length){
+   const vvipResult=await db.rpc('verify_vvip_login',{
+     p_username:username,
+     p_password:password
+   });
+   if(!vvipResult.error && vvipResult.data?.length){
+     data=vvipResult.data;
+     error=null;
+   }
+ }
 
  if(error || !data?.length){
    if(auto){
@@ -1383,7 +1470,8 @@ async function login(options={}){
 
  $('loginView').classList.add('hidden');
  $('appView').classList.remove('hidden');
- $('who').innerHTML='<b>'+esc(session.displayName)+'</b> · '+(session.role==='admin'?'관리자':'검색 전용');
+ const roleLabel=session.role==='vvip'?'👑 VVIP 주관리자':(session.role==='admin'?'관리자':'검색 전용');
+ $('who').innerHTML='<b>'+esc(session.displayName)+'</b> · '+roleLabel;
 
  if($('lastLoginInfo')){
    $('lastLoginInfo').textContent=`마지막 로그인: ${formatLoginTime(loginTime)}`;
@@ -1392,10 +1480,14 @@ async function login(options={}){
  document.querySelectorAll('.adminOnly').forEach(x=>
    x.classList.toggle('hidden',session.role!=='admin')
  );
+ document.querySelectorAll('.vvipOnly').forEach(x=>
+   x.classList.toggle('hidden',session.role!=='vvip')
+ );
 
  setupCooperationNotice();
  await loadAll();
- switchTab('search');
+ if(session.role==='vvip'){ switchTab('vvip'); await loadVvipAnalysis(); }
+ else switchTab('search');
  return true;
 }
 $('loginBtn').onclick=()=>login();
@@ -1716,6 +1808,7 @@ function switchTab(name){
  $(name+'Tab').classList.remove('hidden');
  if(name==='erpmaster') loadErpMaster();
  if(name==='history' && !historyRows.length) loadHistory();
+ if(name==='vvip' && session?.role==='vvip' && !vvipRows.length) loadVvipAnalysis();
 }
 
 
@@ -4327,6 +4420,121 @@ if($('erpMasterApplyBtn')) $('erpMasterApplyBtn').onclick=async()=>{
  $('erpMasterApplyMsg').textContent='✅ 확인 후 WMS 적용 완료 · 이제 일반 검색에 노출됩니다.';
  await loadAll();
  await loadErpMaster();
+};
+
+
+function vvipStateLabel(x){
+ if(x.analysis_status==='UNCHECKED') return '⚠️ 미확인';
+ if(x.analysis_status==='ERP_NEGATIVE') return '⚠️ ERP 음수';
+ if(x.analysis_status==='NO_STOCK') return '🔴 실제없음';
+ if(x.analysis_status==='SHORTAGE') return '🟡 실제부족';
+ if(x.analysis_status==='EXCESS') return '🔵 실제초과';
+ return '🟢 정상';
+}
+async function loadVvipAnalysis(){
+ if(!session || session.role!=='vvip' || !$('vvipBody')) return;
+ $('vvipMsg').textContent='재고차이 분석 중...';
+ let all=[],from=0,pageSize=1000;
+ while(true){
+   const {data,error}=await db.rpc('vvip_inventory_analysis',{
+     p_username:session.username,p_password:session.password
+   }).range(from,from+pageSize-1);
+   if(error){
+     $('vvipMsg').textContent='❌ VVIP SQL 설치 후 사용할 수 있습니다: '+error.message;
+     return;
+   }
+   const page=data||[];
+   all.push(...page);
+   if(page.length<pageSize) break;
+   from+=pageSize;
+ }
+ vvipRows=all;
+ renderVvipAnalysis();
+ $('vvipMsg').textContent=`✅ 재고분석 완료 · ${vvipRows.length.toLocaleString()}품목`;
+}
+function renderVvipAnalysis(){
+ if(!$('vvipBody')) return;
+ const total=vvipRows.length;
+ const checked=vvipRows.filter(x=>x.analysis_status!=='UNCHECKED').length;
+ const unchecked=vvipRows.filter(x=>x.analysis_status==='UNCHECKED').length;
+ const normal=vvipRows.filter(x=>x.analysis_status==='NORMAL').length;
+ const shortage=vvipRows.filter(x=>x.analysis_status==='SHORTAGE').length;
+ const excess=vvipRows.filter(x=>x.analysis_status==='EXCESS').length;
+ const noStock=vvipRows.filter(x=>x.analysis_status==='NO_STOCK').length;
+ const negative=vvipRows.filter(x=>Number(x.erp_stock_qty||0)<0).length;
+
+ $('vvipTotal').textContent=total.toLocaleString();
+ $('vvipChecked').textContent=checked.toLocaleString();
+ $('vvipUnchecked').textContent=unchecked.toLocaleString();
+ $('vvipNormal').textContent=normal.toLocaleString();
+ $('vvipShortage').textContent=shortage.toLocaleString();
+ $('vvipExcess').textContent=excess.toLocaleString();
+ $('vvipNoStock').textContent=noStock.toLocaleString();
+ $('vvipNegative').textContent=negative.toLocaleString();
+
+ const status=$('vvipStatus')?.value||'ALL';
+ const q=norm($('vvipKeyword')?.value||'');
+ const rows=vvipRows.filter(x=>{
+   const statusOk=status==='ALL' || (status==='ERP_NEGATIVE'?Number(x.erp_stock_qty||0)<0:x.analysis_status===status);
+   const qOk=!q || norm(`${x.erp_item_code||''} ${x.item_name||''} ${x.specification||''}`).includes(q);
+   return statusOk&&qOk;
+ });
+ $('vvipCount').textContent=`표시 ${rows.length.toLocaleString()}개 / 전체 ${total.toLocaleString()}개`;
+ $('vvipBody').innerHTML=rows.slice(0,1000).map(x=>`<tr>
+   <td class="vvip-status">${vvipStateLabel(x)}</td>
+   <td><b>${esc(x.erp_item_code||'-')}</b></td>
+   <td>${esc(x.specification?`${x.item_name||''} [${x.specification}]`:(x.item_name||'-'))}</td>
+   <td>${esc(x.category||'⚠️ 미확인')}</td>
+   <td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
+   <td>${Number(x.floor1_qty||0).toLocaleString()}</td>
+   <td>${Number(x.floor2_qty||0).toLocaleString()}</td>
+   <td>${Number(x.production_qty||0).toLocaleString()}</td>
+   <td><b>${Number(x.wms_total_qty||0).toLocaleString()}</b></td>
+   <td><b>${x.diff_qty===null||x.diff_qty===undefined?'-':Number(x.diff_qty).toLocaleString()}</b></td>
+   <td>${esc(x.last_stock_check_at?formatLoginTime(x.last_stock_check_at):'⚠️ 미확인')}</td>
+ </tr>`).join('');
+ if(rows.length>1000) $('vvipCount').textContent+=` · 화면은 앞 1,000개만 표시 (검색/필터 사용)`;
+}
+if($('vvipReloadBtn')) $('vvipReloadBtn').onclick=loadVvipAnalysis;
+if($('vvipStatus')) $('vvipStatus').onchange=renderVvipAnalysis;
+if($('vvipKeyword')) $('vvipKeyword').oninput=renderVvipAnalysis;
+if($('vvipExcelBtn')) $('vvipExcelBtn').onclick=()=>{
+ if(!vvipRows.length){$('vvipMsg').textContent='⚠️ 먼저 재고분석을 불러오세요.';return;}
+ const rows=vvipRows.map(x=>({
+   '상태':vvipStateLabel(x),
+   '품목코드':x.erp_item_code||'',
+   '품목명(규격)':x.specification?`${x.item_name||''} [${x.specification}]`:(x.item_name||''),
+   '자재구분':x.category||'미확인',
+   'ERP 재고':Number(x.erp_stock_qty||0),
+   '1층 자재실':Number(x.floor1_qty||0),
+   '2층 자재실':Number(x.floor2_qty||0),
+   '생산':Number(x.production_qty||0),
+   'WMS 실제 총수량':Number(x.wms_total_qty||0),
+   '차이수량(WMS-ERP)':x.diff_qty===null||x.diff_qty===undefined?'':Number(x.diff_qty),
+   '마지막 확인일':x.last_stock_check_at?formatLoginTime(x.last_stock_check_at):'미확인'
+ }));
+ const wb=XLSX.utils.book_new();
+ const ws=XLSX.utils.json_to_sheet(rows);
+ ws['!cols']=[{wch:16},{wch:20},{wch:45},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:18},{wch:20},{wch:20}];
+ ws['!freeze']={xSplit:0,ySplit:1};
+ ws['!autofilter']={ref:`A1:K${rows.length+1}`};
+ XLSX.utils.book_append_sheet(wb,ws,'재고차이 보고서');
+ const summary=[
+   ['미림테크놀러지 VVIP 재고차이 보고서'],
+   ['생성일',todayKST()],
+   ['ERP 전체 품목',vvipRows.length],
+   ['실제확인 완료',vvipRows.filter(x=>x.analysis_status!=='UNCHECKED').length],
+   ['미확인',vvipRows.filter(x=>x.analysis_status==='UNCHECKED').length],
+   ['정상',vvipRows.filter(x=>x.analysis_status==='NORMAL').length],
+   ['실제부족',vvipRows.filter(x=>x.analysis_status==='SHORTAGE').length],
+   ['실제초과',vvipRows.filter(x=>x.analysis_status==='EXCESS').length],
+   ['실제없음',vvipRows.filter(x=>x.analysis_status==='NO_STOCK').length],
+   ['ERP 음수',vvipRows.filter(x=>Number(x.erp_stock_qty||0)<0).length]
+ ];
+ const sws=XLSX.utils.aoa_to_sheet(summary); sws['!cols']=[{wch:24},{wch:24}];
+ XLSX.utils.book_append_sheet(wb,sws,'요약');
+ XLSX.writeFile(wb,`미림테크놀러지_VVIP_재고차이보고서_${todayKST()}.xlsx`);
+ $('vvipMsg').textContent='✅ 대표님 보고용 Excel 저장 완료';
 };
 
 if($('erpItemSelect')) $('erpItemSelect').onchange=renderErpSelected;
