@@ -154,6 +154,10 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:8px;
 }
 
+
+#excelbulkTab table th,#excelbulkTab table td{border-bottom:1px solid #e5e7eb;padding:8px 7px;text-align:left;font-size:12px;white-space:nowrap}
+#excelbulkTab table th{background:#f5f7f6;font-weight:900;position:sticky;top:0}
+.bulk-ok{color:#067647;font-weight:900}.bulk-warn{color:#b54708;font-weight:900}.bulk-bad{color:#b42318;font-weight:900}
 </style>
 </head>
 <body>
@@ -196,6 +200,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   <div id="tabs" class="tabs">
     <button class="tab active" data-tab="search">🔎 검색</button>
     <button class="tab adminOnly" data-tab="items">📦 품목 등록</button>
+    <button class="tab adminOnly" data-tab="excelbulk">📥 엑셀 일괄등록</button>
     <button class="tab adminOnly" data-tab="inbound">📥 입고</button>
     <button class="tab adminOnly" data-tab="outbound">📤 출고</button>
     <button class="tab adminOnly" data-tab="stats">📊 통계·엑셀</button>
@@ -448,6 +453,40 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         사용중지: 기록을 유지하고 목록에서 숨김 · 완전삭제: 현재고 0, 입출고 이력 없음인 품목만 가능
       </div>
       <div id="itemMsg" class="muted" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  
+  <section id="excelbulkTab" class="tabpane hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">📥 엑셀 품목 일괄등록</h2><span class="badge">관리자 전용</span>
+      </div>
+      <div class="ok" style="margin-top:12px">엑셀 작성 → 파일 선택 → 미리보기 → 오류 확인 → 정상 품목만 일괄등록</div>
+      <div class="bad" style="margin-top:10px">⚠️ 파일을 선택해도 바로 저장되지 않습니다. 중복·누락·수량·위치 오류를 먼저 확인합니다.</div>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <button id="downloadBulkTemplateBtn" type="button" class="secondary" style="width:auto">⬇️ 엑셀 양식 다운로드</button>
+        <button id="chooseBulkFileBtn" type="button" class="secondary" style="width:auto">📂 엑셀 파일 선택</button>
+        <input id="bulkExcelFile" type="file" accept=".xlsx,.xls" class="hidden">
+        <button id="registerBulkBtn" type="button" style="width:auto" disabled>✅ 정상 품목 일괄등록</button>
+      </div>
+      <div id="bulkSummary" class="muted" style="margin-top:10px">엑셀 파일을 선택하세요.</div>
+    </div>
+    <div class="card">
+      <h3>등록 전 미리보기</h3>
+      <div class="muted">기존 품목을 덮어쓰지 않습니다. 품번 중복과 오류는 등록 전에 차단합니다.</div>
+      <div style="overflow:auto;margin-top:12px">
+        <table style="width:100%;border-collapse:collapse;min-width:1180px">
+          <thead><tr><th>행</th><th>상태</th><th>등록구분</th><th>품번</th><th>품명</th><th>자재구분</th><th>최소수량</th><th>현재고수량</th><th>자재위치</th><th>비고</th><th>확인내용</th></tr></thead>
+          <tbody id="bulkPreviewBody"><tr><td colspan="11" class="muted">아직 불러온 엑셀 자료가 없습니다.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3>사용 기준</h3>
+      <div class="loc"><b>현보유품목</b> · 현재고는 초기재고로 저장 · 입고통계 미포함</div>
+      <div class="loc"><b>새품목</b> · 현재고 0 · 실제 입고는 기존 입고 메뉴에서 처리</div>
+      <div class="loc"><b>품번 중복</b> · 신규등록 차단 · 기존 품목 수정 화면에서 처리</div>
     </div>
   </section>
 
@@ -990,6 +1029,7 @@ const db=supabase.createClient(cfg.url,cfg.publishableKey);
 
 let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, photoData=null;
 let erpLinks=[], erpQueue=[];
+let bulkRows=[];
 let itemRegisterMode='existing';
 
 const LOGIN_STORAGE_KEY='mirim_wms_saved_login_v1';
@@ -1332,6 +1372,76 @@ async function loadErpData(){
  }
 }
 
+
+function bulkNormalizeMode(v){
+ const s=String(v||'').trim().replace(/\s/g,'');
+ if(['현보유품목','현보유','기존','초기재고'].includes(s)) return 'existing';
+ if(['새품목','신규','신규품목','새로운품목'].includes(s)) return 'new';
+ return '';
+}
+function bulkHeaderValue(row,names){for(const n of names){if(Object.prototype.hasOwnProperty.call(row,n)) return row[n];}return '';}
+function bulkValidateRows(rawRows){
+ const existingParts=new Set(items.map(x=>norm(x.part_no)));
+ const seen=new Set();
+ const categorySet=new Set(categories.map(x=>norm(x.name)));
+ return rawRows.map((row,idx)=>{
+   const modeRaw=bulkHeaderValue(row,['등록구분','등록방식','구분']);
+   const partNo=String(bulkHeaderValue(row,['품번','품목코드','품목번호'])||'').trim();
+   const itemName=String(bulkHeaderValue(row,['품명','품목명'])||'').trim();
+   const category=String(bulkHeaderValue(row,['자재구분','분류'])||'').trim();
+   const minRaw=bulkHeaderValue(row,['최소수량','최소재고']);
+   const qtyRaw=bulkHeaderValue(row,['현재고수량','현 재고수량','현재수량']);
+   const location=String(bulkHeaderValue(row,['자재위치','위치코드','위치'])||'').trim();
+   const note=String(bulkHeaderValue(row,['비고','메모'])||'').trim();
+   const mode=bulkNormalizeMode(modeRaw), minStock=Number(minRaw===''||minRaw==null?0:minRaw), currentQty=Number(qtyRaw===''||qtyRaw==null?0:qtyRaw);
+   const errors=[],warnings=[];
+   if(!mode) errors.push('등록구분 확인');
+   if(!partNo) errors.push('품번 필수');
+   if(!itemName) errors.push('품명 필수');
+   if(!category) errors.push('자재구분 필수');
+   if(category && categorySet.size && !categorySet.has(norm(category))) errors.push('WMS에 없는 자재구분');
+   if(!Number.isFinite(minStock)||minStock<0) errors.push('최소수량 오류');
+   if(!Number.isFinite(currentQty)||currentQty<0) errors.push('현재고수량 오류');
+   const key=norm(partNo);
+   if(partNo&&existingParts.has(key)) errors.push('기존 WMS 품번 중복');
+   if(partNo&&seen.has(key)) errors.push('엑셀 내부 품번 중복');
+   if(partNo) seen.add(key);
+   if(mode==='existing'&&currentQty>0&&!location) errors.push('현보유품목 위치 필수');
+   if(mode==='new'&&currentQty>0) errors.push('새품목 현재고는 0');
+   if(mode==='new'&&location) warnings.push('새품목 위치는 실제 입고 때 등록 권장');
+   return {excelRow:idx+2,mode,modeLabel:mode==='existing'?'현보유품목':(mode==='new'?'새품목':String(modeRaw||'')),partNo,itemName,category,minStock,currentQty,location,note,status:errors.length?'ERROR':(warnings.length?'WARN':'OK'),errors,warnings};
+ });
+}
+function renderBulkPreview(){
+ const body=$('bulkPreviewBody'); if(!body)return;
+ if(!bulkRows.length){body.innerHTML='<tr><td colspan="11" class="muted">아직 불러온 엑셀 자료가 없습니다.</td></tr>';$('bulkSummary').textContent='엑셀 파일을 선택하세요.';$('registerBulkBtn').disabled=true;return;}
+ const okCount=bulkRows.filter(x=>x.status!=='ERROR').length,errorCount=bulkRows.filter(x=>x.status==='ERROR').length,warnCount=bulkRows.filter(x=>x.status==='WARN').length;
+ body.innerHTML=bulkRows.map(r=>{const cls=r.status==='ERROR'?'bulk-bad':(r.status==='WARN'?'bulk-warn':'bulk-ok');const st=r.status==='ERROR'?'⚠️ 확인 필요':(r.status==='WARN'?'🟡 등록 가능':'✅ 정상');const msg=[...r.errors,...r.warnings].join(' / ')||'정상';return `<tr><td>${r.excelRow}</td><td class="${cls}">${st}</td><td>${esc(r.modeLabel)}</td><td><b>${esc(r.partNo)}</b></td><td>${esc(r.itemName)}</td><td>${esc(r.category)}</td><td>${r.minStock}</td><td>${r.currentQty}</td><td>${esc(r.location)}</td><td>${esc(r.note)}</td><td class="${cls}">${esc(msg)}</td></tr>`}).join('');
+ $('bulkSummary').innerHTML=`전체 <b>${bulkRows.length}</b>건 · 등록 가능 <b>${okCount}</b>건 · 확인 필요 <b>${errorCount}</b>건${warnCount?` · 주의 ${warnCount}건`:''}`;$('registerBulkBtn').disabled=okCount===0;
+}
+function downloadBulkTemplate(){
+ const ws=XLSX.utils.aoa_to_sheet([['등록구분','품번','품명','자재구분','최소수량','현재고수량','자재위치','비고']]);ws['!cols']=[{wch:16},{wch:18},{wch:28},{wch:16},{wch:13},{wch:13},{wch:34},{wch:30}];
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'WMS_품목일괄등록');
+ const gs=XLSX.utils.aoa_to_sheet([['작성안내','내용'],['등록구분','현보유품목 또는 새품목'],['품번','필수 / 기존 품번 중복 금지'],['품명','필수'],['자재구분','WMS 등록 명칭과 동일'],['최소수량','0 이상 숫자'],['현재고수량','현보유품목 실제수량 / 새품목 0'],['자재위치','현보유품목 현재고가 1 이상이면 필수'],['중요','미리보기 후 정상 품목만 최종등록'],['입고통계','현보유품목 현재고는 초기재고라 입고통계 미포함']]);gs['!cols']=[{wch:18},{wch:60}];XLSX.utils.book_append_sheet(wb,gs,'작성안내');XLSX.writeFile(wb,'미림_WMS_품목일괄등록_양식.xlsx');
+}
+async function parseBulkExcel(file){
+ const data=await file.arrayBuffer(),wb=XLSX.read(data,{type:'array'}),sheet=wb.Sheets[wb.SheetNames[0]];if(!sheet)throw new Error('첫 번째 시트를 찾지 못했습니다.');
+ const raw=XLSX.utils.sheet_to_json(sheet,{defval:'',raw:true}),meaningful=raw.filter(r=>Object.values(r).some(v=>String(v??'').trim()!==''));if(!meaningful.length)throw new Error('등록할 행이 없습니다.');
+ bulkRows=bulkValidateRows(meaningful);renderBulkPreview();
+}
+async function registerBulkRows(){
+ const targets=bulkRows.filter(x=>x.status!=='ERROR');if(!targets.length){$('bulkSummary').textContent='⚠️ 등록 가능한 품목이 없습니다.';return;}
+ if(!confirm(`등록 가능 품목 ${targets.length}건을 WMS에 등록할까요?\n확인 필요 행은 등록하지 않습니다.`))return;
+ $('registerBulkBtn').disabled=true;let success=0,failed=0;$('bulkSummary').textContent=`등록 중... 0 / ${targets.length}`;
+ for(let i=0;i<targets.length;i++){const r=targets[i];try{
+   const {data:itemId,error:itemError}=await db.rpc('admin_upsert_item',{p_username:session.username,p_password:session.password,p_item_id:null,p_part_no:r.partNo,p_item_name:r.itemName,p_category:r.category,p_maker:'',p_specification:'',p_unit:'EA',p_min_stock:r.minStock,p_note:r.note||'',p_photo_url:null});if(itemError)throw itemError;
+   if(r.mode==='existing'&&r.currentQty>0){const {error:initError}=await db.rpc('admin_set_initial_stock',{p_username:session.username,p_password:session.password,p_item_id:itemId,p_location_code:r.location,p_qty:r.currentQty});if(initError)throw new Error(`품목 등록 후 초기재고 실패: ${initError.message}`);}
+   try{await db.rpc('admin_queue_erp_sync',{p_username:session.username,p_password:session.password,p_action_type:'ITEM_CREATE',p_item_id:itemId,p_qty:null,p_movement_date:null,p_note:'엑셀 일괄등록'});}catch(_){}
+   success++;r.registered=true;
+ }catch(e){failed++;r.status='ERROR';r.errors=[`등록 실패: ${String(e?.message||e)}`];}
+ $('bulkSummary').textContent=`등록 중... ${i+1} / ${targets.length} · 성공 ${success} · 실패 ${failed}`;}
+ await loadAll();bulkRows=bulkRows.filter(r=>!r.registered);renderBulkPreview();$('bulkSummary').innerHTML=`✅ 일괄등록 완료 · 성공 <b>${success}</b>건 · 실패 <b>${failed}</b>건${bulkRows.length?` · 남은 확인 항목 ${bulkRows.length}건`:''}`;
+}
 function switchTab(name){
  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
  document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hidden'));
@@ -3726,6 +3836,12 @@ $('editLocationSaveBtn').onclick=async()=>{
    $('editLocationMsg').textContent=`✅ 위치 변경 완료 · ${newCode} · 수량은 그대로 유지되었습니다.`;
  }
 };
+
+
+if($('downloadBulkTemplateBtn')) $('downloadBulkTemplateBtn').onclick=downloadBulkTemplate;
+if($('chooseBulkFileBtn')) $('chooseBulkFileBtn').onclick=()=>$('bulkExcelFile').click();
+if($('bulkExcelFile')) $('bulkExcelFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;$('bulkSummary').textContent='엑셀 파일 확인 중...';try{await parseBulkExcel(file);}catch(err){bulkRows=[];renderBulkPreview();$('bulkSummary').textContent='❌ 엑셀 읽기 실패: '+String(err?.message||err);}};
+if($('registerBulkBtn')) $('registerBulkBtn').onclick=registerBulkRows;
 
 </script>
 
