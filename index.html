@@ -731,6 +731,26 @@ img{
  #dailyWorkerSelect{width:100%!important;min-width:0!important}
 }
 </style>
+
+<style>
+.history-count-card{cursor:pointer;transition:.12s}
+.history-count-card:hover{box-shadow:0 3px 12px rgba(16,128,72,.12);transform:translateY(-1px)}
+.history-click-row{cursor:pointer;transition:background .12s}
+.history-click-row:hover{background:#eef9f2}
+.history-click-row:focus{outline:3px solid rgba(16,128,72,.18);outline-offset:-3px}
+.history-detail-line{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid #edf0ee}
+.history-detail-line span{font-size:13px;color:#667085}
+.history-detail-line b{font-size:14px;word-break:break-word}
+.history-detail-line b.important{color:#087a43;font-size:16px}
+@media(max-width:720px){
+ .history-detail-line{grid-template-columns:105px minmax(0,1fr)}
+ .history-detail-line span{font-size:11px}
+ .history-detail-line b{font-size:12px}
+ .history-detail-line b.important{font-size:14px}
+ #handlerAdminList .loc{grid-template-columns:34px minmax(0,1fr) auto auto!important}
+ #handlerAdminList button{font-size:11px!important;padding:6px 7px!important}
+}
+</style>
 </head>
 <body>
 <header>
@@ -774,7 +794,6 @@ img{
     <button class="tab adminOnly" data-tab="items">📦 품목 등록</button>
     <button class="tab adminOnly" data-tab="excelbulk">📥 엑셀 일괄등록</button>
     <button class="tab adminOnly" data-tab="inbound">📥 입고</button>
-    <button class="tab adminOnly" data-tab="outbound">📤 출고하기</button>
     <button class="tab adminOnly" data-tab="stats">📊 통계·엑셀</button>
     <button class="tab adminOnly" data-tab="history">📋 입출고 누적</button>
     <button class="tab adminOnly" data-tab="erp">🔄 ERP 대조</button>
@@ -820,7 +839,7 @@ img{
 
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h2 style="margin:0">자재 검색</h2>
+        <h2 style="margin:0">자재 검색 · 빠른 출고</h2>
         <div id="itemCountBadge" class="badge" style="font-size:16px;padding:10px 14px">총 0종목 등록</div>
       </div>
       <div class="label required-label">품번 · 품명 검색</div>
@@ -1373,9 +1392,10 @@ img{
       <div>
         <div class="label">구분</div>
         <select id="historyType">
-          <option value="ALL">입고 + 출고 전체</option>
+          <option value="ALL">입고 + 출고 + 수량확인 전체</option>
           <option value="IN">입고만</option>
           <option value="OUT">출고만</option>
+          <option value="CHECK">수량확인만</option>
         </select>
       </div>
       <div>
@@ -1397,20 +1417,28 @@ img{
 
   <div class="card">
     <div class="grid">
-      
-      
+      <div class="ok history-count-card" data-history-type="IN" role="button" tabindex="0">
+        <small>📥 입고 건수</small><div id="historyInCount" style="font-size:24px;font-weight:900">0</div>
+      </div>
+      <div class="ok history-count-card" data-history-type="OUT" role="button" tabindex="0">
+        <small>📤 출고 건수</small><div id="historyOutCount" style="font-size:24px;font-weight:900">0</div>
+      </div>
+      <div class="ok history-count-card" data-history-type="CHECK" role="button" tabindex="0">
+        <small>✅ 수량확인 건수</small><div id="historyCheckCount" style="font-size:24px;font-weight:900">0</div>
+      </div>
     </div>
+    <div class="muted" style="margin-top:8px">건수 카드를 누르면 해당 작업만 바로 볼 수 있습니다.</div>
   </div>
 
   <div class="card">
-    <div id="historyCountText" class="muted" style="margin-bottom:8px">조회 전</div>
+    <div id="historyCountText" class="muted" style="margin-bottom:8px">조회 전 · 행을 클릭하면 상세정보를 볼 수 있습니다.</div>
     <div style="overflow:auto;max-height:620px">
       <table style="width:100%;border-collapse:collapse;min-width:1150px">
         <thead>
           <tr>
             <th>일시</th><th>구분</th><th>품목코드</th><th>품명</th>
-            <th>수량</th><th>단위</th><th>자재위치</th><th>담당자</th>
-            <th>위치 최종수량</th><th>총 최종수량</th><th>비고</th>
+            <th>수량</th><th>단위</th><th>자재위치</th><th>작업자</th>
+            <th>처리 후 위치수량</th><th>처리 후 총수량</th><th>비고</th>
           </tr>
         </thead>
         <tbody id="historyBody"></tbody>
@@ -1810,7 +1838,7 @@ img{
 <div class="card" style="margin-top:16px">
       <h2>출고 담당자 관리</h2>
       <div class="muted">
-        출고 담당자가 늘어나면 이름을 추가하세요. 추가 즉시 출고 담당자 선택 목록에 반영됩니다.
+        일반 검색의 빠른 출고·수량확인에서 선택할 작업자 이름입니다. 추가·수정하면 검색 화면의 이름선택 목록에 바로 반영됩니다.
       </div>
 
       <div class="grid" style="margin-top:12px">
@@ -1961,6 +1989,14 @@ img{
   </div>
 </div>
 
+
+<div id="historyDetailModal" class="quick-action-overlay hidden">
+  <div class="quick-action-modal">
+    <button id="historyDetailClose" type="button" class="quick-close">×</button>
+    <h2 style="margin:0 0 12px">📋 작업 상세</h2>
+    <div id="historyDetailBody"></div>
+  </div>
+</div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2688,11 +2724,12 @@ async function loadAll(){
  if($('handlerAdminList')){
    $('handlerAdminList').innerHTML=handlers.length
      ? handlers.map((h,i)=>`
-       <div class="loc" style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px">
+       <div class="loc" style="display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;align-items:center;gap:8px">
          <div style="font-weight:900">${i+1}</div>
-         <div><b>${esc(h.display_name)}</b></div>
-         <button type="button" class="danger"
-           style="width:auto;padding:7px 10px"
+         <div><b>${esc(h.display_name)}</b><div class="muted">표시순서 ${Number(h.sort_order??i+1)}</div></div>
+         <button type="button" class="secondary" style="width:auto;padding:7px 10px"
+           onclick="editHandler('${h.id}','${esc(h.display_name).replaceAll("'","&#39;")}',${Number(h.sort_order??i+1)})">수정</button>
+         <button type="button" class="danger" style="width:auto;padding:7px 10px"
            onclick="archiveHandler('${h.id}','${esc(h.display_name).replaceAll("'","&#39;")}')">사용중지</button>
        </div>`).join('')
      : '<div class="muted">등록된 담당자가 없습니다.</div>';
@@ -3502,6 +3539,31 @@ $('addHandlerBtn').onclick=async()=>{
  $('handlerAdminMsg').textContent='✅ 출고 담당자 추가 완료';
  await loadAll();
 };
+
+
+async function editHandler(id,currentName,currentOrder){
+ const newName=prompt('작업자 이름을 수정하세요.',currentName);
+ if(newName===null) return;
+ const name=String(newName||'').trim();
+ if(!name){ $('handlerAdminMsg').textContent='⚠️ 작업자 이름을 입력하세요.'; return; }
+
+ const orderInput=prompt('표시 순서를 입력하세요.',String(currentOrder??''));
+ if(orderInput===null) return;
+ const order=String(orderInput).trim()===''?null:Number(orderInput);
+ if(order!==null && (!Number.isFinite(order)||order<0)){
+   $('handlerAdminMsg').textContent='⚠️ 표시 순서는 0 이상의 숫자로 입력하세요.';
+   return;
+ }
+
+ $('handlerAdminMsg').textContent='작업자 수정 중...';
+ const {error}=await db.rpc('admin_update_material_handler',{
+   p_username:session.username,p_password:session.password,
+   p_handler_id:id,p_display_name:name,p_sort_order:order
+ });
+ if(error){ $('handlerAdminMsg').textContent='❌ 작업자 수정 실패: '+error.message; return; }
+ $('handlerAdminMsg').textContent='✅ 작업자 이름/순서 수정 완료';
+ await loadAll();
+}
 
 async function archiveHandler(id,name){
  if(!confirm(`${name} 담당자를 사용중지할까요?\n기존 출고 기록은 그대로 유지됩니다.`)) return;
@@ -4951,9 +5013,8 @@ function filteredHistoryRows(){
  const q=norm($('historyKeyword')?.value||'');
  return historyRows.filter(x=>{
    const typeOk=type==='ALL'||x.movement_type===type;
-   const item=itemByPartNo(x.part_no);
-   const nameSpec=displayItemNameSpec(item||{item_name:x.item_name});
-   const qOk=!q||norm(`${x.part_no||''} ${nameSpec}`).includes(q);
+   const nameSpec=x.item_display_name||x.item_name||'';
+   const qOk=!q||norm(`${x.part_no||''} ${nameSpec} ${x.actor_name||''}`).includes(q);
    return typeOk&&qOk;
  });
 }
@@ -4963,70 +5024,97 @@ function renderHistory(){
  const rows=filteredHistoryRows();
  const inRows=rows.filter(x=>x.movement_type==='IN');
  const outRows=rows.filter(x=>x.movement_type==='OUT');
- const inQty=inRows.reduce((s,x)=>s+Number(x.qty||0),0);
- const outQty=outRows.reduce((s,x)=>s+Number(x.qty||0),0);
+ const checkRows=rows.filter(x=>x.movement_type==='CHECK');
 
  $('historyInCount').textContent=inRows.length.toLocaleString();
  $('historyOutCount').textContent=outRows.length.toLocaleString();
- $('historyInQty').textContent=inQty.toLocaleString();
- $('historyOutQty').textContent=outQty.toLocaleString();
- $('historyCountText').textContent=`조건 결과 ${rows.length.toLocaleString()}건 / 불러온 누적내역 ${historyRows.length.toLocaleString()}건`;
+ $('historyCheckCount').textContent=checkRows.length.toLocaleString();
+ $('historyCountText').textContent=`조건 결과 ${rows.length.toLocaleString()}건 / 전체 ${historyRows.length.toLocaleString()}건 · 행 클릭 = 상세보기`;
 
- $('historyBody').innerHTML=rows.slice(0,1000).map(x=>{
-   const item=itemByPartNo(x.part_no);
-   const nameSpec=displayItemNameSpec(item||{item_name:x.item_name});
-   return `<tr>
+ window.__historyVisibleRows=rows.slice(0,1000);
+
+ $('historyBody').innerHTML=window.__historyVisibleRows.map((x,i)=>{
+   const label=x.movement_type==='IN'?'📥 입고':(x.movement_type==='OUT'?'📤 출고':'✅ 수량확인');
+   return `<tr class="history-click-row" role="button" tabindex="0"
+     onclick="openHistoryDetail(${i})"
+     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHistoryDetail(${i})}">
      <td>${esc(historyDateTime(x.created_at))}</td>
-     <td><b>${x.movement_type==='IN'?'입고':'출고'}</b></td>
+     <td><b>${label}</b></td>
      <td>${esc(x.part_no||'-')}</td>
-     <td>${esc(nameSpec)}</td>
+     <td>${esc(x.item_display_name||x.item_name||'-')}</td>
      <td><b>${Number(x.qty||0).toLocaleString()}</b></td>
      <td>${esc(x.unit||'EA')}</td>
      <td>${esc(x.location_display||'-')}</td>
-     <td>${esc(x.actor_name||'-')}</td>
-     <td>${Number(x.stock_after_location||0).toLocaleString()}</td>
-     <td>${Number(x.stock_after_total||0).toLocaleString()}</td>
+     <td><b>${esc(x.actor_name||'-')}</b></td>
+     <td>${x.movement_type==='CHECK'?'확인기록':Number(x.stock_after_location??0).toLocaleString()}</td>
+     <td>${x.movement_type==='CHECK'?'확인기록':Number(x.stock_after_total??0).toLocaleString()}</td>
      <td>${esc(x.note||'')}</td>
    </tr>`;
  }).join('');
 
- if(rows.length>1000){
-   $('historyCountText').textContent+=` · 화면은 최근 1,000건만 표시 (Excel에는 조건 결과 전체 포함)`;
- }
+ if(rows.length>1000) $('historyCountText').textContent+=' · 화면은 최근 1,000건만 표시';
 }
+
+function historyDetailLine(label,value,important=false){
+ return `<div class="history-detail-line"><span>${esc(label)}</span><b class="${important?'important':''}">${esc(value??'-')}</b></div>`;
+}
+function openHistoryDetail(index){
+ const x=(window.__historyVisibleRows||[])[index];
+ if(!x) return;
+ const label=x.movement_type==='IN'?'📥 입고':(x.movement_type==='OUT'?'📤 출고':'✅ 수량확인');
+ let body=`
+   <div class="ok" style="margin-bottom:10px"><b>${label}</b></div>
+   ${historyDetailLine('작업일시',historyDateTime(x.created_at))}
+   ${historyDetailLine('작업자',x.actor_name||'-',true)}
+   ${historyDetailLine('품번',x.part_no||'-')}
+   ${historyDetailLine('품명',x.item_display_name||x.item_name||'-')}
+   ${historyDetailLine('자재구분',x.category||'-')}
+   ${historyDetailLine('자재위치',x.location_display||'-')}
+   ${historyDetailLine(x.movement_type==='CHECK'?'실제 확인수량':(x.movement_type==='IN'?'입고수량':'출고수량'),
+     `${Number(x.qty||0).toLocaleString()} ${x.unit||'EA'}`,true)}
+ `;
+ if(x.movement_type!=='CHECK'){
+   body+=historyDetailLine('처리 후 위치수량',`${Number(x.stock_after_location??0).toLocaleString()} ${x.unit||'EA'}`);
+   body+=historyDetailLine('처리 후 총수량',`${Number(x.stock_after_total??0).toLocaleString()} ${x.unit||'EA'}`);
+ }else{
+   body+=historyDetailLine('처리 방식','수량확인 기록만 저장 · WMS 재고 자동수정 없음');
+ }
+ body+=historyDetailLine('비고',x.note||'-');
+ $('historyDetailBody').innerHTML=body;
+ $('historyDetailModal').classList.remove('hidden');
+}
+if($('historyDetailClose')) $('historyDetailClose').onclick=()=>$('historyDetailModal').classList.add('hidden');
+if($('historyDetailModal')) $('historyDetailModal').addEventListener('click',e=>{
+ if(e.target===$('historyDetailModal')) $('historyDetailModal').classList.add('hidden');
+});
+document.querySelectorAll('.history-count-card').forEach(card=>{
+ const type=card.dataset.historyType;
+ card.onclick=()=>{ $('historyType').value=type; renderHistory(); $('historyBody')?.closest('.card')?.scrollIntoView({behavior:'smooth',block:'start'}); };
+ card.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();} };
+});
 
 async function loadHistory(){
  const start=$('historyStartDate').value;
  const end=$('historyEndDate').value;
- if(!start||!end){
-   $('historyMsg').textContent='⚠️ 시작일과 종료일을 선택하세요.';
-   return;
- }
- $('historyMsg').textContent='입출고 누적내역을 불러오는 중...';
- const startIso=new Date(`${start}T00:00:00+09:00`).toISOString();
- const endIso=new Date(new Date(`${end}T00:00:00+09:00`).getTime()+86400000).toISOString();
+ if(!start||!end){ $('historyMsg').textContent='⚠️ 시작일과 종료일을 선택하세요.'; return; }
+ $('historyMsg').textContent='입고·출고·수량확인 누적내역을 불러오는 중...';
 
  let all=[],from=0,pageSize=1000;
  while(true){
-   const {data,error}=await db.rpc('admin_get_stock_report',{
-     p_username:session.username,
-     p_password:session.password,
-     p_start:startIso,p_end:endIso
+   const {data,error}=await db.rpc('admin_get_unified_activity_history',{
+     p_username:session.username,p_password:session.password,
+     p_start_date:start,p_end_date:end
    }).range(from,from+pageSize-1);
-   if(error){
-     $('historyMsg').textContent='❌ 누적내역 조회 실패: '+error.message;
-     return;
-   }
+   if(error){ $('historyMsg').textContent='❌ 누적내역 조회 실패 · SQL 26 확인: '+error.message; return; }
    const page=data||[];
    all.push(...page);
    if(page.length<pageSize) break;
    from+=pageSize;
  }
  historyRows=all.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
- $('historyMsg').textContent=`✅ ${start} ~ ${end} 누적내역 ${historyRows.length.toLocaleString()}건 조회 완료`;
+ $('historyMsg').textContent=`✅ ${start} ~ ${end} 입고·출고·수량확인 ${historyRows.length.toLocaleString()}건`;
  renderHistory();
 }
-
 if($('historyTodayBtn')) $('historyTodayBtn').onclick=()=>{setHistoryRange('today');loadHistory();};
 if($('historyWeekBtn')) $('historyWeekBtn').onclick=()=>{setHistoryRange('week');loadHistory();};
 if($('historyMonthBtn')) $('historyMonthBtn').onclick=()=>{setHistoryRange('month');loadHistory();};
@@ -5041,23 +5129,20 @@ if($('historyExcelBtn')) $('historyExcelBtn').onclick=()=>{
    $('historyMsg').textContent='⚠️ Excel로 출력할 입출고 내역이 없습니다.';
    return;
  }
- const excelRows=rows.map(x=>{
-   const item=itemByPartNo(x.part_no);
-   return {
-     '일시':historyDateTime(x.created_at),
-     '구분':x.movement_type==='IN'?'입고':'출고',
-     '품목코드':x.part_no||'',
-     '품명':displayItemNameSpec(item||{item_name:x.item_name}),
-     '자재구분':x.category||'기타',
-     '수량':Number(x.qty||0),
-     '단위':x.unit||'EA',
-     '자재위치':x.location_display||'',
-     '담당자':x.actor_name||'',
-     '위치 최종수량':Number(x.stock_after_location||0),
-     '총 최종수량':Number(x.stock_after_total||0),
-     '비고':x.note||''
-   };
- });
+ const excelRows=rows.map(x=>({
+   '일시':historyDateTime(x.created_at),
+   '구분':x.movement_type==='IN'?'입고':(x.movement_type==='OUT'?'출고':'수량확인'),
+   '품목코드':x.part_no||'',
+   '품명':x.item_display_name||x.item_name||'',
+   '자재구분':x.category||'기타',
+   '수량':Number(x.qty||0),
+   '단위':x.unit||'EA',
+   '자재위치':x.location_display||'',
+   '작업자':x.actor_name||'',
+   '처리 후 위치수량':x.movement_type==='CHECK'?'':Number(x.stock_after_location||0),
+   '처리 후 총수량':x.movement_type==='CHECK'?'':Number(x.stock_after_total||0),
+   '비고':x.note||''
+ }));
  const wb=XLSX.utils.book_new();
  const ws=XLSX.utils.json_to_sheet(excelRows);
  ws['!cols']=[
