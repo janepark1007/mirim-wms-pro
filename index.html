@@ -1067,10 +1067,8 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
   <div class="card">
     <div class="grid">
-      <div class="ok erp-summary-card" data-filter-card="erpMasterTotalCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>입고 건수</small><div id="historyInCount" style="font-size:27px;font-weight:900">0</div></div>
-      <div class="ok erp-summary-card" data-filter-card="erpMasterExposedCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>출고 건수</small><div id="historyOutCount" style="font-size:27px;font-weight:900">0</div></div>
-      <div class="ok erp-summary-card" data-filter-card="erpMasterTempCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>총 입고수량</small><div id="historyInQty" style="font-size:27px;font-weight:900">0</div></div>
-      <div class="ok erp-summary-card" data-filter-card="erpMasterHiddenCount" role="button" tabindex="0" title="클릭하여 해당 품목만 보기"><small>총 출고수량</small><div id="historyOutQty" style="font-size:27px;font-weight:900">0</div></div>
+      
+      
     </div>
   </div>
 
@@ -5311,6 +5309,31 @@ if($('downloadBulkTemplateBtn')) $('downloadBulkTemplateBtn').onclick=downloadBu
 if($('chooseBulkFileBtn')) $('chooseBulkFileBtn').onclick=()=>$('bulkExcelFile').click();
 if($('bulkExcelFile')) $('bulkExcelFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;$('bulkSummary').textContent='엑셀 파일 확인 중...';try{await parseBulkExcel(file);}catch(err){bulkRows=[];renderBulkPreview();$('bulkSummary').textContent='❌ 엑셀 읽기 실패: '+String(err?.message||err);}};
 if($('registerBulkBtn')) $('registerBulkBtn').onclick=registerBulkRows;
+
+
+
+function hideMeaninglessMixedQuantityTotals(){
+  const labels=['총 입고수량','총 출고수량','누적 입고수량','누적 출고수량'];
+  document.querySelectorAll('div,button').forEach(el=>{
+    const txt=(el.textContent||'').trim();
+    if(!labels.some(label=>txt.startsWith(label))) return;
+    // choose the nearest small dashboard card, never a whole section
+    let card=el;
+    for(let i=0;i<4 && card.parentElement;i++){
+      if(card.classList && (
+        card.classList.contains('stat-card') ||
+        card.classList.contains('summary-card') ||
+        card.classList.contains('metric-card') ||
+        card.classList.contains('clickable-stat')
+      )) break;
+      if(card.parentElement.children.length>1) card=card.parentElement;
+      else break;
+    }
+    if(card && card !== document.body) card.style.display='none';
+  });
+}
+window.addEventListener('load',hideMeaninglessMixedQuantityTotals);
+setTimeout(hideMeaninglessMixedQuantityTotals,300);
 
 </script>
 
