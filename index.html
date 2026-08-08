@@ -850,6 +850,16 @@ img{
  .single-stock-qty b{font-size:13px}
 }
 </style>
+
+<style>
+@media(max-width:720px){
+ #searchResetBtn{
+   min-width:92px!important;
+   font-size:12px!important;
+   padding:9px 10px!important;
+ }
+}
+</style>
 </head>
 <body>
 <header>
@@ -946,6 +956,7 @@ img{
       <div class="row">
         <input id="searchQ" placeholder="품번 또는 품명 일부 입력">
         <button id="searchBtn">검색</button>
+        <button id="searchResetBtn" type="button" class="secondary" style="width:auto">🔄 새로고침</button>
       </div>
 
       <div class="row photo-search-row" style="margin-top:8px">
@@ -3380,6 +3391,19 @@ function renderMergedSearch(rows){
    </div>`;
  }).join(''):'<div class="card">⚠️ 검색 결과가 없습니다.</div>';
 }
+
+
+function resetSearchView(){
+ if($('searchQ')) $('searchQ').value='';
+ items.forEach(x=>delete x.__photoScore);
+ if($('photoSearchMsg')){
+   $('photoSearchMsg').textContent='등록된 품목 사진과 비교해 비슷한 품목을 찾아줍니다. 사진이 등록된 품목만 비교할 수 있습니다.';
+ }
+ renderRecentThree();
+ if($('searchQ')) $('searchQ').focus();
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+if($('searchResetBtn')) $('searchResetBtn').onclick=resetSearchView;
 
 async function runUnifiedSearch(keyword=''){
  await ensureErpMasterForSearch();
