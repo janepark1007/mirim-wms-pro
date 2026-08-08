@@ -600,6 +600,80 @@ img{
   }
 }
 </style>
+
+<style>
+/* ===== 앱 검색화면 글씨 크기 축소 ===== */
+@media(max-width:720px){
+  /* 검색 제목/카운트 */
+  #searchTab h2,
+  #searchTab .search-recent-head strong{
+    font-size:20px !important;
+  }
+
+  /* 검색 입력/버튼 */
+  #searchTab input,
+  #searchTab button{
+    font-size:14px !important;
+    min-height:42px !important;
+  }
+
+  /* 최근 등록 카드 */
+  .search-recent-card{
+    padding:10px 12px !important;
+    gap:6px !important;
+    border-radius:12px !important;
+  }
+  .search-recent-card small{
+    font-size:11px !important;
+    margin-bottom:2px !important;
+  }
+  .search-recent-card b,
+  .recent-name-click{
+    font-size:14px !important;
+    line-height:1.35 !important;
+    font-weight:800 !important;
+  }
+
+  /* 상세 검색 결과 품번/품명 */
+  .search-priority-box small,
+  .search-priority-total small{
+    font-size:11px !important;
+  }
+  .search-priority-box strong.search-fit-text,
+  .search-name-click{
+    font-size:14px !important;
+    line-height:1.3 !important;
+  }
+  .search-priority-total strong{
+    font-size:18px !important;
+  }
+
+  /* 최근 등록 품목 리스트가 너무 커지지 않도록 */
+  .search-recent-wrap{
+    gap:8px !important;
+  }
+
+  /* 카드 높이도 같이 축소 */
+  .search-priority-card{
+    padding:10px !important;
+  }
+
+  /* 위치/수량 하단 텍스트 */
+  .search-priority-location .name{
+    font-size:12px !important;
+  }
+  .search-priority-location .code{
+    font-size:10px !important;
+  }
+  .search-priority-location .qty{
+    font-size:14px !important;
+  }
+  .search-chip{
+    font-size:10px !important;
+    padding:4px 7px !important;
+  }
+}
+</style>
 </head>
 <body>
 <header>
