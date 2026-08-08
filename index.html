@@ -212,6 +212,15 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 .erp-summary-card:focus{outline:3px solid rgba(16,128,72,.22);outline-offset:2px}
 .erp-summary-card.active-filter{box-shadow:inset 0 0 0 3px #108048}
 </style>
+
+<style>
+.stock-status-badge{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.stock-status-negative{background:#fff0ed;color:#c62828}
+.stock-status-shortage{background:#fff7dc;color:#9a6700}
+.stock-status-excess{background:#eaf3ff;color:#1557a0}
+.stock-status-normal{background:#e9f8ef;color:#087a43}
+.stock-status-unchecked{background:#f1f3f5;color:#667085}
+</style>
 </head>
 <body>
 <header>
@@ -1292,7 +1301,14 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <button id="vvipMonthBtn" type="button" class="secondary" style="width:auto">이번 달</button>
         <button id="vvipAllDateBtn" type="button" class="secondary" style="width:auto">전체 확인일</button>
       </div>
-      <div id="vvipCount" class="muted" style="margin-top:8px"></div>
+      <div class="row" style="margin:10px 0;gap:8px;flex-wrap:wrap">
+<span class="stock-status-badge stock-status-negative">⚠️ ERP 음수 · 우선 수량확인</span>
+<span class="stock-status-badge stock-status-shortage">🔴 실제부족 · ERP보다 실제수량 적음</span>
+<span class="stock-status-badge stock-status-excess">🔵 실제초과 · ERP보다 실제수량 많음</span>
+<span class="stock-status-badge stock-status-normal">🟢 정상 · ERP와 실제수량 일치</span>
+<span class="stock-status-badge stock-status-unchecked">⚠️ 미확인 · 실제수량 확인 전</span>
+</div>
+<div id="vvipCount" class="muted" style="margin-top:8px"></div>
       <div style="overflow:auto;margin-top:10px;max-height:620px">
         <table style="width:100%;border-collapse:collapse;min-width:1250px">
           <thead><tr>
@@ -4584,12 +4600,20 @@ document.querySelectorAll('.erp-summary-card').forEach(card=>{
 });
 
 function vvipStateLabel(x){
- if(x.analysis_status==='UNCHECKED') return '⚠️ 미확인';
- if(x.analysis_status==='ERP_NEGATIVE') return '⚠️ ERP 음수';
- if(x.analysis_status==='NO_STOCK') return '🔴 실제없음';
- if(x.analysis_status==='SHORTAGE') return '🟡 실제부족';
+ if(Number(x.erp_stock_qty||0)<0) return '⚠️ ERP 음수';
+ if(x.analysis_status==='NORMAL') return '🟢 정상';
+ if(x.analysis_status==='SHORTAGE') return '🔴 실제부족';
  if(x.analysis_status==='EXCESS') return '🔵 실제초과';
- return '🟢 정상';
+ if(x.analysis_status==='NO_STOCK') return '🔴 실제없음';
+ return '⚠️ 미확인';
+}
+function vvipStateBadge(x){
+ const s=vvipStateLabel(x);
+ if(s.includes('ERP 음수')) return `<span class="stock-status-badge stock-status-negative">${s}</span>`;
+ if(s.includes('실제부족')||s.includes('실제없음')) return `<span class="stock-status-badge stock-status-shortage">${s}</span>`;
+ if(s.includes('실제초과')) return `<span class="stock-status-badge stock-status-excess">${s}</span>`;
+ if(s.includes('정상')) return `<span class="stock-status-badge stock-status-normal">${s}</span>`;
+ return `<span class="stock-status-badge stock-status-unchecked">${s}</span>`;
 }
 async function loadVvipAnalysis(){
  if(!session || session.role!=='vvip' || !$('vvipBody')) return;
@@ -4641,7 +4665,7 @@ function renderVvipAnalysis(){
  const rows=vvipFilteredRows();
  $('vvipCount').textContent=`표시 ${rows.length.toLocaleString()}개 / 전체 ${total.toLocaleString()}개`;
  $('vvipBody').innerHTML=rows.slice(0,1000).map(x=>`<tr>
-   <td class="vvip-status">${vvipStateLabel(x)}</td>
+   <td class="vvip-status">${vvipStateBadge(x)}</td>
    <td><b>${esc(x.erp_item_code||'-')}</b></td>
    <td>${esc(x.specification?`${x.item_name||''} [${x.specification}]`:(x.item_name||'-'))}</td>
    <td>${esc(x.category||'⚠️ 미확인')}</td>
