@@ -292,7 +292,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   .search-priority-info{grid-template-columns:1fr !important}
   .search-name-click{font-size:14px !important}
 }
-#erpMasterBody td:nth-child(2){max-width:480px;white-space:normal;word-break:break-word}
+#erpMasterBody td:nth-child(2){width:390px;max-width:390px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;word-break:normal}
 #erpApplyName{font-size:14px}
 </style>
 
@@ -312,6 +312,39 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 }
 .search-item-click{cursor:pointer}
 .search-item-click small{color:#087a43}
+</style>
+
+<style>
+/* ERP 기준자료 목록 - 긴 품명이 세로로 찢어지지 않도록 수정 */
+#erpMasterTab table,
+#erpMasterBody{font-size:13px}
+#erpMasterTab table{table-layout:fixed;min-width:1080px;width:100%}
+#erpMasterTab th,#erpMasterTab td{white-space:nowrap !important;vertical-align:middle}
+#erpMasterTab th:nth-child(1),#erpMasterTab td:nth-child(1){width:130px}
+#erpMasterTab th:nth-child(2),#erpMasterTab td:nth-child(2){
+  width:390px !important;
+  min-width:390px !important;
+  max-width:390px !important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+}
+#erpMasterTab th:nth-child(3),#erpMasterTab td:nth-child(3){width:95px}
+#erpMasterTab th:nth-child(4),#erpMasterTab td:nth-child(4){width:110px}
+#erpMasterTab th:nth-child(5),#erpMasterTab td:nth-child(5){width:150px}
+#erpMasterTab th:nth-child(6),#erpMasterTab td:nth-child(6){width:95px}
+#erpMasterTab th:nth-child(7),#erpMasterTab td:nth-child(7){width:180px}
+#erpMasterTab th:nth-child(8),#erpMasterTab td:nth-child(8){width:100px}
+.erp-name-cell{cursor:pointer}
+.erp-name-cell:hover{text-decoration:underline;color:#087a43}
+.erp-name-cell.expanded{
+ white-space:normal !important;
+ overflow:visible !important;
+ text-overflow:clip !important;
+ word-break:break-word !important;
+ line-height:1.45;
+}
 </style>
 </head>
 <body>
