@@ -113,6 +113,27 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 .search-priority-box strong.search-fit-md{font-size:clamp(18px,2.5vw,28px)}
 .search-priority-box strong.search-fit-sm{font-size:clamp(14px,2.0vw,22px)}
 
+.search-priority-box{min-width:0}
+.search-spec-text{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:14px !important;
+  line-height:1.35;
+  cursor:pointer;
+}
+.search-spec-text.expanded{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  word-break:break-word;
+}
+
+
 .search-recent-wrap{display:grid;gap:10px;margin-top:12px}
 .search-recent-head{
   display:flex;justify-content:space-between;align-items:center;gap:10px;
@@ -1418,7 +1439,7 @@ function bulkValidateRows(rawRows){
    if(partNo) seen.add(key);
    if(mode==='existing'&&currentQty>0&&!location) errors.push('현보유품목 위치 필수');
    if(mode==='new'&&currentQty>0) errors.push('새품목 현재고는 0');
-   if(mode==='new'&&location) warnings.push('새품목 위치는 실제 입고 때 등록 권장');
+   if(mode==='new'&&location) warnings.push('새품목 위치도 현재고 0으로 저장');
    return {excelRow:idx+2,mode,modeLabel:mode==='existing'?'현보유품목':(mode==='new'?'새품목':String(modeRaw||'')),partNo,itemName,specification,category,maker,unit,minStock,currentQty,erpStockQty,location,note,status:errors.length?'ERROR':(warnings.length?'WARN':'OK'),errors,warnings};
  });
 }
@@ -1434,7 +1455,7 @@ function downloadBulkTemplate(){
  ws['!cols']=[{wch:16},{wch:18},{wch:28},{wch:28},{wch:16},{wch:18},{wch:12},{wch:13},{wch:16},{wch:16},{wch:14},{wch:34},{wch:30}];
  ws['K2']={t:'n',f:'IF(OR(I2="",J2=""),"",I2-J2)'};
  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'WMS_품목일괄등록');
- const gs=XLSX.utils.aoa_to_sheet([['작성안내','내용'],['등록구분','현보유품목 또는 새품목'],['품번','필수 / 기존 품번 중복 금지'],['품명','필수'],['품목규격','검색 결과에 표시 / 규격으로도 검색 가능'],['자재구분','WMS 등록 명칭과 동일'],['WMS 현 재고수량','현보유품목 실제수량 / 새품목 0'],['ERP 재고수량','ERP 비교용 수량 / WMS 현재고에 합산하지 않음'],['재고차이','WMS 현 재고 - ERP 재고'],['자재위치','현보유품목 현재고가 1 이상이면 필수'],['중요','미리보기 후 정상 품목만 최종등록'],['입고통계','현보유품목 현재고는 초기재고라 입고통계 미포함']]);gs['!cols']=[{wch:18},{wch:60}];XLSX.utils.book_append_sheet(wb,gs,'작성안내');XLSX.writeFile(wb,'미림_WMS_품목일괄등록_ERP재고_품목규격_양식.xlsx');
+ const gs=XLSX.utils.aoa_to_sheet([['작성안내','내용'],['등록구분','현보유품목 또는 새품목'],['품번','필수 / 기존 품번 중복 금지'],['품명','필수'],['품목규격','검색 결과에 표시 / 규격으로도 검색 가능'],['자재구분','WMS 등록 명칭과 동일'],['WMS 현 재고수량','현보유품목 실제수량 / 새품목 0'],['ERP 재고수량','ERP 비교용 수량 / WMS 현재고에 합산하지 않음'],['재고차이','WMS 현 재고 - ERP 재고'],['자재위치','입력한 최종 위치코드를 품목과 함께 저장 / 새품목은 현재고 0으로 위치 저장'],['중요','미리보기 후 정상 품목만 최종등록'],['입고통계','현보유품목 현재고는 초기재고라 입고통계 미포함']]);gs['!cols']=[{wch:18},{wch:60}];XLSX.utils.book_append_sheet(wb,gs,'작성안내');XLSX.writeFile(wb,'미림_WMS_품목일괄등록_ERP재고_품목규격_양식.xlsx');
 }
 async function parseBulkExcel(file){
  const data=await file.arrayBuffer(),wb=XLSX.read(data,{type:'array'}),sheet=wb.Sheets[wb.SheetNames[0]];if(!sheet)throw new Error('첫 번째 시트를 찾지 못했습니다.');
@@ -1447,7 +1468,17 @@ async function registerBulkRows(){
  $('registerBulkBtn').disabled=true;let success=0,failed=0;$('bulkSummary').textContent=`등록 중... 0 / ${targets.length}`;
  for(let i=0;i<targets.length;i++){const r=targets[i];try{
    const {data:itemId,error:itemError}=await db.rpc('admin_upsert_item',{p_username:session.username,p_password:session.password,p_item_id:null,p_part_no:r.partNo,p_item_name:r.itemName,p_category:r.category,p_maker:r.maker||'',p_specification:r.specification||'',p_unit:r.unit||'EA',p_min_stock:r.minStock,p_note:r.note||'',p_photo_url:null});if(itemError)throw itemError;
-   if(r.mode==='existing'&&r.currentQty>0){const {error:initError}=await db.rpc('admin_set_initial_stock',{p_username:session.username,p_password:session.password,p_item_id:itemId,p_location_code:r.location,p_qty:r.currentQty});if(initError)throw new Error(`품목 등록 후 초기재고 실패: ${initError.message}`);}
+   if(r.location){
+     const locationQty=r.mode==='existing'?r.currentQty:0;
+     const {error:initError}=await db.rpc('admin_set_initial_stock',{
+       p_username:session.username,
+       p_password:session.password,
+       p_item_id:itemId,
+       p_location_code:r.location,
+       p_qty:locationQty
+     });
+     if(initError)throw new Error(`품목 등록 후 위치 저장 실패: ${initError.message}`);
+   }
    if(r.erpStockQty!==null){
      const {error:erpError}=await db.rpc('admin_upsert_erp_item_link',{
        p_username:session.username,
@@ -1684,7 +1715,7 @@ function renderSearch(list){
            </div>
            <div class="search-priority-box">
              <small>품목규격</small>
-             <strong class="search-fit-text ${searchFitClass(x.specification||'')}">${esc(x.specification||'-')}</strong>
+             <strong class="search-spec-text" title="${esc(x.specification||'')}" onclick="this.classList.toggle('expanded')">${esc(x.specification||'-')}</strong>
            </div>
            <div class="search-priority-total">
              <small>현재 총수량</small>
