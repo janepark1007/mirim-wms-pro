@@ -774,7 +774,7 @@ img{
     <button class="tab adminOnly" data-tab="items">📦 품목 등록</button>
     <button class="tab adminOnly" data-tab="excelbulk">📥 엑셀 일괄등록</button>
     <button class="tab adminOnly" data-tab="inbound">📥 입고</button>
-    <button class="tab adminOnly" data-tab="outbound">📤 출고</button>
+    <button class="tab adminOnly" data-tab="outbound">📤 출고하기</button>
     <button class="tab adminOnly" data-tab="stats">📊 통계·엑셀</button>
     <button class="tab adminOnly" data-tab="history">📋 입출고 누적</button>
     <button class="tab adminOnly" data-tab="erp">🔄 ERP 대조</button>
@@ -800,7 +800,7 @@ img{
       </div>
     </div>
     <div id="dailyWorkerMsg" class="muted" style="margin-top:7px">
-      로그인 후 이름을 한 번 선택하면 오늘 작업 집계에 계속 누적됩니다.
+      로그인 → 오늘 작업자 이름 선택 → 검색 → 위치 확인 → 출고 또는 수량체크. 이름은 오늘 동안 기억되고 작업 건수가 누적됩니다.
     </div>
   </div>
 
@@ -1933,10 +1933,10 @@ img{
     <div id="quickActionItem" class="ok" style="margin-bottom:12px"></div>
 
     <div id="quickActionQuestion">
-      <div style="font-size:18px;font-weight:900;margin:10px 0">이 품목을 출고하시겠습니까?</div>
+      <div style="font-size:18px;font-weight:900;margin:10px 0">이 품목은 어떤 작업을 할까요?</div>
       <div class="quick-action-buttons">
         <button id="quickChooseOutbound" type="button">📤 출고</button>
-        <button id="quickChooseCheck" type="button" class="secondary">✅ 수량 체크만</button>
+        <button id="quickChooseCheck" type="button" class="secondary">✅ 수량만 확인</button>
       </div>
     </div>
 
@@ -4204,7 +4204,7 @@ async function loadDailyWorkerSummary(){
    $('dailyCheckCount').textContent='0';
    return;
  }
- const {data,error}=await db.rpc('admin_get_daily_worker_summary',{
+ const {data,error}=await db.rpc('quick_get_daily_worker_summary',{
    p_username:session.username,p_password:session.password,
    p_worker_name:worker,p_work_date:todayKST()
  });
@@ -4239,8 +4239,8 @@ $('quickActionClose').onclick=closeQuickAction;
 $('quickActionModal').addEventListener('click',e=>{if(e.target===$('quickActionModal')) closeQuickAction();});
 
 async function openQuickAction(itemId){
- if(session?.role!=='admin'){
-   alert('빠른 출고·수량확인은 관리자 로그인에서 사용할 수 있습니다.');
+ if(!session){
+   alert('로그인 후 사용할 수 있습니다.');
    return;
  }
  const worker=selectedDailyWorker||$('dailyWorkerSelect')?.value||'';
@@ -4299,7 +4299,7 @@ $('quickCheckConfirm').onclick=async()=>{
  if(qty<0){$('quickActionMsg').textContent='⚠️ 수량을 확인하세요.';return;}
 
  $('quickActionMsg').textContent='수량 확인 기록 저장 중...';
- const {error}=await db.rpc('admin_record_stock_check',{
+ const {error}=await db.rpc('quick_record_stock_check',{
    p_username:session.username,p_password:session.password,
    p_item_id:item.id,p_location_id:locationId,
    p_checked_qty:qty,p_worker_name:worker
@@ -4317,48 +4317,47 @@ $('quickOutConfirm').onclick=async()=>{
  const locationId=$('quickOutLocation').value;
  const qty=Number($('quickOutQty').value);
  const worker=selectedDailyWorker||$('dailyWorkerSelect').value;
- if(!item||!locationId){$('quickActionMsg').textContent='⚠️ 출고 위치를 선택하세요.';return;}
- if(!qty||qty<=0){$('quickActionMsg').textContent='⚠️ 출고수량을 입력하세요.';return;}
 
+ if(!item||!locationId){
+   $('quickActionMsg').textContent='⚠️ 출고 위치를 선택하세요.';
+   return;
+ }
+ if(!qty||qty<=0){
+   $('quickActionMsg').textContent='⚠️ 출고수량을 입력하세요.';
+   return;
+ }
  const loc=(item.item_locations||[]).find(l=>String(l.id)===String(locationId));
  if(loc && qty>Number(loc.qty||0)){
    $('quickActionMsg').textContent='⚠️ 현재 위치 재고보다 많이 출고할 수 없습니다.';
    return;
  }
+
  if(!confirm(`${loc?.location_display||'선택 위치'}에서 ${qty}개 출고할까요?`)) return;
 
- // 기존 관리자 출고화면과 같은 데이터/같은 저장함수를 사용
- verifiedHandler=handlers.find(h=>h.display_name===worker)||{id:'quick',display_name:worker};
- if($('handler')){
-   const matched=handlers.find(h=>h.display_name===worker);
-   if(matched) $('handler').value=matched.id;
- }
- $('outItemId').value=item.id;
- $('outPartSearch').value=item.part_no||'';
- $('outNameSearch').value=displayItemNameSpec(item);
- $('outPart').value=item.part_no||'';
- $('outName').value=item.item_name||'';
- $('outCategory').value=item.category||'';
- $('outCurrentStock').value=`${total(item)} ${item.unit||'EA'}`;
- $('outLoc').innerHTML=(item.item_locations||[]).map(l=>`<option value="${l.id}">${esc(l.location_display||l.location_code)} · 현재 ${Number(l.qty||0)} ${esc(item.unit||'EA')}</option>`).join('');
- $('outLoc').value=locationId;
- $('outQty').value=qty;
- $('outDate').value=todayKST();
- $('outNote').value='일반 검색 빠른 출고';
-
  $('quickActionMsg').textContent='출고 저장 중...';
- $('outSave').click();
 
- // 기존 출고 저장 완료 후 DB가 갱신될 시간을 두고 집계 새로고침
- setTimeout(async()=>{
-   await loadAll();
-   await loadDailyWorkerSummary();
-   if(String($('outMsg').textContent||'').includes('✅')){
-     closeQuickAction();
-   }else{
-     $('quickActionMsg').textContent=$('outMsg').textContent||'출고 처리 결과를 확인하세요.';
-   }
- },900);
+ const {error}=await db.rpc('quick_apply_outbound',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:item.id,
+   p_location_id:locationId,
+   p_qty:qty,
+   p_worker_name:worker,
+   p_note:'일반 검색 빠른 출고'
+ });
+
+ if(error){
+   $('quickActionMsg').textContent=
+     error.message.includes('INSUFFICIENT_STOCK')
+       ? '❌ 현재 재고보다 많이 출고할 수 없습니다.'
+       : '❌ '+error.message;
+   return;
+ }
+
+ $('quickActionMsg').textContent='✅ 출고 완료 · 관리자 출고내역에도 자동 누적되었습니다.';
+ await loadAll();
+ await loadDailyWorkerSummary();
+ setTimeout(closeQuickAction,700);
 };
 
 
@@ -6060,8 +6059,8 @@ function addQuickOutboundButtonsToSearch(){
    const btn=document.createElement('button');
    btn.type='button';
    btn.className='quick-outbound-search-btn';
-   btn.textContent='📤 출고';
-   btn.title='이 품목 바로 출고 등록';
+   btn.textContent='📦 작업';
+   btn.title='출고 또는 수량확인';
    btn.onclick=(e)=>{
      e.preventDefault();
      e.stopPropagation();
