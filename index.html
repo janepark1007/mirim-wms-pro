@@ -751,6 +751,30 @@ img{
  #handlerAdminList button{font-size:11px!important;padding:6px 7px!important}
 }
 </style>
+
+<style>
+.photo-search-row{gap:8px;flex-wrap:wrap}
+.photo-search-row button{width:auto;min-width:170px}
+.search-priority-card{position:relative}
+.photo-match-badge{
+ position:absolute;
+ top:9px;
+ right:10px;
+ z-index:2;
+ background:#e7f7ed;
+ color:#087a43;
+ border:1px solid #b8e3c8;
+ border-radius:999px;
+ padding:5px 9px;
+ font-size:11px;
+ font-weight:900;
+}
+@media(max-width:720px){
+ .photo-search-row{display:grid!important;grid-template-columns:1fr 1fr!important}
+ .photo-search-row button{width:100%!important;min-width:0!important;font-size:12px!important;padding:9px 7px!important}
+ .photo-match-badge{font-size:10px;padding:4px 7px}
+}
+</style>
 </head>
 <body>
 <header>
@@ -843,7 +867,20 @@ img{
         <div id="itemCountBadge" class="badge" style="font-size:16px;padding:10px 14px">총 0종목 등록</div>
       </div>
       <div class="label required-label">품번 · 품명 검색</div>
-      <div class="row"><input id="searchQ" placeholder="품번 또는 품명 일부 입력"><button id="searchBtn">검색</button></div>
+      <div class="row">
+        <input id="searchQ" placeholder="품번 또는 품명 일부 입력">
+        <button id="searchBtn">검색</button>
+      </div>
+
+      <div class="row photo-search-row" style="margin-top:8px">
+        <button id="photoSearchBtn" type="button" class="secondary">📷 사진 찍어서 찾기</button>
+        <input id="photoSearchFile" type="file" accept="image/*" capture="environment" class="hidden">
+        <button id="photoSearchAlbumBtn" type="button" class="secondary">🖼️ 앨범 사진으로 찾기</button>
+        <input id="photoSearchAlbumFile" type="file" accept="image/*" class="hidden">
+      </div>
+      <div id="photoSearchMsg" class="muted" style="margin-top:6px">
+        등록된 품목 사진과 비교해 비슷한 품목을 찾아줍니다. 사진이 등록된 품목만 비교할 수 있습니다.
+      </div>
       <div id="searchCountText" class="muted" style="margin-top:8px">전체 0종목</div>
     </div>
     <div id="searchResults"></div>
@@ -1058,7 +1095,7 @@ img{
 
       <div class="label" style="margin-top:14px">품목 사진</div>
       <input id="photoFile" type="file" accept="image/*" capture="environment">
-      <div class="muted">품목 사진은 검색·입고·출고 화면에 함께 표시됩니다.</div>
+      <div class="muted">관리자가 등록한 사진은 일반검색에도 바로 표시되고, 📷 사진 유사검색의 기준사진으로 사용됩니다.</div>
 
       <button id="saveItemBtn" style="margin-top:12px">품목 저장</button>
       <div class="row" style="margin-top:10px">
@@ -2850,6 +2887,152 @@ function openRegisteredItem(itemId){
  $('searchResults').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+
+async function loadImageForCompare(src){
+ return await new Promise((resolve,reject)=>{
+   const img=new Image();
+   img.onload=()=>resolve(img);
+   img.onerror=reject;
+   img.src=src;
+ });
+}
+
+function imageFeatureFromCanvas(canvas){
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});
+ const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+ const values=[];
+ let meanR=0,meanG=0,meanB=0;
+ const count=canvas.width*canvas.height;
+
+ for(let i=0;i<data.length;i+=4){
+   meanR+=data[i]; meanG+=data[i+1]; meanB+=data[i+2];
+ }
+ meanR/=count; meanG/=count; meanB/=count;
+
+ // 밝기 변화에 덜 민감하도록 각 픽셀을 전체 평균 대비값으로 저장
+ const meanGray=(meanR+meanG+meanB)/3;
+ for(let i=0;i<data.length;i+=4){
+   const r=data[i],g=data[i+1],b=data[i+2];
+   const gray=.299*r+.587*g+.114*b;
+   values.push((gray-meanGray)/255);
+ }
+ return {values,meanR:meanR/255,meanG:meanG/255,meanB:meanB/255};
+}
+
+async function imageFeatureFromSource(src){
+ const img=await loadImageForCompare(src);
+ const canvas=document.createElement('canvas');
+ canvas.width=16;
+ canvas.height=16;
+ const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#fff';
+ ctx.fillRect(0,0,16,16);
+
+ // 중앙 맞춤 crop: 촬영 배경 차이 영향을 조금 줄임
+ const sw=img.naturalWidth||img.width;
+ const sh=img.naturalHeight||img.height;
+ const side=Math.min(sw,sh);
+ const sx=(sw-side)/2;
+ const sy=(sh-side)/2;
+ ctx.drawImage(img,sx,sy,side,side,0,0,16,16);
+ return imageFeatureFromCanvas(canvas);
+}
+
+function photoFeatureDistance(a,b){
+ if(!a||!b||a.values.length!==b.values.length) return 999;
+ let shape=0;
+ for(let i=0;i<a.values.length;i++){
+   const d=a.values[i]-b.values[i];
+   shape+=d*d;
+ }
+ shape=Math.sqrt(shape/a.values.length);
+
+ const color=Math.sqrt(
+   (a.meanR-b.meanR)**2+
+   (a.meanG-b.meanG)**2+
+   (a.meanB-b.meanB)**2
+ )/Math.sqrt(3);
+
+ // 형태를 더 중요하게, 색상은 보조
+ return shape*0.78 + color*0.22;
+}
+
+async function fileToCompareSource(file){
+ return await new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onload=()=>resolve(reader.result);
+   reader.onerror=reject;
+   reader.readAsDataURL(file);
+ });
+}
+
+async function runPhotoSimilaritySearch(file){
+ if(!file) return;
+ const photoItems=items.filter(x=>String(x.photo_url||'').trim());
+ if(!photoItems.length){
+   $('photoSearchMsg').textContent='⚠️ 아직 사진이 등록된 품목이 없습니다. 관리자 품목등록에서 기준 사진을 먼저 등록하세요.';
+   return;
+ }
+
+ $('photoSearchMsg').textContent=`📷 등록사진 ${photoItems.length}개와 비교 중...`;
+
+ try{
+   const querySrc=await fileToCompareSource(file);
+   const queryFeature=await imageFeatureFromSource(querySrc);
+   const scored=[];
+
+   for(const item of photoItems){
+     try{
+       const feature=await imageFeatureFromSource(item.photo_url);
+       const distance=photoFeatureDistance(queryFeature,feature);
+       scored.push({item,distance});
+     }catch(_){}
+   }
+
+   scored.sort((a,b)=>a.distance-b.distance);
+   const top=scored.slice(0,5);
+
+   if(!top.length){
+     $('photoSearchMsg').textContent='⚠️ 비교 가능한 등록 사진을 불러오지 못했습니다.';
+     return;
+   }
+
+   // 같은 사진에 가까울수록 100에 가까운 참고 점수
+   const results=top.map(x=>{
+     x.item.__photoScore=Math.max(1,Math.round((1-Math.min(x.distance,1))*100));
+     return x.item;
+   });
+
+   $('searchQ').value='';
+   $('searchCountText').textContent=`📷 사진 유사검색 결과 ${results.length}종목 / 사진등록 ${photoItems.length}종목`;
+   $('photoSearchMsg').innerHTML=
+     `✅ 사진과 비슷한 품목을 가까운 순서로 표시했습니다. `+
+     `<b>품번·품명을 반드시 최종 확인</b>한 뒤 출고하세요.`;
+   renderSearch(results);
+   $('searchResults').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(error){
+   $('photoSearchMsg').textContent='❌ 사진 검색 실패: '+error.message;
+ }
+}
+
+if($('photoSearchBtn')){
+ $('photoSearchBtn').onclick=()=>$('photoSearchFile').click();
+ $('photoSearchFile').onchange=e=>{
+   const file=e.target.files?.[0];
+   if(file) runPhotoSimilaritySearch(file);
+   e.target.value='';
+ };
+}
+if($('photoSearchAlbumBtn')){
+ $('photoSearchAlbumBtn').onclick=()=>$('photoSearchAlbumFile').click();
+ $('photoSearchAlbumFile').onchange=e=>{
+   const file=e.target.files?.[0];
+   if(file) runPhotoSimilaritySearch(file);
+   e.target.value='';
+ };
+}
+
+
 function renderSearch(list){
  $('searchResults').innerHTML=list.length?list.map(x=>{
    const locations=x.item_locations||[];
@@ -2857,7 +3040,11 @@ function renderSearch(list){
    const days=inactiveDays(x);
    const disposal=days!==null && days>=365;
 
+   const photoScoreBadge=x.__photoScore
+     ? `<span class="photo-match-badge">📷 사진 유사도 ${x.__photoScore}%</span>`
+     : '';
    return `<div class="search-priority-card">
+     ${photoScoreBadge}
      <div class="search-priority-main">
        <div>
          ${x.photo_url
@@ -2937,6 +3124,7 @@ function renderSearch(list){
  }).join(''):'<div class="card">⚠️ 검색 결과가 없습니다.</div>';
 }
 $('searchBtn').onclick=()=>{
+ items.forEach(x=>delete x.__photoScore);
  const k=norm($('searchQ').value);
  if(!k){ renderRecentThree(); return; }
  const filtered=items.filter(x=>norm(x.part_no+' '+x.item_name+' '+(x.specification||'')+' '+x.category+' '+(x.maker||'')).includes(k));
@@ -2944,6 +3132,7 @@ $('searchBtn').onclick=()=>{
  renderSearch(filtered);
 };
 $('searchQ').oninput=()=>{
+ items.forEach(x=>delete x.__photoScore);
  const q=norm($('searchQ').value);
 
  if(!q){
