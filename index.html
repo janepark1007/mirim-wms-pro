@@ -1032,7 +1032,8 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <div class="ok"><small>ERP 전체 품목</small><div id="erpMasterTotalCount" style="font-size:26px;font-weight:900">0</div></div>
       <div class="ok"><small>WMS 적용·검색 노출</small><div id="erpMasterExposedCount" style="font-size:26px;font-weight:900">0</div></div>
       <div class="ok"><small>아직 미노출</small><div id="erpMasterHiddenCount" style="font-size:26px;font-weight:900">0</div></div>
-      <div class="ok"><small>ERP 0/음수 재고</small><div id="erpMasterNonPositiveCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok"><small>ERP 0재고 품목</small><div id="erpMasterZeroCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="bad"><small>⚠️ ERP 음수재고 품목</small><div id="erpMasterNegativeCount" style="font-size:26px;font-weight:900">0</div></div>
     </div>
     <div style="overflow:auto;margin-top:10px;max-height:520px">
       <table style="width:100%;border-collapse:collapse;min-width:900px">
@@ -4226,11 +4227,13 @@ function renderErpMaster(){
    return searchOk&&stateOk;
  });
  const exposedCount=erpMasterRows.filter(x=>!!x.wms_item_id).length;
- const nonPositiveCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)<=0).length;
+ const zeroCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)===0).length;
+ const negativeCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)<0).length;
  $('erpMasterTotalCount').textContent=erpMasterRows.length.toLocaleString();
  $('erpMasterExposedCount').textContent=exposedCount.toLocaleString();
  $('erpMasterHiddenCount').textContent=(erpMasterRows.length-exposedCount).toLocaleString();
- $('erpMasterNonPositiveCount').textContent=nonPositiveCount.toLocaleString();
+ $('erpMasterZeroCount').textContent=zeroCount.toLocaleString();
+ $('erpMasterNegativeCount').textContent=negativeCount.toLocaleString();
  $('erpMasterCount').textContent=`표시 ${rows.length}개 / ERP 기준자료 전체 ${erpMasterRows.length}개`;
  $('erpMasterBody').innerHTML=rows.slice(0,500).map(x=>`<tr>
    <td>${esc(x.erp_item_code)}</td>
