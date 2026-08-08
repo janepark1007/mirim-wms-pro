@@ -823,6 +823,33 @@ img{
  .dual-stock-qty b{font-size:12px}
 }
 </style>
+
+<style>
+.single-stock-qty{
+ border:1px solid #dfe7e2;
+ border-radius:10px;
+ padding:8px 10px;
+ background:#fff;
+ margin-top:4px;
+}
+.single-stock-qty span{
+ display:block;
+ font-size:10px;
+ color:#667085;
+ margin-bottom:2px;
+}
+.single-stock-qty b{
+ display:block;
+ font-size:15px;
+ font-weight:900;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+@media(max-width:720px){
+ .single-stock-qty b{font-size:13px}
+}
+</style>
 </head>
 <body>
 <header>
@@ -915,7 +942,7 @@ img{
         <h2 style="margin:0">자재 검색 · 빠른 출고</h2>
         <div id="itemCountBadge" class="badge" style="font-size:16px;padding:10px 14px">총 0종목 등록</div>
       </div>
-      <div class="label required-label">품번 · 품명 검색</div><div class="muted" style="margin-bottom:6px">WMS 등록품목 + ERP 기준자료 품목을 함께 검색합니다.</div>
+      <div class="label required-label">품번 · 품명 검색</div><div id="searchModeHelp" class="muted" style="margin-bottom:6px">ERP 기준자료 전체 품목을 검색할 수 있습니다.</div>
       <div class="row">
         <input id="searchQ" placeholder="품번 또는 품명 일부 입력">
         <button id="searchBtn">검색</button>
@@ -2362,6 +2389,11 @@ async function login(options={}){
  );
 
  setupCooperationNotice();
+ if($('searchModeHelp')){
+   $('searchModeHelp').textContent=session.role==='admin'
+     ? '관리자 검색: WMS 수량과 ERP 수량을 함께 비교합니다.'
+     : '일반 검색: ERP 전체 품목은 검색되며, 화면에는 현 창고수량과 자재위치만 표시합니다.';
+ }
  await loadAll();
  if(session.role==='vvip'){ switchTab('vvip'); await loadVvipAnalysis(); }
  else switchTab('search');
@@ -3218,10 +3250,15 @@ function searchMergedRows(keyword=''){
 function renderMergedSearch(rows){
  if(!$('searchResults')) return;
 
+ const isAdmin=session?.role==='admin';
+ const isGeneral=!isAdmin && session?.role!=='vvip';
+
  if($('searchCountText')){
    const wms=rows.filter(r=>r.item).length;
    const erpOnly=rows.filter(r=>!r.item&&r.erp).length;
-   $('searchCountText').textContent=`검색 결과 ${rows.length}종목 · WMS ${wms} · ERP기준만 ${erpOnly}`;
+   $('searchCountText').textContent=isAdmin
+     ? `검색 결과 ${rows.length}종목 · WMS ${wms} · ERP기준만 ${erpOnly}`
+     : `검색 결과 ${rows.length}종목 · 창고정보 등록 ${wms} · 위치/수량 미등록 ${erpOnly}`;
  }
 
  $('searchResults').innerHTML=rows.length?rows.map(r=>{
@@ -3236,7 +3273,18 @@ function renderMergedSearch(rows){
    const locations=item?.item_locations||[];
    const photo=item?.photo_url||'';
 
+   // WMS 적용 품목
    if(item){
+     const qtyBlock=isAdmin
+       ? `<div class="dual-stock-qty">
+            <div><span>WMS</span><b>${Number(wmsQty||0).toLocaleString()} ${esc(item.unit||'EA')}</b></div>
+            <div><span>ERP</span><b>${erpQty===null||erpQty===undefined?'⚠️ 미확인':Number(erpQty).toLocaleString()}</b></div>
+          </div>`
+       : `<div class="single-stock-qty">
+            <span>현 창고수량</span>
+            <b>${Number(wmsQty||0).toLocaleString()} ${esc(item.unit||'EA')}</b>
+          </div>`;
+
      return `<div class="search-priority-card">
        <div class="search-priority-main">
          <div class="search-priority-photo">
@@ -3245,8 +3293,9 @@ function renderMergedSearch(rows){
          <div style="min-width:0;flex:1">
            <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:6px">
              <span class="stock-status-badge stock-status-normal">🟢 WMS 등록완료</span>
-             ${erp?'<span class="badge">ERP 연동</span>':''}
+             ${isAdmin&&erp?'<span class="badge">ERP 연동</span>':''}
            </div>
+
            <div class="search-priority-info">
              <div class="search-priority-box">
                <small>품번</small>
@@ -3257,15 +3306,12 @@ function renderMergedSearch(rows){
                <strong class="search-name-click">${esc(name)}</strong>
              </div>
              <div class="search-priority-box">
-               <small>수량</small>
-               <div class="dual-stock-qty">
-                 <div><span>WMS</span><b>${Number(wmsQty||0).toLocaleString()} ${esc(item.unit||'EA')}</b></div>
-                 <div><span>ERP</span><b>${erpQty===null||erpQty===undefined?'⚠️ 미확인':Number(erpQty).toLocaleString()}</b></div>
-               </div>
+               <small>${isAdmin?'수량':'창고수량'}</small>
+               ${qtyBlock}
              </div>
            </div>
 
-           <div class="label" style="margin-top:14px">자재위치</div>
+           <div class="label" style="margin-top:14px">${isAdmin?'자재위치':'현 자재위치'}</div>
            <div class="search-priority-locations">
              ${locations.length
                ?locations.map((l,i)=>`<div class="search-priority-location">
@@ -3281,7 +3327,7 @@ function renderMergedSearch(rows){
 
            <div class="search-foot">
              <span class="search-chip">자재구분: ${esc(item.category||'기타')}</span>
-             <span class="search-chip">최소수량: ${Number(item.min_stock||0).toLocaleString()} ${esc(item.unit||'EA')}</span>
+             ${isAdmin?`<span class="search-chip">최소수량: ${Number(item.min_stock||0).toLocaleString()} ${esc(item.unit||'EA')}</span>`:''}
            </div>
 
            <button type="button" class="quick-outbound-search-btn" onclick="event.stopPropagation();openQuickAction('${item.id}')">📦 작업</button>
@@ -3290,14 +3336,17 @@ function renderMergedSearch(rows){
      </div>`;
    }
 
+   // ERP 기준자료에는 있지만 WMS 미적용 품목
+   // 관리자: ERP 수량까지 보임 / 일반검색: 품번·품명만 노출하고 담당자 문의
    return `<div class="search-priority-card erp-only-card">
      <div class="search-priority-main">
        <div class="search-priority-photo"><div class="no-photo">ERP</div></div>
        <div style="min-width:0;flex:1">
          <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:6px">
-           <span class="stock-status-badge stock-status-shortage">🟡 ERP 기준만</span>
-           <span class="badge">⚠️ WMS 미등록</span>
+           <span class="stock-status-badge stock-status-shortage">${isAdmin?'🟡 ERP 기준만':'⚠️ 창고정보 미등록'}</span>
+           <span class="badge">WMS 미등록</span>
          </div>
+
          <div class="search-priority-info">
            <div class="search-priority-box">
              <small>품번</small>
@@ -3308,19 +3357,24 @@ function renderMergedSearch(rows){
              <strong class="search-name-click">${esc(name)}</strong>
            </div>
            <div class="search-priority-box">
-             <small>수량</small>
-             <div class="dual-stock-qty">
-               <div><span>WMS</span><b>⚠️ 미등록</b></div>
-               <div><span>ERP</span><b>${erpQty===null||erpQty===undefined?'⚠️ 미확인':Number(erpQty).toLocaleString()}</b></div>
-             </div>
+             <small>${isAdmin?'수량':'창고정보'}</small>
+             ${isAdmin
+               ? `<div class="dual-stock-qty">
+                    <div><span>WMS</span><b>⚠️ 미등록</b></div>
+                    <div><span>ERP</span><b>${erpQty===null||erpQty===undefined?'⚠️ 미확인':Number(erpQty).toLocaleString()}</b></div>
+                  </div>`
+               : `<div class="single-stock-qty">
+                    <span>현 창고수량</span><b>⚠️ 확인 필요</b>
+                  </div>`}
            </div>
          </div>
 
          <div class="bad" style="margin-top:12px">
-           ⚠️ 해당 품목은 ERP 기준자료에는 있으나 WMS 위치·실재고가 등록되지 않았습니다.<br>
-           <b>자재 담당자에게 품목 위치 및 실제재고 등록을 문의해 주세요.</b>
+           ${isAdmin
+             ? `⚠️ ERP 기준자료에는 있으나 WMS 위치·실재고가 등록되지 않았습니다.<br><b>관리자에서 위치와 실제재고를 확인해 WMS 적용하세요.</b>`
+             : `⚠️ 현재 창고수량과 자재위치가 아직 등록되지 않았습니다.<br><b>자재 담당자에게 위치 및 실제재고를 문의해 주세요.</b>`}
          </div>
-         <button type="button" class="secondary" disabled style="margin-top:10px">📞 담당자 문의 필요</button>
+         <button type="button" class="secondary" disabled style="margin-top:10px">${isAdmin?'⚠️ WMS 등록 필요':'📞 담당자 문의 필요'}</button>
        </div>
      </div>
    </div>`;
