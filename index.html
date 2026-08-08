@@ -1032,15 +1032,17 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <select id="erpMasterFilter">
           <option value="ALL">전체</option>
           <option value="HIDDEN">일반 검색 미노출</option>
-          <option value="EXPOSED">WMS 적용 완료</option>
+          <option value="TEMP">📝 임시등록 · 현장확인 필요</option>
+          <option value="EXPOSED">WMS 실제재고 적용 완료</option>
         </select>
       </div>
     </div>
     <div id="erpMasterCount" class="muted" style="margin-top:8px"></div>
     <div class="grid" style="margin-top:10px">
       <div class="ok"><small>ERP 전체 품목</small><div id="erpMasterTotalCount" style="font-size:26px;font-weight:900">0</div></div>
-      <div class="ok"><small>WMS 적용·검색 노출</small><div id="erpMasterExposedCount" style="font-size:26px;font-weight:900">0</div></div>
-      <div class="ok"><small>아직 미노출</small><div id="erpMasterHiddenCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok"><small>WMS 실제재고 적용</small><div id="erpMasterExposedCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok"><small>📝 임시등록</small><div id="erpMasterTempCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok"><small>아직 미등록</small><div id="erpMasterHiddenCount" style="font-size:26px;font-weight:900">0</div></div>
       <div class="ok"><small>ERP 0재고 품목</small><div id="erpMasterZeroCount" style="font-size:26px;font-weight:900">0</div></div>
       <div class="bad"><small>⚠️ ERP 음수재고 품목</small><div id="erpMasterNegativeCount" style="font-size:26px;font-weight:900">0</div></div>
     </div>
@@ -1055,18 +1057,22 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   </div>
 
   <div id="erpMasterApplyCard" class="card hidden">
-    <h3>WMS 적용 준비</h3>
+    <h3>📝 품목 임시등록 / 현장확인 후 실제재고 적용</h3>
     <input id="erpMasterSelectedCode" type="hidden">
     <div class="grid">
       <div><div class="label">품목코드</div><input id="erpApplyCode" readonly></div>
       <div><div class="label">품목명(규격)</div><input id="erpApplyName" readonly></div>
-      <div><div class="label required-label">자재구분</div><select id="erpApplyCategory"></select></div>
-      <div><div class="label required-label">자재위치</div><input id="erpApplyLocation" placeholder="예: 1층자재실-A-1단-001"></div>
-      <div><div class="label required-label">WMS 실제수량</div><input id="erpApplyQty" type="number" min="0" step="0.001" value="0"></div>
+      <div><div class="label">자재구분</div><select id="erpApplyCategory"></select></div>
+      <div><div class="label">자재위치</div><input id="erpApplyLocation" placeholder="모르면 비워두세요 · 나중에 수정 가능"></div>
+      <div><div class="label">WMS 실제수량</div><input id="erpApplyQty" type="number" min="0" step="0.001" placeholder="현장 확인 전에는 비워두세요"></div>
       <div><div class="label">ERP 현재고</div><input id="erpApplyErpQty" readonly></div>
     </div>
-    <div class="bad" style="margin-top:10px">⚠️ WMS 실제수량은 현장에서 확인한 수량만 입력하세요. ERP 수량을 자동으로 복사하지 않습니다.</div>
-    <button id="erpMasterApplyBtn" type="button" style="margin-top:12px">확인 후 WMS 적용</button>
+    <div class="ok" style="margin-top:10px">📝 지금 모르면 <b>임시등록</b>하세요. 자재구분·위치·실제수량은 나중에 이 품목을 검색해서 바로 수정할 수 있습니다.</div>
+    <div class="bad" style="margin-top:8px">⚠️ 실제수량 미확인은 <b>0이 아닙니다.</b> 현장에서 실제로 0개임을 확인했을 때만 0을 입력하세요.</div>
+    <div class="row" style="margin-top:12px;flex-wrap:wrap">
+      <button id="erpMasterTempBtn" type="button" class="secondary" style="width:auto">📝 모르는 항목은 미확인으로 임시등록</button>
+      <button id="erpMasterApplyBtn" type="button" style="width:auto">✅ 현장 확인 후 WMS 실제재고 적용</button>
+    </div>
     <div id="erpMasterApplyMsg" class="muted" style="margin-top:8px"></div>
   </div>
 </section>
@@ -4313,30 +4319,38 @@ function renderErpMaster(){
  if(!$('erpMasterBody')) return;
  const q=norm($('erpMasterSearch')?.value||'');
  const f=$('erpMasterFilter')?.value||'ALL';
+ const stateOf=x=>x.wms_item_id?(x.wms_verified?'EXPOSED':'TEMP'):'HIDDEN';
  let rows=erpMasterRows.filter(x=>{
    const searchOk=!q || norm(`${x.erp_item_code} ${erpMasterDisplay(x)}`).includes(q);
-   const exposed=!!x.wms_item_id;
-   const stateOk=f==='ALL'||(f==='EXPOSED'&&exposed)||(f==='HIDDEN'&&!exposed);
+   const stateOk=f==='ALL'||stateOf(x)===f;
    return searchOk&&stateOk;
  });
- const exposedCount=erpMasterRows.filter(x=>!!x.wms_item_id).length;
+ const exposedCount=erpMasterRows.filter(x=>stateOf(x)==='EXPOSED').length;
+ const tempCount=erpMasterRows.filter(x=>stateOf(x)==='TEMP').length;
+ const hiddenCount=erpMasterRows.filter(x=>stateOf(x)==='HIDDEN').length;
  const zeroCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)===0).length;
  const negativeCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)<0).length;
  $('erpMasterTotalCount').textContent=erpMasterRows.length.toLocaleString();
  $('erpMasterExposedCount').textContent=exposedCount.toLocaleString();
- $('erpMasterHiddenCount').textContent=(erpMasterRows.length-exposedCount).toLocaleString();
+ $('erpMasterTempCount').textContent=tempCount.toLocaleString();
+ $('erpMasterHiddenCount').textContent=hiddenCount.toLocaleString();
  $('erpMasterZeroCount').textContent=zeroCount.toLocaleString();
  $('erpMasterNegativeCount').textContent=negativeCount.toLocaleString();
  $('erpMasterCount').textContent=`표시 ${rows.length}개 / ERP 기준자료 전체 ${erpMasterRows.length}개`;
- $('erpMasterBody').innerHTML=rows.slice(0,500).map(x=>`<tr>
-   <td>${esc(x.erp_item_code)}</td>
-   <td>${esc(erpMasterDisplay(x))}</td>
-   <td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
-   <td>${x.wms_item_id?'<span class="erp-diff-ok">WMS 적용 완료</span>':'<span class="muted">미노출</span>'}</td>
-   <td>${esc(formatLoginTime(x.erp_updated_at))}</td>
-   <td>${x.wms_item_id?'<span class="muted">검색 노출 중</span>':`<button type="button" class="secondary" style="width:auto;padding:6px 9px" onclick="prepareErpMasterApply('${String(x.erp_item_code).replace(/'/g,"\\'")}')">WMS 적용 준비</button>`}</td>
- </tr>`).join('');
- if(rows.length>500) $('erpMasterCount').textContent+=` · 전체 ${rows.length.toLocaleString()}개 중 화면은 앞 500개만 표시 (검색으로 좁혀주세요)`;
+ $('erpMasterBody').innerHTML=rows.slice(0,500).map(x=>{
+   const st=stateOf(x);
+   const stateText=st==='EXPOSED'?'<span class="erp-diff-ok">✅ 실제재고 적용</span>':(st==='TEMP'?'<span class="muted">📝 임시등록 · 확인 필요</span>':'<span class="muted">미등록</span>');
+   const btnText=st==='EXPOSED'?'수정':(st==='TEMP'?'현장확인·수정':'등록 준비');
+   return `<tr>
+     <td>${esc(x.erp_item_code)}</td>
+     <td>${esc(erpMasterDisplay(x))}</td>
+     <td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
+     <td>${stateText}</td>
+     <td>${esc(formatLoginTime(x.erp_updated_at))}</td>
+     <td><button type="button" class="secondary" style="width:auto;padding:6px 9px" onclick="prepareErpMasterApply('${String(x.erp_item_code).replace(/'/g,"\\'")}')">${btnText}</button></td>
+   </tr>`;
+ }).join('');
+ if(rows.length>500) $('erpMasterCount').textContent+=` · 전체 ${rows.length.toLocaleString()}개 중 화면은 앞 500개만 표시 (검색으로 바로 찾을 수 있습니다)`;
 }
 function prepareErpMasterApply(code){
  const x=erpMasterRows.find(v=>String(v.erp_item_code)===String(code));
@@ -4345,11 +4359,14 @@ function prepareErpMasterApply(code){
  $('erpApplyCode').value=x.erp_item_code;
  $('erpApplyName').value=erpMasterDisplay(x);
  $('erpApplyErpQty').value=Number(x.erp_stock_qty||0);
- $('erpApplyQty').value='0';
- $('erpApplyLocation').value='';
- $('erpApplyCategory').innerHTML='<option value="">자재구분 선택</option>'+categories.map(c=>`<option value="${esc(c.name||c.category||c)}">${esc(c.name||c.category||c)}</option>`).join('');
+ $('erpApplyQty').value=x.wms_verified && x.wms_qty!==null && x.wms_qty!==undefined?String(x.wms_qty):'';
+ $('erpApplyLocation').value=x.wms_location||'';
+ $('erpApplyCategory').innerHTML='<option value="">⚠️ 자재구분 미확인</option>'+categories.map(c=>`<option value="${esc(c.name||c.category||c)}">${esc(c.name||c.category||c)}</option>`).join('');
+ if(x.wms_category) $('erpApplyCategory').value=x.wms_category;
  $('erpMasterApplyCard').classList.remove('hidden');
- $('erpMasterApplyMsg').textContent='자재구분·실제 위치·실제수량을 확인한 뒤 적용하세요.';
+ $('erpMasterApplyMsg').textContent=x.wms_item_id
+   ?'기존 등록정보를 불러왔습니다. 필요한 부분만 수정한 뒤 저장하세요.'
+   :'모르는 항목은 비워두고 임시등록할 수 있습니다.';
  $('erpMasterApplyCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function parseAndUploadErpMaster(file){
@@ -4400,26 +4417,44 @@ if($('erpMasterFile')) $('erpMasterFile').onchange=async e=>{
 if($('erpMasterReloadBtn')) $('erpMasterReloadBtn').onclick=loadErpMaster;
 if($('erpMasterSearch')) $('erpMasterSearch').oninput=renderErpMaster;
 if($('erpMasterFilter')) $('erpMasterFilter').onchange=renderErpMaster;
+if($('erpMasterTempBtn')) $('erpMasterTempBtn').onclick=async()=>{
+ const code=$('erpMasterSelectedCode').value;
+ if(!code){$('erpMasterApplyMsg').textContent='⚠️ 품목을 먼저 선택하세요.';return;}
+ const category=$('erpApplyCategory').value||null;
+ const location=$('erpApplyLocation').value.trim()||null;
+ const qtyText=$('erpApplyQty').value.trim();
+ if(!confirm(`임시등록할까요?\n\n품목코드: ${code}\n\n모르는 자재구분·위치·실제수량은 '미확인'으로 저장됩니다.\n나중에 ERP 기준자료에서 품목코드/품목명으로 검색해 바로 수정할 수 있습니다.`)) return;
+ $('erpMasterApplyMsg').textContent='임시등록 중...';
+ const {error}=await db.rpc('admin_save_erp_master_draft',{
+   p_username:session.username,p_password:session.password,p_erp_item_code:code,
+   p_category:category,p_location_code:location,
+   p_wms_qty:qtyText===''?null:Number(qtyText)
+ });
+ if(error){$('erpMasterApplyMsg').textContent='❌ 임시등록 실패: '+error.message;return;}
+ $('erpMasterApplyMsg').textContent='📝 임시등록 완료 · 현장 확인 후 검색해서 수정하세요.';
+ await loadAll(); await loadErpMaster();
+};
+
 if($('erpMasterApplyBtn')) $('erpMasterApplyBtn').onclick=async()=>{
  const code=$('erpMasterSelectedCode').value;
  const category=$('erpApplyCategory').value;
  const location=$('erpApplyLocation').value.trim();
- const qty=Number($('erpApplyQty').value);
+ const qtyText=$('erpApplyQty').value.trim();
+ const qty=qtyText===''?NaN:Number(qtyText);
  if(!code||!category||!location||!Number.isFinite(qty)||qty<0){
-   $('erpMasterApplyMsg').textContent='⚠️ 자재구분·자재위치·확인된 WMS 실제수량을 입력하세요.'; return;
+   $('erpMasterApplyMsg').textContent='⚠️ 실제재고 적용은 자재구분·자재위치·현장에서 확인한 실제수량이 모두 필요합니다.'; return;
  }
  const x=erpMasterRows.find(v=>String(v.erp_item_code)===String(code));
  if(!x) return;
- if(!confirm(`일반 검색에 노출할까요?\n\n품목코드: ${x.erp_item_code}\n품목명(규격): ${erpMasterDisplay(x)}\n자재구분: ${category}\n자재위치: ${location}\nWMS 실제수량: ${qty}\nERP 현재고: ${Number(x.erp_stock_qty||0)}\n\n[확인]을 누르면 WMS 검색·입고·출고에 적용됩니다.`)) return;
- $('erpMasterApplyMsg').textContent='WMS 적용 중...';
+ if(!confirm(`현장 확인 완료 후 실제재고로 적용할까요?\n\n품목코드: ${x.erp_item_code}\n품목명(규격): ${erpMasterDisplay(x)}\n자재구분: ${category}\n자재위치: ${location}\nWMS 실제수량: ${qty}\nERP 현재고: ${Number(x.erp_stock_qty||0)}\n\n확인한 실제수량만 적용하세요.`)) return;
+ $('erpMasterApplyMsg').textContent='WMS 실제재고 적용 중...';
  const {error}=await db.rpc('admin_activate_erp_master_item',{
    p_username:session.username,p_password:session.password,p_erp_item_code:code,
    p_category:category,p_location_code:location,p_wms_qty:qty
  });
  if(error){$('erpMasterApplyMsg').textContent='❌ WMS 적용 실패: '+error.message;return;}
- $('erpMasterApplyMsg').textContent='✅ 확인 후 WMS 적용 완료 · 이제 일반 검색에 노출됩니다.';
- await loadAll();
- await loadErpMaster();
+ $('erpMasterApplyMsg').textContent='✅ 현장 확인 완료 · WMS 실제재고 적용 및 일반 검색 노출 완료';
+ await loadAll(); await loadErpMaster();
 };
 
 
