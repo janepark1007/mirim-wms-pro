@@ -1384,7 +1384,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div class="card">
       <h3>ERP 품목 연결 및 현재고 입력</h3>
       <div class="muted" style="margin-bottom:10px">
-        ERP의 <b>품목코드</b>와 <b>품명</b>을 입력하면 WMS 품목을 자동으로 찾습니다.
+        ERP의 <b>품목코드 또는 품명</b> 중 하나만 입력해도 ERP 기준자료에서 찾아 품목코드·품명·ERP 현재고를 자동으로 채웁니다.
       </div>
 
       <input id="erpItemSelect" type="hidden">
@@ -1396,7 +1396,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         </div>
         <div>
           <div class="label">품명</div>
-          <input id="erpItemName" placeholder="예: 커넥터 [ABC-123]">
+          <input id="erpItemName" placeholder="품명 또는 품목코드 일부 입력">
         </div>
         <div>
           <div class="label required-label">ERP 현재고</div>
@@ -1405,7 +1405,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       </div>
 
       <div id="erpAutoMatchMsg" class="ok" style="margin-top:10px">
-        품목코드를 입력하면 WMS 자동매칭 결과가 표시됩니다.
+        품목코드 또는 품명을 입력하면 ERP 기준자료와 WMS를 자동으로 찾습니다.
       </div>
 
       <div class="label" style="margin-top:10px">비고</div>
@@ -1888,6 +1888,93 @@ function findWmsItemForErp(code,nameSpec=''){
  return null;
 }
 
+
+function findErpMasterCandidate(codeValue,nameValue){
+ const c=norm(codeValue);
+ const n=norm(nameValue);
+ const rows=erpMasterRows||[];
+
+ // 정확한 ERP 품목코드
+ if(c){
+   const exact=rows.filter(x=>norm(x.erp_item_code)===c);
+   if(exact.length===1) return exact[0];
+ }
+ // 품명 입력칸에 품목코드를 넣은 경우도 허용
+ if(n){
+   const exactCodeInName=rows.filter(x=>norm(x.erp_item_code)===n);
+   if(exactCodeInName.length===1) return exactCodeInName[0];
+ }
+ // 품명/규격 정확 또는 포함 검색
+ if(n){
+   const exactName=rows.filter(x=>{
+     const full=norm(erpMasterDisplay(x));
+     return full===n || norm(x.item_name)===n || norm(x.specification)===n;
+   });
+   if(exactName.length===1) return exactName[0];
+
+   const contains=rows.filter(x=>{
+     const hay=norm(`${x.erp_item_code||''} ${erpMasterDisplay(x)} ${x.item_name||''} ${x.specification||''}`);
+     return hay.includes(n);
+   });
+   if(contains.length===1) return contains[0];
+ }
+ return null;
+}
+
+function syncErpMasterFields(){
+ if(!$('erpItemCode')||!$('erpItemName')) return null;
+ const code=$('erpItemCode').value.trim();
+ const name=$('erpItemName').value.trim();
+ const master=findErpMasterCandidate(code,name);
+ if(!master) return null;
+
+ $('erpItemCode').value=master.erp_item_code||'';
+ $('erpItemName').value=erpMasterDisplay(master);
+ if($('erpStockQty')) $('erpStockQty').value=Number(master.erp_stock_qty||0);
+
+ // WMS 연결품목이 있으면 즉시 선택
+ let item=null;
+ if(master.wms_item_id){
+   item=items.find(x=>String(x.id)===String(master.wms_item_id))||null;
+ }
+ if(!item) item=findWmsItemForErp(master.erp_item_code,erpMasterDisplay(master));
+ if(item) $('erpItemSelect').value=item.id;
+
+ return {master,item};
+}
+
+async function ensureErpMasterForCompare(){
+ if(erpMasterRows?.length) return;
+ try{
+   let all=[],from=0,pageSize=1000;
+   while(true){
+     const {data,error}=await db.rpc('admin_list_erp_master_items_v3',{
+       p_username:session.username,p_password:session.password
+     }).range(from,from+pageSize-1);
+     if(error) break;
+     const page=data||[];
+     all.push(...page);
+     if(page.length<pageSize) break;
+     from+=pageSize;
+   }
+   if(all.length) erpMasterRows=all;
+ }catch(e){}
+}
+
+async function syncErpCompareSearch(){
+ await ensureErpMasterForCompare();
+ const matched=syncErpMasterFields();
+ const item=syncErpAutoMatch();
+
+ if(matched?.master){
+   $('erpAutoMatchMsg').className=item?'ok':'bad';
+   $('erpAutoMatchMsg').innerHTML=item
+     ? `✅ ERP 기준자료 자동연결 · <b>${esc(matched.master.erp_item_code)}</b> · ${esc(erpMasterDisplay(matched.master))} · ERP 현재고 <b>${Number(matched.master.erp_stock_qty||0).toLocaleString()}</b>`
+     : `⚠️ ERP 기준자료는 찾았습니다: <b>${esc(matched.master.erp_item_code)}</b> · ERP 현재고 <b>${Number(matched.master.erp_stock_qty||0).toLocaleString()}</b><br>WMS 실제재고 적용 전이라 WMS 재고 비교는 아직 할 수 없습니다.`;
+ }
+ if(item) renderErpSelected();
+}
+
 function syncErpAutoMatch(){
  if(!$('erpItemCode')) return null;
 
@@ -1994,6 +2081,7 @@ function renderErpQueue(){
 
 async function loadErpData(){
  if(!session || session.role!=='admin') return;
+ await ensureErpMasterForCompare();
 
  const [linksRes,queueRes]=await Promise.all([
    db.rpc('admin_list_erp_item_links',{
@@ -5186,9 +5274,21 @@ if($('vvipExcelBtn')) $('vvipExcelBtn').onclick=()=>{
  $('vvipMsg').textContent=`✅ 대표님 보고용 Excel 저장 완료 · ${filtered.length.toLocaleString()}품목`;
 };
 
+
+if($('erpItemCode')){
+ $('erpItemCode').addEventListener('input',syncErpCompareSearch);
+ $('erpItemCode').addEventListener('change',syncErpCompareSearch);
+ $('erpItemCode').addEventListener('keyup',e=>{if(e.key==='Enter') syncErpCompareSearch();});
+}
+if($('erpItemName')){
+ $('erpItemName').addEventListener('input',syncErpCompareSearch);
+ $('erpItemName').addEventListener('change',syncErpCompareSearch);
+ $('erpItemName').addEventListener('keyup',e=>{if(e.key==='Enter') syncErpCompareSearch();});
+}
+
 if($('erpItemSelect')) $('erpItemSelect').onchange=renderErpSelected;
-if($('erpItemCode')) $('erpItemCode').addEventListener('input',syncErpAutoMatch);
-if($('erpItemName')) $('erpItemName').addEventListener('input',syncErpAutoMatch);
+if($('erpItemCode')) 
+if($('erpItemName')) 
 
 if($('erpSaveLinkBtn')) $('erpSaveLinkBtn').onclick=async()=>{
  const item=syncErpAutoMatch();
