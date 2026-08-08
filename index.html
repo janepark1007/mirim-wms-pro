@@ -226,6 +226,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <button class="tab adminOnly" data-tab="outbound">📤 출고</button>
     <button class="tab adminOnly" data-tab="stats">📊 통계·엑셀</button>
     <button class="tab adminOnly" data-tab="erp">🔄 ERP 대조</button>
+     <button class="tab adminOnly" data-tab="erpmaster">🗃️ ERP 기준자료</button>
     <button class="tab adminOnly" data-tab="disposal">⏰ 1년 폐기알림</button>
     <button class="tab adminOnly" data-tab="categories">📂 자재구분</button>
   </div>
@@ -899,14 +900,86 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
   </section>
 
   
-  <section id="erpTab" class="tabpane hidden">
+  
+<section id="erpmasterTab" class="tabpane hidden">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div>
+        <h2 style="margin:0">🗃️ Axcelis ERP 기준자료</h2>
+        <div class="muted" style="margin-top:6px">Axcelis ERP 재고현황 Excel을 한 번에 올립니다. 전체 품목은 관리자에만 보관되고 일반 검색·입고·출고에는 자동 노출되지 않습니다.</div>
+      </div>
+      <span class="badge">관리자 전용 · 기본 미노출</span>
+    </div>
+    <div class="ok" style="margin-top:12px">
+      ERP Excel 갱신은 <b>품목코드 · 품목명[규격] · ERP 현재고</b>만 갱신합니다.
+      기존 WMS의 <b>1층 자재실 · 2층 자재실 · 생산 수량과 위치</b>는 변경하지 않습니다.
+    </div>
+    <input id="erpMasterFile" type="file" accept=".xlsx,.xls" class="hidden">
+    <div class="row" style="margin-top:12px;align-items:center">
+      <button id="erpMasterChooseBtn" type="button" style="width:auto">Axcelis 재고현황 Excel 일괄등록</button>
+      <button id="erpMasterReloadBtn" type="button" class="secondary" style="width:auto">목록 새로고침</button>
+      <span id="erpMasterUpdatedAt" class="muted">ERP 최종 갱신일: -</span>
+    </div>
+    <div id="erpMasterUploadMsg" class="muted" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <div class="label">ERP 품목 검색</div>
+        <input id="erpMasterSearch" placeholder="품목코드 또는 품목명[규격]">
+      </div>
+      <div>
+        <div class="label">상태</div>
+        <select id="erpMasterFilter">
+          <option value="ALL">전체</option>
+          <option value="HIDDEN">일반 검색 미노출</option>
+          <option value="EXPOSED">WMS 적용 완료</option>
+        </select>
+      </div>
+    </div>
+    <div id="erpMasterCount" class="muted" style="margin-top:8px"></div>
+    <div class="grid" style="margin-top:10px">
+      <div class="ok"><small>ERP 전체 품목</small><div id="erpMasterTotalCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok"><small>WMS 적용·검색 노출</small><div id="erpMasterExposedCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok"><small>아직 미노출</small><div id="erpMasterHiddenCount" style="font-size:26px;font-weight:900">0</div></div>
+      <div class="ok"><small>ERP 0/음수 재고</small><div id="erpMasterNonPositiveCount" style="font-size:26px;font-weight:900">0</div></div>
+    </div>
+    <div style="overflow:auto;margin-top:10px;max-height:520px">
+      <table style="width:100%;border-collapse:collapse;min-width:900px">
+        <thead><tr>
+          <th>품목코드</th><th>품목명[규격]</th><th>ERP 현재고</th><th>상태</th><th>ERP 갱신일</th><th>작업</th>
+        </tr></thead>
+        <tbody id="erpMasterBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="erpMasterApplyCard" class="card hidden">
+    <h3>WMS 적용 준비</h3>
+    <input id="erpMasterSelectedCode" type="hidden">
+    <div class="grid">
+      <div><div class="label">품목코드</div><input id="erpApplyCode" readonly></div>
+      <div><div class="label">품목명(규격)</div><input id="erpApplyName" readonly></div>
+      <div><div class="label required-label">자재구분</div><select id="erpApplyCategory"></select></div>
+      <div><div class="label required-label">자재위치</div><input id="erpApplyLocation" placeholder="예: 1층자재실-A-1단-001"></div>
+      <div><div class="label required-label">WMS 실제수량</div><input id="erpApplyQty" type="number" min="0" step="0.001" value="0"></div>
+      <div><div class="label">ERP 현재고</div><input id="erpApplyErpQty" readonly></div>
+    </div>
+    <div class="bad" style="margin-top:10px">⚠️ WMS 실제수량은 현장에서 확인한 수량만 입력하세요. ERP 수량을 자동으로 복사하지 않습니다.</div>
+    <button id="erpMasterApplyBtn" type="button" style="margin-top:12px">확인 후 WMS 적용</button>
+    <div id="erpMasterApplyMsg" class="muted" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<section id="erpTab" class="tabpane hidden">
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <h2 style="margin:0">🔄 ERP 재고대조</h2>
         <span class="badge">관리자 전용</span>
       </div>
       <div class="ok" style="margin-top:12px">
-        WMS의 <b>자재실 + 생산 + 기타 등록위치</b> 수량을 모두 합산하여 ERP 현재고와 비교합니다.
+        WMS의 <b>1층 자재실 + 2층 자재실 + 생산</b> 수량을 합산하여 ERP 현재고와 비교합니다.
       </div>
       <div class="bad" style="margin-top:10px">
         ⚠️ 현재 버전은 ERP 품목연결·현재고 대조와 ERP 반영대기 기록까지 제공합니다.
@@ -1048,6 +1121,7 @@ const db=supabase.createClient(cfg.url,cfg.publishableKey);
 
 let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, photoData=null;
 let erpLinks=[], erpQueue=[];
+let erpMasterRows=[];
 let bulkRows=[];
 let itemRegisterMode='existing';
 
@@ -1549,6 +1623,7 @@ function switchTab(name){
  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
  document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hidden'));
  $(name+'Tab').classList.remove('hidden');
+ if(name==='erpmaster') loadErpMaster();
 }
 
 
@@ -3862,6 +3937,140 @@ $('stockCorrectBtn').onclick=async()=>{
 };
 
 
+
+function splitErpNameSpec(value){
+ const s=String(value??'').trim();
+ const m=s.match(/^(.*?)\s*\[([^\]]*)\]\s*$/);
+ return m ? {name:m[1].trim(),spec:m[2].trim()} : {name:s,spec:''};
+}
+function erpMasterDisplay(x){
+ return x.specification ? `${x.item_name||''} [${x.specification}]` : (x.item_name||'');
+}
+async function loadErpMaster(){
+ if(!session || session.role!=='admin' || !$('erpMasterBody')) return;
+ const {data,error}=await db.rpc('admin_list_erp_master_items',{
+   p_username:session.username,p_password:session.password
+ });
+ if(error){
+   $('erpMasterUploadMsg').textContent='⚠️ ERP 기준자료 SQL 설치 후 사용할 수 있습니다: '+error.message;
+   return;
+ }
+ erpMasterRows=data||[];
+ const latest=erpMasterRows.map(x=>x.erp_updated_at).filter(Boolean).sort().pop();
+ $('erpMasterUpdatedAt').textContent='ERP 최종 갱신일: '+(latest?formatLoginTime(latest):'-');
+ renderErpMaster();
+}
+function renderErpMaster(){
+ if(!$('erpMasterBody')) return;
+ const q=norm($('erpMasterSearch')?.value||'');
+ const f=$('erpMasterFilter')?.value||'ALL';
+ let rows=erpMasterRows.filter(x=>{
+   const searchOk=!q || norm(`${x.erp_item_code} ${erpMasterDisplay(x)}`).includes(q);
+   const exposed=!!x.wms_item_id;
+   const stateOk=f==='ALL'||(f==='EXPOSED'&&exposed)||(f==='HIDDEN'&&!exposed);
+   return searchOk&&stateOk;
+ });
+ const exposedCount=erpMasterRows.filter(x=>!!x.wms_item_id).length;
+ const nonPositiveCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)<=0).length;
+ $('erpMasterTotalCount').textContent=erpMasterRows.length.toLocaleString();
+ $('erpMasterExposedCount').textContent=exposedCount.toLocaleString();
+ $('erpMasterHiddenCount').textContent=(erpMasterRows.length-exposedCount).toLocaleString();
+ $('erpMasterNonPositiveCount').textContent=nonPositiveCount.toLocaleString();
+ $('erpMasterCount').textContent=`표시 ${rows.length}개 / ERP 기준자료 전체 ${erpMasterRows.length}개`;
+ $('erpMasterBody').innerHTML=rows.slice(0,500).map(x=>`<tr>
+   <td>${esc(x.erp_item_code)}</td>
+   <td>${esc(erpMasterDisplay(x))}</td>
+   <td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
+   <td>${x.wms_item_id?'<span class="erp-diff-ok">WMS 적용 완료</span>':'<span class="muted">미노출</span>'}</td>
+   <td>${esc(formatLoginTime(x.erp_updated_at))}</td>
+   <td>${x.wms_item_id?'<span class="muted">검색 노출 중</span>':`<button type="button" class="secondary" style="width:auto;padding:6px 9px" onclick="prepareErpMasterApply('${String(x.erp_item_code).replace(/'/g,"\\'")}')">WMS 적용 준비</button>`}</td>
+ </tr>`).join('');
+ if(rows.length>500) $('erpMasterCount').textContent+=` · 화면은 앞 500개만 표시 (검색으로 좁혀주세요)`;
+}
+function prepareErpMasterApply(code){
+ const x=erpMasterRows.find(v=>String(v.erp_item_code)===String(code));
+ if(!x) return;
+ $('erpMasterSelectedCode').value=x.erp_item_code;
+ $('erpApplyCode').value=x.erp_item_code;
+ $('erpApplyName').value=erpMasterDisplay(x);
+ $('erpApplyErpQty').value=Number(x.erp_stock_qty||0);
+ $('erpApplyQty').value='0';
+ $('erpApplyLocation').value='';
+ $('erpApplyCategory').innerHTML='<option value="">자재구분 선택</option>'+categories.map(c=>`<option value="${esc(c.name||c.category||c)}">${esc(c.name||c.category||c)}</option>`).join('');
+ $('erpMasterApplyCard').classList.remove('hidden');
+ $('erpMasterApplyMsg').textContent='자재구분·실제 위치·실제수량을 확인한 뒤 적용하세요.';
+ $('erpMasterApplyCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function parseAndUploadErpMaster(file){
+ const buf=await file.arrayBuffer();
+ const wb=XLSX.read(buf,{type:'array'});
+ const targetSheet=wb.SheetNames.includes('재고현황')?'재고현황':wb.SheetNames[0];
+ const ws=wb.Sheets[targetSheet];
+ if(!ws) throw new Error('재고현황 시트를 찾지 못했습니다.');
+ const grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+ let hi=grid.findIndex(r=>r.some(v=>String(v).trim()==='품목코드') && r.some(v=>String(v).trim()==='재고수량'));
+ if(hi<0) throw new Error('Axcelis 재고현황 형식이 아닙니다. 품목코드 / 품목명[규격] / 재고수량 열을 확인하세요.');
+ const hdr=grid[hi].map(v=>String(v).trim());
+ const codeI=hdr.findIndex(v=>v==='품목코드');
+ const nameI=hdr.findIndex(v=>['품목명[규격]','품목명(규격)','품목명','품명[규격]','품명'].includes(v));
+ const qtyI=hdr.findIndex(v=>v==='재고수량'||v==='현재고'||v==='ERP 현재고');
+ if(codeI<0||nameI<0||qtyI<0) throw new Error('필수 열(품목코드/품목명[규격]/재고수량)을 확인하세요.');
+ const rows=[];
+ for(const r of grid.slice(hi+1)){
+   const code=String(r[codeI]??'').trim();
+   if(!code || code==='합계') continue;
+   const ns=splitErpNameSpec(r[nameI]);
+   const qty=Number(String(r[qtyI]??0).replace(/,/g,''));
+   if(!Number.isFinite(qty)) continue;
+   rows.push({erp_item_code:code,item_name:ns.name,specification:ns.spec,erp_stock_qty:qty});
+ }
+ if(!rows.length) throw new Error('업로드할 ERP 품목을 찾지 못했습니다.');
+ if(!confirm(`Axcelis ERP 품목 ${rows.length}개를 관리자 기준자료에 일괄등록할까요?\n\n✅ 일반 검색에는 자동 노출되지 않습니다.\n✅ 기존 WMS 위치·실제수량은 변경되지 않습니다.\n✅ ERP 현재고만 기준자료로 저장/갱신됩니다.`)) return;
+ let done=0;
+ for(let i=0;i<rows.length;i+=500){
+   const chunk=rows.slice(i,i+500);
+   const {error}=await db.rpc('admin_upsert_erp_master_batch',{
+     p_username:session.username,p_password:session.password,p_rows:chunk
+   });
+   if(error) throw error;
+   done+=chunk.length;
+   $('erpMasterUploadMsg').textContent=`ERP 기준자료 갱신 중... ${done} / ${rows.length}`;
+ }
+ $('erpMasterUploadMsg').textContent=`✅ Axcelis ERP ${rows.length}개 관리자 일괄등록 완료 · 일반 검색 미노출 · WMS 실제수량/위치 유지`;
+ await loadErpMaster();
+}
+if($('erpMasterChooseBtn')) $('erpMasterChooseBtn').onclick=()=>$('erpMasterFile').click();
+if($('erpMasterFile')) $('erpMasterFile').onchange=async e=>{
+ const file=e.target.files?.[0]; if(!file)return;
+ $('erpMasterUploadMsg').textContent='ERP Excel 확인 중...';
+ try{await parseAndUploadErpMaster(file);}catch(err){$('erpMasterUploadMsg').textContent='❌ ERP 업로드 실패: '+String(err?.message||err);}
+ finally{$('erpMasterFile').value='';}
+};
+if($('erpMasterReloadBtn')) $('erpMasterReloadBtn').onclick=loadErpMaster;
+if($('erpMasterSearch')) $('erpMasterSearch').oninput=renderErpMaster;
+if($('erpMasterFilter')) $('erpMasterFilter').onchange=renderErpMaster;
+if($('erpMasterApplyBtn')) $('erpMasterApplyBtn').onclick=async()=>{
+ const code=$('erpMasterSelectedCode').value;
+ const category=$('erpApplyCategory').value;
+ const location=$('erpApplyLocation').value.trim();
+ const qty=Number($('erpApplyQty').value);
+ if(!code||!category||!location||!Number.isFinite(qty)||qty<0){
+   $('erpMasterApplyMsg').textContent='⚠️ 자재구분·자재위치·확인된 WMS 실제수량을 입력하세요.'; return;
+ }
+ const x=erpMasterRows.find(v=>String(v.erp_item_code)===String(code));
+ if(!x) return;
+ if(!confirm(`일반 검색에 노출할까요?\n\n품목코드: ${x.erp_item_code}\n품목명(규격): ${erpMasterDisplay(x)}\n자재구분: ${category}\n자재위치: ${location}\nWMS 실제수량: ${qty}\nERP 현재고: ${Number(x.erp_stock_qty||0)}\n\n[확인]을 누르면 WMS 검색·입고·출고에 적용됩니다.`)) return;
+ $('erpMasterApplyMsg').textContent='WMS 적용 중...';
+ const {error}=await db.rpc('admin_activate_erp_master_item',{
+   p_username:session.username,p_password:session.password,p_erp_item_code:code,
+   p_category:category,p_location_code:location,p_wms_qty:qty
+ });
+ if(error){$('erpMasterApplyMsg').textContent='❌ WMS 적용 실패: '+error.message;return;}
+ $('erpMasterApplyMsg').textContent='✅ 확인 후 WMS 적용 완료 · 이제 일반 검색에 노출됩니다.';
+ await loadAll();
+ await loadErpMaster();
+};
+
 if($('erpItemSelect')) $('erpItemSelect').onchange=renderErpSelected;
 if($('erpItemCode')) $('erpItemCode').addEventListener('input',syncErpAutoMatch);
 if($('erpItemName')) $('erpItemName').addEventListener('input',syncErpAutoMatch);
@@ -3880,8 +4089,8 @@ if($('erpSaveLinkBtn')) $('erpSaveLinkBtn').onclick=async()=>{
  }
 
  const qty=Number(qtyRaw);
- if(!Number.isFinite(qty) || qty<0){
-   $('erpSaveMsg').textContent='⚠️ ERP 현재고를 0 이상 숫자로 입력하세요.';
+ if(!Number.isFinite(qty)){
+   $('erpSaveMsg').textContent='⚠️ ERP 현재고를 숫자로 입력하세요.';
    return;
  }
 
