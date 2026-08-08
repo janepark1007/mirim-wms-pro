@@ -674,6 +674,63 @@ img{
   }
 }
 </style>
+
+<style>
+/* 일반검색 → 빠른 출고 */
+.search-recent-card,.search-priority-card{position:relative}
+.quick-outbound-search-btn{
+  position:absolute;
+  right:10px;
+  bottom:10px;
+  width:auto !important;
+  min-width:72px !important;
+  min-height:34px !important;
+  padding:7px 11px !important;
+  border:0 !important;
+  border-radius:10px !important;
+  background:#108048 !important;
+  color:#fff !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  cursor:pointer;
+}
+.search-recent-card{padding-bottom:52px !important}
+@media(max-width:720px){
+ .quick-outbound-search-btn{
+   right:8px;
+   bottom:8px;
+   min-width:66px !important;
+   min-height:32px !important;
+   padding:6px 9px !important;
+   font-size:12px !important;
+ }
+ .search-recent-card{padding-bottom:46px !important}
+}
+</style>
+
+<style>
+.quick-action-overlay{
+ position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:9999;
+ display:flex;align-items:center;justify-content:center;padding:14px;
+}
+.quick-action-overlay.hidden{display:none!important}
+.quick-action-modal{
+ width:min(520px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;
+ padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);position:relative;
+}
+.quick-close{
+ position:absolute;right:10px;top:8px;width:38px!important;height:38px!important;
+ min-width:38px!important;padding:0!important;border-radius:50%!important;
+ background:#eef2f6!important;color:#111!important;font-size:22px!important;
+}
+.quick-action-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:720px){
+ .quick-action-modal{padding:14px;border-radius:15px}
+ .quick-action-buttons{grid-template-columns:1fr}
+ #dailyWorkerCard{padding:10px!important}
+ #dailyWorkerSelect{width:100%!important;min-width:0!important}
+}
+</style>
 </head>
 <body>
 <header>
@@ -728,6 +785,25 @@ img{
   </div>
 
   <section id="searchTab" class="tabpane">
+
+  <div id="dailyWorkerCard" class="card" style="margin-bottom:12px">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div>
+        <div class="label">👤 오늘 작업자 이름 선택</div>
+        <select id="dailyWorkerSelect" style="min-width:220px">
+          <option value="">이름을 선택하세요</option>
+        </select>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <span class="badge">오늘 출고 <b id="dailyOutCount">0</b>건</span>
+        <span class="badge">수량확인 <b id="dailyCheckCount">0</b>건</span>
+      </div>
+    </div>
+    <div id="dailyWorkerMsg" class="muted" style="margin-top:7px">
+      로그인 후 이름을 한 번 선택하면 오늘 작업 집계에 계속 누적됩니다.
+    </div>
+  </div>
+
 
     <div id="cooperationNotice" class="coop-notice">
       <div class="coop-notice-head">
@@ -1849,6 +1925,42 @@ img{
   </section>
 
 </section>
+
+<div id="quickActionModal" class="quick-action-overlay hidden">
+  <div class="quick-action-modal">
+    <button id="quickActionClose" type="button" class="quick-close">×</button>
+    <h2 style="margin:0 0 6px">창고 작업</h2>
+    <div id="quickActionItem" class="ok" style="margin-bottom:12px"></div>
+
+    <div id="quickActionQuestion">
+      <div style="font-size:18px;font-weight:900;margin:10px 0">이 품목을 출고하시겠습니까?</div>
+      <div class="quick-action-buttons">
+        <button id="quickChooseOutbound" type="button">📤 출고</button>
+        <button id="quickChooseCheck" type="button" class="secondary">✅ 수량 체크만</button>
+      </div>
+    </div>
+
+    <div id="quickOutboundForm" class="hidden">
+      <div class="label required-label">출고 위치</div>
+      <select id="quickOutLocation"></select>
+      <div class="label required-label" style="margin-top:10px">출고수량</div>
+      <input id="quickOutQty" type="number" min="1" placeholder="실제로 가져가는 수량">
+      <button id="quickOutConfirm" type="button" style="margin-top:12px">최종 출고 저장</button>
+    </div>
+
+    <div id="quickCheckForm" class="hidden">
+      <div class="label required-label">확인 위치</div>
+      <select id="quickCheckLocation"></select>
+      <div class="label required-label" style="margin-top:10px">실제 확인수량</div>
+      <input id="quickCheckQty" type="number" min="0" placeholder="창고에서 확인한 수량">
+      <div class="muted" style="margin-top:6px">수량 체크 완료는 재고를 자동 수정하지 않고 확인 기록만 남깁니다.</div>
+      <button id="quickCheckConfirm" type="button" class="secondary" style="margin-top:12px">수량 체크 완료</button>
+    </div>
+
+    <div id="quickActionMsg" class="muted" style="margin-top:10px"></div>
+  </div>
+</div>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2624,6 +2736,7 @@ async function loadAll(){
  }
 
  selectHandler(false);
+ populateDailyWorkerSelect();
  if($('itemCountBadge')) $('itemCountBadge').textContent=`총 ${items.length}종목 등록`;
  renderRecentThree();
  setDefaultDates();
@@ -4066,6 +4179,222 @@ async function fillOutboundCandidates(){
    if(e.key==='Enter') fillOutboundCandidates();
  });
 });
+
+
+
+let quickActionItemId=null;
+let selectedDailyWorker='';
+
+function populateDailyWorkerSelect(){
+ if(!$('dailyWorkerSelect')) return;
+ const saved=localStorage.getItem('mirim_daily_worker_'+todayKST())||'';
+ $('dailyWorkerSelect').innerHTML='<option value="">이름을 선택하세요</option>'+
+   handlers.map(h=>`<option value="${esc(h.display_name)}">${esc(h.display_name)}</option>`).join('');
+ if(saved && handlers.some(h=>h.display_name===saved)){
+   $('dailyWorkerSelect').value=saved;
+   selectedDailyWorker=saved;
+ }
+ loadDailyWorkerSummary();
+}
+async function loadDailyWorkerSummary(){
+ if(!$('dailyOutCount')) return;
+ const worker=selectedDailyWorker||$('dailyWorkerSelect')?.value||'';
+ if(!worker){
+   $('dailyOutCount').textContent='0';
+   $('dailyCheckCount').textContent='0';
+   return;
+ }
+ const {data,error}=await db.rpc('admin_get_daily_worker_summary',{
+   p_username:session.username,p_password:session.password,
+   p_worker_name:worker,p_work_date:todayKST()
+ });
+ if(error){
+   $('dailyWorkerMsg').textContent='⚠️ 일일 집계 SQL 24를 실행하면 작업자별 누적이 표시됩니다.';
+   return;
+ }
+ const r=(data||[])[0]||{};
+ $('dailyOutCount').textContent=Number(r.outbound_count||0).toLocaleString();
+ $('dailyCheckCount').textContent=Number(r.stock_check_count||0).toLocaleString();
+ $('dailyWorkerMsg').textContent=`✅ ${worker} · ${todayKST()} 작업 누적`;
+}
+if($('dailyWorkerSelect')){
+ $('dailyWorkerSelect').onchange=()=>{
+   selectedDailyWorker=$('dailyWorkerSelect').value||'';
+   if(selectedDailyWorker) localStorage.setItem('mirim_daily_worker_'+todayKST(),selectedDailyWorker);
+   loadDailyWorkerSummary();
+ };
+}
+
+function closeQuickAction(){
+ quickActionItemId=null;
+ $('quickActionModal').classList.add('hidden');
+ $('quickOutboundForm').classList.add('hidden');
+ $('quickCheckForm').classList.add('hidden');
+ $('quickActionQuestion').classList.remove('hidden');
+ $('quickOutQty').value='';
+ $('quickCheckQty').value='';
+ $('quickActionMsg').textContent='';
+}
+$('quickActionClose').onclick=closeQuickAction;
+$('quickActionModal').addEventListener('click',e=>{if(e.target===$('quickActionModal')) closeQuickAction();});
+
+async function openQuickAction(itemId){
+ if(session?.role!=='admin'){
+   alert('빠른 출고·수량확인은 관리자 로그인에서 사용할 수 있습니다.');
+   return;
+ }
+ const worker=selectedDailyWorker||$('dailyWorkerSelect')?.value||'';
+ if(!worker){
+   alert('먼저 오늘 작업자 이름을 선택하세요.');
+   $('dailyWorkerSelect')?.focus();
+   return;
+ }
+ let item=items.find(x=>String(x.id)===String(itemId));
+ if(!item) return;
+
+ const {data:locations,error}=await db.from('item_locations')
+   .select('id,item_id,location_code,location_display,qty')
+   .eq('item_id',item.id).order('location_display');
+ if(error){alert('위치 조회 실패: '+error.message);return;}
+ item.item_locations=locations||[];
+ const idx=items.findIndex(x=>String(x.id)===String(item.id));
+ if(idx>=0) items[idx]=item;
+
+ quickActionItemId=item.id;
+ $('quickActionItem').innerHTML=`<b>${esc(item.part_no)}</b><br>${esc(displayItemNameSpec(item))}<br>현재 총수량 <b>${total(item)} ${esc(item.unit||'EA')}</b>`;
+ const locOptions=(item.item_locations||[]).map(l=>`<option value="${l.id}">${esc(l.location_display||l.location_code)} · 현재 ${Number(l.qty||0)} ${esc(item.unit||'EA')}</option>`).join('');
+ $('quickOutLocation').innerHTML='<option value="">출고 위치 선택</option>'+locOptions;
+ $('quickCheckLocation').innerHTML='<option value="">확인 위치 선택</option>'+locOptions;
+ if((item.item_locations||[]).length===1){
+   $('quickOutLocation').value=String(item.item_locations[0].id);
+   $('quickCheckLocation').value=String(item.item_locations[0].id);
+ }
+ $('quickActionModal').classList.remove('hidden');
+ $('quickActionQuestion').classList.remove('hidden');
+ $('quickOutboundForm').classList.add('hidden');
+ $('quickCheckForm').classList.add('hidden');
+}
+
+$('quickChooseOutbound').onclick=()=>{
+ $('quickActionQuestion').classList.add('hidden');
+ $('quickOutboundForm').classList.remove('hidden');
+ $('quickCheckForm').classList.add('hidden');
+ setTimeout(()=>$('quickOutQty').focus(),50);
+};
+$('quickChooseCheck').onclick=()=>{
+ $('quickActionQuestion').classList.add('hidden');
+ $('quickCheckForm').classList.remove('hidden');
+ $('quickOutboundForm').classList.add('hidden');
+ setTimeout(()=>$('quickCheckQty').focus(),50);
+};
+
+$('quickCheckConfirm').onclick=async()=>{
+ const item=items.find(x=>String(x.id)===String(quickActionItemId));
+ const locationId=$('quickCheckLocation').value;
+ const qtyText=$('quickCheckQty').value;
+ const worker=selectedDailyWorker||$('dailyWorkerSelect').value;
+ if(!item||!locationId){$('quickActionMsg').textContent='⚠️ 확인 위치를 선택하세요.';return;}
+ if(qtyText===''){ $('quickActionMsg').textContent='⚠️ 실제 확인수량을 입력하세요.';return; }
+ const qty=Number(qtyText);
+ if(qty<0){$('quickActionMsg').textContent='⚠️ 수량을 확인하세요.';return;}
+
+ $('quickActionMsg').textContent='수량 확인 기록 저장 중...';
+ const {error}=await db.rpc('admin_record_stock_check',{
+   p_username:session.username,p_password:session.password,
+   p_item_id:item.id,p_location_id:locationId,
+   p_checked_qty:qty,p_worker_name:worker
+ });
+ if(error){$('quickActionMsg').textContent='❌ '+error.message;return;}
+ $('quickActionMsg').textContent='✅ 수량 체크 완료 · 재고수량은 변경하지 않았습니다.';
+ await loadDailyWorkerSummary();
+ setTimeout(closeQuickAction,650);
+};
+
+
+
+$('quickOutConfirm').onclick=async()=>{
+ const item=items.find(x=>String(x.id)===String(quickActionItemId));
+ const locationId=$('quickOutLocation').value;
+ const qty=Number($('quickOutQty').value);
+ const worker=selectedDailyWorker||$('dailyWorkerSelect').value;
+ if(!item||!locationId){$('quickActionMsg').textContent='⚠️ 출고 위치를 선택하세요.';return;}
+ if(!qty||qty<=0){$('quickActionMsg').textContent='⚠️ 출고수량을 입력하세요.';return;}
+
+ const loc=(item.item_locations||[]).find(l=>String(l.id)===String(locationId));
+ if(loc && qty>Number(loc.qty||0)){
+   $('quickActionMsg').textContent='⚠️ 현재 위치 재고보다 많이 출고할 수 없습니다.';
+   return;
+ }
+ if(!confirm(`${loc?.location_display||'선택 위치'}에서 ${qty}개 출고할까요?`)) return;
+
+ // 기존 관리자 출고화면과 같은 데이터/같은 저장함수를 사용
+ verifiedHandler=handlers.find(h=>h.display_name===worker)||{id:'quick',display_name:worker};
+ if($('handler')){
+   const matched=handlers.find(h=>h.display_name===worker);
+   if(matched) $('handler').value=matched.id;
+ }
+ $('outItemId').value=item.id;
+ $('outPartSearch').value=item.part_no||'';
+ $('outNameSearch').value=displayItemNameSpec(item);
+ $('outPart').value=item.part_no||'';
+ $('outName').value=item.item_name||'';
+ $('outCategory').value=item.category||'';
+ $('outCurrentStock').value=`${total(item)} ${item.unit||'EA'}`;
+ $('outLoc').innerHTML=(item.item_locations||[]).map(l=>`<option value="${l.id}">${esc(l.location_display||l.location_code)} · 현재 ${Number(l.qty||0)} ${esc(item.unit||'EA')}</option>`).join('');
+ $('outLoc').value=locationId;
+ $('outQty').value=qty;
+ $('outDate').value=todayKST();
+ $('outNote').value='일반 검색 빠른 출고';
+
+ $('quickActionMsg').textContent='출고 저장 중...';
+ $('outSave').click();
+
+ // 기존 출고 저장 완료 후 DB가 갱신될 시간을 두고 집계 새로고침
+ setTimeout(async()=>{
+   await loadAll();
+   await loadDailyWorkerSummary();
+   if(String($('outMsg').textContent||'').includes('✅')){
+     closeQuickAction();
+   }else{
+     $('quickActionMsg').textContent=$('outMsg').textContent||'출고 처리 결과를 확인하세요.';
+   }
+ },900);
+};
+
+
+async function quickOutboundFromSearch(itemId){
+ const item=items.find(x=>String(x.id)===String(itemId));
+ if(!item) return;
+
+ // 출고 탭으로 이동
+ const outBtn=document.querySelector('[data-tab="outboundTab"]');
+ if(outBtn) outBtn.click();
+ else{
+   document.querySelectorAll('.tabpane').forEach(x=>x.classList.add('hidden'));
+   if($('outboundTab')) $('outboundTab').classList.remove('hidden');
+ }
+
+ // 검색 품목 자동 입력/선택
+ if($('outPartSearch')) $('outPartSearch').value=item.part_no||'';
+ if($('outNameSearch')) $('outNameSearch').value=displayItemNameSpec(item);
+ if($('outFinalSelect')){
+   $('outFinalSelect').innerHTML=`<option value="${item.id}">${esc(item.part_no)} · ${esc(displayItemNameSpec(item))}</option>`;
+   $('outFinalSelect').value=String(item.id);
+ }
+ await selectOutboundItem();
+
+ // 위치가 1곳이면 자동선택
+ const fresh=items.find(x=>String(x.id)===String(item.id))||item;
+ const locs=(fresh.item_locations||[]).filter(x=>Number(x.qty||0)>0);
+ if(locs.length===1 && $('outLoc')) $('outLoc').value=String(locs[0].id);
+
+ if($('outMsg')) $('outMsg').textContent=`📤 빠른 출고 · ${item.part_no} · 출고 담당자와 수량을 확인한 뒤 저장하세요.`;
+
+ setTimeout(()=>{
+   const card=$('outPartSearch')?.closest('.card');
+   if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+ },100);
+}
 
 async function selectOutboundItem(){
  const itemId=$('outFinalSelect').value;
@@ -5714,6 +6043,39 @@ function hideMeaninglessMixedQuantityTotals(){
 }
 window.addEventListener('load',hideMeaninglessMixedQuantityTotals);
 setTimeout(hideMeaninglessMixedQuantityTotals,300);
+
+
+
+function addQuickOutboundButtonsToSearch(){
+ if(!$('searchTab')) return;
+ const cards=$('searchTab').querySelectorAll('.search-recent-card,.search-priority-card');
+ cards.forEach(card=>{
+   if(card.querySelector('.quick-outbound-search-btn')) return;
+
+   // 카드 텍스트에서 품번을 찾아 현재 등록품목과 연결
+   const txt=card.textContent||'';
+   const item=items.find(x=>x.part_no && txt.includes(String(x.part_no)));
+   if(!item) return;
+
+   const btn=document.createElement('button');
+   btn.type='button';
+   btn.className='quick-outbound-search-btn';
+   btn.textContent='📤 출고';
+   btn.title='이 품목 바로 출고 등록';
+   btn.onclick=(e)=>{
+     e.preventDefault();
+     e.stopPropagation();
+     openQuickAction(item.id);
+   };
+   card.appendChild(btn);
+ });
+}
+const _quickOutboundObserver=new MutationObserver(()=>addQuickOutboundButtonsToSearch());
+window.addEventListener('load',()=>{
+ addQuickOutboundButtonsToSearch();
+ if($('searchTab')) _quickOutboundObserver.observe($('searchTab'),{childList:true,subtree:true});
+});
+setTimeout(addQuickOutboundButtonsToSearch,500);
 
 </script>
 
