@@ -1249,6 +1249,20 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div class="card">
       <div class="grid">
         <div>
+          <div class="label">실제 재고 확인 시작일</div>
+          <input id="vvipStartDate" type="date">
+        </div>
+        <div>
+          <div class="label">실제 재고 확인 종료일</div>
+          <input id="vvipEndDate" type="date">
+        </div>
+        <div>
+          <div class="label">자재구분</div>
+          <select id="vvipCategory">
+            <option value="">전체 자재구분</option>
+          </select>
+        </div>
+        <div>
           <div class="label">상태 필터</div>
           <select id="vvipStatus">
             <option value="ALL">전체</option>
@@ -1264,6 +1278,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           <div class="label">품목 검색</div>
           <input id="vvipKeyword" placeholder="품목코드 또는 품목명(규격)">
         </div>
+      </div>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap">
+        <button id="vvipTodayBtn" type="button" class="secondary" style="width:auto">오늘</button>
+        <button id="vvipWeekBtn" type="button" class="secondary" style="width:auto">최근 7일</button>
+        <button id="vvipMonthBtn" type="button" class="secondary" style="width:auto">이번 달</button>
+        <button id="vvipAllDateBtn" type="button" class="secondary" style="width:auto">전체 확인일</button>
       </div>
       <div id="vvipCount" class="muted" style="margin-top:8px"></div>
       <div style="overflow:auto;margin-top:10px;max-height:620px">
@@ -4458,6 +4478,50 @@ if($('erpMasterApplyBtn')) $('erpMasterApplyBtn').onclick=async()=>{
 };
 
 
+
+function setVvipDateRange(mode){
+ const today=todayKST();
+ const base=new Date(`${today}T00:00:00+09:00`);
+ if(mode==='today'){
+   $('vvipStartDate').value=today;
+   $('vvipEndDate').value=today;
+ }else if(mode==='week'){
+   const d=new Date(base.getTime()-6*86400000);
+   $('vvipStartDate').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+   $('vvipEndDate').value=today;
+ }else if(mode==='month'){
+   $('vvipStartDate').value=today.slice(0,7)+'-01';
+   $('vvipEndDate').value=today;
+ }else{
+   $('vvipStartDate').value='';
+   $('vvipEndDate').value='';
+ }
+}
+setTimeout(()=>setVvipDateRange('month'),0);
+
+function vvipFilteredRows(){
+ const status=$('vvipStatus')?.value||'ALL';
+ const q=norm($('vvipKeyword')?.value||'');
+ const category=$('vvipCategory')?.value||'';
+ const start=$('vvipStartDate')?.value||'';
+ const end=$('vvipEndDate')?.value||'';
+ return vvipRows.filter(x=>{
+   const statusOk=status==='ALL' || (status==='ERP_NEGATIVE'?Number(x.erp_stock_qty||0)<0:x.analysis_status===status);
+   const qOk=!q || norm(`${x.erp_item_code||''} ${x.item_name||''} ${x.specification||''}`).includes(q);
+   const categoryOk=!category || String(x.category||'')===category;
+   let dateOk=true;
+   if(start||end){
+     if(!x.last_stock_check_at) dateOk=false;
+     else{
+       const d=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(x.last_stock_check_at));
+       if(start && d<start) dateOk=false;
+       if(end && d>end) dateOk=false;
+     }
+   }
+   return statusOk&&qOk&&categoryOk&&dateOk;
+ });
+}
+
 function vvipStateLabel(x){
  if(x.analysis_status==='UNCHECKED') return '⚠️ 미확인';
  if(x.analysis_status==='ERP_NEGATIVE') return '⚠️ ERP 음수';
@@ -4484,6 +4548,12 @@ async function loadVvipAnalysis(){
    from+=pageSize;
  }
  vvipRows=all;
+ if($('vvipCategory')){
+   const current=$('vvipCategory').value;
+   const cats=[...new Set(vvipRows.map(x=>x.category).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ko'));
+   $('vvipCategory').innerHTML='<option value="">전체 자재구분</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+   if(cats.includes(current)) $('vvipCategory').value=current;
+ }
  renderVvipAnalysis();
  $('vvipMsg').textContent=`✅ 재고분석 완료 · ${vvipRows.length.toLocaleString()}품목`;
 }
@@ -4507,13 +4577,7 @@ function renderVvipAnalysis(){
  $('vvipNoStock').textContent=noStock.toLocaleString();
  $('vvipNegative').textContent=negative.toLocaleString();
 
- const status=$('vvipStatus')?.value||'ALL';
- const q=norm($('vvipKeyword')?.value||'');
- const rows=vvipRows.filter(x=>{
-   const statusOk=status==='ALL' || (status==='ERP_NEGATIVE'?Number(x.erp_stock_qty||0)<0:x.analysis_status===status);
-   const qOk=!q || norm(`${x.erp_item_code||''} ${x.item_name||''} ${x.specification||''}`).includes(q);
-   return statusOk&&qOk;
- });
+ const rows=vvipFilteredRows();
  $('vvipCount').textContent=`표시 ${rows.length.toLocaleString()}개 / 전체 ${total.toLocaleString()}개`;
  $('vvipBody').innerHTML=rows.slice(0,1000).map(x=>`<tr>
    <td class="vvip-status">${vvipStateLabel(x)}</td>
@@ -4533,9 +4597,17 @@ function renderVvipAnalysis(){
 if($('vvipReloadBtn')) $('vvipReloadBtn').onclick=loadVvipAnalysis;
 if($('vvipStatus')) $('vvipStatus').onchange=renderVvipAnalysis;
 if($('vvipKeyword')) $('vvipKeyword').oninput=renderVvipAnalysis;
+if($('vvipCategory')) $('vvipCategory').onchange=renderVvipAnalysis;
+if($('vvipStartDate')) $('vvipStartDate').onchange=renderVvipAnalysis;
+if($('vvipEndDate')) $('vvipEndDate').onchange=renderVvipAnalysis;
+if($('vvipTodayBtn')) $('vvipTodayBtn').onclick=()=>{setVvipDateRange('today');renderVvipAnalysis();};
+if($('vvipWeekBtn')) $('vvipWeekBtn').onclick=()=>{setVvipDateRange('week');renderVvipAnalysis();};
+if($('vvipMonthBtn')) $('vvipMonthBtn').onclick=()=>{setVvipDateRange('month');renderVvipAnalysis();};
+if($('vvipAllDateBtn')) $('vvipAllDateBtn').onclick=()=>{setVvipDateRange('all');renderVvipAnalysis();};
 if($('vvipExcelBtn')) $('vvipExcelBtn').onclick=()=>{
- if(!vvipRows.length){$('vvipMsg').textContent='⚠️ 먼저 재고분석을 불러오세요.';return;}
- const rows=vvipRows.map(x=>({
+ const filtered=vvipFilteredRows();
+ if(!filtered.length){$('vvipMsg').textContent='⚠️ 현재 조회조건에 맞는 보고자료가 없습니다.';return;}
+ const rows=filtered.map(x=>({
    '상태':vvipStateLabel(x),
    '품목코드':x.erp_item_code||'',
    '품목명(규격)':x.specification?`${x.item_name||''} [${x.specification}]`:(x.item_name||''),
@@ -4546,30 +4618,39 @@ if($('vvipExcelBtn')) $('vvipExcelBtn').onclick=()=>{
    '생산':Number(x.production_qty||0),
    'WMS 실제 총수량':Number(x.wms_total_qty||0),
    '차이수량(WMS-ERP)':x.diff_qty===null||x.diff_qty===undefined?'':Number(x.diff_qty),
-   '마지막 확인일':x.last_stock_check_at?formatLoginTime(x.last_stock_check_at):'미확인'
+   '실제 재고 확인일':x.last_stock_check_at?formatLoginTime(x.last_stock_check_at):'미확인'
  }));
  const wb=XLSX.utils.book_new();
+ const summary=[
+   ['미림테크놀러지 대표님 재고차이 보고서'],
+   ['조회 시작일',$('vvipStartDate').value||'전체'],
+   ['조회 종료일',$('vvipEndDate').value||'전체'],
+   ['자재구분',$('vvipCategory').value||'전체'],
+   ['상태',$('vvipStatus').options[$('vvipStatus').selectedIndex].text],
+   ['생성일',todayKST()],
+   ['조회 품목',filtered.length],
+   ['정상',filtered.filter(x=>x.analysis_status==='NORMAL').length],
+   ['실제부족',filtered.filter(x=>x.analysis_status==='SHORTAGE').length],
+   ['실제초과',filtered.filter(x=>x.analysis_status==='EXCESS').length],
+   ['실제없음',filtered.filter(x=>x.analysis_status==='NO_STOCK').length],
+   ['ERP 음수',filtered.filter(x=>Number(x.erp_stock_qty||0)<0).length],
+   ['미확인',filtered.filter(x=>x.analysis_status==='UNCHECKED').length]
+ ];
+ const sws=XLSX.utils.aoa_to_sheet(summary);
+ sws['!cols']=[{wch:26},{wch:28}];
+ XLSX.utils.book_append_sheet(wb,sws,'요약');
+
  const ws=XLSX.utils.json_to_sheet(rows);
- ws['!cols']=[{wch:16},{wch:20},{wch:45},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:18},{wch:20},{wch:20}];
+ ws['!cols']=[{wch:16},{wch:20},{wch:45},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:18},{wch:20},{wch:22}];
  ws['!freeze']={xSplit:0,ySplit:1};
  ws['!autofilter']={ref:`A1:K${rows.length+1}`};
- XLSX.utils.book_append_sheet(wb,ws,'재고차이 보고서');
- const summary=[
-   ['미림테크놀러지 VVIP 재고차이 보고서'],
-   ['생성일',todayKST()],
-   ['ERP 전체 품목',vvipRows.length],
-   ['실제확인 완료',vvipRows.filter(x=>x.analysis_status!=='UNCHECKED').length],
-   ['미확인',vvipRows.filter(x=>x.analysis_status==='UNCHECKED').length],
-   ['정상',vvipRows.filter(x=>x.analysis_status==='NORMAL').length],
-   ['실제부족',vvipRows.filter(x=>x.analysis_status==='SHORTAGE').length],
-   ['실제초과',vvipRows.filter(x=>x.analysis_status==='EXCESS').length],
-   ['실제없음',vvipRows.filter(x=>x.analysis_status==='NO_STOCK').length],
-   ['ERP 음수',vvipRows.filter(x=>Number(x.erp_stock_qty||0)<0).length]
- ];
- const sws=XLSX.utils.aoa_to_sheet(summary); sws['!cols']=[{wch:24},{wch:24}];
- XLSX.utils.book_append_sheet(wb,sws,'요약');
- XLSX.writeFile(wb,`미림테크놀러지_VVIP_재고차이보고서_${todayKST()}.xlsx`);
- $('vvipMsg').textContent='✅ 대표님 보고용 Excel 저장 완료';
+ XLSX.utils.book_append_sheet(wb,ws,'상세내역');
+
+ const startDate=$('vvipStartDate').value||'전체';
+ const endDate=$('vvipEndDate').value||'전체';
+ const cat=String($('vvipCategory').value||'전체').replace(/[\\/:*?"<>|]/g,'_');
+ XLSX.writeFile(wb,`미림테크놀러지_대표님_재고보고_${startDate}_${endDate}_${cat}.xlsx`);
+ $('vvipMsg').textContent=`✅ 대표님 보고용 Excel 저장 완료 · ${filtered.length.toLocaleString()}품목`;
 };
 
 if($('erpItemSelect')) $('erpItemSelect').onchange=renderErpSelected;
