@@ -159,6 +159,23 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 }
 
 
+
+/* 입출고 누적 */
+#historyTab table th,#historyTab table td{
+  border-bottom:1px solid #e5e7eb;
+  padding:9px 8px;
+  text-align:left;
+  font-size:13px;
+  white-space:nowrap;
+}
+#historyTab table th{
+  background:#f5f7f6;
+  font-weight:900;
+  position:sticky;
+  top:0;
+  z-index:1;
+}
+
 /* ERP 대조 */
 #erpTab table th,#erpTab table td{
   border-bottom:1px solid #e5e7eb;
@@ -225,6 +242,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <button class="tab adminOnly" data-tab="inbound">📥 입고</button>
     <button class="tab adminOnly" data-tab="outbound">📤 출고</button>
     <button class="tab adminOnly" data-tab="stats">📊 통계·엑셀</button>
+    <button class="tab adminOnly" data-tab="history">📋 입출고 누적</button>
     <button class="tab adminOnly" data-tab="erp">🔄 ERP 대조</button>
      <button class="tab adminOnly" data-tab="erpmaster">🗃️ ERP 기준자료</button>
     <button class="tab adminOnly" data-tab="disposal">⏰ 1년 폐기알림</button>
@@ -761,7 +779,78 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     </div>
   </section>
 
-  <section id="statsTab" class="tabpane hidden">
+  
+<section id="historyTab" class="tabpane hidden">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div>
+        <h2 style="margin:0">📋 입출고 누적내역</h2>
+        <div class="muted" style="margin-top:6px">입고·출고 저장내역을 계속 누적해서 관리자에서 조회합니다. ERP Excel 갱신과는 별개로 유지됩니다.</div>
+      </div>
+      <span class="badge">관리자 전용</span>
+    </div>
+
+    <div class="grid" style="margin-top:12px">
+      <div>
+        <div class="label">시작일</div>
+        <input id="historyStartDate" type="date">
+      </div>
+      <div>
+        <div class="label">종료일</div>
+        <input id="historyEndDate" type="date">
+      </div>
+      <div>
+        <div class="label">구분</div>
+        <select id="historyType">
+          <option value="ALL">입고 + 출고 전체</option>
+          <option value="IN">입고만</option>
+          <option value="OUT">출고만</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">품목 검색</div>
+        <input id="historyKeyword" placeholder="품목코드 또는 품목명(규격)">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;flex-wrap:wrap">
+      <button id="historyTodayBtn" type="button" class="secondary" style="width:auto">오늘</button>
+      <button id="historyWeekBtn" type="button" class="secondary" style="width:auto">최근 7일</button>
+      <button id="historyMonthBtn" type="button" class="secondary" style="width:auto">이번 달</button>
+      <button id="historyAllBtn" type="button" class="secondary" style="width:auto">전체 누적</button>
+      <button id="historyLoadBtn" type="button" style="width:auto">조회</button>
+      <button id="historyExcelBtn" type="button" class="secondary" style="width:auto">Excel 출력</button>
+    </div>
+    <div id="historyMsg" class="muted" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="ok"><small>입고 건수</small><div id="historyInCount" style="font-size:27px;font-weight:900">0</div></div>
+      <div class="ok"><small>출고 건수</small><div id="historyOutCount" style="font-size:27px;font-weight:900">0</div></div>
+      <div class="ok"><small>총 입고수량</small><div id="historyInQty" style="font-size:27px;font-weight:900">0</div></div>
+      <div class="ok"><small>총 출고수량</small><div id="historyOutQty" style="font-size:27px;font-weight:900">0</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="historyCountText" class="muted" style="margin-bottom:8px">조회 전</div>
+    <div style="overflow:auto;max-height:620px">
+      <table style="width:100%;border-collapse:collapse;min-width:1150px">
+        <thead>
+          <tr>
+            <th>일시</th><th>구분</th><th>품목코드</th><th>품목명(규격)</th>
+            <th>수량</th><th>단위</th><th>자재위치</th><th>담당자</th>
+            <th>위치 최종수량</th><th>총 최종수량</th><th>비고</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="statsTab" class="tabpane hidden">
     <div class="ok" style="margin-bottom:12px">
       아래 첫 번째 영역에서 <b>자재구분 품목 / 입고내역 / 출고내역</b>을 각각 별도 엑셀 파일로 저장할 수 있습니다.
       월별·연도별 통계는 그 아래에 따로 있습니다.
@@ -1123,6 +1212,7 @@ let session=null, items=[], categories=[], handlers=[], verifiedHandler=null, ph
 let erpLinks=[], erpQueue=[];
 let erpMasterRows=[];
 let bulkRows=[];
+let historyRows=[];
 let itemRegisterMode='existing';
 
 const LOGIN_STORAGE_KEY='mirim_wms_saved_login_v1';
@@ -1624,6 +1714,7 @@ function switchTab(name){
  document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hidden'));
  $(name+'Tab').classList.remove('hidden');
  if(name==='erpmaster') loadErpMaster();
+ if(name==='history' && !historyRows.length) loadHistory();
 }
 
 
@@ -3635,6 +3726,163 @@ $('exportThreeFilesBtn').onclick=async()=>{
  }catch(error){
    $('quickExportMsg').textContent='❌ 파일 저장 실패: '+error.message;
  }
+};
+
+
+
+function historyDateTime(value){
+ if(!value) return '-';
+ const d=new Date(value);
+ if(Number.isNaN(d.getTime())) return String(value);
+ return new Intl.DateTimeFormat('ko-KR',{
+   timeZone:'Asia/Seoul',
+   year:'numeric',month:'2-digit',day:'2-digit',
+   hour:'2-digit',minute:'2-digit'
+ }).format(d);
+}
+function setHistoryRange(mode){
+ const today=todayKST();
+ const td=new Date(`${today}T00:00:00+09:00`);
+ if(mode==='today'){
+   $('historyStartDate').value=today;
+   $('historyEndDate').value=today;
+ }else if(mode==='week'){
+   const d=new Date(td.getTime()-6*86400000);
+   $('historyStartDate').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+   $('historyEndDate').value=today;
+ }else if(mode==='month'){
+   $('historyStartDate').value=today.slice(0,7)+'-01';
+   $('historyEndDate').value=today;
+ }else if(mode==='all'){
+   $('historyStartDate').value='2000-01-01';
+   $('historyEndDate').value=today;
+ }
+}
+setTimeout(()=>setHistoryRange('month'),0);
+
+function filteredHistoryRows(){
+ const type=$('historyType')?.value||'ALL';
+ const q=norm($('historyKeyword')?.value||'');
+ return historyRows.filter(x=>{
+   const typeOk=type==='ALL'||x.movement_type===type;
+   const item=itemByPartNo(x.part_no);
+   const nameSpec=displayItemNameSpec(item||{item_name:x.item_name});
+   const qOk=!q||norm(`${x.part_no||''} ${nameSpec}`).includes(q);
+   return typeOk&&qOk;
+ });
+}
+
+function renderHistory(){
+ if(!$('historyBody')) return;
+ const rows=filteredHistoryRows();
+ const inRows=rows.filter(x=>x.movement_type==='IN');
+ const outRows=rows.filter(x=>x.movement_type==='OUT');
+ const inQty=inRows.reduce((s,x)=>s+Number(x.qty||0),0);
+ const outQty=outRows.reduce((s,x)=>s+Number(x.qty||0),0);
+
+ $('historyInCount').textContent=inRows.length.toLocaleString();
+ $('historyOutCount').textContent=outRows.length.toLocaleString();
+ $('historyInQty').textContent=inQty.toLocaleString();
+ $('historyOutQty').textContent=outQty.toLocaleString();
+ $('historyCountText').textContent=`조건 결과 ${rows.length.toLocaleString()}건 / 불러온 누적내역 ${historyRows.length.toLocaleString()}건`;
+
+ $('historyBody').innerHTML=rows.slice(0,1000).map(x=>{
+   const item=itemByPartNo(x.part_no);
+   const nameSpec=displayItemNameSpec(item||{item_name:x.item_name});
+   return `<tr>
+     <td>${esc(historyDateTime(x.created_at))}</td>
+     <td><b>${x.movement_type==='IN'?'입고':'출고'}</b></td>
+     <td>${esc(x.part_no||'-')}</td>
+     <td>${esc(nameSpec)}</td>
+     <td><b>${Number(x.qty||0).toLocaleString()}</b></td>
+     <td>${esc(x.unit||'EA')}</td>
+     <td>${esc(x.location_display||'-')}</td>
+     <td>${esc(x.actor_name||'-')}</td>
+     <td>${Number(x.stock_after_location||0).toLocaleString()}</td>
+     <td>${Number(x.stock_after_total||0).toLocaleString()}</td>
+     <td>${esc(x.note||'')}</td>
+   </tr>`;
+ }).join('');
+
+ if(rows.length>1000){
+   $('historyCountText').textContent+=` · 화면은 최근 1,000건만 표시 (Excel에는 조건 결과 전체 포함)`;
+ }
+}
+
+async function loadHistory(){
+ const start=$('historyStartDate').value;
+ const end=$('historyEndDate').value;
+ if(!start||!end){
+   $('historyMsg').textContent='⚠️ 시작일과 종료일을 선택하세요.';
+   return;
+ }
+ $('historyMsg').textContent='입출고 누적내역을 불러오는 중...';
+ const startIso=new Date(`${start}T00:00:00+09:00`).toISOString();
+ const endIso=new Date(new Date(`${end}T00:00:00+09:00`).getTime()+86400000).toISOString();
+
+ let all=[],from=0,pageSize=1000;
+ while(true){
+   const {data,error}=await db.rpc('admin_get_stock_report',{
+     p_username:session.username,
+     p_password:session.password,
+     p_start:startIso,p_end:endIso
+   }).range(from,from+pageSize-1);
+   if(error){
+     $('historyMsg').textContent='❌ 누적내역 조회 실패: '+error.message;
+     return;
+   }
+   const page=data||[];
+   all.push(...page);
+   if(page.length<pageSize) break;
+   from+=pageSize;
+ }
+ historyRows=all.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+ $('historyMsg').textContent=`✅ ${start} ~ ${end} 누적내역 ${historyRows.length.toLocaleString()}건 조회 완료`;
+ renderHistory();
+}
+
+if($('historyTodayBtn')) $('historyTodayBtn').onclick=()=>{setHistoryRange('today');loadHistory();};
+if($('historyWeekBtn')) $('historyWeekBtn').onclick=()=>{setHistoryRange('week');loadHistory();};
+if($('historyMonthBtn')) $('historyMonthBtn').onclick=()=>{setHistoryRange('month');loadHistory();};
+if($('historyAllBtn')) $('historyAllBtn').onclick=()=>{setHistoryRange('all');loadHistory();};
+if($('historyLoadBtn')) $('historyLoadBtn').onclick=loadHistory;
+if($('historyType')) $('historyType').onchange=renderHistory;
+if($('historyKeyword')) $('historyKeyword').oninput=renderHistory;
+
+if($('historyExcelBtn')) $('historyExcelBtn').onclick=()=>{
+ const rows=filteredHistoryRows();
+ if(!rows.length){
+   $('historyMsg').textContent='⚠️ Excel로 출력할 입출고 내역이 없습니다.';
+   return;
+ }
+ const excelRows=rows.map(x=>{
+   const item=itemByPartNo(x.part_no);
+   return {
+     '일시':historyDateTime(x.created_at),
+     '구분':x.movement_type==='IN'?'입고':'출고',
+     '품목코드':x.part_no||'',
+     '품목명(규격)':displayItemNameSpec(item||{item_name:x.item_name}),
+     '자재구분':x.category||'기타',
+     '수량':Number(x.qty||0),
+     '단위':x.unit||'EA',
+     '자재위치':x.location_display||'',
+     '담당자':x.actor_name||'',
+     '위치 최종수량':Number(x.stock_after_location||0),
+     '총 최종수량':Number(x.stock_after_total||0),
+     '비고':x.note||''
+   };
+ });
+ const wb=XLSX.utils.book_new();
+ const ws=XLSX.utils.json_to_sheet(excelRows);
+ ws['!cols']=[
+   {wch:20},{wch:9},{wch:18},{wch:42},{wch:14},{wch:12},
+   {wch:10},{wch:32},{wch:18},{wch:15},{wch:15},{wch:32}
+ ];
+ ws['!freeze']={xSplit:0,ySplit:1};
+ ws['!autofilter']={ref:`A1:L${excelRows.length+1}`};
+ XLSX.utils.book_append_sheet(wb,ws,'입출고 누적내역');
+ XLSX.writeFile(wb,`미림테크놀러지_입출고누적_${$('historyStartDate').value}_${$('historyEndDate').value}.xlsx`);
+ $('historyMsg').textContent=`✅ 입출고 누적내역 Excel 저장 완료 · ${excelRows.length.toLocaleString()}건`;
 };
 
 
