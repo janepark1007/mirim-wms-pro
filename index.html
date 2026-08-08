@@ -873,7 +873,7 @@ img{
     <button class="tab adminOnly" data-tab="disposal">⏰ 1년 폐기알림</button>
     <button class="tab adminOnly" data-tab="categories">📂 자재구분</button>
     <button class="tab vvipOnly hidden" data-tab="vvip">👑 VVIP 재고분석</button>
-    <button class="tab vvipOnly hidden" data-tab="bomai">🤖 BOM AI 분석</button>
+    <button class="tab vvipOnly hidden" data-tab="bomai" title="VVIP 전용">🤖 BOM AI 분석</button>
   </div>
 
   <section id="searchTab" class="tabpane">
@@ -1954,7 +1954,7 @@ img{
         <h2 style="margin:0">🤖 BOM AI 분석</h2>
         <div class="muted" style="margin-top:6px">BOM 사진에서 품번·품명·1대당 소요량을 읽고 WMS의 위치·현재수량과 자동 대조합니다.</div>
       </div>
-      <span class="badge">VVIP 전용 · 조회/분석만</span>
+      <span class="badge">👑 VVIP 전용 · 일반검색 미노출</span>
     </div>
     <div class="bad" style="margin-top:12px">
       ⚠️ AI 판독값은 재고에 자동 반영하지 않습니다. 품번 또는 수량이 애매하면 <b>확인 필요</b>로 표시합니다.
@@ -2003,10 +2003,7 @@ img{
       계산: <b>총 필요량 = BOM 1대당 소요량 × 생산수량</b> · 부족수량은 WMS 현재수량과 비교합니다.
     </div>
     <div style="overflow:auto;max-height:680px">
-      <table class="bom-ai-table">
-        <thead>
-          <tr>
-            <th>상태</th><th>BOM 품번</th><th>BOM 품명</th><th>1대 소요량</th>
+      <th>BOM 품번</th><th>BOM 품명</th><th>1대 소요량</th>
             <th>생산수량</th><th>총 필요량</th><th>WMS 품번</th><th>WMS 품명</th>
             <th>현재수량</th><th>자재위치</th><th>부족수량</th><th>AI 확인</th>
           </tr>
@@ -2797,9 +2794,13 @@ async function registerBulkRows(){
  await loadAll();bulkRows=bulkRows.filter(r=>!r.registered);renderBulkPreview();$('bulkSummary').innerHTML=`✅ 일괄등록 완료 · 성공 <b>${success}</b>건 · 실패 <b>${failed}</b>건${bulkRows.length?` · 남은 확인 항목 ${bulkRows.length}건`:''}`;
 }
 function switchTab(name){
+ if(name==='bomai' && session?.role!=='vvip'){
+   name='search';
+ }
  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
  document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hidden'));
- $(name+'Tab').classList.remove('hidden');
+ const pane=$(name+'Tab');
+ if(pane) pane.classList.remove('hidden');
  if(name==='erpmaster') loadErpMaster();
  if(name==='history' && !historyRows.length) loadHistory();
  if(name==='vvip' && session?.role==='vvip' && !vvipRows.length) loadVvipAnalysis();
@@ -6372,8 +6373,7 @@ function renderBomRows(){
  $('bomShortCount').textContent=rows.filter(x=>Number(x.shortage||0)>0).length.toLocaleString();
 
  $('bomResultBody').innerHTML=rows.map(x=>`
-   <tr class="${x.needsCheck?'bom-needs-check':''}">
-     <td><b>${bomStatus(x)}</b></td>
+   </td>
      <td><b>${esc(x.part_no||'⚠️ 판독불명')}</b></td>
      <td>${esc(x.item_name||'-')}</td>
      <td>${Number.isFinite(Number(x.qty_per_unit))?Number(x.qty_per_unit).toLocaleString():'⚠️'}</td>
@@ -6382,7 +6382,7 @@ function renderBomRows(){
      <td>${x.item?`<b>${esc(x.item.part_no)}</b>`:'⚠️ 미매칭'}</td>
      <td>${x.item?esc(displayItemNameSpec(x.item)):'-'}</td>
      <td>${x.stock===null?'-':`${Number(x.stock).toLocaleString()} ${esc(x.item?.unit||'EA')}`}</td>
-     <td class="bom-location">${x.item?esc(bomLocations(x.item)||'⚠️ 위치 확인 필요'):'-'}</td>
+     
      <td><b>${x.shortage===null?'-':Number(x.shortage).toLocaleString()}</b></td>
      <td>${Number(x.confidence||0)>=.72?'AI 판독':'⚠️ 낮은 확신'}</td>
    </tr>`).join('');
