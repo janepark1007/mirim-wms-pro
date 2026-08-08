@@ -250,8 +250,8 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <h2 style="margin:0">자재 검색</h2>
         <div id="itemCountBadge" class="badge" style="font-size:16px;padding:10px 14px">총 0종목 등록</div>
       </div>
-      <div class="label required-label">품번 · 품명 · 품목규격 검색</div>
-      <div class="row"><input id="searchQ" placeholder="품번·품명·품목규격 일부 입력"><button id="searchBtn">검색</button></div>
+      <div class="label required-label">품목코드 · 품목명(규격) 검색</div>
+      <div class="row"><input id="searchQ" placeholder="품목코드·품목명(규격)·품목규격 일부 입력"><button id="searchBtn">검색</button></div>
       <div id="searchCountText" class="muted" style="margin-top:8px">전체 0종목</div>
     </div>
     <div id="searchResults"></div>
@@ -284,13 +284,13 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <button id="cancelEditBtn" class="secondary" type="button">수정 취소</button>
       </div>
       <div style="margin-top:8px">
-        <input id="editItemSearch" type="search" placeholder="🔎 수정할 품번 또는 품명 검색">
+        <input id="editItemSearch" type="search" placeholder="🔎 수정할 품목코드 또는 품목명(규격) 검색">
       </div>
       <div id="editItemCount" class="muted" style="margin:6px 0 6px">기존 품목 불러오는 중...</div>
       <div class="muted" style="margin:8px 0 6px">기존 품목을 선택하면 등록정보가 자동으로 채워집니다. 삭제할 품목은 선택 후 오른쪽 위 빨간 × 버튼을 누르세요.</div>
       <div id="editModeMsg" class="muted" style="margin:8px 0 6px">새 품목 등록 모드입니다.</div>
       <div class="ok" style="margin-bottom:14px">
-        품번 또는 품명을 모르면 비워 두거나 0을 입력하세요. 임시값으로 등록한 뒤 나중에 수정할 수 있습니다.
+        품목코드 또는 품목명(규격)을 모르면 비워 두거나 0을 입력하세요. 임시값으로 등록한 뒤 나중에 수정할 수 있습니다.
       </div>
       <div class="card" style="background:#f7fbf8;border:1px solid #d8ebde;box-shadow:none;padding:14px;margin:0 0 14px">
         <div class="label">등록 방식</div>
@@ -307,13 +307,14 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <div class="grid">
         <div>
-          <div class="label required-label">품번</div>
-          <input id="partNo" placeholder="품번 입력">
+          <div class="label required-label">품목코드</div>
+          <input id="partNo" placeholder="품목코드 입력">
           <div id="partNoDuplicateMsg" class="muted" style="margin-top:5px"></div>
         </div>
         <div>
-          <div class="label required-label">품명</div>
-          <input id="itemName" placeholder="품명 입력">
+          <div class="label required-label">품목명(규격)</div>
+          <input id="itemName" placeholder="품목명 입력">
+          <input id="spec" placeholder="규격 입력" style="margin-top:6px">
         </div>
         <div>
           <div class="label required-label">자재구분</div>
@@ -327,7 +328,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <input id="unit" type="hidden" value="EA">
       <input id="maker" type="hidden">
-      <input id="spec" type="hidden">
+      
       <input id="note" type="hidden">
       <input id="registeredOn" type="hidden">
 
@@ -495,10 +496,10 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     </div>
     <div class="card">
       <h3>등록 전 미리보기</h3>
-      <div class="muted">기존 품목을 덮어쓰지 않습니다. 품번 중복과 오류는 등록 전에 차단합니다.</div>
+      <div class="muted">기존 품목을 덮어쓰지 않습니다. 품목코드 중복과 오류는 등록 전에 차단합니다.</div>
       <div style="overflow:auto;margin-top:12px">
         <table style="width:100%;border-collapse:collapse;min-width:1180px">
-          <thead><tr><th>행</th><th>상태</th><th>등록구분</th><th>품번</th><th>품명</th><th>품목규격</th><th>자재구분</th><th>최소수량</th><th>WMS 현 재고</th><th>ERP 재고</th><th>자재위치</th><th>비고</th><th>확인내용</th></tr></thead>
+          <thead><tr><th>행</th><th>상태</th><th>등록구분</th><th>품목코드</th><th>품목명</th><th>품목규격</th><th>자재구분</th><th>최소수량</th><th>WMS 현 재고</th><th>ERP 재고</th><th>자재위치</th><th>비고</th><th>확인내용</th></tr></thead>
           <tbody id="bulkPreviewBody"><tr><td colspan="13" class="muted">아직 불러온 엑셀 자료가 없습니다.</td></tr></tbody>
         </table>
       </div>
@@ -507,7 +508,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <h3>사용 기준</h3>
       <div class="loc"><b>현보유품목</b> · 현재고는 초기재고로 저장 · 입고통계 미포함</div>
       <div class="loc"><b>새품목</b> · 현재고 0 · 실제 입고는 기존 입고 메뉴에서 처리</div>
-      <div class="loc"><b>품번 중복</b> · 신규등록 차단 · 기존 품목 수정 화면에서 처리</div>
+      <div class="loc"><b>품목코드 중복</b> · 신규등록 차단 · 기존 품목 수정 화면에서 처리</div>
       <div class="loc"><b>품목규격</b> · 엑셀에서 등록하면 기존 검색 결과에 표시되고 규격으로도 검색 가능</div>
       <div class="loc"><b>ERP 재고</b> · 비교용으로 ERP 대조 화면에 저장 · WMS 실제재고와 합산하지 않음</div>
     </div>
@@ -519,12 +520,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <div class="grid">
         <div>
-          <div class="label required-label">품번 검색</div>
-          <input id="inPartSearch" placeholder="품번 입력 → 품명 자동표시">
+          <div class="label required-label">품목코드 검색</div>
+          <input id="inPartSearch" placeholder="품목코드 입력 → 품목명(규격) 자동표시">
         </div>
         <div>
-          <div class="label required-label">품명 검색</div>
-          <input id="inNameSearch" placeholder="품명 입력 → 품번 자동표시">
+          <div class="label required-label">품목명(규격) 검색</div>
+          <input id="inNameSearch" placeholder="품목명 또는 규격 입력 → 품목코드 자동표시">
         </div>
       </div>
 
@@ -533,15 +534,15 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <button id="inReloadItems" type="button" class="secondary" style="width:auto;padding:7px 10px">등록 품목 새로고침</button>
       </div>
       <select id="inFinalSelect">
-        <option value="">품번 또는 품명을 입력하면 자동 선택됩니다.</option>
+        <option value="">품목코드 또는 품목명(규격)을 입력하면 자동 선택됩니다.</option>
       </select>
       <input id="inItemId" type="hidden">
 
       <div id="inItemPreview" class="movement-preview hidden">
         <div id="inPhotoWrap"><div class="no-photo">📷 사진 없음</div></div>
         <div class="meta">
-          <div><small>품번</small><strong id="inPartText">-</strong></div>
-          <div><small>품명</small><strong id="inNameText">-</strong></div>
+          <div><small>품목코드</small><strong id="inPartText">-</strong></div>
+          <div><small>품목명(규격)</small><strong id="inNameText">-</strong></div>
           <div><small>자재구분</small><strong id="inCategoryText">-</strong></div>
           <div><small>현재 총수량</small><strong id="inStockText">-</strong></div>
           <div style="grid-column:1/-1">
@@ -694,7 +695,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <option value="default-14">엑셀-수정</option>
         <option value="default-15">엑셀-매화</option>
       </select>
-      <div id="handlerMsg" class="muted" style="margin-top:8px">담당자 이름을 선택한 뒤 아래에서 품번 또는 품명을 입력하세요.</div>
+      <div id="handlerMsg" class="muted" style="margin-top:8px">담당자 이름을 선택한 뒤 아래에서 품목코드 또는 품목명(규격)을 입력하세요.</div>
     </div>
 
     <div id="outStep2" class="card">
@@ -702,12 +703,12 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 
       <div class="grid">
         <div>
-          <div class="label required-label">품번 검색</div>
-          <input id="outPartSearch" placeholder="품번 입력 → 품명 자동표시">
+          <div class="label required-label">품목코드 검색</div>
+          <input id="outPartSearch" placeholder="품목코드 입력 → 품목명(규격) 자동표시">
         </div>
         <div>
-          <div class="label required-label">품명 검색</div>
-          <input id="outNameSearch" placeholder="품명 입력 → 품번 자동표시">
+          <div class="label required-label">품목명(규격) 검색</div>
+          <input id="outNameSearch" placeholder="품목명 또는 규격 입력 → 품목코드 자동표시">
         </div>
       </div>
 
@@ -716,23 +717,23 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
         <button id="outReloadItems" type="button" class="secondary" style="width:auto;padding:7px 10px">등록 품목 새로고침</button>
       </div>
       <select id="outFinalSelect">
-        <option value="">품번 또는 품명을 입력하면 후보가 표시됩니다.</option>
+        <option value="">품목코드 또는 품목명(규격)을 입력하면 후보가 표시됩니다.</option>
       </select>
       <input id="outItemId" type="hidden">
 
       <div id="outItemPreview" class="movement-preview hidden">
         <div id="outPhotoWrap"><div class="no-photo">📷 사진 없음</div></div>
         <div class="meta">
-          <div><small>품번</small><strong id="outPartText">-</strong></div>
-          <div><small>품명</small><strong id="outNameText">-</strong></div>
+          <div><small>품목코드</small><strong id="outPartText">-</strong></div>
+          <div><small>품목명(규격)</small><strong id="outNameText">-</strong></div>
           <div><small>자재구분</small><strong id="outCategoryText">-</strong></div>
           <div><small>현재 총수량</small><strong id="outStockText">-</strong></div>
         </div>
       </div>
 
       <div class="grid" style="margin-top:10px">
-        <input id="outPart" readonly placeholder="선택 품번">
-        <input id="outName" readonly placeholder="선택 품명">
+        <input id="outPart" readonly placeholder="선택 품목코드">
+        <input id="outName" readonly placeholder="선택 품목명(규격)">
         <input id="outCategory" readonly placeholder="자재구분">
         <input id="outCurrentStock" readonly placeholder="현재고">
       </div>
@@ -801,7 +802,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div class="card">
       <h2>선택형 엑셀 내보내기</h2>
       <div class="muted">
-        품목등록·입고·출고 자료를 자재구분, 기간, 품번·품명, 담당자 기준으로 골라 저장합니다.
+        품목등록·입고·출고 자료를 자재구분, 기간, 품목코드·품목명(규격), 담당자 기준으로 골라 저장합니다.
       </div>
 
       <div class="grid" style="margin-top:12px">
@@ -820,7 +821,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
           </select>
         </div>
         <div>
-          <div class="label">품번 또는 품명</div>
+          <div class="label">품목코드 또는 품목명(규격)</div>
           <input id="filterKeyword" placeholder="비우면 전체">
         </div>
         <div id="filterHandlerWrap">
@@ -848,7 +849,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
     <div class="card">
       <h2>창고 재고조사표</h2>
       <div class="muted">
-        등록된 모든 품목을 품번·품명·자재위치·전산수량 기준으로 정리합니다.
+        등록된 모든 품목을 품목코드·품목명(규격)·자재위치·전산수량 기준으로 정리합니다.
         출력 후 실제수량과 차이를 손으로 기록할 수 있습니다.
       </div>
       <div class="row" style="margin-top:12px">
@@ -1457,8 +1458,8 @@ function bulkValidateRows(rawRows){
  const categorySet=new Set(categories.map(x=>norm(x.name)));
  return rawRows.map((row,idx)=>{
    const modeRaw=bulkHeaderValue(row,['등록구분','등록방식','구분']);
-   const partNo=String(bulkHeaderValue(row,['품번','품목코드','품목번호'])||'').trim();
-   const itemName=String(bulkHeaderValue(row,['품명','품목명'])||'').trim();
+   const partNo=String(bulkHeaderValue(row,['품목코드','품번','품목번호'])||'').trim();
+   const itemName=String(bulkHeaderValue(row,['품목명','품명'])||'').trim();
    const specification=String(bulkHeaderValue(row,['품목규격','규격','Specification'])||'').trim();
    const category=String(bulkHeaderValue(row,['자재구분','분류'])||'').trim();
    const maker=String(bulkHeaderValue(row,['제조사','Maker'])||'').trim();
@@ -1482,8 +1483,8 @@ function bulkValidateRows(rawRows){
    if(!Number.isFinite(currentQty)||currentQty<0) errors.push('현재고수량 오류');
    if(erpStockQty!==null && (!Number.isFinite(erpStockQty)||erpStockQty<0)) errors.push('ERP 재고수량 오류');
    const key=norm(partNo);
-   if(partNo&&existingParts.has(key)) errors.push('기존 WMS 품번 중복');
-   if(partNo&&seen.has(key)) errors.push('엑셀 내부 품번 중복');
+   if(partNo&&existingParts.has(key)) errors.push('기존 WMS 품목코드 중복');
+   if(partNo&&seen.has(key)) errors.push('엑셀 내부 품목코드 중복');
    if(partNo) seen.add(key);
    if(mode==='existing'&&currentQty>0&&!location) errors.push('현보유품목 위치 필수');
    if(mode==='new'&&currentQty>0) errors.push('새품목 현재고는 0');
@@ -1499,11 +1500,11 @@ function renderBulkPreview(){
  $('bulkSummary').innerHTML=`전체 <b>${bulkRows.length}</b>건 · 등록 가능 <b>${okCount}</b>건 · 확인 필요 <b>${errorCount}</b>건${warnCount?` · 주의 ${warnCount}건`:''}`;$('registerBulkBtn').disabled=okCount===0;
 }
 function downloadBulkTemplate(){
- const ws=XLSX.utils.aoa_to_sheet([['등록구분','품번','품명','품목규격','자재구분','제조사','관리단위','최소수량','WMS 현 재고수량','ERP 재고수량','재고차이','자재위치','비고']]);
+ const ws=XLSX.utils.aoa_to_sheet([['등록구분','품목코드','품목명','품목규격','자재구분','제조사','관리단위','최소수량','WMS 현 재고수량','ERP 재고수량','재고차이','자재위치','비고']]);
  ws['!cols']=[{wch:16},{wch:18},{wch:28},{wch:28},{wch:16},{wch:18},{wch:12},{wch:13},{wch:16},{wch:16},{wch:14},{wch:34},{wch:30}];
  ws['K2']={t:'n',f:'IF(OR(I2="",J2=""),"",I2-J2)'};
  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'WMS_품목일괄등록');
- const gs=XLSX.utils.aoa_to_sheet([['작성안내','내용'],['등록구분','현보유품목 또는 새품목'],['품번','필수 / 기존 품번 중복 금지'],['품명','필수'],['품목규격','검색 결과에 표시 / 규격으로도 검색 가능'],['자재구분','WMS 등록 명칭과 동일'],['WMS 현 재고수량','현보유품목 실제수량 / 새품목 0'],['ERP 재고수량','ERP 비교용 수량 / WMS 현재고에 합산하지 않음'],['재고차이','WMS 현 재고 - ERP 재고'],['자재위치','입력한 최종 위치코드를 품목과 함께 저장 / 새품목은 현재고 0으로 위치 저장'],['중요','미리보기 후 정상 품목만 최종등록'],['입고통계','현보유품목 현재고는 초기재고라 입고통계 미포함']]);gs['!cols']=[{wch:18},{wch:60}];XLSX.utils.book_append_sheet(wb,gs,'작성안내');XLSX.writeFile(wb,'미림_WMS_품목일괄등록_ERP재고_품목규격_양식.xlsx');
+ const gs=XLSX.utils.aoa_to_sheet([['작성안내','내용'],['등록구분','현보유품목 또는 새품목'],['품목코드','필수 / 기존 품목코드 중복 금지'],['품목명','필수'],['품목규격','검색 결과에 표시 / 규격으로도 검색 가능'],['자재구분','WMS 등록 명칭과 동일'],['WMS 현 재고수량','현보유품목 실제수량 / 새품목 0'],['ERP 재고수량','ERP 비교용 수량 / WMS 현재고에 합산하지 않음'],['재고차이','WMS 현 재고 - ERP 재고'],['자재위치','입력한 최종 위치코드를 품목과 함께 저장 / 새품목은 현재고 0으로 위치 저장'],['중요','미리보기 후 정상 품목만 최종등록'],['입고통계','현보유품목 현재고는 초기재고라 입고통계 미포함']]);gs['!cols']=[{wch:18},{wch:60}];XLSX.utils.book_append_sheet(wb,gs,'작성안내');XLSX.writeFile(wb,'미림_WMS_품목일괄등록_ERP재고_품목규격_양식.xlsx');
 }
 async function parseBulkExcel(file){
  const data=await file.arrayBuffer(),wb=XLSX.read(data,{type:'array'}),sheet=wb.Sheets[wb.SheetNames[0]];if(!sheet)throw new Error('첫 번째 시트를 찾지 못했습니다.');
@@ -1562,12 +1563,14 @@ function renderEditItemOptions(keyword=''){
    ? items
    : items.filter(x=>
        norm(x.part_no).includes(q) ||
-       norm(x.item_name).includes(q)
+       norm(x.item_name).includes(q) ||
+       norm(x.specification).includes(q) ||
+       norm(displayItemNameSpec(x)).includes(q)
      );
 
  $('editItemSelect').innerHTML=
    '<option value="">새 품목 등록</option>'+
-   list.map(x=>`<option value="${x.id}">${esc(x.part_no||'-')} · ${esc(x.item_name||'-')}</option>`).join('');
+   list.map(x=>`<option value="${x.id}">${esc(x.part_no||'-')} · ${esc(displayItemNameSpec(x))}</option>`).join('');
 
  if(current && list.some(x=>String(x.id)===current)){
    $('editItemSelect').value=current;
@@ -2015,6 +2018,7 @@ function clearItemForm(){
  $('partNo').value='';
  if($('partNoDuplicateMsg')) $('partNoDuplicateMsg').textContent='';
  $('itemName').value='';
+ if($('spec')) $('spec').value='';
  $('minStock').value='';
  if($('category')){
    // 신규 등록 시 자재구분을 첫 선택값으로 초기화
@@ -2055,6 +2059,7 @@ function loadItemForEdit(){
  $('itemId').value=x.id;
  $('partNo').value=x.part_no||'';
  $('itemName').value=x.item_name||'';
+ if($('spec')) $('spec').value=x.specification||'';
  $('category').value=x.category||'기타';
  $('minStock').value=x.min_stock??0;
  $('registeredOn').value=x.registered_on||todayKST();
@@ -2143,6 +2148,7 @@ async function saveItemSimple(){
  let partNo=$('partNo').value.trim();
  let itemName=$('itemName').value.trim();
  const category=$('category').value;
+ const specification=$('spec')?.value.trim()||'';
  const minStock=Number($('minStock').value||0);
 
  // 모르는 값은 0으로 임시등록
@@ -2179,7 +2185,7 @@ async function saveItemSimple(){
    p_item_name:itemName,
    p_category:category,
    p_maker:'',
-   p_specification:'',
+   p_specification:specification,
    p_unit:'EA',
    p_min_stock:minStock,
    p_note:'',
@@ -2497,12 +2503,24 @@ $('addCategoryBtn').onclick=async()=>{
  const {error}=await db.rpc('admin_add_category',{p_username:session.username,p_password:session.password,p_name:$('newCategory').value});
  $('catMsg').textContent=error?'❌ '+error.message:'✅ 자재구분 추가 완료';if(!error){$('newCategory').value='';await loadAll()}
 };
+
+function displayItemNameSpec(item){
+ const name=String(item?.item_name||'').trim();
+ const spec=String(item?.specification||'').trim();
+ return spec ? `${name} [${spec}]` : (name||'-');
+}
+
+function itemByPartNo(partNo){
+ return items.find(x=>norm(x.part_no)===norm(partNo))||null;
+}
+
 function filterItemCandidates(partValue,nameValue){
  const p=norm(partValue);
  const n=norm(nameValue);
  return items.filter(x=>{
    const partOk=!p || norm(x.part_no).includes(p);
-   const nameOk=!n || norm(x.item_name).includes(n);
+   const nameSpec=norm(displayItemNameSpec(x));
+   const nameOk=!n || nameSpec.includes(n) || norm(x.item_name).includes(n) || norm(x.specification).includes(n);
    return partOk && nameOk;
  });
 }
@@ -2511,7 +2529,7 @@ function populateCandidateSelect(selectId,partValue,nameValue){
  const list=filterItemCandidates(partValue,nameValue);
  const el=$(selectId);
  el.innerHTML='<option value="">최종 품목을 선택하세요.</option>'+
-   list.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(x.item_name)} · ${esc(x.category||'기타')}</option>`).join('');
+   list.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(displayItemNameSpec(x))} · ${esc(x.category||'기타')}</option>`).join('');
  return list;
 }
 
@@ -2572,13 +2590,17 @@ function syncPairedSearch(prefix){
    if(exactPart.length===1) found=exactPart[0];
  }
  if(!found && n){
-   const exactName=items.filter(x=>norm(x.item_name)===n);
+   const exactName=items.filter(x=>
+     norm(displayItemNameSpec(x))===n ||
+     norm(x.item_name)===n ||
+     norm(x.specification)===n
+   );
    if(exactName.length===1) found=exactName[0];
  }
 
  if(found){
    partEl.value=found.part_no||'';
-   nameEl.value=found.item_name||'';
+   nameEl.value=displayItemNameSpec(found);
  }
  return found;
 }
@@ -2590,14 +2612,21 @@ function resolveRegisteredItem(partValue,nameValue){
  let found=null;
 
  if(p && n){
-   found=items.find(x=>norm(x.part_no)===p && norm(x.item_name)===n)||null;
+   found=items.find(x=>
+     norm(x.part_no)===p &&
+     (norm(displayItemNameSpec(x))===n || norm(x.item_name)===n || norm(x.specification)===n)
+   )||null;
  }
  if(!found && p){
    const exactPart=items.filter(x=>norm(x.part_no)===p);
    if(exactPart.length===1) found=exactPart[0];
  }
  if(!found && n){
-   const exactName=items.filter(x=>norm(x.item_name)===n);
+   const exactName=items.filter(x=>
+     norm(displayItemNameSpec(x))===n ||
+     norm(x.item_name)===n ||
+     norm(x.specification)===n
+   );
    if(exactName.length===1) found=exactName[0];
  }
  if(!found){
@@ -2638,7 +2667,7 @@ async function fillInboundCandidates(){
    await selectInboundItem();
    $('inMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택 · 최신 위치/수량 확인`;
  }else if(partValue || nameValue){
-   $('inMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
+   $('inMsg').textContent='⚠️ 등록된 품목코드 또는 품목명(규격)을 확인하세요.';
  }
 }
 ['inPartSearch','inNameSearch'].forEach(id=>{
@@ -2678,7 +2707,7 @@ function renderMovementItemPreview(prefix,found){
    ? `<img src="${esc(found.photo_url)}" alt="${esc(found.item_name)}">`
    : '<div class="no-photo">📷 사진 없음</div>';
  $(prefix+'PartText').textContent=found.part_no||'-';
- $(prefix+'NameText').textContent=found.item_name||'-';
+ $(prefix+'NameText').textContent=displayItemNameSpec(found);
  $(prefix+'CategoryText').textContent=found.category||'기타';
  $(prefix+'StockText').textContent=`${total(found)} ${found.unit||'EA'}`;
 }
@@ -2896,7 +2925,7 @@ $('inSave').onclick=async()=>{
  const qty=Number($('inQty').value);
  const mode=$('inLocationMode').value;
 
- if(!x){$('inMsg').textContent='⚠️ 등록된 품목과 정확히 일치하지 않습니다. 품번 또는 품명을 다시 확인하세요.';return}
+ if(!x){$('inMsg').textContent='⚠️ 등록된 품목과 정확히 일치하지 않습니다. 품목코드 또는 품목명(규격)을 다시 확인하세요.';return}
  if(!qty||qty<=0){$('inMsg').textContent='⚠️ 입고수량을 입력하세요.';return}
  if(mode==='existing' && !$('inLoc').value){
    $('inMsg').textContent='⚠️ 기존 자재위치를 선택하세요.';
@@ -2928,7 +2957,7 @@ $('inSave').onclick=async()=>{
    // 입고 저장 후 다음 건을 바로 입력할 수 있도록 화면 초기화
    $('inPartSearch').value='';
    $('inNameSearch').value='';
-   $('inFinalSelect').innerHTML='<option value="">품번 또는 품명을 입력하면 자동 선택됩니다.</option>';
+   $('inFinalSelect').innerHTML='<option value="">품목코드 또는 품목명(규격)을 입력하면 자동 선택됩니다.</option>';
    $('inItemId').value='';
    $('inPart').value='';
    $('inName').value='';
@@ -3000,7 +3029,7 @@ async function fillOutboundCandidates(){
    await selectOutboundItem();
    $('outMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
  }else if(partValue || nameValue){
-   $('outMsg').textContent='⚠️ 등록된 품번 또는 품명을 확인하세요.';
+   $('outMsg').textContent='⚠️ 등록된 품목코드 또는 품목명(규격)을 확인하세요.';
  }
 }
 ['outPartSearch','outNameSearch'].forEach(id=>{
@@ -3107,7 +3136,7 @@ $('outSave').onclick=async()=>{
    // 출고 저장 후 다음 건을 바로 입력할 수 있도록 화면 초기화
    $('outPartSearch').value='';
    $('outNameSearch').value='';
-   $('outFinalSelect').innerHTML='<option value="">품번 또는 품명을 입력하면 후보가 표시됩니다.</option>';
+   $('outFinalSelect').innerHTML='<option value="">품목코드 또는 품목명(규격)을 입력하면 후보가 표시됩니다.</option>';
    $('outItemId').value='';
    $('outPart').value='';
    $('outName').value='';
@@ -3173,7 +3202,7 @@ function filterItemsForExport(){
 
  return items.filter(x=>{
    const categoryOk=!category || x.category===category;
-   const keywordOk=!keyword || norm(`${x.part_no} ${x.item_name}`).includes(keyword);
+   const keywordOk=!keyword || norm(`${x.part_no} ${displayItemNameSpec(x)}`).includes(keyword);
    return categoryOk && keywordOk;
  });
 }
@@ -3186,8 +3215,8 @@ function itemExportRows(){
    const locs=item.item_locations||[];
    if(locs.length){
      locs.forEach(loc=>rows.push({
-       '품번':item.part_no||'',
-       '품명':item.item_name||'',
+       '품목코드':item.part_no||'',
+       '품목명(규격)':displayItemNameSpec(item),
        '자재구분':item.category||'기타',
        '최소수량':Number(item.min_stock||0),
        '현재 총수량':total(item),
@@ -3200,8 +3229,8 @@ function itemExportRows(){
      }));
    }else{
      rows.push({
-       '품번':item.part_no||'',
-       '품명':item.item_name||'',
+       '품목코드':item.part_no||'',
+       '품목명(규격)':displayItemNameSpec(item),
        '자재구분':item.category||'기타',
        '최소수량':Number(item.min_stock||0),
        '현재 총수량':0,
@@ -3241,13 +3270,13 @@ async function movementExportRows(type){
  return (data||[]).filter(x=>{
    const typeOk=x.movement_type===movementType;
    const categoryOk=!category || x.category===category;
-   const keywordOk=!keyword || norm(`${x.part_no} ${x.item_name}`).includes(keyword);
+   const keywordOk=!keyword || norm(`${x.part_no} ${displayItemNameSpec(x)}`).includes(keyword);
    const handlerOk=type!=='outbound' || !handler || x.actor_name===handler;
    return typeOk && categoryOk && keywordOk && handlerOk;
  }).map(x=>({
    [type==='inbound'?'입고일':'출고일']:new Date(x.created_at).toLocaleDateString('ko-KR'),
-   '품번':x.part_no||'',
-   '품명':x.item_name||'',
+   '품목코드':x.part_no||'',
+   '품목명(규격)':displayItemNameSpec(itemByPartNo(x.part_no)||{item_name:x.item_name}),
    '자재구분':x.category||'기타',
    [type==='inbound'?'입고수량':'출고수량']:Number(x.qty||0),
    '단위':x.unit||'EA',
@@ -3294,7 +3323,7 @@ $('exportFilteredExcelBtn').onclick=async()=>{
    const conditions=[
      ['자료 구분',sheetName],
      ['자재구분',$('filterCategory').value||'전체'],
-     ['품번·품명',$('filterKeyword').value||'전체'],
+     ['품목코드·품목명(규격)',$('filterKeyword').value||'전체'],
      ['출고 담당자',type==='outbound'?($('filterHandler').value||'전체'):'해당 없음'],
      ['시작일',type==='items'?'해당 없음':$('filterStartDate').value],
      ['종료일',type==='items'?'해당 없음':$('filterEndDate').value],
@@ -3352,8 +3381,8 @@ function categoryItemRows(){
      const locs=item.item_locations||[];
      if(locs.length){
        locs.forEach(loc=>rows.push({
-         '품번':item.part_no||'',
-         '품명':item.item_name||'',
+         '품목코드':item.part_no||'',
+         '품목명(규격)':displayItemNameSpec(item),
          '자재구분':item.category||'기타',
          '최소수량':Number(item.min_stock||0),
          '현재 총수량':total(item),
@@ -3366,8 +3395,8 @@ function categoryItemRows(){
        }));
      }else{
        rows.push({
-         '품번':item.part_no||'',
-         '품명':item.item_name||'',
+         '품목코드':item.part_no||'',
+         '품목명(규격)':displayItemNameSpec(item),
          '자재구분':item.category||'기타',
          '최소수량':Number(item.min_stock||0),
          '현재 총수량':0,
@@ -3413,8 +3442,8 @@ async function quickMovementRows(type){
    )
    .map(x=>({
      [type==='IN'?'입고일':'출고일']:new Date(x.created_at).toLocaleDateString('ko-KR'),
-     '품번':x.part_no||'',
-     '품명':x.item_name||'',
+     '품목코드':x.part_no||'',
+     '품목명(규격)':displayItemNameSpec(itemByPartNo(x.part_no)||{item_name:x.item_name}),
      '자재구분':x.category||'기타',
      [type==='IN'?'입고수량':'출고수량']:Number(x.qty||0),
      '단위':x.unit||'EA',
@@ -3564,15 +3593,18 @@ function summarizeReport(rows){
  const map=new Map();
  rows.forEach(r=>{
    const key=r.part_no;
+   const item=itemByPartNo(r.part_no);
    if(!map.has(key)) map.set(key,{
-     품번:r.part_no,품명:r.item_name,자재구분:r.category||'기타',
+     '품목코드':r.part_no,
+     '품목명(규격)':displayItemNameSpec(item||{item_name:r.item_name}),
+     자재구분:r.category||'기타',
      입고수량:0,출고수량:0,현재고:Number(r.current_stock||0),단위:r.unit||'EA'
    });
    const x=map.get(key);
    if(r.movement_type==='IN') x.입고수량+=Number(r.qty||0);
    if(r.movement_type==='OUT') x.출고수량+=Number(r.qty||0);
  });
- return [...map.values()].sort((a,b)=>String(a.품번).localeCompare(String(b.품번)));
+ return [...map.values()].sort((a,b)=>String(a['품목코드']).localeCompare(String(b['품목코드'])));
 }
 
 function renderReport(){
@@ -3584,8 +3616,8 @@ function renderReport(){
   <div class="loc"><b>총 입고수량</b><div class="stock">${inQty}</div></div>
   <div class="loc"><b>총 출고수량</b><div class="stock">${outQty}</div></div>
   <div class="loc"><b>입출고 건수</b><div class="stock">${reportRows.length}</div></div>`;
- $('reportTable').innerHTML='<thead><tr><th>품번</th><th>품명</th><th>자재구분</th><th>입고수량</th><th>출고수량</th><th>현재고</th><th>단위</th></tr></thead><tbody>'+
-   summary.map(x=>`<tr><td>${esc(x.품번)}</td><td>${esc(x.품명)}</td><td>${esc(x.자재구분)}</td><td>${x.입고수량}</td><td>${x.출고수량}</td><td>${x.현재고}</td><td>${esc(x.단위)}</td></tr>`).join('')+
+ $('reportTable').innerHTML='<thead><tr><th>품목코드</th><th>품목명(규격)</th><th>자재구분</th><th>입고수량</th><th>출고수량</th><th>현재고</th><th>단위</th></tr></thead><tbody>'+
+   summary.map(x=>`<tr><td>${esc(x['품목코드'])}</td><td>${esc(x['품목명(규격)'])}</td><td>${esc(x.자재구분)}</td><td>${x.입고수량}</td><td>${x.출고수량}</td><td>${x.현재고}</td><td>${esc(x.단위)}</td></tr>`).join('')+
    '</tbody>';
 }
 
@@ -3611,14 +3643,14 @@ $('exportExcelBtn').onclick=async()=>{
  const detail=reportRows.map(x=>({
    일시:new Date(x.created_at).toLocaleString('ko-KR'),
    구분:x.movement_type==='IN'?'입고':'출고',
-   품번:x.part_no,품명:x.item_name,자재구분:x.category||'기타',
+   '품목코드':x.part_no,'품목명(규격)':displayItemNameSpec(itemByPartNo(x.part_no)||{item_name:x.item_name}),자재구분:x.category||'기타',
    수량:Number(x.qty||0),단위:x.unit||'EA',
    위치:x.location_display,담당자:x.actor_name,비고:x.note||'',
    위치재고:Number(x.stock_after_location||0),
    총재고:Number(x.stock_after_total||0)
  }));
  const inventory=items.flatMap(x=>(x.item_locations||[]).map(l=>({
-   품번:x.part_no,품명:x.item_name,자재구분:x.category||'기타',
+   '품목코드':x.part_no,'품목명(규격)':displayItemNameSpec(x),자재구분:x.category||'기타',
    위치:l.location_display,현재수량:Number(l.qty||0),단위:x.unit,
    최소수량:Number(x.min_stock||0)
  })));
@@ -3640,8 +3672,8 @@ function inventoryCheckRows(){
      locs.forEach((loc,idx)=>{
        rows.push({
          '순번':rows.length+1,
-         '품번':item.part_no||'',
-         '품명':item.item_name||'',
+         '품목코드':item.part_no||'',
+         '품목명(규격)':displayItemNameSpec(item),
          '자재구분':item.category||'기타',
          '자재위치':loc.location_display||loc.location_code||'',
          '전산수량':Number(loc.qty||0),
@@ -3655,8 +3687,8 @@ function inventoryCheckRows(){
    }else{
      rows.push({
        '순번':rows.length+1,
-       '품번':item.part_no||'',
-       '품명':item.item_name||'',
+       '품목코드':item.part_no||'',
+       '품목명(규격)':displayItemNameSpec(item),
        '자재구분':item.category||'기타',
        '자재위치':'⚠️ 위치 미등록',
        '전산수량':0,
@@ -3670,7 +3702,7 @@ function inventoryCheckRows(){
  });
  return rows.sort((a,b)=>
    String(a.자재위치).localeCompare(String(b.자재위치),'ko') ||
-   String(a.품번).localeCompare(String(b.품번),'ko')
+   String(a['품목코드']).localeCompare(String(b['품목코드']),'ko')
  ).map((r,i)=>({...r,'순번':i+1}));
 }
 
@@ -3725,7 +3757,7 @@ $('printInventoryCheckBtn').onclick=()=>{
    <table>
      <thead>
        <tr>
-         <th>순번</th><th>품번</th><th>품명</th><th>자재구분</th>
+         <th>순번</th><th>품목코드</th><th>품목명(규격)</th><th>자재구분</th>
          <th>자재위치</th><th>전산수량</th><th>실제수량</th>
          <th>차이수량</th><th>확인자</th><th>확인일</th><th>비고</th>
        </tr>
@@ -3733,8 +3765,8 @@ $('printInventoryCheckBtn').onclick=()=>{
      <tbody>
        ${rows.map(r=>`<tr>
          <td>${r['순번']}</td>
-         <td>${esc(r['품번'])}</td>
-         <td>${esc(r['품명'])}</td>
+         <td>${esc(r['품목코드'])}</td>
+         <td>${esc(r['품목명(규격)'])}</td>
          <td>${esc(r['자재구분'])}</td>
          <td>${esc(r['자재위치'])}</td>
          <td>${r['전산수량']}</td>
