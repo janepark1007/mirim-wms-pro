@@ -1169,7 +1169,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
       <input id="erpApplyLocation" readonly placeholder="위치 선택 시 자동 생성">
       <div class="muted" style="margin-top:6px">품목등록과 동일한 위치선택 방식입니다. 직접 타자하지 않아도 됩니다.</div>
     </div>
-    <div class="ok" style="margin-top:10px">📝 지금 모르면 <b>임시등록</b>하세요. 자재구분·위치·실제수량은 나중에 이 품목을 검색해서 바로 수정할 수 있습니다.</div>
+    <div class="ok" style="margin-top:10px">📝 자재구분을 모르더라도 <b>⚠️ 확인 필요</b>로 저장할 수 있습니다. 위치와 실제수량을 현장에서 확인했다면 WMS 실제재고 적용도 가능합니다. 나중에 품목을 검색해서 자재구분만 수정하면 됩니다.</div>
     <div class="bad" style="margin-top:8px">⚠️ 실제수량 미확인은 <b>0이 아닙니다.</b> 현장에서 실제로 0개임을 확인했을 때만 0을 입력하세요.</div>
     <div class="row" style="margin-top:12px;flex-wrap:wrap">
       <button id="erpMasterTempBtn" type="button" class="secondary" style="width:auto">📝 모르는 항목은 미확인으로 임시등록</button>
@@ -2051,7 +2051,7 @@ async function loadAll(){
    $('filterHandler').value=selected;
  }
 
- $('category').innerHTML=categories.map(x=>`<option>${esc(x.name)}</option>`).join('');
+ $('category').innerHTML='<option>확인 필요</option>'+categories.filter(x=>x.name!=='확인 필요').map(x=>`<option>${esc(x.name)}</option>`).join('');
  $('catList').innerHTML=categories.map(x=>`<span class="badge">${esc(x.name)}</span>`).join('');
 
  renderEditItemOptions($('editItemSearch')?.value||'');
@@ -4623,8 +4623,9 @@ function prepareErpMasterApply(code){
  $('erpApplyErpQty').value=Number(x.erp_stock_qty||0);
  $('erpApplyQty').value=x.wms_qty!==null && x.wms_qty!==undefined?String(x.wms_qty):'';
  loadErpLocationFromText(x.wms_location||'');
- $('erpApplyCategory').innerHTML='<option value="">⚠️ 자재구분 미확인</option>'+categories.map(c=>`<option value="${esc(c.name||c.category||c)}">${esc(c.name||c.category||c)}</option>`).join('');
+ $('erpApplyCategory').innerHTML='<option value="확인 필요">⚠️ 확인 필요</option>'+categories.map(c=>`<option value="${esc(c.name||c.category||c)}">${esc(c.name||c.category||c)}</option>`).join('');
  if(x.wms_category) $('erpApplyCategory').value=x.wms_category;
+ else $('erpApplyCategory').value='확인 필요';
  $('erpMasterApplyCard').classList.remove('hidden');
  $('erpMasterApplyMsg').textContent=x.wms_item_id
    ?'🔄 품목등록/WMS의 최신 자재구분·위치를 자동으로 불러왔습니다. 실제수량을 확인한 뒤 적용하세요.'
@@ -4714,7 +4715,7 @@ if($('erpMasterApplyBtn')) $('erpMasterApplyBtn').onclick=async()=>{
  const qtyText=$('erpApplyQty').value.trim();
  const qty=qtyText===''?NaN:Number(qtyText);
  if(!code||!category||!location||!Number.isFinite(qty)||qty<0){
-   $('erpMasterApplyMsg').textContent='⚠️ 실제재고 적용은 자재구분·자재위치·현장에서 확인한 실제수량이 모두 필요합니다.'; return;
+   $('erpMasterApplyMsg').textContent="⚠️ 자재위치와 현장에서 확인한 실제수량이 필요합니다. 자재구분을 모르면 '확인 필요'로 두고 적용할 수 있습니다."; return;
  }
  const x=erpMasterRows.find(v=>String(v.erp_item_code)===String(code));
  if(!x) return;
