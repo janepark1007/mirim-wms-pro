@@ -1185,6 +1185,23 @@ img{
   }
 }
 </style>
+
+<style id="inbound-erp-wms-preview">
+#inAutoMatchMsg{
+  font-size:15px!important;
+  font-weight:700!important;
+  padding:10px 12px!important;
+  border-radius:10px!important;
+}
+#inErpStockQty{
+  font-weight:900!important;
+  background:#f7fbff!important;
+}
+@media(max-width:720px){
+  #inAutoMatchMsg{font-size:16px!important;line-height:1.5!important}
+  #inErpStockQty{font-size:18px!important}
+}
+</style>
 </head>
 <body>
 <header>
@@ -1574,13 +1591,20 @@ img{
 
       <div class="grid">
         <div>
-          <div class="label required-label">품번 검색</div>
-          <input id="inPartSearch" placeholder="품번 입력 → 품명 자동표시">
+          <div class="label required-label">품목코드</div>
+          <input id="inPartSearch" placeholder="품목코드 입력 → 품명 자동표시">
         </div>
         <div>
-          <div class="label required-label">품명 검색</div>
+          <div class="label required-label">품명</div>
           <input id="inNameSearch" placeholder="품목명 또는 규격 입력 → 품목코드 자동표시">
         </div>
+        <div>
+          <div class="label required-label">ERP 현재고</div>
+          <input id="inErpStockQty" readonly placeholder="ERP 현재고 자동표시">
+        </div>
+      </div>
+      <div id="inAutoMatchMsg" class="ok" style="margin-top:10px">
+        품목코드 또는 품명을 입력하면 ERP 기준자료와 WMS를 자동으로 대조합니다.
       </div>
 
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
@@ -5307,6 +5331,11 @@ function clearInboundSelectedItem(keepSearch=true){
  $('inName').value='';
  $('inCategory').value='';
  $('inCurrentStock').value='';
+ if($('inErpStockQty')) $('inErpStockQty').value='';
+ if($('inAutoMatchMsg')){
+   $('inAutoMatchMsg').className='ok';
+   $('inAutoMatchMsg').textContent='품목코드 또는 품명을 입력하면 ERP 기준자료와 WMS를 자동으로 대조합니다.';
+ }
  $('inLoc').innerHTML='<option value="">등록된 위치를 선택하세요.</option>';
  $('inLocationInfo').textContent='품목을 선택하면 등록된 모든 위치와 수량이 표시됩니다.';
  if($('stockCurrentQty')) $('stockCurrentQty').value='';
@@ -5315,6 +5344,32 @@ function clearInboundSelectedItem(keepSearch=true){
  if(!keepSearch){
    $('inPartSearch').value='';
    $('inNameSearch').value='';
+ }
+}
+
+
+async function updateInboundErpWmsSummary(item){
+ if(!item) return;
+ try{
+   if(typeof ensureErpMasterForCompare==='function') await ensureErpMasterForCompare();
+ }catch(_){}
+
+ const erp=(erpMasterRows||[]).find(x=>norm(x.erp_item_code)===norm(item.part_no));
+ const erpQty=erp?.erp_stock_qty;
+ const wmsQty=total(item);
+
+ if($('inErpStockQty')){
+   $('inErpStockQty').value=(erpQty===null||erpQty===undefined||erpQty==='')?'⚠️ 미등록':Number(erpQty).toLocaleString();
+ }
+
+ if($('inAutoMatchMsg')){
+   if(erp){
+     $('inAutoMatchMsg').className='ok';
+     $('inAutoMatchMsg').innerHTML=`✅ WMS 자동매칭: <b>${esc(item.part_no)}</b> · ${esc(displayItemNameSpec(item))} · WMS 현재수량 <b>${Number(wmsQty).toLocaleString()} ${esc(item.unit||'EA')}</b>`;
+   }else{
+     $('inAutoMatchMsg').className='bad';
+     $('inAutoMatchMsg').innerHTML=`⚠️ ERP 기준자료 미등록 · <b>${esc(item.part_no)}</b> · WMS 현재수량 <b>${Number(wmsQty).toLocaleString()} ${esc(item.unit||'EA')}</b>`;
+   }
  }
 }
 
@@ -5395,6 +5450,7 @@ async function fillInboundCandidates(source=''){
    $('inFinalSelect').value=String(target.id);
    await selectInboundItem();
    if(seq!==inboundSearchSeq) return;
+   await updateInboundErpWmsSummary(items.find(x=>String(x.id)===String(target.id))||target);
 
    const fresh=items.find(x=>String(x.id)===String(target.id))||target;
    const locs=fresh.item_locations||[];
@@ -5428,7 +5484,12 @@ $('inPartSearch').addEventListener('keyup',e=>{ if(e.key==='Enter'){clearTimeout
 $('inNameSearch').addEventListener('keyup',e=>{ if(e.key==='Enter'){clearTimeout(inboundSearchTimer);fillInboundCandidates('name');} });
 
 
-$('inFinalSelect').addEventListener('change',selectInboundItem);
+$('inFinalSelect').addEventListener('change',async()=>{
+ await selectInboundItem();
+ const id=String($('inFinalSelect').value||'');
+ const found=items.find(x=>String(x.id)===id)||null;
+ if(found) await updateInboundErpWmsSummary(found);
+});
 
 async function imageFileToDataUrl(file){
  const im=new Image();
