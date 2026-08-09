@@ -1585,7 +1585,7 @@ img{
   <section id="inboundTab" class="tabpane hidden">
     <div class="card">
       <h2>입고 등록</h2><div class="ok" style="margin:8px 0 14px">
-          사용순서: <b>품번/품명 검색 → 품목 선택 → 입고 위치 선택 → 이번 입고수량 입력 → 입고 저장</b><br>
+          사용순서: <b>품목코드 또는 품명 검색 → 최종 품목 확인 → 입고 위치 선택 → 이번 입고수량 입력 → 입고 저장</b><br>
           저장하면 해당 위치의 WMS 재고에 입고수량이 자동으로 더해집니다.
         </div>
 
@@ -1605,6 +1605,9 @@ img{
       </div>
       <div id="inAutoMatchMsg" class="ok" style="margin-top:10px">
         품목코드 또는 품명을 입력하면 ERP 기준자료와 WMS를 자동으로 대조합니다.
+      </div>
+      <div class="muted" style="margin-top:6px">
+        ※ 품목코드 검색과 품명 검색은 서로 섞이지 않습니다. 최종 선택된 1개 품목 기준으로 두 칸이 자동 정리됩니다.
       </div>
 
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
@@ -5347,7 +5350,6 @@ function clearInboundSelectedItem(keepSearch=true){
  }
 }
 
-
 async function updateInboundErpWmsSummary(item){
  if(!item) return;
  try{
@@ -5373,69 +5375,85 @@ async function updateInboundErpWmsSummary(item){
  }
 }
 
-async function fillInboundCandidates(source=''){
+function inboundCandidatePoolByPart(partValue){
+ const p=norm(partValue);
+ if(!p) return [];
+ const exact=items.filter(x=>norm(x.part_no)===p);
+ if(exact.length===1) return exact;
+ return items.filter(x=>norm(x.part_no).includes(p)).slice(0,50);
+}
+
+function inboundCandidatePoolByName(nameValue){
+ const n=norm(nameValue);
+ if(!n) return [];
+ const exact=items.filter(x=>
+   norm(displayItemNameSpec(x))===n ||
+   norm(x.item_name)===n ||
+   norm(x.specification)===n
+ );
+ if(exact.length===1) return exact;
+ return items.filter(x=>
+   norm(displayItemNameSpec(x)).includes(n) ||
+   norm(x.item_name).includes(n) ||
+   norm(x.specification).includes(n)
+ ).slice(0,50);
+}
+
+async function applyInboundFinalItem(item){
+ if(!item) return;
+
+ $('inPartSearch').value=item.part_no||'';
+ $('inNameSearch').value=displayItemNameSpec(item);
+ $('inFinalSelect').value=String(item.id);
+
+ await selectInboundItem();
+
+ const fresh=items.find(x=>String(x.id)===String(item.id))||item;
+ await updateInboundErpWmsSummary(fresh);
+
+ const locs=fresh.item_locations||[];
+ if(locs.length===1 && $('inLoc')){
+   $('inLoc').value=String(locs[0].id);
+ }
+
+ $('inMsg').textContent=`✅ 최종 품목 확정 · ${item.part_no} · ${displayItemNameSpec(item)}`;
+}
+
+async function fillInboundCandidates(source='part'){
  const seq=++inboundSearchSeq;
  const partValue=$('inPartSearch').value.trim();
  const nameValue=$('inNameSearch').value.trim();
 
- // 새 검색을 시작하면 이전에 선택된 품목부터 즉시 해제
  clearInboundSelectedItem(true);
 
- if(!partValue && !nameValue){
-   $('inFinalSelect').innerHTML='<option value="">품번 또는 품명을 입력하면 등록품목이 표시됩니다.</option>';
-   $('inMsg').textContent='';
-   return;
- }
-
- let target=null;
  let candidates=[];
+ if(source==='part'){
+   if(!partValue){
+     $('inFinalSelect').innerHTML='<option value="">품목코드를 입력하세요.</option>';
+     $('inMsg').textContent='';
+     return;
+   }
 
- // 품번을 입력한 경우: 품명칸의 이전 값은 검색조건으로 사용하지 않음.
- // 품번 정확일치가 있으면 그 품목만 선택.
- if(source==='part' || partValue){
-   const p=norm(partValue);
-   let exactPart=items.filter(x=>norm(x.part_no)===p);
+   candidates=inboundCandidatePoolByPart(partValue);
 
-   if(exactPart.length!==1 && partValue){
-     const {data,error}=await db.from('items')
-       .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
-       .eq('is_active',true)
-       .ilike('part_no',partValue)
-       .limit(20);
+   if(!candidates.length){
+     await loadAll();
      if(seq!==inboundSearchSeq) return;
-     if(!error && data){
-       exactPart=data.filter(x=>norm(x.part_no)===p);
-       data.forEach(x=>{
-         const idx=items.findIndex(y=>String(y.id)===String(x.id));
-         if(idx>=0) items[idx]=x; else items.push(x);
-       });
-     }
+     candidates=inboundCandidatePoolByPart(partValue);
+   }
+ }else{
+   if(!nameValue){
+     $('inFinalSelect').innerHTML='<option value="">품명을 입력하세요.</option>';
+     $('inMsg').textContent='';
+     return;
    }
 
-   if(exactPart.length===1){
-     target=exactPart[0];
-     candidates=[target];
-   }else{
-     // 정확일치가 없을 때만 품번 부분일치 후보를 보여줌
-     candidates=items.filter(x=>norm(x.part_no).includes(p)).slice(0,50);
-   }
- }else if(source==='name' || nameValue){
-   // 품명 검색 시에는 품번칸의 이전 값과 섞지 않음
-   const n=norm(nameValue);
-   const exactName=items.filter(x=>
-     norm(displayItemNameSpec(x))===n ||
-     norm(x.item_name)===n ||
-     norm(x.specification)===n
-   );
-   if(exactName.length===1){
-     target=exactName[0];
-     candidates=[target];
-   }else{
-     candidates=items.filter(x=>
-       norm(displayItemNameSpec(x)).includes(n) ||
-       norm(x.item_name).includes(n) ||
-       norm(x.specification).includes(n)
-     ).slice(0,50);
+   candidates=inboundCandidatePoolByName(nameValue);
+
+   if(!candidates.length){
+     await loadAll();
+     if(seq!==inboundSearchSeq) return;
+     candidates=inboundCandidatePoolByName(nameValue);
    }
  }
 
@@ -5444,34 +5462,25 @@ async function fillInboundCandidates(source=''){
  $('inFinalSelect').innerHTML='<option value="">최종 품목을 선택하세요.</option>'+
    candidates.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(displayItemNameSpec(x))} · ${esc(x.category||'기타')}</option>`).join('');
 
- if(target){
-   $('inPartSearch').value=target.part_no||'';
-   $('inNameSearch').value=displayItemNameSpec(target);
-   $('inFinalSelect').value=String(target.id);
-   await selectInboundItem();
-   if(seq!==inboundSearchSeq) return;
-   await updateInboundErpWmsSummary(items.find(x=>String(x.id)===String(target.id))||target);
-
-   const fresh=items.find(x=>String(x.id)===String(target.id))||target;
-   const locs=fresh.item_locations||[];
-   if(locs.length===1 && $('inLoc')) $('inLoc').value=String(locs[0].id);
-
-   $('inMsg').textContent=target.erp_catalog_only
-     ? `🟡 ERP 기준자료 자동선택 · ${target.part_no} · ${displayItemNameSpec(target)} · 첫 입고 시 실제 위치와 수량을 확인해 등록하세요.`
-     : `✅ 품번 정확일치 선택 · ${target.part_no} · ${displayItemNameSpec(target)}`;
+ if(candidates.length===1){
+   await applyInboundFinalItem(candidates[0]);
    return;
  }
 
  $('inMsg').textContent=candidates.length
    ? `검색 후보 ${candidates.length}개 · 아래 '최종 품목 선택'에서 정확한 품목을 선택하세요.`
-   : '⚠️ 등록품목을 찾지 못했습니다. 품번 또는 품명을 다시 확인하세요.';
+   : '⚠️ 등록품목을 찾지 못했습니다. 품목코드 또는 품명을 다시 확인하세요.';
 }
 
 function scheduleInboundSearch(source){
  clearTimeout(inboundSearchTimer);
- // 반대쪽 검색칸의 이전 자동값 제거: 서로 다른 품목이 섞이는 현상 방지
- if(source==='part') $('inNameSearch').value='';
- if(source==='name') $('inPartSearch').value='';
+
+ if(source==='part'){
+   $('inNameSearch').value='';
+ }else{
+   $('inPartSearch').value='';
+ }
+
  clearInboundSelectedItem(true);
  inboundSearchTimer=setTimeout(()=>fillInboundCandidates(source),250);
 }
@@ -5480,15 +5489,28 @@ $('inPartSearch').addEventListener('input',()=>scheduleInboundSearch('part'));
 $('inNameSearch').addEventListener('input',()=>scheduleInboundSearch('name'));
 $('inPartSearch').addEventListener('change',()=>fillInboundCandidates('part'));
 $('inNameSearch').addEventListener('change',()=>fillInboundCandidates('name'));
-$('inPartSearch').addEventListener('keyup',e=>{ if(e.key==='Enter'){clearTimeout(inboundSearchTimer);fillInboundCandidates('part');} });
-$('inNameSearch').addEventListener('keyup',e=>{ if(e.key==='Enter'){clearTimeout(inboundSearchTimer);fillInboundCandidates('name');} });
+$('inPartSearch').addEventListener('keyup',e=>{
+ if(e.key==='Enter'){
+   clearTimeout(inboundSearchTimer);
+   fillInboundCandidates('part');
+ }
+});
+$('inNameSearch').addEventListener('keyup',e=>{
+ if(e.key==='Enter'){
+   clearTimeout(inboundSearchTimer);
+   fillInboundCandidates('name');
+ }
+});
 
 
 $('inFinalSelect').addEventListener('change',async()=>{
- await selectInboundItem();
  const id=String($('inFinalSelect').value||'');
  const found=items.find(x=>String(x.id)===id)||null;
- if(found) await updateInboundErpWmsSummary(found);
+ if(!found){
+   clearInboundSelectedItem(true);
+   return;
+ }
+ await applyInboundFinalItem(found);
 });
 
 async function imageFileToDataUrl(file){
