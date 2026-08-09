@@ -2035,7 +2035,7 @@ img{
       <div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <div>
           <h3 style="margin:0">전체 품목 ERP/WMS 차이</h3>
-          <div class="muted" style="margin-top:4px">WMS 등록 위치가 자동 표시됩니다. 필터한 목록만 Excel로 출력할 수 있습니다.</div>
+          <div class="muted" style="margin-top:4px">WMS 위치·자재구분·사용빈도는 최신 WMS 품목정보를 기준으로 자동 표시됩니다. 필터한 목록만 Excel로 출력할 수 있습니다.</div>
         </div>
         <div class="row" style="gap:8px;flex-wrap:wrap">
           <button id="erpCompareExcelBtn" type="button" style="width:auto">📊 ERP 대조 Excel 출력</button>
@@ -2071,6 +2071,12 @@ img{
             <option value="UNSET">⚠️ 미분류</option>
           </select>
         </div>
+        <div>
+          <div class="label">자재구분</div>
+          <select id="erpCompareFilterCategory">
+            <option value="">전체 자재구분</option>
+          </select>
+        </div>
       </div>
       <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
         <button id="erpCompareFilterReset" type="button" class="secondary" style="width:auto">필터 초기화</button>
@@ -2082,7 +2088,7 @@ img{
           <thead>
             <tr>
               <th>품목코드</th><th>품명</th><th>ERP 재고</th>
-              <th>WMS 총수량</th><th>차이</th><th>사용빈도</th><th>WMS 위치</th><th>상태</th><th>ERP 확인일</th>
+              <th>WMS 총수량</th><th>차이</th><th>사용빈도</th><th>자재구분</th><th>WMS 위치</th><th>상태</th><th>ERP 확인일</th>
             </tr>
           </thead>
           <tbody id="erpCompareBody"></tbody>
@@ -2950,6 +2956,7 @@ function erpCompareRowsFiltered(){
  const status=$('erpCompareFilterStatus')?.value||'';
  const location=$('erpCompareFilterLocation')?.value||'';
  const usage=$('erpCompareFilterUsage')?.value||'';
+ const category=$('erpCompareFilterCategory')?.value||'';
 
  return items.filter(item=>{
    const qty=erpQtyBreakdown(item);
@@ -2968,9 +2975,21 @@ function erpCompareRowsFiltered(){
    if(location && !loc.split(' / ').includes(location)) return false;
    if(usage==='UNSET' && item.usage_frequency) return false;
    if(usage && usage!=='UNSET' && item.usage_frequency!==usage) return false;
+   if(category && String(item.category||'')!==category) return false;
    return true;
  });
 }
+function refreshErpCompareCategoryFilter(){
+ const sel=$('erpCompareFilterCategory');
+ if(!sel) return;
+ const keep=sel.value;
+ const values=[...new Set(items.map(x=>String(x.category||'').trim()).filter(Boolean))]
+   .sort((a,b)=>a.localeCompare(b,'ko'));
+ sel.innerHTML='<option value="">전체 자재구분</option>'+
+   values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+ if(values.includes(keep)) sel.value=keep;
+}
+
 function refreshErpCompareLocationFilter(){
  const sel=$('erpCompareFilterLocation'); if(!sel) return;
  const keep=sel.value;
@@ -2987,6 +3006,7 @@ function refreshErpCompareLocationFilter(){
 function renderErpCompare(){
  if(!$('erpCompareBody')) return;
  refreshErpCompareLocationFilter();
+ refreshErpCompareCategoryFilter();
  const rows=erpCompareRowsFiltered();
  if($('erpCompareCount')) $('erpCompareCount').textContent=`표시 ${rows.length}개 / WMS ${items.length}개`;
 
@@ -3016,11 +3036,12 @@ function renderErpCompare(){
      <td><b>${q.total}</b></td>
      <td class="${has?(ok?'erp-diff-ok':'erp-diff-warn'):''}">${has?diff:'-'}</td>
      <td>${usageSelect}</td>
+     <td><b>${esc(item.category||'⚠️ 확인 필요')}</b></td>
      <td><b>${esc(location)}</b></td>
      <td class="${has?(ok?'erp-diff-ok':'erp-diff-warn'):''}">${!has?'⚠️ 확인 필요':(ok?'🟢 일치':'⚠️ 수량차이')}</td>
      <td>${link?.checked_at?formatDateKST(link.checked_at):'-'}</td>
    </tr>`;
- }).join(''):'<tr><td colspan="9" class="muted">조건에 맞는 품목이 없습니다.</td></tr>';
+ }).join(''):'<tr><td colspan="10" class="muted">조건에 맞는 품목이 없습니다.</td></tr>';
 }
 
 async function saveUsageFromErpCompare(itemId,value,control){
@@ -3072,6 +3093,7 @@ function exportErpCompareExcel(){
      'WMS 총수량':q.total,
      '차이':has?diff:'',
      '사용빈도':usageLabel(item.usage_frequency).replace(/^..\s?/,''),
+     '자재구분':item.category||'확인 필요',
      'WMS 위치':erpCompareLocationText(item),
      '상태':!has?'확인 필요':(ok?'일치':'수량차이'),
      'ERP 확인일':link?.checked_at?formatDateKST(link.checked_at):''
@@ -3079,7 +3101,7 @@ function exportErpCompareExcel(){
  });
  if(!rows.length){alert('출력할 품목이 없습니다.');return;}
  const ws=XLSX.utils.json_to_sheet(rows);
- ws['!cols']=[{wch:18},{wch:40},{wch:14},{wch:14},{wch:12},{wch:16},{wch:34},{wch:16},{wch:20}];
+ ws['!cols']=[{wch:18},{wch:40},{wch:14},{wch:14},{wch:12},{wch:16},{wch:18},{wch:34},{wch:16},{wch:20}];
  const wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,'ERP_WMS_대조');
  XLSX.writeFile(wb,`ERP_WMS_대조_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -7456,11 +7478,13 @@ if($('erpCompareFilterQ')) $('erpCompareFilterQ').oninput=renderErpCompare;
 if($('erpCompareFilterStatus')) $('erpCompareFilterStatus').onchange=renderErpCompare;
 if($('erpCompareFilterLocation')) $('erpCompareFilterLocation').onchange=renderErpCompare;
 if($('erpCompareFilterUsage')) $('erpCompareFilterUsage').onchange=renderErpCompare;
+if($('erpCompareFilterCategory')) $('erpCompareFilterCategory').onchange=renderErpCompare;
 if($('erpCompareFilterReset')) $('erpCompareFilterReset').onclick=()=>{
  $('erpCompareFilterQ').value='';
  $('erpCompareFilterStatus').value='';
  $('erpCompareFilterLocation').value='';
  $('erpCompareFilterUsage').value='';
+ $('erpCompareFilterCategory').value='';
  renderErpCompare();
 };
 if($('erpCompareExcelBtn')) $('erpCompareExcelBtn').onclick=exportErpCompareExcel;
