@@ -3827,22 +3827,34 @@ async function loadAll(){
  let itemData=[];
  let itemError=null;
 
- // 날짜 확장열이 설치된 경우
- let result=await db.from('items')
-   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,registered_on,last_inbound_at,last_outbound_at,last_stock_check_at,item_locations(id,location_code,location_display,qty)')
-   .eq('is_active',true)
-   .order('part_no');
+ async function fetchAllActiveItems(selectColumns){
+   const all=[];
+   const pageSize=1000;
+   let from=0;
+   while(true){
+     const {data,error}=await db.from('items')
+       .select(selectColumns)
+       .eq('is_active',true)
+       .order('part_no')
+       .range(from,from+pageSize-1);
+     if(error) return {data:all,error};
+     const page=data||[];
+     all.push(...page);
+     if(page.length<pageSize) return {data:all,error:null};
+     from+=pageSize;
+   }
+ }
 
+ let result=await fetchAllActiveItems(
+   'id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,registered_on,last_inbound_at,last_outbound_at,last_stock_check_at,item_locations(id,location_code,location_display,qty)'
+ );
  itemData=result.data||[];
  itemError=result.error;
 
- // 날짜 SQL을 아직 실행하지 않았어도 품목 검색은 반드시 되도록 기본열로 재조회
  if(itemError){
-   result=await db.from('items')
-     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
-     .eq('is_active',true)
-     .order('part_no');
-
+   result=await fetchAllActiveItems(
+     'id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)'
+   );
    itemData=(result.data||[]).map(x=>({
      ...x,
      registered_on:null,
@@ -3918,11 +3930,15 @@ async function loadAll(){
  selectHandler(false);
  populateDailyWorkerSelect();
  if($('itemCountBadge')){
-   const verified=items.filter(x=>!x.erp_catalog_only).length;
-   const catalog=items.filter(x=>x.erp_catalog_only).length;
-   $('itemCountBadge').textContent=`전체 ${items.length}종목 · WMS ${verified} · ERP기준 ${catalog}`;
+   const wmsActual=items.filter(x=>!x.erp_catalog_only).length;
+   const erpTotal=(erpMasterRows||[]).length;
+   const erpCatalogInItems=items.filter(x=>x.erp_catalog_only).length;
+   $('itemCountBadge').textContent=erpTotal
+     ? `ERP 기준 ${erpTotal.toLocaleString()}종목 · WMS ${wmsActual.toLocaleString()}`
+     : `전체 ${items.length.toLocaleString()}종목 · WMS ${wmsActual.toLocaleString()} · ERP기준 ${erpCatalogInItems.toLocaleString()}`;
  }
  renderRecentThree();
+ refreshMainItemCountBadge();
  setDefaultDates();
  markRequiredFields();
 
@@ -3954,6 +3970,17 @@ function getRecentThreeItems(){
    })
    .slice(0,3)
    .map(v=>v.x);
+}
+
+
+function refreshMainItemCountBadge(){
+ if(!$('itemCountBadge')) return;
+ const wmsActual=items.filter(x=>!x.erp_catalog_only).length;
+ const erpTotal=(erpMasterRows||[]).length;
+ const erpCatalogInItems=items.filter(x=>x.erp_catalog_only).length;
+ $('itemCountBadge').textContent=erpTotal
+   ? `ERP 기준 ${erpTotal.toLocaleString()}종목 · WMS ${wmsActual.toLocaleString()}`
+   : `전체 ${items.length.toLocaleString()}종목 · WMS ${wmsActual.toLocaleString()} · ERP기준 ${erpCatalogInItems.toLocaleString()}`;
 }
 
 function renderRecentThree(){
@@ -7145,6 +7172,7 @@ async function loadErpMaster(){
  const latest=erpMasterRows.map(x=>x.erp_updated_at).filter(Boolean).sort().pop();
  $('erpMasterUpdatedAt').textContent='ERP 최종 갱신일: '+(latest?formatLoginTime(latest):'-');
  renderErpMaster();
+ refreshMainItemCountBadge();
 }
 let erpMasterQuickFilter='';
 
