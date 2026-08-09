@@ -957,6 +957,22 @@ img{
  .usage-mini{font-size:10px!important;padding:5px 5px!important}
 }
 </style>
+
+<style>
+.usage-inline-select{
+ min-width:128px!important;width:auto!important;padding:6px 8px!important;
+ font-size:11px!important;font-weight:800!important;border:1px solid #d8e3dc!important;
+ border-radius:9px!important;background:#fff!important;
+}
+.usage-view-chip{font-weight:900!important}
+.recent-usage-badge{
+ position:absolute;left:14px;bottom:8px;font-size:11px;font-weight:900;color:#087a43;
+}
+@media(max-width:720px){
+ .usage-inline-select{min-width:112px!important;font-size:10px!important;padding:5px 6px!important}
+ .recent-usage-badge{font-size:10px}
+}
+</style>
 </head>
 <body>
 <header>
@@ -1139,6 +1155,15 @@ img{
           <div class="label required-label">최소수량</div><div class="muted" style="margin:-4px 0 6px">부족재고 판단 기준</div>
           <input id="minStock" type="number" min="0" placeholder="최소수량 입력">
         </div>
+        <div>
+          <div class="label">사용빈도</div>
+          <select id="itemUsageFrequency">
+            <option value="">⚠️ 미분류</option>
+            <option value="FREQUENT">🔥 자주 사용</option>
+            <option value="LESS">🟡 덜 사용</option>
+            <option value="RARE">🔵 사용 적음</option>
+          </select>
+        </div>
       </div>
 
       <input id="unit" type="hidden" value="EA">
@@ -1183,7 +1208,6 @@ img{
           </div>
           <div><div class="label">노랑박스</div>
             <select id="initialYellowBox">
-              <option value="">해당사항 없음</option>
               <option value="">해당사항 없음</option><option value="A">A</option><option value="B">B</option>
             </select>
           </div>
@@ -3204,7 +3228,8 @@ async function loadUnregisteredItems(){
 }
 
 
-async function saveUsageFromAny(itemId,value,control){
+
+async function saveUsageEverywhere(itemId,value,control){
  if(control) control.disabled=true;
  const {error}=await db.rpc('admin_update_item_usage_frequency',{
    p_username:session.username,
@@ -3219,39 +3244,37 @@ async function saveUsageFromAny(itemId,value,control){
    return;
  }
 
- const item=items.find(x=>String(x.id)===String(itemId));
- if(item) item.usage_frequency=value||null;
+ const it=items.find(x=>String(x.id)===String(itemId));
+ if(it) it.usage_frequency=value||null;
 
- const row=unregisteredRows.find(x=>String(x.item_id)===String(itemId));
- if(row) row.usage_frequency=value||null;
-
- const erp=erpMasterRows.find(x=>String(x.wms_item_id)===String(itemId));
- if(erp) erp.usage_frequency=value||null;
-
- if($('erpMasterUploadMsg')){
-   $('erpMasterUploadMsg').textContent=`✅ 사용빈도 저장 완료 · ${usageLabel(value||null)} · 다른 WMS 화면에도 동일하게 반영됩니다.`;
+ if(typeof unregisteredRows!=='undefined'){
+   const ur=unregisteredRows.find(x=>String(x.item_id)===String(itemId));
+   if(ur) ur.usage_frequency=value||null;
  }
+ const er=erpMasterRows.find(x=>String(x.wms_item_id)===String(itemId));
+ if(er) er.usage_frequency=value||null;
+
+ const active=document.querySelector('.tab.active')?.dataset?.tab;
+ if(active==='search'){
+   const q=$('searchQ')?.value?.trim()||'';
+   if(q) await runUnifiedSearch(q); else renderRecentThree();
+ }else if(active==='unregistered'){
+   renderUnregisteredItems();
+ }else if(active==='erpmaster'){
+   renderErpMaster();
+ }
+
+ const msg=`✅ 사용빈도 저장 완료 · ${usageLabel(value||null)} · 모든 화면에 동일 반영`;
+ if(active==='items' && $('itemMsg')) $('itemMsg').textContent=msg;
+ if(active==='unregistered' && $('unregMsg')) $('unregMsg').textContent=msg;
+ if(active==='erpmaster' && $('erpMasterUploadMsg')) $('erpMasterUploadMsg').textContent=msg;
 }
+
+async function saveUsageFromAny(itemId,value,control){ return await saveUsageEverywhere(itemId,value,control); }
 async function saveUsageFrequency(itemId){
  const select=$(`usage_${itemId}`);
  if(!select) return;
- const value=select.value||null;
-
- $('unregMsg').textContent='사용빈도 저장 중...';
- const {error}=await db.rpc('admin_update_item_usage_frequency',{
-   p_username:session.username,
-   p_password:session.password,
-   p_item_id:itemId,
-   p_usage_frequency:value
- });
- if(error){
-   $('unregMsg').textContent='❌ 사용빈도 저장 실패: '+error.message;
-   return;
- }
- const row=unregisteredRows.find(x=>String(x.item_id)===String(itemId));
- if(row) row.usage_frequency=value;
- $('unregMsg').textContent=`✅ 사용빈도 저장 완료 · ${usageLabel(value)}`;
- renderUnregisteredItems();
+ await saveUsageEverywhere(itemId,select.value||null,select);
 }
 
 ['unregKeyword','unregErpStatus','unregUsageFilter','unregLocationFilter','unregStockFilter','unregSort'].forEach(id=>{
@@ -3343,7 +3366,7 @@ async function loadAll(){
 
  // 날짜 확장열이 설치된 경우
  let result=await db.from('items')
-   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,registered_on,last_inbound_at,last_outbound_at,last_stock_check_at,item_locations(id,location_code,location_display,qty)')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,registered_on,last_inbound_at,last_outbound_at,last_stock_check_at,item_locations(id,location_code,location_display,qty)')
    .eq('is_active',true)
    .order('part_no');
 
@@ -3353,7 +3376,7 @@ async function loadAll(){
  // 날짜 SQL을 아직 실행하지 않았어도 품목 검색은 반드시 되도록 기본열로 재조회
  if(itemError){
    result=await db.from('items')
-     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
      .eq('is_active',true)
      .order('part_no');
 
@@ -3491,7 +3514,7 @@ function renderRecentThree(){
              <small>품명</small>
              <b title="${esc(displayItemNameSpec(x))}">${esc(displayItemNameSpec(x))}</b>
            </div>
-           <span class="recent-open-hint">클릭해서 보기 ›</span>
+           <span class="recent-usage-badge">${usageLabel(x.usage_frequency)}</span><span class="recent-open-hint">클릭해서 보기 ›</span>
          </button>`).join('')}
      </div>`
    : '<div class="card">등록된 품목이 없습니다.</div>';
@@ -3761,6 +3784,15 @@ function renderMergedSearch(rows){
            <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:6px">
              <span class="stock-status-badge stock-status-normal">🟢 WMS 등록완료</span>
              ${isAdmin&&erp?'<span class="badge">ERP 연동</span>':''}
+             <span class="badge usage-view-chip">${usageLabel(item.usage_frequency)}</span>
+             ${isAdmin
+               ? `<select class="usage-inline-select" onchange="event.stopPropagation();saveUsageEverywhere('${item.id}',this.value,this)">
+                    <option value="" ${!item.usage_frequency?'selected':''}>⚠️ 미분류</option>
+                    <option value="FREQUENT" ${item.usage_frequency==='FREQUENT'?'selected':''}>🔥 자주 사용</option>
+                    <option value="LESS" ${item.usage_frequency==='LESS'?'selected':''}>🟡 덜 사용</option>
+                    <option value="RARE" ${item.usage_frequency==='RARE'?'selected':''}>🔵 사용 적음</option>
+                  </select>`
+               : ''}
            </div>
 
            <div class="search-priority-info">
@@ -3900,6 +3932,17 @@ function renderSearch(list){
              <small>WMS 현재수량</small>
              <strong>${totalQty} ${esc(x.unit)}</strong>
            </div>
+           ${session?.role==='admin'
+             ? `<div class="search-priority-box">
+                  <small>사용빈도 · 관리자 수정</small>
+                  <select class="usage-inline-select" onchange="event.stopPropagation();saveUsageEverywhere('${x.id}',this.value,this)">
+                    <option value="" ${!x.usage_frequency?'selected':''}>⚠️ 미분류</option>
+                    <option value="FREQUENT" ${x.usage_frequency==='FREQUENT'?'selected':''}>🔥 자주 사용</option>
+                    <option value="LESS" ${x.usage_frequency==='LESS'?'selected':''}>🟡 덜 사용</option>
+                    <option value="RARE" ${x.usage_frequency==='RARE'?'selected':''}>🔵 사용 적음</option>
+                  </select>
+                </div>`
+             : ''}
          </div>
 
          <div class="activity-dates">
@@ -3949,6 +3992,7 @@ function renderSearch(list){
 
          <div class="search-foot">
            <span class="search-chip">자재구분: ${esc(x.category||'기타')}</span>
+           <span class="search-chip usage-view-chip">${usageLabel(x.usage_frequency)}</span>
            <span class="search-chip">최소수량: ${esc(x.min_stock??0)} ${esc(x.unit)}</span>
            <span class="search-chip">등록 위치: ${locations.length}곳</span>
          </div>
@@ -4129,6 +4173,7 @@ function clearItemForm(){
  $('itemName').value='';
  if($('spec')) $('spec').value='';
  $('minStock').value='';
+ if($('itemUsageFrequency')) $('itemUsageFrequency').value='';
  if($('category')){
    // 신규 등록 시 자재구분을 첫 선택값으로 초기화
    $('category').selectedIndex=0;
@@ -4171,6 +4216,7 @@ function loadItemForEdit(){
  if($('spec')) $('spec').value=x.specification||'';
  $('category').value=x.category||'기타';
  $('minStock').value=x.min_stock??0;
+ if($('itemUsageFrequency')) $('itemUsageFrequency').value=x.usage_frequency||'';
  $('registeredOn').value=x.registered_on||todayKST();
  $('unit').value=x.unit||'EA';
  $('partNo').readOnly=false;
@@ -4306,6 +4352,20 @@ async function saveItemSimple(){
      ?'⚠️ 이미 등록된 품번입니다. 기존 품목 수정에서 선택하세요.'
      :'❌ '+itemError.message;
    return;
+ }
+
+
+ // 사용빈도는 품목당 하나의 공통값으로 저장
+ if($('itemUsageFrequency')){
+   const {error:usageError}=await db.rpc('admin_update_item_usage_frequency',{
+     p_username:session.username,
+     p_password:session.password,
+     p_item_id:itemId,
+     p_usage_frequency:$('itemUsageFrequency').value||null
+   });
+   if(usageError){
+     $('itemMsg').textContent='⚠️ 품목은 저장되었지만 사용빈도 저장 실패: '+usageError.message;
+   }
  }
 
  // 날짜 기능 SQL이 설치되지 않아도 품목등록 자체는 성공 처리
@@ -4675,7 +4735,7 @@ async function fetchRegisteredItemDirect(partValue,nameValue){
  if(!p && !n) return null;
 
  let query=db.from('items')
-   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
    .eq('is_active',true);
 
  if(p) query=query.eq('part_no',p);
@@ -4685,7 +4745,7 @@ async function fetchRegisteredItemDirect(partValue,nameValue){
 
  if((error || !data?.length) && p && !n){
    ({data,error}=await db.from('items')
-     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
      .eq('is_active',true)
      .ilike('part_no',p)
      .limit(2));
@@ -4693,7 +4753,7 @@ async function fetchRegisteredItemDirect(partValue,nameValue){
 
  if((error || !data?.length) && n && !p){
    ({data,error}=await db.from('items')
-     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
      .eq('is_active',true)
      .ilike('item_name',n)
      .limit(2));
@@ -4992,7 +5052,7 @@ async function selectInboundItem(){
 
  // 품목 선택 때마다 DB에서 최신 위치/수량을 직접 다시 불러옴
  const {data:fresh,error:freshError}=await db.from('items')
-   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,item_locations(id,location_code,location_display,qty)')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
    .eq('id',found.id)
    .eq('is_active',true)
    .maybeSingle();
