@@ -1035,6 +1035,71 @@ img{
  .mobile-location-title{font-size:23px!important;font-weight:900!important;line-height:1.35!important}
 }
 </style>
+
+<style id="mobile-exact-location-font-fix">
+.coop-notice-close{
+  width:auto!important;
+  min-height:38px!important;
+  padding:7px 12px!important;
+  font-size:14px!important;
+  font-weight:900!important;
+}
+.coop-notice-collapsed{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  margin:6px 0!important;
+}
+.coop-show-btn{
+  width:auto!important;
+  min-height:36px!important;
+  padding:6px 10px!important;
+  font-size:13px!important;
+}
+@media(max-width:720px){
+  /* 사용자가 표시한 바로 그 자재위치 카드 */
+  #searchResults .search-priority-location{
+    grid-template-columns:36px 1fr!important;
+    gap:10px!important;
+    padding:18px!important;
+    border-radius:16px!important;
+  }
+  #searchResults .search-priority-location > div:first-child{
+    font-size:28px!important;
+  }
+  #searchResults .search-priority-location .name{
+    font-size:24px!important;
+    line-height:1.35!important;
+    font-weight:900!important;
+    letter-spacing:-0.3px!important;
+  }
+  #searchResults .search-priority-location .code{
+    font-size:18px!important;
+    line-height:1.4!important;
+    margin-top:5px!important;
+    color:#667085!important;
+  }
+  #searchResults .search-priority-location .qty{
+    grid-column:2!important;
+    font-size:27px!important;
+    line-height:1.25!important;
+    font-weight:900!important;
+    margin-top:8px!important;
+    text-align:left!important;
+  }
+  #searchResults .search-priority-locations{
+    gap:12px!important;
+  }
+  #searchResults .search-foot .search-chip{
+    font-size:17px!important;
+    padding:9px 11px!important;
+  }
+  .coop-notice-close{
+    font-size:15px!important;
+    min-height:40px!important;
+  }
+}
+</style>
 </head>
 <body>
 <header>
@@ -2602,9 +2667,25 @@ function setupCooperationNotice(){
  const box=$('cooperationNotice');
  if(!box) return;
 
+ const hidden=sessionStorage.getItem('mirim_coop_notice_hidden')==='1';
+ if(hidden){
+   box.innerHTML=`
+     <button id="showCooperationNotice" type="button" class="secondary coop-show-btn">
+       📢 협조사항 보기
+     </button>`;
+   box.classList.add('coop-notice-collapsed');
+   $('showCooperationNotice').onclick=()=>{
+     sessionStorage.removeItem('mirim_coop_notice_hidden');
+     setupCooperationNotice();
+   };
+   return;
+ }
+
+ box.classList.remove('coop-notice-collapsed');
  box.innerHTML=`
    <div class="coop-notice-head">
      <div class="coop-notice-title">📢 협조사항</div>
+     <button id="closeCooperationNotice" type="button" class="coop-notice-close" aria-label="협조사항 닫기">✕ 닫기</button>
    </div>
    <div class="coop-notice-body">
      <div class="coop-notice-item">🔎 <b>제품검색</b> · 품번 또는 품명 일부 입력 → 제품 찾기</div>
@@ -2614,8 +2695,12 @@ function setupCooperationNotice(){
      <div class="coop-notice-item">📷 <b>사진 없음</b> · 자재 담당자에게 사진 등록 요청</div>
      <div class="coop-notice-item">📍 <b>위치 다름/없음</b> · 임의 변경 금지 → 자재 담당자 확인 요청</div>
    </div>`;
-}
 
+ $('closeCooperationNotice').onclick=()=>{
+   sessionStorage.setItem('mirim_coop_notice_hidden','1');
+   setupCooperationNotice();
+ };
+}
 function todayKST(){
   return new Intl.DateTimeFormat('en-CA',{
     timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
