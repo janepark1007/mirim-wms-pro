@@ -933,7 +933,9 @@ img{
  .unreg-usage-edit{grid-template-columns:1fr auto}
 }
 </style>
-</head>
+<style>
+.usage-mini{min-width:120px;padding:6px 7px;font-size:12px;font-weight:800}
+</style></head>
 <body>
 <header>
   <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
@@ -3179,6 +3181,22 @@ async function loadUnregisteredItems(){
  renderUnregisteredItems();
 }
 
+
+async function saveUsageFromAny(itemId,value,control){
+ if(control) control.disabled=true;
+ const {error}=await db.rpc('admin_update_item_usage_frequency',{
+   p_username:session.username,p_password:session.password,
+   p_item_id:itemId,p_usage_frequency:value||null
+ });
+ if(control) control.disabled=false;
+ if(error){ alert('사용빈도 저장 실패: '+error.message); return; }
+ const item=items.find(x=>String(x.id)===String(itemId));
+ if(item) item.usage_frequency=value||null;
+ const row=unregisteredRows.find(x=>String(x.item_id)===String(itemId));
+ if(row) row.usage_frequency=value||null;
+ const erp=erpMasterRows.find(x=>String(x.wms_item_id)===String(itemId));
+ if(erp) erp.usage_frequency=value||null;
+}
 async function saveUsageFrequency(itemId){
  const select=$(`usage_${itemId}`);
  if(!select) return;
@@ -3741,6 +3759,7 @@ function renderMergedSearch(rows){
 
            <div class="search-foot">
              <span class="search-chip">자재구분: ${esc(item.category||'기타')}</span>
+             <span class="search-chip">${usageLabel(item.usage_frequency)}</span>
              ${isAdmin?`<span class="search-chip">최소수량: ${Number(item.min_stock||0).toLocaleString()} ${esc(item.unit||'EA')}</span>`:''}
            </div>
 
@@ -6520,7 +6539,12 @@ function renderErpMaster(){
    return `<tr>
      <td>${esc(x.erp_item_code)}</td>
      <td>${esc(erpMasterDisplay(x))}</td>
-     <td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
+     <td>${r.wms_item_id?`<select class="usage-mini" onchange="saveUsageFromAny('${r.wms_item_id}',this.value,this)">
+<option value="" ${!r.usage_frequency?'selected':''}>⚠️ 미분류</option>
+<option value="FREQUENT" ${r.usage_frequency==='FREQUENT'?'selected':''}>🔥 자주 사용</option>
+<option value="LESS" ${r.usage_frequency==='LESS'?'selected':''}>🟡 덜 사용</option>
+<option value="RARE" ${r.usage_frequency==='RARE'?'selected':''}>🔵 사용 적음</option>
+</select>`:'<span class="badge">WMS 미등록</span>'}</td><td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
      <td>${esc(x.wms_category||'⚠️ 미확인')}</td>
      <td>${esc(x.wms_location||'⚠️ 미확인')}</td>
      <td>${stateText}</td>
