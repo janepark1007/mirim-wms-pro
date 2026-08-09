@@ -1117,6 +1117,74 @@ img{
  .expert-photo-row button{font-size:18px!important;min-height:50px!important}
 }
 </style>
+
+<style id="coop-red-expert-notice">
+#cooperationNotice{
+  border:2px solid #c62828!important;
+  background:#fff5f5!important;
+  border-radius:16px!important;
+  padding:12px!important;
+}
+#cooperationNotice .coop-notice-head{
+  background:#c62828!important;
+  color:#fff!important;
+  border-radius:12px!important;
+  padding:10px 12px!important;
+  margin-bottom:10px!important;
+}
+#cooperationNotice .coop-notice-title{
+  color:#fff!important;
+  font-size:20px!important;
+  font-weight:900!important;
+}
+#cooperationNotice .coop-notice-close{
+  background:#fff!important;
+  color:#b71c1c!important;
+  border:0!important;
+  font-weight:900!important;
+}
+#cooperationNotice .coop-system-test{
+  background:#d32f2f!important;
+  color:#fff!important;
+  border-radius:12px!important;
+  padding:12px 14px!important;
+  font-size:18px!important;
+  font-weight:800!important;
+  line-height:1.5!important;
+  margin-bottom:10px!important;
+}
+#cooperationNotice .coop-expert-guide{
+  background:#fff3cd!important;
+  border:2px solid #f0b429!important;
+  color:#5f4300!important;
+  border-radius:12px!important;
+  padding:12px 14px!important;
+  font-size:16px!important;
+  font-weight:700!important;
+  line-height:1.55!important;
+  margin-bottom:10px!important;
+}
+#cooperationNotice .coop-expert-guide b{
+  font-weight:900!important;
+}
+#cooperationNotice .coop-notice-item{
+  background:#fff!important;
+  border:1px solid #f1d4d4!important;
+}
+@media(max-width:720px){
+  #cooperationNotice .coop-notice-title{
+    font-size:22px!important;
+  }
+  #cooperationNotice .coop-system-test{
+    font-size:19px!important;
+    padding:13px!important;
+  }
+  #cooperationNotice .coop-expert-guide{
+    font-size:17px!important;
+    padding:13px!important;
+  }
+}
+</style>
 </head>
 <body>
 <header>
@@ -2711,12 +2779,25 @@ function setupCooperationNotice(){
      <div class="coop-notice-title">📢 협조사항</div>
      <button id="closeCooperationNotice" type="button" class="coop-notice-close" aria-label="협조사항 닫기">✕ 닫기</button>
    </div>
+
+   <div class="coop-system-test">
+     🚨 <b>현재 WMS는 테스트 운영 중입니다.</b><br>
+     문제점·오류·수정 요청이 있으면 <b>자재 담당자에게 바로 알려 주세요.</b>
+   </div>
+
+   <div class="coop-expert-guide">
+     🛠️ <b>품목 전문가 직접 수정 가능</b><br>
+     <b>최순정대리님 · 엑셀-영애</b>는 일반 검색에서
+     <b>사진 · 사용빈도 · 자재구분 · 최소수량</b>을 직접 수정할 수 있습니다.<br>
+     다른 직원은 수정이 필요하면 두 분 또는 자재 담당자에게 요청해 주세요.
+   </div>
+
    <div class="coop-notice-body">
      <div class="coop-notice-item">🔎 <b>제품검색</b> · 품번 또는 품명 일부 입력 → 제품 찾기</div>
      <div class="coop-notice-item">📸 <b>사진검색</b> · 제품 촬영 → 돋보기 사진검색 → 비슷한 제품 찾기</div>
      <div class="coop-notice-item">📦 <b>출고</b> · 제품 확인 → 오른쪽 하단 <b>📦 작업</b> → 출고정보 입력</div>
      <div class="coop-notice-item">🔢 <b>WMS 수량</b> · 없거나 실제수량과 다르면 → 자재 담당자 확인 요청</div>
-     <div class="coop-notice-item">📷 <b>사진 없음</b> · 자재 담당자에게 사진 등록 요청</div>
+     <div class="coop-notice-item">📷 <b>사진 없음</b> · 품목 전문가 또는 자재 담당자에게 사진 등록 요청</div>
      <div class="coop-notice-item">📍 <b>위치 다름/없음</b> · 임의 변경 금지 → 자재 담당자 확인 요청</div>
    </div>`;
 
@@ -2725,67 +2806,6 @@ function setupCooperationNotice(){
    setupCooperationNotice();
  };
 }
-
-async function expertSaveInfo(itemId){
- if(!isItemExpert()){ alert('품목 전문가만 수정할 수 있습니다.'); return; }
- const usage=$(`expertUsage_${itemId}`)?.value||null;
- const category=$(`expertCategory_${itemId}`)?.value?.trim()||null;
- const minStock=Number($(`expertMin_${itemId}`)?.value||0);
- const msg=$(`expertMsg_${itemId}`);
- if(msg) msg.textContent='저장 중...';
-
- const {error}=await db.rpc('item_expert_update_basic_info',{
-   p_username:session.username,
-   p_password:session.password,
-   p_item_id:itemId,
-   p_usage_frequency:usage,
-   p_category:category,
-   p_min_stock:minStock
- });
- if(error){
-   if(msg) msg.textContent='❌ 저장 실패: '+error.message;
-   return;
- }
- const it=items.find(x=>String(x.id)===String(itemId));
- if(it){ it.usage_frequency=usage; it.category=category; it.min_stock=minStock; }
- if(msg) msg.textContent='✅ 저장 완료 · 관리자/ERP대조에도 동일 기준정보 반영';
-}
-
-async function expertSavePhoto(itemId,input){
- if(!isItemExpert()){ alert('품목 전문가만 사진을 저장할 수 있습니다.'); return; }
- const file=input?.files?.[0];
- if(!file) return;
- const msg=$(`expertMsg_${itemId}`);
- if(msg) msg.textContent='📷 사진 저장 중...';
-
- // 기존 앱의 사진 업로드 함수를 우선 재사용
- try{
-   if(typeof uploadItemPhotoFile==='function'){
-     await uploadItemPhotoFile(itemId,file);
-   }else if(typeof uploadPhotoForItem==='function'){
-     await uploadPhotoForItem(itemId,file);
-   }else{
-     // 앱의 기존 Supabase Storage bucket(items)을 사용
-     const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
-     const path=`items/${itemId}/${Date.now()}.${ext}`;
-     const up=await db.storage.from('item-photos').upload(path,file,{upsert:true});
-     if(up.error) throw up.error;
-     const pub=db.storage.from('item-photos').getPublicUrl(path);
-     const photoUrl=pub.data?.publicUrl||'';
-     const r=await db.rpc('item_expert_update_photo',{
-       p_username:session.username,p_password:session.password,
-       p_item_id:itemId,p_photo_url:photoUrl
-     });
-     if(r.error) throw r.error;
-   }
-   if(msg) msg.textContent='✅ 사진 저장 완료 · 관리자 화면에도 동일 사진 반영';
-   await loadAll();
- }catch(e){
-   if(msg) msg.textContent='❌ 사진 저장 실패: '+(e?.message||e);
- }
- input.value='';
-}
-
 function todayKST(){
   return new Intl.DateTimeFormat('en-CA',{
     timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
