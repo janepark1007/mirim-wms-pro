@@ -974,174 +974,65 @@ img{
 }
 </style>
 
+<style id="mobile-location-readable-v2">
+@media(max-width:720px){
+  /* 검색 결과 카드 기본 가독성 */
+  #searchResults, #searchResults *{
+    line-height:1.45;
+  }
 
+  /* 위치 영역 제목 */
+  #searchResults h3,
+  #searchResults h4{
+    font-size:22px!important;
+    font-weight:900!important;
+    line-height:1.35!important;
+  }
 
-<style id="mobile-readable-font-v2">
-/* 데스크톱은 기존 비율 유지, 폰에서만 확실히 크게 보이도록 강제 확대 */
-@media(max-width:900px){
-  html{
+  /* 위치 카드 자체 */
+  #searchResults [class*="location"],
+  #searchResults [class*="loc-"]{
+    font-size:18px!important;
+  }
+
+  /* 위치 카드 안 텍스트/수량 */
+  #searchResults [class*="location"] b,
+  #searchResults [class*="location"] strong,
+  #searchResults [class*="loc-"] b,
+  #searchResults [class*="loc-"] strong{
     font-size:20px!important;
-    -webkit-text-size-adjust:100%!important;
-    text-size-adjust:100%!important;
-  }
-  body{
-    font-size:20px!important;
-    line-height:1.6!important;
-  }
-
-  /* 기본 텍스트 */
-  body,div,span,p,small,strong,b,label,a{
-    letter-spacing:0!important;
-  }
-
-  /* 상단 메뉴/탭 */
-  .tab,button{
-    font-size:18px!important;
-    min-height:50px!important;
-    padding:11px 14px!important;
     font-weight:900!important;
   }
 
-  /* 입력 영역 */
-  input,select,textarea{
-    font-size:18px!important;
-    min-height:50px!important;
-    padding:11px 13px!important;
-    font-weight:700!important;
-  }
-  input::placeholder,textarea::placeholder{
-    font-size:17px!important;
-  }
-
-  /* 제목 */
-  h1{font-size:30px!important;line-height:1.3!important}
-  h2{font-size:26px!important;line-height:1.35!important}
-  h3{font-size:22px!important;line-height:1.4!important}
-
-  /* 안내문, 라벨 */
-  .label{
-    font-size:17px!important;
-    font-weight:900!important;
-  }
-  .muted{
+  #searchResults [class*="location"] small,
+  #searchResults [class*="loc-"] small{
     font-size:16px!important;
-    line-height:1.55!important;
-  }
-  .ok,.bad{
-    font-size:17px!important;
-    line-height:1.55!important;
-    padding:12px 14px!important;
-  }
-
-  /* 배지/상태 */
-  .badge,.search-chip,.stock-status-badge,.photo-match-badge{
-    font-size:16px!important;
-    padding:7px 10px!important;
-    font-weight:900!important;
-  }
-
-  /* 검색 카드 */
-  .search-priority-card,
-  .search-recent-card,
-  .card{
-    font-size:18px!important;
-  }
-  .search-priority-box small,
-  .search-priority-total small,
-  .activity-date small,
-  .unreg-item-card small{
-    font-size:15px!important;
-  }
-  .search-priority-box strong,
-  .search-priority-total strong,
-  .search-recent-card b,
-  .unreg-part,
-  .unreg-name{
-    font-size:19px!important;
     line-height:1.45!important;
   }
 
-  /* 수량 */
-  .single-stock-qty span,
-  .dual-stock-qty span{
-    font-size:15px!important;
-  }
-  .single-stock-qty b,
-  .dual-stock-qty b,
-  .unreg-qty b{
-    font-size:21px!important;
+  /* 검색 결과 하단 자재구분/빈도/최소수량 배지 */
+  #searchResults .badge,
+  #searchResults .search-chip{
+    font-size:17px!important;
+    padding:9px 11px!important;
+    min-height:38px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    font-weight:800!important;
   }
 
-  /* 표 */
-  table{
-    font-size:17px!important;
-  }
-  th{
-    font-size:17px!important;
-    padding:12px 10px!important;
-    font-weight:900!important;
-    white-space:nowrap!important;
-  }
-  td{
-    font-size:17px!important;
-    padding:12px 10px!important;
-    line-height:1.5!important;
-  }
-
-  /* 사용빈도/선택박스 */
-  .usage-inline-select,.usage-mini{
-    font-size:16px!important;
-    min-height:44px!important;
-    padding:7px 9px!important;
-    font-weight:900!important;
-  }
-
-  /* ERP 대조 */
-  #erpCompareCount{
-    font-size:16px!important;
-  }
-  #erpCompareExcelBtn,
-  #erpReloadBtn{
+  /* 작업 버튼도 같이 읽기 쉽게 */
+  #searchResults button{
     font-size:18px!important;
-    min-height:50px!important;
-    padding:11px 16px!important;
-  }
-
-  /* 관리자/일반 공통 검색 도움말 */
-  #searchModeHelp,
-  #searchCountText,
-  #photoSearchMsg{
-    font-size:16px!important;
-  }
-
-  /* 최근 등록 */
-  .recent-usage-badge,
-  .recent-open-hint{
-    font-size:14px!important;
-  }
-
-  /* 모바일에서 너무 작아지는 zoom 방지 */
-  #app,
-  .app,
-  main,
-  .container,
-  .wrap{
-    zoom:1!important;
-    transform:none!important;
+    min-height:48px!important;
+    font-weight:900!important;
   }
 }
+</style>
 
-/* 작은 휴대폰은 한 단계 더 키움 */
-@media(max-width:600px){
-  html,body{font-size:21px!important}
-  .tab,button,input,select,textarea{font-size:19px!important}
-  .label{font-size:18px!important}
-  .muted{font-size:17px!important}
-  th,td{font-size:18px!important}
-  .badge,.search-chip,.stock-status-badge{font-size:16px!important}
-  .search-priority-box strong,
-  .search-priority-total strong,
-  .search-recent-card b{font-size:20px!important}
+<style>
+@media(max-width:720px){
+ .mobile-location-title{font-size:23px!important;font-weight:900!important;line-height:1.35!important}
 }
 </style>
 </head>
@@ -4327,7 +4218,7 @@ function renderSearch(list){
            ? `<button class="secondary stock-check-btn" onclick="markStockChecked('${x.id}')">재고확인 완료 기록</button>`
            : ''}
 
-         <div class="label" style="margin-top:18px">전체 자재위치 및 위치별 최종수량</div>
+         <div class="label" style="margin-top:18px"><span class="mobile-location-title">전체 자재위치 및 위치별 최종수량</span></div>
          <div class="search-priority-locations">
            ${locations.length
              ? locations.map((l,i)=>`
