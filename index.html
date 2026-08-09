@@ -1100,6 +1100,23 @@ img{
   }
 }
 </style>
+
+<style id="item-expert-quick-edit">
+.expert-quick-panel{margin-top:12px;padding:14px;border:2px solid #0a7a45;border-radius:14px;background:#f4fff8}
+.expert-quick-title{font-size:16px;font-weight:900;margin-bottom:10px}
+.expert-quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.expert-quick-grid label{font-size:13px;font-weight:800}
+.expert-quick-grid input,.expert-quick-grid select{margin-top:4px}
+.expert-photo-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.expert-photo-row button{width:auto}
+@media(max-width:720px){
+ .expert-quick-title{font-size:20px!important}
+ .expert-quick-grid{grid-template-columns:1fr!important}
+ .expert-quick-grid label{font-size:17px!important}
+ .expert-quick-grid input,.expert-quick-grid select{font-size:18px!important;min-height:50px!important}
+ .expert-photo-row button{font-size:18px!important;min-height:50px!important}
+}
+</style>
 </head>
 <body>
 <header>
@@ -2663,6 +2680,13 @@ setTimeout(setDefaultDates,0);
 
 const $=id=>document.getElementById(id);
 
+const ITEM_EXPERT_NAMES=['최순정대리님','순정대리님','엑셀-조영애','엑셀-영애','조영애'];
+function isItemExpert(){
+ const n=String(session?.displayName||'').replace(/\s/g,'');
+ return ITEM_EXPERT_NAMES.some(v=>n.includes(String(v).replace(/\s/g,'')));
+}
+
+
 function setupCooperationNotice(){
  const box=$('cooperationNotice');
  if(!box) return;
@@ -2701,6 +2725,67 @@ function setupCooperationNotice(){
    setupCooperationNotice();
  };
 }
+
+async function expertSaveInfo(itemId){
+ if(!isItemExpert()){ alert('품목 전문가만 수정할 수 있습니다.'); return; }
+ const usage=$(`expertUsage_${itemId}`)?.value||null;
+ const category=$(`expertCategory_${itemId}`)?.value?.trim()||null;
+ const minStock=Number($(`expertMin_${itemId}`)?.value||0);
+ const msg=$(`expertMsg_${itemId}`);
+ if(msg) msg.textContent='저장 중...';
+
+ const {error}=await db.rpc('item_expert_update_basic_info',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:itemId,
+   p_usage_frequency:usage,
+   p_category:category,
+   p_min_stock:minStock
+ });
+ if(error){
+   if(msg) msg.textContent='❌ 저장 실패: '+error.message;
+   return;
+ }
+ const it=items.find(x=>String(x.id)===String(itemId));
+ if(it){ it.usage_frequency=usage; it.category=category; it.min_stock=minStock; }
+ if(msg) msg.textContent='✅ 저장 완료 · 관리자/ERP대조에도 동일 기준정보 반영';
+}
+
+async function expertSavePhoto(itemId,input){
+ if(!isItemExpert()){ alert('품목 전문가만 사진을 저장할 수 있습니다.'); return; }
+ const file=input?.files?.[0];
+ if(!file) return;
+ const msg=$(`expertMsg_${itemId}`);
+ if(msg) msg.textContent='📷 사진 저장 중...';
+
+ // 기존 앱의 사진 업로드 함수를 우선 재사용
+ try{
+   if(typeof uploadItemPhotoFile==='function'){
+     await uploadItemPhotoFile(itemId,file);
+   }else if(typeof uploadPhotoForItem==='function'){
+     await uploadPhotoForItem(itemId,file);
+   }else{
+     // 앱의 기존 Supabase Storage bucket(items)을 사용
+     const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+     const path=`items/${itemId}/${Date.now()}.${ext}`;
+     const up=await db.storage.from('item-photos').upload(path,file,{upsert:true});
+     if(up.error) throw up.error;
+     const pub=db.storage.from('item-photos').getPublicUrl(path);
+     const photoUrl=pub.data?.publicUrl||'';
+     const r=await db.rpc('item_expert_update_photo',{
+       p_username:session.username,p_password:session.password,
+       p_item_id:itemId,p_photo_url:photoUrl
+     });
+     if(r.error) throw r.error;
+   }
+   if(msg) msg.textContent='✅ 사진 저장 완료 · 관리자 화면에도 동일 사진 반영';
+   await loadAll();
+ }catch(e){
+   if(msg) msg.textContent='❌ 사진 저장 실패: '+(e?.message||e);
+ }
+ input.value='';
+}
+
 function todayKST(){
   return new Intl.DateTimeFormat('en-CA',{
     timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
@@ -4155,7 +4240,34 @@ function renderMergedSearch(rows){
                :'<div class="search-priority-location"><div>⚠️</div><div class="name">자재위치 확인 필요</div></div>'}
            </div>
 
-           <div class="search-foot">
+           ${isItemExpert()?`
+         <div class="expert-quick-panel">
+           <div class="expert-quick-title">🛠️ 품목 전문가 빠른 수정</div>
+           <div class="expert-quick-grid">
+             <label>사용빈도
+               <select id="expertUsage_${item.id}" onclick="event.stopPropagation()">
+                 <option value="" ${!item.usage_frequency?'selected':''}>⚠️ 미분류</option>
+                 <option value="FREQUENT" ${item.usage_frequency==='FREQUENT'?'selected':''}>🔥 자주 사용</option>
+                 <option value="LESS" ${item.usage_frequency==='LESS'?'selected':''}>🟡 덜 사용</option>
+                 <option value="RARE" ${item.usage_frequency==='RARE'?'selected':''}>🔵 사용 적음</option>
+               </select>
+             </label>
+             <label>자재구분
+               <input id="expertCategory_${item.id}" value="${esc(item.category||'')}" onclick="event.stopPropagation()" placeholder="자재구분">
+             </label>
+             <label>최소수량
+               <input id="expertMin_${item.id}" type="number" min="0" step="0.001" value="${Number(item.min_stock||0)}" onclick="event.stopPropagation()">
+             </label>
+           </div>
+           <div class="expert-photo-row">
+             <input id="expertPhoto_${item.id}" type="file" accept="image/*" capture="environment" class="hidden"
+                    onchange="expertSavePhoto('${item.id}',this)" onclick="event.stopPropagation()">
+             <button type="button" class="secondary" onclick="event.stopPropagation();document.getElementById('expertPhoto_${item.id}').click()">📷 사진 촬영·저장</button>
+             <button type="button" onclick="event.stopPropagation();expertSaveInfo('${item.id}')">💾 기준정보 저장</button>
+           </div>
+           <div id="expertMsg_${item.id}" class="muted"></div>
+         </div>`:''}
+         <div class="search-foot">
              <span class="search-chip">자재구분: ${esc(item.category||'기타')}</span>
              <span class="search-chip">${usageLabel(item.usage_frequency)}</span>
              ${isAdmin?`<span class="search-chip">최소수량: ${Number(item.min_stock||0).toLocaleString()} ${esc(item.unit||'EA')}</span>`:''}
