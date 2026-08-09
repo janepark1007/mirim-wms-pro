@@ -935,7 +935,29 @@ img{
 </style>
 <style>
 .usage-mini{min-width:120px;padding:6px 7px;font-size:12px;font-weight:800}
-</style></head>
+</style>
+<style>
+#erpMasterTab table{table-layout:fixed;min-width:1230px!important}
+#erpMasterTab th:nth-child(1),#erpMasterTab td:nth-child(1){width:130px!important}
+#erpMasterTab th:nth-child(2),#erpMasterTab td:nth-child(2){width:360px!important;max-width:360px!important}
+#erpMasterTab th:nth-child(3),#erpMasterTab td:nth-child(3){width:95px!important}
+#erpMasterTab th:nth-child(4),#erpMasterTab td:nth-child(4){width:145px!important}
+#erpMasterTab th:nth-child(5),#erpMasterTab td:nth-child(5){width:115px!important}
+#erpMasterTab th:nth-child(6),#erpMasterTab td:nth-child(6){width:160px!important}
+#erpMasterTab th:nth-child(7),#erpMasterTab td:nth-child(7){width:125px!important}
+#erpMasterTab th:nth-child(8),#erpMasterTab td:nth-child(8){width:175px!important}
+#erpMasterTab th:nth-child(9),#erpMasterTab td:nth-child(9){width:105px!important}
+.usage-mini{
+ min-width:128px!important;width:128px!important;padding:6px 7px!important;
+ font-size:11px!important;font-weight:800!important;
+ border:1px solid #d9e2dc!important;border-radius:8px!important;background:#fff!important;
+}
+@media(max-width:720px){
+ #erpMasterTab table{width:1230px!important;min-width:1230px!important}
+ .usage-mini{font-size:10px!important;padding:5px 5px!important}
+}
+</style>
+</head>
 <body>
 <header>
   <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
@@ -1837,7 +1859,7 @@ img{
     <div style="overflow:auto;margin-top:10px;max-height:520px">
       <table style="width:100%;border-collapse:collapse;min-width:900px">
         <thead><tr>
-          <th>품목코드</th><th>품명</th><th>ERP 현재고</th><th>자재구분</th><th>현재 WMS 위치</th><th>상태</th><th>ERP 갱신일</th><th>작업</th>
+          <th>품목코드</th><th>품명</th><th>ERP 현재고</th><th>사용빈도</th><th>자재구분</th><th>현재 WMS 위치</th><th>상태</th><th>ERP 갱신일</th><th>작업</th>
         </tr></thead>
         <tbody id="erpMasterBody"></tbody>
       </table>
@@ -3185,17 +3207,30 @@ async function loadUnregisteredItems(){
 async function saveUsageFromAny(itemId,value,control){
  if(control) control.disabled=true;
  const {error}=await db.rpc('admin_update_item_usage_frequency',{
-   p_username:session.username,p_password:session.password,
-   p_item_id:itemId,p_usage_frequency:value||null
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:itemId,
+   p_usage_frequency:value||null
  });
  if(control) control.disabled=false;
- if(error){ alert('사용빈도 저장 실패: '+error.message); return; }
+
+ if(error){
+   alert('사용빈도 저장 실패: '+error.message);
+   return;
+ }
+
  const item=items.find(x=>String(x.id)===String(itemId));
  if(item) item.usage_frequency=value||null;
+
  const row=unregisteredRows.find(x=>String(x.item_id)===String(itemId));
  if(row) row.usage_frequency=value||null;
+
  const erp=erpMasterRows.find(x=>String(x.wms_item_id)===String(itemId));
  if(erp) erp.usage_frequency=value||null;
+
+ if($('erpMasterUploadMsg')){
+   $('erpMasterUploadMsg').textContent=`✅ 사용빈도 저장 완료 · ${usageLabel(value||null)} · 다른 WMS 화면에도 동일하게 반영됩니다.`;
+ }
 }
 async function saveUsageFrequency(itemId){
  const select=$(`usage_${itemId}`);
@@ -6509,22 +6544,32 @@ function applyErpSummaryFilter(kind){
 function renderErpMaster(){
  setTimeout(bindErpSummaryCards,0);
  if(!$('erpMasterBody')) return;
+
  const q=norm($('erpMasterSearch')?.value||'');
  const f=$('erpMasterFilter')?.value||'ALL';
  const stateOf=x=>x.wms_verified?'EXPOSED':(x.draft_saved?'TEMP':'HIDDEN');
+
  let rows=erpMasterRows.filter(x=>{
-   const searchOk=!q || norm(`${x.erp_item_code} ${erpMasterDisplay(x)}`).includes(q);
+   const searchText=norm([
+     x.erp_item_code,
+     x.item_name,
+     x.specification,
+     erpMasterDisplay(x)
+   ].filter(Boolean).join(' '));
+   const searchOk=!q || searchText.includes(q);
    const stateOk=f==='ALL'||stateOf(x)===f;
    const quickOk=!erpMasterQuickFilter
      || (erpMasterQuickFilter==='ZERO' && Number(x.erp_stock_qty||0)===0)
      || (erpMasterQuickFilter==='NEGATIVE' && Number(x.erp_stock_qty||0)<0);
    return searchOk&&stateOk&&quickOk;
  });
+
  const exposedCount=erpMasterRows.filter(x=>stateOf(x)==='EXPOSED').length;
  const tempCount=erpMasterRows.filter(x=>stateOf(x)==='TEMP').length;
  const hiddenCount=erpMasterRows.filter(x=>stateOf(x)==='HIDDEN').length;
  const zeroCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)===0).length;
  const negativeCount=erpMasterRows.filter(x=>Number(x.erp_stock_qty||0)<0).length;
+
  $('erpMasterTotalCount').textContent=erpMasterRows.length.toLocaleString();
  $('erpMasterExposedCount').textContent=exposedCount.toLocaleString();
  $('erpMasterTempCount').textContent=tempCount.toLocaleString();
@@ -6532,19 +6577,30 @@ function renderErpMaster(){
  $('erpMasterZeroCount').textContent=zeroCount.toLocaleString();
  $('erpMasterNegativeCount').textContent=negativeCount.toLocaleString();
  $('erpMasterCount').textContent=`표시 ${rows.length}개 / ERP 기준자료 전체 ${erpMasterRows.length}개`;
+
  $('erpMasterBody').innerHTML=rows.slice(0,500).map(x=>{
    const st=stateOf(x);
-   const stateText=st==='EXPOSED'?'<span class="erp-diff-ok">✅ 실제재고 적용</span>':(st==='TEMP'?'<span class="muted">📝 임시등록 · 확인 필요</span>':'<span class="muted">미등록</span>');
+   const stateText=st==='EXPOSED'
+     ?'<span class="erp-diff-ok">✅ 실제재고 적용</span>'
+     :(st==='TEMP'
+       ?'<span class="muted">📝 임시등록 · 확인 필요</span>'
+       :'<span class="muted">미등록</span>');
    const btnText=st==='EXPOSED'?'수정':(st==='TEMP'?'현장확인·수정':'등록 준비');
+
+   const usageControl=x.wms_item_id
+     ? `<select class="usage-mini" onchange="saveUsageFromAny('${x.wms_item_id}',this.value,this)">
+          <option value="" ${!x.usage_frequency?'selected':''}>⚠️ 미분류</option>
+          <option value="FREQUENT" ${x.usage_frequency==='FREQUENT'?'selected':''}>🔥 자주 사용</option>
+          <option value="LESS" ${x.usage_frequency==='LESS'?'selected':''}>🟡 덜 사용</option>
+          <option value="RARE" ${x.usage_frequency==='RARE'?'selected':''}>🔵 사용 적음</option>
+        </select>`
+     : '<span class="badge">WMS 미등록</span>';
+
    return `<tr>
      <td>${esc(x.erp_item_code)}</td>
-     <td>${esc(erpMasterDisplay(x))}</td>
-     <td>${r.wms_item_id?`<select class="usage-mini" onchange="saveUsageFromAny('${r.wms_item_id}',this.value,this)">
-<option value="" ${!r.usage_frequency?'selected':''}>⚠️ 미분류</option>
-<option value="FREQUENT" ${r.usage_frequency==='FREQUENT'?'selected':''}>🔥 자주 사용</option>
-<option value="LESS" ${r.usage_frequency==='LESS'?'selected':''}>🟡 덜 사용</option>
-<option value="RARE" ${r.usage_frequency==='RARE'?'selected':''}>🔵 사용 적음</option>
-</select>`:'<span class="badge">WMS 미등록</span>'}</td><td>${Number(x.erp_stock_qty||0).toLocaleString()}</td>
+     <td class="erp-name-cell" title="${esc(erpMasterDisplay(x))}" onclick="this.classList.toggle('expanded')">${esc(erpMasterDisplay(x))}</td>
+     <td><b>${Number(x.erp_stock_qty||0).toLocaleString()}</b></td>
+     <td>${usageControl}</td>
      <td>${esc(x.wms_category||'⚠️ 미확인')}</td>
      <td>${esc(x.wms_location||'⚠️ 미확인')}</td>
      <td>${stateText}</td>
@@ -6552,9 +6608,11 @@ function renderErpMaster(){
      <td><button type="button" class="secondary" style="width:auto;padding:6px 9px" onclick="prepareErpMasterApply('${String(x.erp_item_code).replace(/'/g,"\\'")}')">${btnText}</button></td>
    </tr>`;
  }).join('');
- if(rows.length>500) $('erpMasterCount').textContent+=` · 전체 ${rows.length.toLocaleString()}개 중 화면은 앞 500개만 표시 (검색으로 바로 찾을 수 있습니다)`;
-}
 
+ if(rows.length>500){
+   $('erpMasterCount').textContent+=` · 전체 ${rows.length.toLocaleString()}개 중 화면은 앞 500개만 표시 (검색으로 바로 찾을 수 있습니다)`;
+ }
+}
 function setupErpLocationOptions(){
  if(!$('erpLocArea')) return;
  $('erpLocArea').innerHTML='ABCDEFGHIJKLMNOPQ'.split('')
