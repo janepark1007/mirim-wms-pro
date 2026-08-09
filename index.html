@@ -3782,7 +3782,7 @@ function renderEditItemOptions(keyword=''){
 
  $('editItemSelect').innerHTML=
    '<option value="">새 품목 등록</option>'+
-   list.map(x=>`<option value="${x.id}">${esc(x.part_no||'-')} · ${esc(displayItemNameSpec(x))}</option>`).join('');
+   list.map(x=>`<option value="${x.id}">${x.erp_catalog_only?'[ERP 기준] ':''}${esc(x.part_no||'-')} · ${esc(displayItemNameSpec(x))}</option>`).join('');
 
  if(current && list.some(x=>String(x.id)===current)){
    $('editItemSelect').value=current;
@@ -3802,7 +3802,7 @@ async function loadAll(){
 
  // 날짜 확장열이 설치된 경우
  let result=await db.from('items')
-   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,registered_on,last_inbound_at,last_outbound_at,last_stock_check_at,item_locations(id,location_code,location_display,qty)')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,registered_on,last_inbound_at,last_outbound_at,last_stock_check_at,item_locations(id,location_code,location_display,qty)')
    .eq('is_active',true)
    .order('part_no');
 
@@ -3812,7 +3812,7 @@ async function loadAll(){
  // 날짜 SQL을 아직 실행하지 않았어도 품목 검색은 반드시 되도록 기본열로 재조회
  if(itemError){
    result=await db.from('items')
-     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
      .eq('is_active',true)
      .order('part_no');
 
@@ -3890,7 +3890,11 @@ async function loadAll(){
 
  selectHandler(false);
  populateDailyWorkerSelect();
- if($('itemCountBadge')) $('itemCountBadge').textContent=`총 ${items.length}종목 등록`;
+ if($('itemCountBadge')){
+   const verified=items.filter(x=>!x.erp_catalog_only).length;
+   const catalog=items.filter(x=>x.erp_catalog_only).length;
+   $('itemCountBadge').textContent=`전체 ${items.length}종목 · WMS ${verified} · ERP기준 ${catalog}`;
+ }
  renderRecentThree();
  setDefaultDates();
  markRequiredFields();
@@ -4218,7 +4222,7 @@ function renderMergedSearch(rows){
          </div>
          <div style="min-width:0;flex:1">
            <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:6px">
-             <span class="stock-status-badge stock-status-normal">🟢 WMS 등록완료</span>
+             <span class="stock-status-badge ${item.erp_catalog_only?'stock-status-shortage':'stock-status-normal'}">${item.erp_catalog_only?'🟡 ERP 기준자료 · WMS 확인 필요':'🟢 WMS 등록완료'}</span>
              ${isAdmin&&erp?'<span class="badge">ERP 연동</span>':''}
              <span class="badge usage-view-chip">${usageLabel(item.usage_frequency)}</span>
              ${isAdmin
@@ -5198,7 +5202,7 @@ async function fetchRegisteredItemDirect(partValue,nameValue){
  if(!p && !n) return null;
 
  let query=db.from('items')
-   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
    .eq('is_active',true);
 
  if(p) query=query.eq('part_no',p);
@@ -5208,7 +5212,7 @@ async function fetchRegisteredItemDirect(partValue,nameValue){
 
  if((error || !data?.length) && p && !n){
    ({data,error}=await db.from('items')
-     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
      .eq('is_active',true)
      .ilike('part_no',p)
      .limit(2));
@@ -5216,7 +5220,7 @@ async function fetchRegisteredItemDirect(partValue,nameValue){
 
  if((error || !data?.length) && n && !p){
    ({data,error}=await db.from('items')
-     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
+     .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
      .eq('is_active',true)
      .ilike('item_name',n)
      .limit(2));
@@ -5339,7 +5343,7 @@ async function fillInboundCandidates(source=''){
 
    if(exactPart.length!==1 && partValue){
      const {data,error}=await db.from('items')
-       .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
+       .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
        .eq('is_active',true)
        .ilike('part_no',partValue)
        .limit(20);
@@ -5396,7 +5400,9 @@ async function fillInboundCandidates(source=''){
    const locs=fresh.item_locations||[];
    if(locs.length===1 && $('inLoc')) $('inLoc').value=String(locs[0].id);
 
-   $('inMsg').textContent=`✅ 품번 정확일치 선택 · ${target.part_no} · ${displayItemNameSpec(target)}`;
+   $('inMsg').textContent=target.erp_catalog_only
+     ? `🟡 ERP 기준자료 자동선택 · ${target.part_no} · ${displayItemNameSpec(target)} · 첫 입고 시 실제 위치와 수량을 확인해 등록하세요.`
+     : `✅ 품번 정확일치 선택 · ${target.part_no} · ${displayItemNameSpec(target)}`;
    return;
  }
 
@@ -5552,7 +5558,7 @@ async function selectInboundItem(){
 
  // 품목 선택 때마다 DB에서 최신 위치/수량을 직접 다시 불러옴
  const {data:fresh,error:freshError}=await db.from('items')
-   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,item_locations(id,location_code,location_display,qty)')
+   .select('id,part_no,item_name,category,maker,specification,unit,min_stock,note,photo_url,usage_frequency,erp_catalog_only,item_locations(id,location_code,location_display,qty)')
    .eq('id',found.id)
    .eq('is_active',true)
    .maybeSingle();
@@ -5791,7 +5797,9 @@ async function fillOutboundCandidates(){
  if(target){
    $('outFinalSelect').value=target.id;
    await selectOutboundItem();
-   $('outMsg').textContent=`✅ ${target.part_no} · ${target.item_name} 자동 선택`;
+   $('outMsg').textContent=target.erp_catalog_only
+     ? `⚠️ ERP 기준자료 품목입니다 · WMS 실제 위치/수량 확인 전에는 출고할 수 없습니다.`
+     : `✅ ${target.part_no} · ${target.item_name} 자동 선택`;
  }else if(partValue || nameValue){
    $('outMsg').textContent='⚠️ WMS에 실제재고 적용된 품목을 찾지 못했습니다. ERP 기준자료에만 있는 품목이면 먼저 현장확인 후 WMS 실제재고 적용을 해주세요.';
  }
@@ -7292,7 +7300,7 @@ async function parseAndUploadErpMaster(file){
    rows.push({erp_item_code:code,item_name:ns.name,specification:ns.spec,erp_stock_qty:qty});
  }
  if(!rows.length) throw new Error('업로드할 ERP 품목을 찾지 못했습니다.');
- if(!confirm(`Axcelis ERP 품목 ${rows.length}개를 관리자 기준자료에 일괄등록할까요?\n\n✅ 일반 검색에는 자동 노출되지 않습니다.\n✅ 기존 WMS 위치·실제수량은 변경되지 않습니다.\n✅ ERP 현재고만 기준자료로 저장/갱신됩니다.`)) return;
+ if(!confirm(`Axcelis ERP 품목 ${rows.length}개를 기준자료에 일괄등록할까요?\n\n✅ 품번·품명·규격은 검색/입고/출고/품목등록에 자동 동기화됩니다.\n✅ 기존 WMS 위치·실제수량은 절대 변경하지 않습니다.\n✅ ERP에만 있는 신규 품목은 'ERP 기준자료 · WMS 확인 필요' 상태로 생성됩니다.`)) return;
  let done=0;
  for(let i=0;i<rows.length;i+=500){
    const chunk=rows.slice(i,i+500);
@@ -7303,8 +7311,10 @@ async function parseAndUploadErpMaster(file){
    done+=chunk.length;
    $('erpMasterUploadMsg').textContent=`ERP 기준자료 갱신 중... ${done} / ${rows.length}`;
  }
- $('erpMasterUploadMsg').textContent=`✅ Axcelis ERP ${rows.length}개 관리자 일괄등록 완료 · 일반 검색 미노출 · WMS 실제수량/위치 유지`;
+ $('erpMasterUploadMsg').textContent=`✅ Axcelis ERP ${rows.length}개 갱신 완료 · 검색/입고/출고/품목등록 자동동기화 · WMS 실제수량/위치 유지`;
  await loadErpMaster();
+ await loadAll();
+ if(typeof renderErpCompare==='function') renderErpCompare();
 }
 if($('erpMasterChooseBtn')) $('erpMasterChooseBtn').onclick=()=>$('erpMasterFile').click();
 if($('erpMasterFile')) $('erpMasterFile').onchange=async e=>{
