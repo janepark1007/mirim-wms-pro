@@ -901,6 +901,38 @@ img{
  }
 }
 </style>
+
+<style>
+.unreg-summary-card{cursor:pointer;transition:.12s}
+.unreg-summary-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.unreg-list{display:grid;gap:10px}
+.unreg-item-card{border:1px solid #dfe6e1;border-radius:16px;padding:14px;background:#fbfdfb}
+.unreg-item-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start}
+.unreg-part{font-size:16px;font-weight:900;margin-bottom:3px}
+.unreg-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unreg-qty{background:#eef8f1;border-radius:12px;padding:10px 12px;min-width:130px;text-align:right}
+.unreg-qty small{display:block;color:#667085}
+.unreg-qty b{display:block;font-size:18px;color:#0b5d35}
+.unreg-detail-grid{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}
+.unreg-detail-grid>div{background:#fff;border:1px solid #edf0ee;border-radius:10px;padding:9px 10px;min-width:0}
+.unreg-detail-grid small{display:block;color:#667085;font-size:11px;margin-bottom:3px}
+.unreg-detail-grid b{display:block;font-size:13px;word-break:break-word}
+.unreg-alert{margin-top:9px;background:#fff3e8;color:#9a4b00;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800}
+.unreg-usage-edit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:10px}
+.unreg-usage-edit small{display:block;color:#667085;margin-bottom:4px}
+.unreg-usage-edit select{padding:9px;font-size:13px}
+.unreg-usage-edit button{padding:10px 14px}
+.unreg-badge{background:#fff1df;color:#9a4b00}
+@media(min-width:900px){
+ .unreg-list{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+ .unreg-item-head{grid-template-columns:1fr}
+ .unreg-qty{text-align:left}
+ .unreg-detail-grid{grid-template-columns:1fr}
+ .unreg-usage-edit{grid-template-columns:1fr auto}
+}
+</style>
 </head>
 <body>
 <header>
@@ -950,6 +982,7 @@ img{
      <button class="tab adminOnly" data-tab="erpmaster">🗃️ ERP 기준자료</button>
     <button class="tab adminOnly" data-tab="disposal">⏰ 1년 폐기알림</button>
     <button class="tab adminOnly" data-tab="categories">📂 자재구분</button>
+    <button class="tab adminOnly" data-tab="unregistered">🟠 ERP 미등록·창고정리</button>
     <button class="tab vvipOnly hidden" data-tab="vvip">👑 VVIP 재고분석</button>
     <button class="tab vvipOnly hidden" data-tab="bomai" title="VVIP 전용">🤖 BOM AI 분석</button>
   </div>
@@ -2093,6 +2126,115 @@ img{
   </div>
 </section>
 
+
+<section id="unregisteredTab" class="tabpane hidden">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div>
+        <h2 style="margin:0">🟠 ERP 미등록 품목 · 창고정리</h2>
+        <div class="muted" style="margin-top:6px">
+          WMS 품목을 ERP 등록상태·사용빈도·위치·수량으로 필터해 창고정리 우선순위를 잡습니다.
+        </div>
+      </div>
+      <span class="badge">관리자 전용</span>
+    </div>
+
+    <div class="ok" style="margin-top:12px">
+      ERP에 없는 품목이라고 WMS 수량을 0으로 변경하지 않습니다. 사용빈도는 현장 기준으로 직접 지정합니다.
+    </div>
+
+    <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
+      <button id="unregReloadBtn" type="button" style="width:auto">🔄 목록 새로고침</button>
+      <button id="unregExcelBtn" type="button" class="secondary" style="width:auto">📊 현재 필터 Excel</button>
+    </div>
+    <div id="unregMsg" class="muted" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="bad unreg-summary-card" data-unreg-status="UNREGISTERED" role="button" tabindex="0">
+        <small>🟠 ERP 미등록</small><div id="unregCount" style="font-size:27px;font-weight:900">0</div>
+      </div>
+      <div class="ok unreg-summary-card" data-unreg-status="LINKED" role="button" tabindex="0">
+        <small>🟢 ERP 연동</small><div id="linkedCount" style="font-size:27px;font-weight:900">0</div>
+      </div>
+      <div class="ok unreg-summary-card" data-unreg-usage="FREQUENT" role="button" tabindex="0">
+        <small>🔥 자주 사용</small><div id="frequentCount" style="font-size:27px;font-weight:900">0</div>
+      </div>
+      <div class="bad unreg-summary-card" data-unreg-location="NO_LOCATION" role="button" tabindex="0">
+        <small>📍 위치 미등록</small><div id="noLocationCount" style="font-size:27px;font-weight:900">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">🔎 필터로 정리하기</h3>
+    <div class="grid">
+      <div>
+        <div class="label">품번 · 품명</div>
+        <input id="unregKeyword" placeholder="품번 또는 품명 일부">
+      </div>
+      <div>
+        <div class="label">ERP 등록상태</div>
+        <select id="unregErpStatus">
+          <option value="ALL">전체</option>
+          <option value="UNREGISTERED">🟠 ERP 미등록</option>
+          <option value="LINKED">🟢 ERP 연동</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">사용빈도</div>
+        <select id="unregUsageFilter">
+          <option value="ALL">전체</option>
+          <option value="FREQUENT">🔥 자주 사용</option>
+          <option value="LESS">🟡 덜 사용</option>
+          <option value="RARE">🔵 사용 적음</option>
+          <option value="UNSET">⚠️ 미분류</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">위치</div>
+        <select id="unregLocationFilter">
+          <option value="ALL">전체 위치</option>
+          <option value="FLOOR1">1층</option>
+          <option value="FLOOR2">2층</option>
+          <option value="PRODUCTION">생산</option>
+          <option value="NO_LOCATION">📍 위치 미등록</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">WMS 수량</div>
+        <select id="unregStockFilter">
+          <option value="ALL">전체 수량</option>
+          <option value="POSITIVE">재고 있음</option>
+          <option value="ZERO">0 재고</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">정렬</div>
+        <select id="unregSort">
+          <option value="FREQUENT_FIRST">🔥 자주 사용 우선</option>
+          <option value="RARE_FIRST">🔵 사용 적음 우선</option>
+          <option value="PART_NO">품번순</option>
+          <option value="LOCATION">위치순</option>
+          <option value="QTY_DESC">수량 많은순</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="unregResetFilterBtn" type="button" class="secondary" style="width:auto">필터 초기화</button>
+    </div>
+    <div id="unregCountText" class="muted" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <div class="muted" style="margin-bottom:8px">
+      사용빈도는 각 품목에서 바로 저장할 수 있습니다. 위치가 두 곳 이상이면 모두 표시됩니다.
+    </div>
+    <div id="unregList" class="unreg-list"></div>
+  </div>
+</section>
+
 <section id="vvipTab" class="tabpane hidden">
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
@@ -2891,8 +3033,224 @@ function switchTab(name){
  if(pane) pane.classList.remove('hidden');
  if(name==='erpmaster') loadErpMaster();
  if(name==='history' && !historyRows.length) loadHistory();
+ if(name==='unregistered') loadUnregisteredItems();
  if(name==='vvip' && session?.role==='vvip' && !vvipRows.length) loadVvipAnalysis();
 }
+
+
+
+let unregisteredRows=[];
+
+function usageLabel(v){
+ if(v==='FREQUENT') return '🔥 자주 사용';
+ if(v==='LESS') return '🟡 덜 사용';
+ if(v==='RARE') return '🔵 사용 적음';
+ return '⚠️ 미분류';
+}
+function usageRank(v){
+ if(v==='FREQUENT') return 0;
+ if(v==='LESS') return 1;
+ if(v==='RARE') return 2;
+ return 3;
+}
+function unregLocationGroup(row){
+ const s=String(row.location_summary||'').replace(/\s/g,'');
+ if(!s) return 'NO_LOCATION';
+ if(s.includes('1층')) return 'FLOOR1';
+ if(s.includes('2층')) return 'FLOOR2';
+ if(s.includes('생산')) return 'PRODUCTION';
+ return 'OTHER';
+}
+function filteredUnregisteredRows(){
+ const q=norm($('unregKeyword')?.value||'');
+ const erp=$('unregErpStatus')?.value||'ALL';
+ const usage=$('unregUsageFilter')?.value||'ALL';
+ const loc=$('unregLocationFilter')?.value||'ALL';
+ const stock=$('unregStockFilter')?.value||'ALL';
+ const sort=$('unregSort')?.value||'FREQUENT_FIRST';
+
+ let rows=unregisteredRows.filter(x=>{
+   const qOk=!q||norm(`${x.part_no||''} ${x.item_name||''} ${x.specification||''}`).includes(q);
+   const erpOk=erp==='ALL'||(erp==='LINKED'?x.erp_registered===true:x.erp_registered!==true);
+   const usageOk=usage==='ALL'||(usage==='UNSET'?!x.usage_frequency:x.usage_frequency===usage);
+   const group=unregLocationGroup(x);
+   const locOk=loc==='ALL'||group===loc;
+   const qty=Number(x.wms_qty||0);
+   const stockOk=stock==='ALL'||(stock==='ZERO'?qty===0:qty>0);
+   return qOk&&erpOk&&usageOk&&locOk&&stockOk;
+ });
+
+ rows.sort((a,b)=>{
+   if(sort==='FREQUENT_FIRST'){
+     return usageRank(a.usage_frequency)-usageRank(b.usage_frequency)
+       || String(a.part_no||'').localeCompare(String(b.part_no||''),'ko');
+   }
+   if(sort==='RARE_FIRST'){
+     return usageRank(b.usage_frequency)-usageRank(a.usage_frequency)
+       || String(a.part_no||'').localeCompare(String(b.part_no||''),'ko');
+   }
+   if(sort==='LOCATION'){
+     return String(a.location_summary||'ZZZ').localeCompare(String(b.location_summary||'ZZZ'),'ko');
+   }
+   if(sort==='QTY_DESC'){
+     return Number(b.wms_qty||0)-Number(a.wms_qty||0);
+   }
+   return String(a.part_no||'').localeCompare(String(b.part_no||''),'ko');
+ });
+ return rows;
+}
+
+function renderUnregisteredItems(){
+ if(!$('unregList')) return;
+
+ const unreg=unregisteredRows.filter(x=>!x.erp_registered);
+ const linked=unregisteredRows.filter(x=>x.erp_registered);
+ $('unregCount').textContent=unreg.length.toLocaleString();
+ $('linkedCount').textContent=linked.length.toLocaleString();
+ $('frequentCount').textContent=unregisteredRows.filter(x=>x.usage_frequency==='FREQUENT').length.toLocaleString();
+ $('noLocationCount').textContent=unregisteredRows.filter(x=>!String(x.location_summary||'').trim()).length.toLocaleString();
+
+ const rows=filteredUnregisteredRows();
+ $('unregCountText').textContent=`표시 ${rows.length.toLocaleString()}개 / WMS 전체 ${unregisteredRows.length.toLocaleString()}개`;
+
+ $('unregList').innerHTML=rows.length?rows.map(x=>{
+   const erpBadge=x.erp_registered
+     ? '<span class="stock-status-badge stock-status-normal">🟢 ERP 연동</span>'
+     : '<span class="stock-status-badge unreg-badge">🟠 ERP 미등록</span>';
+   const loc=x.location_summary||'⚠️ 위치 확인 필요';
+   return `<div class="unreg-item-card">
+     <div class="unreg-item-head">
+       <div style="min-width:0">
+         <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:5px">${erpBadge}<span class="badge">${usageLabel(x.usage_frequency)}</span></div>
+         <div class="unreg-part">${esc(x.part_no||'-')}</div>
+         <div class="unreg-name" title="${esc(x.item_name||'')}">${esc(x.specification?`${x.item_name||''} [${x.specification}]`:(x.item_name||'-'))}</div>
+       </div>
+       <div class="unreg-qty">
+         <small>WMS 수량</small>
+         <b>${Number(x.wms_qty||0).toLocaleString()} ${esc(x.unit||'EA')}</b>
+       </div>
+     </div>
+
+     <div class="unreg-detail-grid">
+       <div><small>자재구분</small><b>${esc(x.category||'⚠️ 확인 필요')}</b></div>
+       <div><small>자재위치</small><b>${esc(loc)}</b></div>
+     </div>
+
+     ${!x.erp_registered?`<div class="unreg-alert">⚠️ ERP 기준자료에 없습니다. ERP 품목 등록 여부를 확인해 주세요.</div>`:''}
+
+     <div class="unreg-usage-edit">
+       <div>
+         <small>사용빈도</small>
+         <select id="usage_${x.item_id}">
+           <option value="" ${!x.usage_frequency?'selected':''}>⚠️ 미분류</option>
+           <option value="FREQUENT" ${x.usage_frequency==='FREQUENT'?'selected':''}>🔥 자주 사용</option>
+           <option value="LESS" ${x.usage_frequency==='LESS'?'selected':''}>🟡 덜 사용</option>
+           <option value="RARE" ${x.usage_frequency==='RARE'?'selected':''}>🔵 사용 적음</option>
+         </select>
+       </div>
+       <button type="button" onclick="saveUsageFrequency('${x.item_id}')" style="width:auto">저장</button>
+     </div>
+   </div>`;
+ }).join(''):'<div class="muted">현재 필터에 맞는 품목이 없습니다.</div>';
+}
+
+async function loadUnregisteredItems(){
+ if(!session||session.role!=='admin'||!$('unregList')) return;
+ $('unregMsg').textContent='WMS/ERP 등록상태를 확인하는 중...';
+
+ let all=[],from=0,pageSize=1000;
+ while(true){
+   const {data,error}=await db.rpc('admin_list_wms_erp_registration_status',{
+     p_username:session.username,
+     p_password:session.password
+   }).range(from,from+pageSize-1);
+
+   if(error){
+     $('unregMsg').textContent='❌ 목록 조회 실패 · SQL 29 실행 여부를 확인하세요: '+error.message;
+     return;
+   }
+   const page=data||[];
+   all.push(...page);
+   if(page.length<pageSize) break;
+   from+=pageSize;
+ }
+ unregisteredRows=all;
+ $('unregMsg').textContent=`✅ WMS ${all.length.toLocaleString()}품목 등록상태 확인 완료`;
+ renderUnregisteredItems();
+}
+
+async function saveUsageFrequency(itemId){
+ const select=$(`usage_${itemId}`);
+ if(!select) return;
+ const value=select.value||null;
+
+ $('unregMsg').textContent='사용빈도 저장 중...';
+ const {error}=await db.rpc('admin_update_item_usage_frequency',{
+   p_username:session.username,
+   p_password:session.password,
+   p_item_id:itemId,
+   p_usage_frequency:value
+ });
+ if(error){
+   $('unregMsg').textContent='❌ 사용빈도 저장 실패: '+error.message;
+   return;
+ }
+ const row=unregisteredRows.find(x=>String(x.item_id)===String(itemId));
+ if(row) row.usage_frequency=value;
+ $('unregMsg').textContent=`✅ 사용빈도 저장 완료 · ${usageLabel(value)}`;
+ renderUnregisteredItems();
+}
+
+['unregKeyword','unregErpStatus','unregUsageFilter','unregLocationFilter','unregStockFilter','unregSort'].forEach(id=>{
+ if($(id)){
+   const event=id==='unregKeyword'?'input':'change';
+   $(id).addEventListener(event,renderUnregisteredItems);
+ }
+});
+if($('unregReloadBtn')) $('unregReloadBtn').onclick=loadUnregisteredItems;
+if($('unregResetFilterBtn')) $('unregResetFilterBtn').onclick=()=>{
+ $('unregKeyword').value='';
+ $('unregErpStatus').value='ALL';
+ $('unregUsageFilter').value='ALL';
+ $('unregLocationFilter').value='ALL';
+ $('unregStockFilter').value='ALL';
+ $('unregSort').value='FREQUENT_FIRST';
+ renderUnregisteredItems();
+};
+
+document.querySelectorAll('.unreg-summary-card').forEach(card=>{
+ card.onclick=()=>{
+   if(card.dataset.unregStatus) $('unregErpStatus').value=card.dataset.unregStatus;
+   if(card.dataset.unregUsage) $('unregUsageFilter').value=card.dataset.unregUsage;
+   if(card.dataset.unregLocation) $('unregLocationFilter').value=card.dataset.unregLocation;
+   renderUnregisteredItems();
+   $('unregList')?.scrollIntoView({behavior:'smooth',block:'start'});
+ };
+ card.onkeydown=e=>{
+   if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();}
+ };
+});
+
+if($('unregExcelBtn')) $('unregExcelBtn').onclick=()=>{
+ const rows=filteredUnregisteredRows();
+ if(!rows.length){$('unregMsg').textContent='⚠️ 저장할 품목이 없습니다.';return;}
+ const excelRows=rows.map(x=>({
+   'ERP 상태':x.erp_registered?'ERP 연동':'ERP 미등록',
+   '품번':x.part_no||'',
+   '품명':x.specification?`${x.item_name||''} [${x.specification}]`:(x.item_name||''),
+   '자재구분':x.category||'확인 필요',
+   '사용빈도':usageLabel(x.usage_frequency).replace(/^[^ ]+\s/,''),
+   'WMS 수량':Number(x.wms_qty||0),
+   '단위':x.unit||'EA',
+   '자재위치':x.location_summary||'위치 확인 필요'
+ }));
+ const wb=XLSX.utils.book_new();
+ const ws=XLSX.utils.json_to_sheet(excelRows);
+ ws['!cols']=[{wch:14},{wch:20},{wch:46},{wch:16},{wch:14},{wch:14},{wch:10},{wch:46}];
+ XLSX.utils.book_append_sheet(wb,ws,'창고정리');
+ XLSX.writeFile(wb,`WMS_창고정리_${todayKST()}.xlsx`);
+ $('unregMsg').textContent=`✅ 현재 필터 ${rows.length.toLocaleString()}품목 Excel 저장 완료`;
+};
 
 
 function renderEditItemOptions(keyword=''){
