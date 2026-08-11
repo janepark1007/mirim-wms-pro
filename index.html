@@ -1390,7 +1390,22 @@ img{
 .direct-login-box label:not(.remember){font-weight:800;margin:12px 0 7px}.direct-login-box input:not([type="checkbox"]){font-size:18px;padding:14px;border:1px solid #ccd5df;border-radius:10px}
 .direct-login-box .remember{display:flex;align-items:center;gap:8px;margin:18px 0}.direct-login-box button{min-height:52px;font-size:18px;font-weight:900}
 @media(max-width:760px){.direct-login-card{grid-template-columns:1fr}.direct-login-brand{padding:28px 20px}.direct-login-brand img{width:90px}.direct-login-brand h1{font-size:24px}.direct-login-brand p{font-size:16px}.direct-login-box{padding:30px 22px}}
-</style></head>
+</style>
+<style id="core-role-home-style">
+.core-role-home{margin:12px 0 18px;padding:22px;background:#fff;border:1px solid #e5e9ee;border-radius:18px;box-shadow:0 5px 18px rgba(15,23,42,.055)}
+.core-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.core-head small{font-weight:900;color:#087f46}.core-head h2{font-size:28px;margin:4px 0 0}
+.core-role-badge{padding:9px 14px;border-radius:999px;background:#edf8f2;color:#087f46;font-weight:900}
+.core-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+#coreGeneralMenu{grid-template-columns:repeat(3,1fr)}
+.core-menu button{min-height:145px;border:1px solid #dde5ea;border-radius:16px;background:#f8fafb;color:#101828;font-size:34px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:22px;text-align:left}
+.core-menu button:hover{border-color:#0b8b4c;background:#f1faf5}
+.core-menu b{font-size:22px;margin:8px 0 5px}.core-menu span{font-size:14px;color:#667085;line-height:1.4}
+.core-rule{margin-top:16px;padding:12px 15px;border-radius:10px;background:#f4f7f6;color:#475467;font-weight:800}
+@media(max-width:850px){.core-menu,#coreGeneralMenu{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.core-role-home{padding:14px}.core-menu,#coreGeneralMenu{grid-template-columns:1fr}.core-menu button{min-height:105px;font-size:28px;padding:17px}.core-menu b{font-size:20px}.core-head h2{font-size:23px}}
+</style>
+</head>
 <body>
 <header>
   <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
@@ -1487,6 +1502,25 @@ img{
       </table>
     </div>
   </div>
+</section>
+
+<section id="coreRoleHome" class="core-role-home">
+  <div class="core-head">
+    <div><small>빠른 자재관리</small><h2 id="coreRoleTitle">자재관리</h2></div>
+    <div id="coreRoleBadge" class="core-role-badge">권한 확인 중</div>
+  </div>
+  <div id="coreGeneralMenu" class="core-menu hidden">
+    <button type="button" data-core-tab="search">🔎<b>품목검색</b><span>품번·품명·위치 빠른 확인</span></button>
+    <button type="button" id="coreOutboundBtn">📤<b>출고</b><span>검색 후 빠른 출고 등록</span></button>
+    <button type="button" data-core-tab="search" data-core-mode="location">📍<b>위치관리</b><span>현재 위치 확인·변경</span></button>
+  </div>
+  <div id="coreAdminMenu" class="core-menu hidden">
+    <button type="button" data-core-tab="inbound">📥<b>입고</b><span>입고수량·위치 등록</span></button>
+    <button type="button" data-core-tab="erp">🔄<b>ERP</b><span>ERP 자료 대조·확인</span></button>
+    <button type="button" data-core-tab="erp" data-core-mode="compare">📊<b>ERP ↔ 현창고</b><span>두 수량을 한눈에 비교</span></button>
+    <button type="button" data-core-tab="erp" data-core-mode="difference">⚠️<b>재고차이</b><span>차이 품목 우선 확인</span></button>
+  </div>
+  <div class="core-rule">확인 → 기록 → 등록 → 재고 반영 → 누락 점검</div>
 </section>
 <section id="searchTab" class="tabpane">
 
@@ -3326,6 +3360,7 @@ async function login(options={}){
  }
  await loadAll();
  applyGeneralSimpleMode();
+ applyCoreRoleHome();
  if($('systemDashboard')) $('systemDashboard').classList.remove('hidden');
  setTimeout(()=>{ updateSystemDashboard(); loadDashboardRecent(); },200);
 
@@ -4305,6 +4340,7 @@ async function loadAll(){
  }
  renderRecentThree();
  refreshMainItemCountBadge();
+ if(session) applyCoreRoleHome();
  updateSystemDashboard();
  setDefaultDates();
  markRequiredFields();
@@ -8604,6 +8640,43 @@ if($('tabs')){
    if(e.target.closest('.tab')) $('systemDashboard')?.classList.add('hidden');
  });
 }
+
+function applyCoreRoleHome(){
+ if(!$('coreRoleHome') || !session) return;
+ const admin=session.role==='admin';
+ $('coreGeneralMenu')?.classList.toggle('hidden',admin);
+ $('coreAdminMenu')?.classList.toggle('hidden',!admin);
+ if($('coreRoleTitle')) $('coreRoleTitle').textContent=admin?'관리자 자재관리':'일반 자재관리';
+ if($('coreRoleBadge')) $('coreRoleBadge').textContent=admin?'관리자 전용':'일반 작업';
+ // 관리자 전용 탭은 일반 계정에서 화면에서도 숨김. 서버 권한은 기존 DB role 검증을 그대로 사용.
+ const adminTabs=['inbound','erp','erpmaster','unregistered','excelbulk','stats'];
+ adminTabs.forEach(name=>{
+   const tab=document.querySelector(`#tabs .tab[data-tab="${name}"]`);
+   if(tab) tab.classList.toggle('hidden',!admin);
+ });
+}
+function openCoreTab(name,mode=''){
+ const tab=document.querySelector(`#tabs .tab[data-tab="${name}"]`);
+ if(tab) tab.click();
+ if(name==='search' && $('searchQ')){
+   if(mode==='location') $('searchQ').placeholder='위치를 확인할 품번 또는 품명을 검색하세요';
+   else $('searchQ').placeholder='품번 또는 품명을 검색하세요';
+   setTimeout(()=>$('searchQ')?.focus(),80);
+ }
+ if(name==='erp'){
+   setTimeout(()=>{
+     if(mode==='compare' && $('erpSearch')) $('erpSearch').placeholder='ERP수량과 현창고수량을 비교할 품번·품명';
+     if(mode==='difference' && $('erpSearch')) $('erpSearch').placeholder='재고차이를 확인할 품번·품명';
+   },80);
+ }
+}
+document.querySelectorAll('[data-core-tab]').forEach(btn=>{
+ btn.onclick=()=>openCoreTab(btn.dataset.coreTab,btn.dataset.coreMode||'');
+});
+if($('coreOutboundBtn')) $('coreOutboundBtn').onclick=()=>{
+ openCoreTab('search');
+ if($('searchQ')) $('searchQ').placeholder='출고할 품번 또는 품명을 검색하세요';
+};
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
