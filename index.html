@@ -1421,7 +1421,46 @@ img{
 .simple-io-box label{display:block;font-size:16px;font-weight:900;margin:12px 0 6px}.simple-io-box input,.simple-io-box select{min-height:54px;font-size:18px}.simple-io-box>button{min-height:56px;margin-top:16px;font-size:19px;font-weight:900}
 @media(max-width:600px){.simple-io-modal{padding:8px;align-items:flex-end}.simple-io-box{border-radius:20px 20px 0 0;padding:18px 14px 24px}.simple-io-head h2{font-size:24px}.simple-io-box input,.simple-io-box select{min-height:58px;font-size:19px}.simple-io-box>button{min-height:60px;font-size:20px}}
 </style>
-</head>
+
+<style id="mobile-clean-main-v2">
+@media(max-width:700px){
+  /* 모바일 첫 화면 중복 제거 */
+  #mobileFieldQuick,
+  #systemDashboard,
+  .company-login-page,
+  .dashboard,
+  .dash-main-grid,
+  .dash-recent{display:none!important}
+
+  /* 긴 상단 기능 메뉴는 모바일 메인에서 숨김: 빠른메인으로만 진입 */
+  #tabs{display:none!important}
+
+  /* 모바일 핵심 메인 */
+  #coreRoleHome{display:block!important;margin:8px 0 12px!important;padding:14px!important;border-radius:14px!important;box-shadow:none!important}
+  #coreRoleHome .core-head{margin-bottom:12px!important}
+  #coreRoleHome .core-head small{display:none!important}
+  #coreRoleHome .core-head h2{font-size:22px!important;margin:0!important}
+  #coreRoleHome .core-role-badge{font-size:12px!important;padding:7px 10px!important}
+
+  #coreGeneralMenu,#coreAdminMenu{grid-template-columns:1fr 1fr!important;gap:9px!important}
+  #coreRoleHome .core-menu button{min-height:112px!important;padding:14px!important;border-radius:13px!important;font-size:27px!important}
+  #coreRoleHome .core-menu b{font-size:18px!important;margin:5px 0 3px!important}
+  #coreRoleHome .core-menu span{font-size:11px!important;line-height:1.3!important}
+  #coreRoleHome .core-rule{display:none!important}
+
+  /* 기능 화면을 열었을 때는 해당 화면만 크게 */
+  #appView{padding-left:8px!important;padding-right:8px!important}
+  .card{border-radius:13px!important}
+}
+</style>
+
+<style id="mobile-home-back-style">
+.mobile-home-btn{display:none}
+@media(max-width:700px){
+ .mobile-home-btn{position:sticky;top:6px;z-index:80;width:auto!important;min-height:42px;padding:8px 14px!important;margin:6px 0 8px;background:#173b2c!important;color:#fff!important;border-radius:10px!important;font-weight:900}
+ .mobile-home-btn:not(.hidden){display:block!important}
+}
+</style></head>
 <body>
 <header>
   <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
@@ -1444,7 +1483,7 @@ img{
     </div>
   </div>
 </section>
-<section id="appView" class="hidden">
+<section id="appView" class="hidden"><button id="mobileHomeBtn" type="button" class="mobile-home-btn hidden">← 메인</button>
   <div class="toolbar card">
     <div>
       <div id="who"></div>
@@ -8827,6 +8866,28 @@ if($('qoSave')) $('qoSave').onclick=async()=>{
  $('qoMsg').textContent='✅ 출고 저장 완료';
  await loadAll(); setTimeout(()=>ioClose('quickOutboundModal'),700);
 };
+
+function mobileShowCoreHome(){
+ if(window.innerWidth>700) return;
+ $('coreRoleHome')?.classList.remove('hidden');
+ $('mobileHomeBtn')?.classList.add('hidden');
+ document.querySelectorAll('#appView > section[id$="Tab"]').forEach(s=>s.classList.add('hidden'));
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function mobileEnterFunction(){
+ if(window.innerWidth>700) return;
+ $('coreRoleHome')?.classList.add('hidden');
+ $('mobileHomeBtn')?.classList.remove('hidden');
+}
+if($('mobileHomeBtn')) $('mobileHomeBtn').onclick=mobileShowCoreHome;
+
+document.querySelectorAll('#coreRoleHome [data-core-tab]').forEach(b=>b.addEventListener('click',()=>setTimeout(mobileEnterFunction,0)));
+['coreQuickInboundBtn','coreQuickOutboundBtn'].forEach(id=>{
+ if($(id)) $(id).addEventListener('click',()=>{
+   /* quick modal opens over the clean main, so no extra screen duplication */
+ });
+});
+if(window.innerWidth<=700 && session) setTimeout(mobileShowCoreHome,100);
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
