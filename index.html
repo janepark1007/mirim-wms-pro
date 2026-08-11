@@ -204,6 +204,14 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 #excelbulkTab table th,#excelbulkTab table td{border-bottom:1px solid #e5e7eb;padding:8px 7px;text-align:left;font-size:12px;white-space:nowrap}
 #excelbulkTab table th{background:#f5f7f6;font-weight:900;position:sticky;top:0}
 .bulk-ok{color:#067647;font-weight:900}.bulk-warn{color:#b54708;font-weight:900}.bulk-bad{color:#b42318;font-weight:900}
+
+/* SQL38: 일반 사용자는 작업자 로그인 전 작업자 이름을 메인에서 검색/선택할 수 없음 */
+body.general-mode #dailyWorkerSelect,
+body.general-mode label[for="dailyWorkerSelect"],
+body.general-mode #dailyWorkerCard,
+body.general-mode .daily-worker-card,
+body.general-mode .worker-select-card,
+body.general-mode .today-worker-box { display:none !important; }
 </style>
 
 <style>
@@ -8356,6 +8364,23 @@ window.addEventListener('load',()=>{
 });
 setTimeout(addQuickOutboundButtonsToSearch,500);
 
+
+// SQL38: 일반모드 작업자 로그인 강제
+function enforceGeneralWorkerLogin(){
+  try{
+    const isGeneral = document.body.classList.contains('general-mode') ||
+      (typeof currentMode!=='undefined' && currentMode==='general');
+    if(!isGeneral) return;
+    const worker = (typeof selectedDailyWorker!=='undefined' ? selectedDailyWorker : '') || '';
+    if(!worker){
+      syncWorkerLoginGate();
+      if($('workerLoginGateSelect')) $('workerLoginGateSelect').value='';
+      if($('workerLoginGateMsg')) $('workerLoginGateMsg').textContent='오늘 작업자 이름을 선택하고 로그인해야 검색과 출고 작업을 할 수 있습니다.';
+      $('workerLoginGate')?.classList.remove('hidden');
+    }
+  }catch(e){ console.warn(e); }
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(enforceGeneralWorkerLogin,150));
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
