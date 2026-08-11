@@ -1346,34 +1346,25 @@ img{
  .production-home-title{display:block}
 }
 </style>
-</head>
+<style id="company-home-v2">
+.company-login-page{background:#fff;min-height:100vh}.company-login-page~*{} .company-topbar{height:82px;display:flex;align-items:center;justify-content:space-between;padding:0 6vw;border-bottom:1px solid #e5e7eb;background:#fff}.company-brand{display:flex;align-items:center;gap:12px}.company-brand img{width:62px;height:50px;object-fit:contain}.company-brand b{display:block;font-size:21px}.company-brand small{display:block;color:#667085;font-size:11px;letter-spacing:1.3px}.company-topbar nav{display:flex;gap:30px}.company-topbar a{text-decoration:none;color:#344054;font-weight:800}
+.company-hero{min-height:600px;padding:70px 7vw;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:60px;background:linear-gradient(135deg,#f1f7f3,#fff 60%,#edf7f1)}.hero-copy>span,.company-section>small,.login-area small{color:#087f46;font-weight:900;letter-spacing:1.5px}.hero-copy h1{font-size:58px;line-height:1.1;letter-spacing:-2px;margin:15px 0}.hero-copy p{font-size:19px;line-height:1.7;color:#475467;max-width:680px}.hero-copy button{margin-top:20px;min-height:56px;padding:0 28px;background:#087f46;color:#fff;border:0;border-radius:12px;font-size:18px;font-weight:900}.hero-panel{background:#fff;border:1px solid #dfe8e2;border-radius:28px;padding:42px;box-shadow:0 20px 50px #10182814}.hero-panel img{display:block;width:155px;height:105px;object-fit:contain;margin:auto}.hero-panel h2{text-align:center;font-size:25px}.feature-grid,.system-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.feature-grid b{padding:17px;background:#f1f7f3;border-radius:13px;font-size:16px}
+.company-section{padding:75px 7vw}.company-section h2{font-size:36px}.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.info-grid article{padding:28px;border:1px solid #e4e7ec;border-radius:18px}.info-grid b{font-size:21px}.info-grid p{color:#667085;font-size:16px}.system{background:#f7f9f8}.system-grid{grid-template-columns:repeat(3,1fr)}.system-grid b{background:#fff;border:1px solid #e4e7ec;border-radius:17px;padding:28px;font-size:19px}
+.login-area{padding:75px 10vw;background:#0c3323;color:#fff;display:grid;grid-template-columns:1fr 430px;gap:70px;align-items:center}.login-area h2{font-size:38px;margin:8px 0}.login-area p{color:#d0ded7;font-size:18px}.company-login-box{background:#fff;color:#101828;padding:30px;border-radius:22px}.company-login-box label{display:block;font-weight:800;margin:9px 0 6px}.company-login-box input:not([type=checkbox]){width:100%;box-sizing:border-box;min-height:52px;font-size:17px}.company-login-box .remember{display:flex;gap:8px;align-items:center;margin:14px 0}.company-login-box button{width:100%;min-height:54px;background:#087f46;color:#fff;border:0;border-radius:11px;font-size:18px;font-weight:900}.company-login-page footer{padding:28px 7vw;color:#667085}
+@media(max-width:900px){.company-topbar nav{display:none}.company-hero,.login-area{grid-template-columns:1fr}.hero-copy h1{font-size:44px}.info-grid,.system-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.company-hero,.company-section,.login-area{padding:45px 20px}.hero-copy h1{font-size:37px}.info-grid,.system-grid{grid-template-columns:1fr}}
+</style></head>
 <body>
 <header>
   <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
 </header>
 <main>
-<section id="loginView" class="loginwrap">
-  <div class="intro card">
-    <img class="logoLarge" src="./mirim-logo.png" alt="MIRIM">
-    <h1>미림테크놀러지</h1>
-    <h2 style="color:var(--g)">자재·창고 관리 시스템</h2>
-    <p>정확한 자재 정보와 실시간 재고 관리로<br>효율적인 자재 관리와 생산 활동을 지원합니다.</p>
-    <div><span class="badge">정확한 자재 관리</span><span class="badge">체계적인 위치 관리</span><span class="badge">실시간 재고 확인</span></div>
-  </div>
-  <div class="card loginbox">
-    <h1 class="loginTitle">로그인</h1>
-    <p class="muted">관리자 또는 생산 PC 계정으로 로그인하세요.</p>
-    <input id="loginId" placeholder="아이디"><br><br>
-    <input id="loginPw" type="password" inputmode="numeric" placeholder="비밀번호"><br><br>
-
-    <label style="display:flex;align-items:center;gap:9px;margin:2px 0 14px;cursor:pointer">
-      <input id="rememberLogin" type="checkbox" style="width:20px;height:20px;min-width:20px">
-      <span style="font-weight:800">로그인 상태 유지</span>
-    </label>
-
-    <button id="loginBtn">로그인</button>
-    <div id="loginMsg" class="muted" style="margin-top:10px"></div>
-  </div>
+<section id="loginView" class="company-login-page">
+<header class="company-topbar"><div class="company-brand"><img src="./mirim-logo.png"><div><b>미림테크놀러지</b><small>MIRIM TECHNOLOGY</small></div></div><nav><a href="#about">회사소개</a><a href="#system">자재·창고 시스템</a><a href="#loginArea">로그인</a></nav></header>
+<section class="company-hero"><div class="hero-copy"><span>MIRIM TECHNOLOGY · MATERIAL & WAREHOUSE</span><h1>정확한 자재관리,<br>빠른 현장 업무.</h1><p>ERP 기준자료와 WMS 현장정보를 연결해 품목 검색, 입출고, 재고와 위치 확인을 한곳에서 지원합니다.</p><button id="companyStartBtn" type="button">생산 PC 시작하기</button></div><div class="hero-panel"><img src="./mirim-logo.png"><h2>자재·창고 관리 시스템</h2><div class="feature-grid"><b>🔎 품목 검색</b><b>📦 빠른 출고</b><b>📥 입고 등록</b><b>📍 재고·위치</b><b>📷 이미지 검색</b><b>🖼️ 사진 등록</b></div></div></section>
+<section id="about" class="company-section"><small>ABOUT</small><h2>현장에서 바로 쓰는 자재관리</h2><div class="info-grid"><article><b>ERP 기준 연동</b><p>품번과 품명을 ERP 기준으로 확인합니다.</p></article><article><b>WMS 재고·위치</b><p>현재 창고수량과 자재 위치를 빠르게 확인합니다.</p></article><article><b>생산 PC 작업</b><p>검색부터 입고·출고·사진등록까지 한곳에서 시작합니다.</p></article></div></section>
+<section id="system" class="company-section system"><small>SYSTEM</small><h2>생산 PC 주요 기능</h2><div class="system-grid"><b>🔎 제품·품목 검색</b><b>📷 이미지 검색</b><b>📦 빠른 출고</b><b>📥 입고 등록</b><b>📍 재고·위치 확인</b><b>🖼️ 사진 등록</b></div></section>
+<section id="loginArea" class="login-area"><div><small>MEMBER LOGIN</small><h2>자재·창고 시스템 로그인</h2><p>관리자 또는 생산 PC 계정으로 로그인하세요.</p></div><div class="company-login-box"><label>아이디</label><input id="loginId" placeholder="아이디"><label>비밀번호</label><input id="loginPw" type="password" inputmode="numeric" placeholder="비밀번호"><label class="remember"><input id="rememberLogin" type="checkbox"> 로그인 상태 유지</label><button id="loginBtn">로그인</button><div id="loginMsg" class="muted"></div></div></section>
+<footer><b>미림테크놀러지</b> · 자재·창고 관리 시스템</footer>
 </section>
 
 <section id="appView" class="hidden">
@@ -8410,6 +8401,7 @@ if($('prodPhotoBtn')) $('prodPhotoBtn').onclick=()=>{
  openProductionSearch('product');
  if($('searchQ')) $('searchQ').placeholder='사진을 등록할 품번 또는 품명을 검색하세요';
 };
+if($('companyStartBtn')) $('companyStartBtn').onclick=()=>{$('loginArea')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('loginId')?.focus(),400);};
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
