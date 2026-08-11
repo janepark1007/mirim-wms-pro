@@ -1403,7 +1403,7 @@ img{
           <div class="muted">현재 작업자</div>
           <div id="generalWorkerName" class="general-worker-name">작업자를 선택하세요</div>
         </div>
-        <button id="generalChangeWorkerBtn" type="button" class="secondary">작업자 변경</button>
+        <button id="generalChangeWorkerBtn" type="button" class="secondary">작업자 로그인</button>
       </div>
       <div class="general-home-title">오늘 할 작업을 선택하세요</div>
       <div class="general-home-actions">
@@ -3091,7 +3091,7 @@ function applyGeneralSimpleMode(){
 function syncWorkerLoginGate(){
  if(!$('workerLoginGateSelect')) return;
  const current=$('dailyWorkerSelect')?.value||'';
- $('workerLoginGateSelect').innerHTML='<option value="">작업자 이름 선택</option>'+
+ $('workerLoginGateSelect').innerHTML='<option value="">오늘 작업자 이름 선택</option>'+
    handlers.map(h=>`<option value="${esc(h.display_name)}">${esc(h.display_name)}</option>`).join('');
  if(current) $('workerLoginGateSelect').value=current;
 }
@@ -6243,8 +6243,12 @@ if($('dailyWorkerSelect')){
 
 if($('generalChangeWorkerBtn')){
  $('generalChangeWorkerBtn').onclick=()=>{
-   $('dailyWorkerSelect')?.focus();
-   $('dailyWorkerSelect')?.scrollIntoView({behavior:'smooth',block:'center'});
+   syncWorkerLoginGate();
+   const current=selectedDailyWorker||$('dailyWorkerSelect')?.value||'';
+   if($('workerLoginGateSelect')) $('workerLoginGateSelect').value=current;
+   if($('workerLoginGateMsg')) $('workerLoginGateMsg').textContent='오늘 작업자 이름을 선택하세요.';
+   $('workerLoginGate')?.classList.remove('hidden');
+   setTimeout(()=>$('workerLoginGateSelect')?.focus(),50);
  };
 }
 if($('generalProductSearchBtn')){
