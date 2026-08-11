@@ -1405,6 +1405,22 @@ img{
 @media(max-width:850px){.core-menu,#coreGeneralMenu{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.core-role-home{padding:14px}.core-menu,#coreGeneralMenu{grid-template-columns:1fr}.core-menu button{min-height:105px;font-size:28px;padding:17px}.core-menu b{font-size:20px}.core-head h2{font-size:23px}}
 </style>
+<style id="mobile-field-quick-style">
+.mobile-field-quick{margin:12px 0 18px;padding:20px;background:#fff;border:1px solid #e4e9ee;border-radius:18px;box-shadow:0 5px 18px #0f172a0d}
+.mfq-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.mfq-head small{color:#087f46;font-weight:900}.mfq-head h2{margin:4px 0;font-size:25px}.mfq-head>b{background:#edf8f2;color:#087f46;padding:8px 12px;border-radius:999px}.mfq-help{color:#667085;margin:8px 0 16px}
+.mfq-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.mfq-actions button{min-height:105px;background:#f8fafb;color:#101828;border:1px solid #dde5ea;border-radius:14px;font-size:27px;display:flex;flex-direction:column;justify-content:center;align-items:center}.mfq-actions b{font-size:18px;margin:5px 0}.mfq-actions span{font-size:12px;color:#667085}
+.mfq-note{margin-top:14px;padding:14px;background:#f7f9fa;border-radius:14px}.mfq-note input,.mfq-note textarea{font-size:17px;margin-bottom:9px}.mfq-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mfq-photo-label{display:block;padding:13px;background:#fff;border:1px dashed #aeb9c4;border-radius:10px;font-weight:800;margin-bottom:8px}.mfq-photo-label input{display:none}.mfq-note button{min-height:50px;font-size:17px}
+@media(max-width:650px){.mobile-field-quick{padding:14px}.mfq-head h2{font-size:21px}.mfq-help{font-size:13px}.mfq-actions{grid-template-columns:1fr 1fr}.mfq-actions button{min-height:100px}.mfq-row{grid-template-columns:1fr}}
+</style>
+<style id="simple-inout-main-style">
+.simple-io-modal{position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:9998;display:flex;align-items:center;justify-content:center;padding:18px}
+.simple-io-modal.hidden{display:none!important}
+.simple-io-box{width:min(520px,96vw);background:#fff;border-radius:20px;padding:22px;box-shadow:0 20px 65px rgba(15,23,42,.25)}
+.simple-io-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.simple-io-head h2{margin:0;font-size:27px}.simple-io-head button{width:44px;min-width:44px;height:44px;padding:0;background:#eef2f6;color:#344054}
+.simple-io-note{padding:10px 12px;border-radius:10px;background:#f3f8f5;color:#087f46;font-weight:800;margin-bottom:16px}
+.simple-io-box label{display:block;font-size:16px;font-weight:900;margin:12px 0 6px}.simple-io-box input,.simple-io-box select{min-height:54px;font-size:18px}.simple-io-box>button{min-height:56px;margin-top:16px;font-size:19px;font-weight:900}
+@media(max-width:600px){.simple-io-modal{padding:8px;align-items:flex-end}.simple-io-box{border-radius:20px 20px 0 0;padding:18px 14px 24px}.simple-io-head h2{font-size:24px}.simple-io-box input,.simple-io-box select{min-height:58px;font-size:19px}.simple-io-box>button{min-height:60px;font-size:20px}}
+</style>
 </head>
 <body>
 <header>
@@ -1504,6 +1520,26 @@ img{
   </div>
 </section>
 
+
+<section id="mobileFieldQuick" class="mobile-field-quick">
+ <div class="mfq-head"><div><small>자재실 현장기록</small><h2>정리하면서 빠르게 남기기</h2></div><b>입력 최소화</b></div>
+ <p class="mfq-help">현장에서는 확인할 내용만 남기고, 입고·ERP·재고차이 확정은 관리자 PC에서 일괄 처리합니다.</p>
+ <div class="mfq-actions">
+  <button type="button" id="mfqPhoto">📷<b>사진찍기</b><span>제품·라벨 사진</span></button>
+  <button type="button" id="mfqSearch">🔎<b>품번찾기</b><span>품번·품명 검색</span></button>
+  <button type="button" id="mfqLocation">📍<b>위치기록</b><span>보관 위치 확인</span></button>
+  <button type="button" id="mfqNeedCheck">⚠️<b>확인필요</b><span>나중에 PC에서 처리</span></button>
+ </div>
+ <div id="mfqNoteBox" class="mfq-note hidden">
+  <input id="mfqPart" placeholder="품번 또는 품명">
+  <div class="mfq-row"><input id="mfqQty" inputmode="decimal" placeholder="수량 (모르면 비워두기)"><input id="mfqLoc" placeholder="위치 (예: A-01)"></div>
+  <textarea id="mfqMemo" rows="2" placeholder="메모 / 애로사항"></textarea>
+  <label class="mfq-photo-label">📷 사진 선택<input id="mfqPhotoInput" type="file" accept="image/*" capture="environment"></label>
+  <div id="mfqPhotoName" class="muted"></div>
+  <button type="button" id="mfqSave">현장기록 저장</button>
+  <div id="mfqMsg" class="muted"></div>
+ </div>
+</section>
 <section id="coreRoleHome" class="core-role-home">
   <div class="core-head">
     <div><small>빠른 자재관리</small><h2 id="coreRoleTitle">자재관리</h2></div>
@@ -1511,11 +1547,11 @@ img{
   </div>
   <div id="coreGeneralMenu" class="core-menu hidden">
     <button type="button" data-core-tab="search">🔎<b>품목검색</b><span>품번·품명·위치 빠른 확인</span></button>
-    <button type="button" id="coreOutboundBtn">📤<b>출고</b><span>검색 후 빠른 출고 등록</span></button>
+    <button type="button" id="coreQuickOutboundBtn">📤<b>출고</b><span>작업자 · 빠른 출고 등록</span></button>
     <button type="button" data-core-tab="search" data-core-mode="location">📍<b>위치관리</b><span>현재 위치 확인·변경</span></button>
   </div>
   <div id="coreAdminMenu" class="core-menu hidden">
-    <button type="button" data-core-tab="inbound">📥<b>입고</b><span>입고수량·위치 등록</span></button>
+    <button type="button" id="coreQuickInboundBtn">📥<b>입고</b><span>관리자 · 빠른 입고 등록</span></button>
     <button type="button" data-core-tab="erp">🔄<b>ERP</b><span>ERP 자료 대조·확인</span></button>
     <button type="button" data-core-tab="erp" data-core-mode="compare">📊<b>ERP ↔ 현창고</b><span>두 수량을 한눈에 비교</span></button>
     <button type="button" data-core-tab="erp" data-core-mode="difference">⚠️<b>재고차이</b><span>차이 품목 우선 확인</span></button>
@@ -8677,7 +8713,148 @@ if($('coreOutboundBtn')) $('coreOutboundBtn').onclick=()=>{
  openCoreTab('search');
  if($('searchQ')) $('searchQ').placeholder='출고할 품번 또는 품명을 검색하세요';
 };
+
+function openMfqNote(mode){
+ $('mfqNoteBox')?.classList.remove('hidden');
+ if(mode==='location') $('mfqLoc')?.focus();
+ else if(mode==='photo') $('mfqPhotoInput')?.click();
+ else $('mfqPart')?.focus();
+}
+if($('mfqPhoto')) $('mfqPhoto').onclick=()=>openMfqNote('photo');
+if($('mfqSearch')) $('mfqSearch').onclick=()=>{ document.querySelector('#tabs .tab[data-tab="search"]')?.click(); setTimeout(()=>$('searchQ')?.focus(),80); };
+if($('mfqLocation')) $('mfqLocation').onclick=()=>openMfqNote('location');
+if($('mfqNeedCheck')) $('mfqNeedCheck').onclick=()=>{openMfqNote('check'); if($('mfqMemo')) $('mfqMemo').value='⚠️ 확인 필요';};
+if($('mfqPhotoInput')) $('mfqPhotoInput').onchange=e=>{ $('mfqPhotoName').textContent=e.target.files?.[0]?.name||''; };
+if($('mfqSave')) $('mfqSave').onclick=()=>{
+ const note={
+  id:Date.now(),created_at:new Date().toISOString(),
+  part:($('mfqPart')?.value||'').trim(),
+  qty:($('mfqQty')?.value||'').trim(),
+  location:($('mfqLoc')?.value||'').trim(),
+  memo:($('mfqMemo')?.value||'').trim()||'⚠️ 확인 필요',
+  photo_name:$('mfqPhotoInput')?.files?.[0]?.name||''
+ };
+ if(!note.part && !note.memo && !note.photo_name){ $('mfqMsg').textContent='품번·사진·메모 중 하나는 남겨주세요.'; return; }
+ const arr=JSON.parse(localStorage.getItem('mirim_field_quick_notes')||'[]');
+ arr.unshift(note); localStorage.setItem('mirim_field_quick_notes',JSON.stringify(arr.slice(0,200)));
+ $('mfqMsg').textContent='저장됨 · ERP/재고에는 아직 반영되지 않았습니다.';
+ ['mfqPart','mfqQty','mfqLoc','mfqMemo'].forEach(id=>{if($(id)) $(id).value='';});
+ if($('mfqPhotoInput')) $('mfqPhotoInput').value='';
+ if($('mfqPhotoName')) $('mfqPhotoName').textContent='';
+};
+
+function ioNorm(v){ return String(v||'').trim().toLowerCase().replace(/\s+/g,''); }
+function ioItemName(x){ return displayItemNameSpec ? displayItemNameSpec(x) : (x.item_name||''); }
+function ioFindItems(q){
+ const n=ioNorm(q);
+ if(!n) return [];
+ return (items||[]).filter(x=>ioNorm(`${x.part_no||''} ${ioItemName(x)}`).includes(n)).slice(0,30);
+}
+function ioFillItemSelect(inputId,selectId){
+ const q=$(inputId)?.value||'';
+ const rows=ioFindItems(q);
+ $(selectId).innerHTML='<option value="">품목 선택</option>'+rows.map(x=>`<option value="${x.id}">${esc(x.part_no)} · ${esc(ioItemName(x))}</option>`).join('');
+ if(rows.length===1){ $(selectId).value=rows[0].id; ioFillLocations(selectId, selectId==='qiItem'?'qiLoc':'qoLoc'); }
+}
+function ioFillLocations(itemSelectId,locSelectId){
+ const id=$(itemSelectId)?.value||'';
+ const item=(items||[]).find(x=>String(x.id)===String(id));
+ const locs=item?.item_locations||[];
+ $(locSelectId).innerHTML='<option value="">위치 선택</option>'+locs.map(l=>`<option value="${l.id}">${esc(l.location_display||l.location_code)} · ${Number(l.qty||0).toLocaleString()} ${esc(item.unit||'EA')}</option>`).join('');
+ if(locs.length===1) $(locSelectId).value=String(locs[0].id);
+}
+function ioOpen(id){ $(id)?.classList.remove('hidden'); }
+function ioClose(id){ $(id)?.classList.add('hidden'); }
+document.querySelectorAll('[data-close-io]').forEach(b=>b.onclick=()=>ioClose(b.dataset.closeIo));
+['quickInboundModal','quickOutboundModal'].forEach(id=>$(id)?.addEventListener('click',e=>{if(e.target===$(id))ioClose(id)}));
+
+if($('coreQuickInboundBtn')) $('coreQuickInboundBtn').onclick=()=>{
+ if(session?.role!=='admin'){ alert('입고는 관리자만 가능합니다.'); return; }
+ $('qiSearch').value=''; $('qiQty').value=''; $('qiMsg').textContent='';
+ $('qiItem').innerHTML='<option value="">품목 선택</option>'; $('qiLoc').innerHTML='<option value="">위치 선택</option>';
+ ioOpen('quickInboundModal'); setTimeout(()=>$('qiSearch')?.focus(),80);
+};
+if($('coreQuickOutboundBtn')) $('coreQuickOutboundBtn').onclick=()=>{
+ $('qoSearch').value=''; $('qoQty').value=''; $('qoMsg').textContent='';
+ $('qoItem').innerHTML='<option value="">품목 선택</option>'; $('qoLoc').innerHTML='<option value="">위치 선택</option>';
+ $('qoWorker').innerHTML='<option value="">작업자 선택</option>'+(handlers||[]).map(h=>`<option value="${esc(h.display_name)}">${esc(h.display_name)}</option>`).join('');
+ ioOpen('quickOutboundModal'); setTimeout(()=>$('qoWorker')?.focus(),80);
+};
+
+if($('qiSearch')) $('qiSearch').oninput=()=>ioFillItemSelect('qiSearch','qiItem');
+if($('qoSearch')) $('qoSearch').oninput=()=>ioFillItemSelect('qoSearch','qoItem');
+if($('qiItem')) $('qiItem').onchange=()=>ioFillLocations('qiItem','qiLoc');
+if($('qoItem')) $('qoItem').onchange=()=>ioFillLocations('qoItem','qoLoc');
+
+if($('qiSave')) $('qiSave').onclick=async()=>{
+ if(session?.role!=='admin'){ $('qiMsg').textContent='⚠️ 관리자만 입고할 수 있습니다.'; return; }
+ const item=(items||[]).find(x=>String(x.id)===String($('qiItem').value));
+ const locId=$('qiLoc').value;
+ const qty=Number($('qiQty').value);
+ if(!item){$('qiMsg').textContent='⚠️ 품목을 선택하세요.';return;}
+ if(!locId){$('qiMsg').textContent='⚠️ 입고 위치를 선택하세요.';return;}
+ if(!qty||qty<=0){$('qiMsg').textContent='⚠️ 입고 수량을 입력하세요.';return;}
+ $('qiMsg').textContent='저장 중...';
+ const {error}=await db.rpc('admin_receive_item_to_location',{
+  p_username:session.username,p_password:session.password,
+  p_item_id:item.id,p_location_id:locId,p_location_code:null,p_qty:qty,
+  p_actor_name:session.displayName,p_note:'메인 빠른 입고',
+  p_movement_date:todayKST(),p_use_pending:false
+ });
+ if(error){$('qiMsg').textContent='❌ '+error.message;return;}
+ $('qiMsg').textContent='✅ 입고 저장 완료';
+ await loadAll(); setTimeout(()=>ioClose('quickInboundModal'),700);
+};
+
+if($('qoSave')) $('qoSave').onclick=async()=>{
+ const worker=$('qoWorker').value;
+ const item=(items||[]).find(x=>String(x.id)===String($('qoItem').value));
+ const locId=$('qoLoc').value;
+ const qty=Number($('qoQty').value);
+ if(!worker){$('qoMsg').textContent='⚠️ 작업자를 선택하세요.';return;}
+ if(!item){$('qoMsg').textContent='⚠️ 품목을 선택하세요.';return;}
+ if(!locId){$('qoMsg').textContent='⚠️ 출고 위치를 선택하세요.';return;}
+ if(!qty||qty<=0){$('qoMsg').textContent='⚠️ 출고 수량을 입력하세요.';return;}
+ const loc=(item.item_locations||[]).find(l=>String(l.id)===String(locId));
+ if(loc && qty>Number(loc.qty||0)){$('qoMsg').textContent='⚠️ 현재 위치 재고보다 많이 출고할 수 없습니다.';return;}
+ $('qoMsg').textContent='저장 중...';
+ const {error}=await db.rpc('quick_apply_outbound',{
+  p_username:session.username,p_password:session.password,
+  p_item_id:item.id,p_location_id:locId,p_qty:qty,p_worker_name:worker,
+  p_note:'메인 빠른 출고'
+ });
+ if(error){$('qoMsg').textContent='❌ '+error.message;return;}
+ $('qoMsg').textContent='✅ 출고 저장 완료';
+ await loadAll(); setTimeout(()=>ioClose('quickOutboundModal'),700);
+};
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
+
+<div id="quickInboundModal" class="simple-io-modal hidden">
+ <div class="simple-io-box">
+  <div class="simple-io-head"><h2>📥 빠른 입고</h2><button type="button" data-close-io="quickInboundModal">✕</button></div>
+  <div class="simple-io-note">관리자 전용 · 품목 → 위치 → 수량만 입력</div>
+  <label>품번 또는 품명</label><input id="qiSearch" placeholder="품번 또는 품명 입력">
+  <select id="qiItem"><option value="">품목 선택</option></select>
+  <label>입고 위치</label><select id="qiLoc"><option value="">위치 선택</option></select>
+  <label>입고 수량</label><input id="qiQty" type="number" min="0" step="1" inputmode="numeric" placeholder="수량">
+  <button id="qiSave" type="button">입고 저장</button>
+  <div id="qiMsg" class="muted"></div>
+ </div>
+</div>
+
+<div id="quickOutboundModal" class="simple-io-modal hidden">
+ <div class="simple-io-box">
+  <div class="simple-io-head"><h2>📤 빠른 출고</h2><button type="button" data-close-io="quickOutboundModal">✕</button></div>
+  <div class="simple-io-note">작업자 공용 · 작업자 → 품목 → 수량만 빠르게 입력</div>
+  <label>작업자</label><select id="qoWorker"><option value="">작업자 선택</option></select>
+  <label>품번 또는 품명</label><input id="qoSearch" placeholder="품번 또는 품명 입력">
+  <select id="qoItem"><option value="">품목 선택</option></select>
+  <label>출고 위치</label><select id="qoLoc"><option value="">위치 선택</option></select>
+  <label>출고 수량</label><input id="qoQty" type="number" min="0" step="1" inputmode="numeric" placeholder="수량">
+  <button id="qoSave" type="button">출고 저장</button>
+  <div id="qoMsg" class="muted"></div>
+ </div>
+</div>
 </body></html>
