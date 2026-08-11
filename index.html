@@ -1360,7 +1360,28 @@ img{
 .homepage-menu-help{font-size:17px;color:#667085;margin:-18px 0 28px}
 @media(max-width:900px){.full-menu-grid{grid-template-columns:repeat(2,1fr)!important}}
 @media(max-width:600px){.full-menu-grid{grid-template-columns:1fr!important}}
-</style></head>
+</style>
+<style id="system-dashboard-screenshot-style">
+.system-dashboard{display:block;margin:12px 0 18px}
+.dash-main-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:14px}
+.dash-card{background:#fff;border:1px solid #e7ebef;border-radius:18px;padding:18px;box-shadow:0 4px 18px rgba(15,23,42,.055)}
+.dash-card h2{font-size:19px;margin:0 0 16px}
+.dash-notice{border:1.5px solid #ff5b5b;background:#fffafa;border-radius:8px;padding:17px;display:flex;align-items:center;gap:22px;color:#ef2f2f;margin-bottom:22px}
+.dash-notice span{font-size:18px;font-weight:900;white-space:nowrap}.dash-notice b{font-size:25px}
+.dash-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.dash-kpi{position:relative;min-height:100px;border-radius:10px;padding:18px;border:1px solid;overflow:hidden}
+.dash-kpi span{display:block;font-weight:800;margin-bottom:8px}.dash-kpi b{font-size:29px}.dash-kpi small{margin-left:8px}.dash-kpi i{position:absolute;right:18px;top:36px;font-style:normal;font-size:28px;opacity:.75}
+.dash-kpi.green{background:#f1fbf4;border-color:#cae9d3;color:#18834a}.dash-kpi.blue{background:#f1f7fc;border-color:#cfe0ed;color:#3b6e9d}
+.dash-kpi.amber{background:#fff8eb;border-color:#f1ddb0;color:#e48b10}.dash-kpi.red{background:#fff2f2;border-color:#f2cece;color:#ee4f57}.dash-kpi.purple{background:#f6f2ff;border-color:#ddd3fa;color:#7454d7}
+.dash-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.dash-quick-grid button{min-height:62px;background:#f7f9fb;color:#101828;border:1px solid #e3e8ee;border-radius:9px;font-size:19px;display:flex;align-items:center;justify-content:center;gap:10px}
+.dash-quick-grid button:hover{border-color:#087f46;background:#f0faf4}
+.dash-recent{margin-top:14px}.dash-recent-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.dash-recent-head button{width:auto}
+.dash-recent-tabs{display:flex;gap:6px;margin-bottom:8px}.dash-recent-tabs button{width:auto;padding:9px 15px;background:#eef2f6;color:#344054}.dash-recent-tabs button.active{background:#16834c;color:#fff}
+.dash-table-wrap{overflow:auto}.dash-table-wrap table{width:100%;border-collapse:collapse;font-size:13px}.dash-table-wrap th{background:#f2f5f7;text-align:left;padding:12px}.dash-table-wrap td{padding:12px;border-bottom:1px solid #e8edf1;white-space:nowrap}.dash-table-wrap td:nth-child(4){white-space:normal;min-width:280px}
+@media(max-width:1000px){.dash-main-grid{grid-template-columns:1fr}.dash-kpi-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.dash-card{padding:12px}.dash-notice{display:block}.dash-notice b{display:block;font-size:18px;margin-top:7px}.dash-kpi-grid{grid-template-columns:1fr 1fr}.dash-quick-grid{grid-template-columns:1fr 1fr}.dash-quick-grid button{font-size:15px}.dash-recent-head{display:block}.dash-recent-head button{margin:8px 0;width:100%}}
+</style>
+</head>
 <body>
 <header>
   <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
@@ -1416,7 +1437,58 @@ img{
     <button class="tab vvipOnly hidden" data-tab="bomai" title="VVIP 전용">🤖 BOM AI 분석</button>
   </div>
 
-  <section id="searchTab" class="tabpane">
+  
+<section id="systemDashboard" class="system-dashboard">
+  <div class="dash-main-grid">
+    <div class="dash-card dash-overview">
+      <div class="dash-notice">
+        <span>📢 공지사항</span>
+        <b>현재 시스템은 테스트 중이니 문제점은 담당자에게 문의해 주세요.</b>
+      </div>
+      <h2>오늘의 현황</h2>
+      <div class="dash-kpi-grid">
+        <div class="dash-kpi green"><span>WMS 전체 품목</span><b id="dashWmsTotal">0</b><small>개</small><i>📦</i></div>
+        <div class="dash-kpi blue"><span>WMS 실제재고 적용</span><b id="dashWmsApplied">0</b><small>개</small><i>🏬</i></div>
+        <div class="dash-kpi amber"><span>ERP 미등록 품목</span><b id="dashErpUnreg">0</b><small>개</small><i>!</i></div>
+        <div class="dash-kpi green"><span>총 재고수량</span><b id="dashTotalQty">0</b><small>개</small><i>📦</i></div>
+        <div class="dash-kpi red"><span>위치 미등록 품목</span><b id="dashNoLocation">0</b><small>개</small><i>📍</i></div>
+        <div class="dash-kpi purple"><span>자주 사용 품목</span><b id="dashFrequent">0</b><small>개</small><i>🔥</i></div>
+      </div>
+    </div>
+
+    <div class="dash-card dash-quick">
+      <h2>빠른 실행</h2>
+      <div class="dash-quick-grid">
+        <button data-go-tab="search">🔍 <b>품목 검색</b></button>
+        <button data-go-tab="items">📦 <b>품목 등록</b></button>
+        <button data-go-tab="excelbulk">📗 <b>엑셀 일괄등록</b></button>
+        <button data-go-tab="inbound">📥 <b>입고 등록</b></button>
+        <button id="dashQuickOutbound">📤 <b>출고 등록</b></button>
+        <button data-go-tab="erp">↔️ <b>ERP 대조</b></button>
+        <button data-go-tab="erpmaster">🗃️ <b>ERP 기준자료</b></button>
+        <button data-go-tab="unregistered">🟠 <b>ERP 미등록·창고정리</b></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-card dash-recent">
+    <div class="dash-recent-head">
+      <h2>최근 입출고 내역</h2>
+      <button id="dashHistoryAllBtn" type="button" class="secondary">전체 입출고 내역 보기</button>
+    </div>
+    <div class="dash-recent-tabs">
+      <button type="button" class="active" data-dash-history="IN">입고 내역</button>
+      <button type="button" data-dash-history="OUT">출고 내역</button>
+    </div>
+    <div class="dash-table-wrap">
+      <table>
+        <thead><tr><th>일시</th><th>구분</th><th>품목코드</th><th>품명</th><th>수량</th><th>위치</th><th>등록자</th></tr></thead>
+        <tbody id="dashRecentBody"><tr><td colspan="7">최근 내역을 불러오는 중입니다.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id="searchTab" class="tabpane">
 
   <div id="dailyWorkerCard" class="card hidden" style="display:none!important;margin-bottom:12px">
     <div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -3254,6 +3326,9 @@ async function login(options={}){
  }
  await loadAll();
  applyGeneralSimpleMode();
+ if($('systemDashboard')) $('systemDashboard').classList.remove('hidden');
+ setTimeout(()=>{ updateSystemDashboard(); loadDashboardRecent(); },200);
+
  syncWorkerLoginGate();
 
  if(session.role==='vvip'){ switchTab('vvip'); await loadVvipAnalysis(); }
@@ -4230,6 +4305,7 @@ async function loadAll(){
  }
  renderRecentThree();
  refreshMainItemCountBadge();
+ updateSystemDashboard();
  setDefaultDates();
  markRequiredFields();
 
@@ -8427,6 +8503,107 @@ if($('prodPhotoBtn')) $('prodPhotoBtn').onclick=()=>{
  if($('searchQ')) $('searchQ').placeholder='사진을 등록할 품번 또는 품명을 검색하세요';
 };
 if($('companyStartBtn')) $('companyStartBtn').onclick=()=>{$('loginArea')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('loginId')?.focus(),400);};
+
+let dashboardHistoryType='IN';
+
+function dashboardTotalQty(item){
+ return (item.item_locations||[]).reduce((s,l)=>s+Number(l.qty||0),0);
+}
+function updateSystemDashboard(){
+ if(!$('systemDashboard')) return;
+ const rows=items||[];
+ const wmsApplied=rows.filter(x=>!x.erp_catalog_only);
+ const erpUnreg=rows.filter(x=>x.erp_catalog_only);
+ const noLoc=rows.filter(x=>!(x.item_locations||[]).length);
+ const frequent=rows.filter(x=>x.usage_frequency==='FREQUENT');
+ const totalQty=rows.reduce((s,x)=>s+dashboardTotalQty(x),0);
+
+ $('dashWmsTotal').textContent=rows.length.toLocaleString();
+ $('dashWmsApplied').textContent=wmsApplied.length.toLocaleString();
+ $('dashErpUnreg').textContent=erpUnreg.length.toLocaleString();
+ $('dashTotalQty').textContent=totalQty.toLocaleString();
+ $('dashNoLocation').textContent=noLoc.length.toLocaleString();
+ $('dashFrequent').textContent=frequent.length.toLocaleString();
+ renderDashboardRecent();
+}
+
+function renderDashboardRecent(){
+ if(!$('dashRecentBody')) return;
+ let rows=(historyRows||[]).filter(x=>x.movement_type===dashboardHistoryType).slice(0,8);
+ if(!rows.length){
+   $('dashRecentBody').innerHTML='<tr><td colspan="7">표시할 최근 '+(dashboardHistoryType==='IN'?'입고':'출고')+' 내역이 없습니다.</td></tr>';
+   return;
+ }
+ $('dashRecentBody').innerHTML=rows.map(x=>`
+ <tr>
+  <td>${esc(historyDateTime(x.created_at))}</td>
+  <td>${x.movement_type==='IN'?'입고':'출고'}</td>
+  <td>${esc(x.part_no||'-')}</td>
+  <td>${esc(x.item_display_name||x.item_name||'-')}</td>
+  <td><b>${Number(x.qty||0).toLocaleString()} ${esc(x.unit||'EA')}</b></td>
+  <td>${esc(x.location_display||'-')}</td>
+  <td>${esc(x.actor_name||'-')}</td>
+ </tr>`).join('');
+}
+
+async function loadDashboardRecent(){
+ if(!session || session.role!=='admin') {
+   renderDashboardRecent();
+   return;
+ }
+ try{
+   const today=todayKST();
+   const d=new Date(today+'T00:00:00');
+   d.setDate(d.getDate()-30);
+   const start=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+   let all=[],from=0,pageSize=500;
+   while(true){
+     const {data,error}=await db.rpc('admin_get_unified_activity_history',{
+       p_username:session.username,p_password:session.password,
+       p_start_date:start,p_end_date:today
+     }).range(from,from+pageSize-1);
+     if(error) break;
+     const page=data||[];
+     all.push(...page);
+     if(page.length<pageSize) break;
+     from+=pageSize;
+   }
+   if(all.length) historyRows=all.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+ }catch(_){}
+ renderDashboardRecent();
+}
+
+document.querySelectorAll('[data-dash-history]').forEach(btn=>{
+ btn.onclick=()=>{
+   dashboardHistoryType=btn.dataset.dashHistory;
+   document.querySelectorAll('[data-dash-history]').forEach(x=>x.classList.remove('active'));
+   btn.classList.add('active');
+   renderDashboardRecent();
+ };
+});
+document.querySelectorAll('[data-go-tab]').forEach(btn=>{
+ btn.onclick=()=>{
+   const name=btn.dataset.goTab;
+   const tab=document.querySelector(`#tabs .tab[data-tab="${name}"]`);
+   if(tab){ $('systemDashboard')?.classList.add('hidden'); tab.click(); }
+ };
+});
+if($('dashQuickOutbound')) $('dashQuickOutbound').onclick=()=>{
+ $('systemDashboard')?.classList.add('hidden');
+ const tab=document.querySelector('#tabs .tab[data-tab="search"]');
+ tab?.click();
+ if($('searchQ')){ $('searchQ').placeholder='출고할 품번 또는 품명을 검색하세요'; $('searchQ').focus(); }
+};
+if($('dashHistoryAllBtn')) $('dashHistoryAllBtn').onclick=()=>{
+ $('systemDashboard')?.classList.add('hidden');
+ document.querySelector('#tabs .tab[data-tab="history"]')?.click();
+};
+
+if($('tabs')){
+ $('tabs').addEventListener('click',e=>{
+   if(e.target.closest('.tab')) $('systemDashboard')?.classList.add('hidden');
+ });
+}
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
