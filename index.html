@@ -206,12 +206,7 @@ textarea{min-height:90px}button{background:var(--g);color:#fff;border:0;font-wei
 .bulk-ok{color:#067647;font-weight:900}.bulk-warn{color:#b54708;font-weight:900}.bulk-bad{color:#b42318;font-weight:900}
 
 /* SQL38: 일반 사용자는 작업자 로그인 전 작업자 이름을 메인에서 검색/선택할 수 없음 */
-body.general-mode #dailyWorkerSelect,
-body.general-mode label[for="dailyWorkerSelect"],
-body.general-mode #dailyWorkerCard,
-body.general-mode .daily-worker-card,
-body.general-mode .worker-select-card,
-body.general-mode .today-worker-box { display:none !important; }
+/* 생산 PC 홈페이지에서는 시작 시 작업자 선택을 강제하지 않습니다. */
 </style>
 
 <style>
@@ -1330,7 +1325,28 @@ img{
  #workerLoginGate select,#workerLoginGate button{min-height:62px!important;font-size:20px!important}
 }
 .general-photo-edit-btn{margin-top:12px!important;min-height:54px!important;font-size:17px!important}
-</style></head>
+</style>
+<style id="production-pc-home-style">
+.production-home{padding:26px!important}
+.production-home-title{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}
+.production-home-title h1{font-size:32px!important;margin:4px 0 0!important}
+.production-home-clock{font-size:17px;font-weight:800}
+.production-menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.production-menu-grid button{
+ min-height:165px;border-radius:22px!important;
+ display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;
+ font-size:42px!important;font-weight:900!important
+}
+.production-menu-grid button b{font-size:24px!important}
+.production-menu-grid button small{font-size:15px!important;line-height:1.4}
+@media(max-width:900px){.production-menu-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){
+ .production-menu-grid{grid-template-columns:1fr}
+ .production-menu-grid button{min-height:120px}
+ .production-home-title{display:block}
+}
+</style>
+</head>
 <body>
 <header>
   <div class="brand"><img src="./mirim-logo.png" alt="MIRIM"><div><strong>미림테크놀러지</strong><small>자재·창고 관리 시스템</small></div></div>
@@ -1405,23 +1421,26 @@ img{
   </div>
 
 
-    <div id="generalSimpleHome" class="card hidden">
-      <div class="general-home-head">
-        <div>
-          <div class="muted">현재 작업자</div>
-          <div id="generalWorkerName" class="general-worker-name">작업자를 선택하세요</div>
-        </div>
-        <button id="generalChangeWorkerBtn" type="button" class="secondary">작업자 로그인</button>
-      </div>
-      <div class="general-home-title">오늘 할 작업을 선택하세요</div>
-      <div class="general-home-actions">
-        <button id="generalProductSearchBtn" type="button">🔎<b>제품·품목 검색</b><small>ERP 품번·품명 자동연동</small></button>
-        <button id="generalImageSearchBtn" type="button">📷<b>이미지 검색</b><small>사진으로 제품 찾기</small></button>
-        <button id="generalQuickOutboundBtn" type="button">📦<b>빠른 출고 등록</b><small>검색 후 바로 출고</small></button>
-      </div>
+    <div id="generalSimpleHome" class="card hidden production-home">
+  <div class="production-home-title">
+    <div>
+      <div class="muted">미림테크놀러지 자재·창고 시스템</div>
+      <h1>생산 PC 작업 홈페이지</h1>
     </div>
+    <div class="production-home-clock">필요한 작업을 바로 선택하세요</div>
+  </div>
 
-    <div id="cooperationNotice" class="coop-notice">
+  <div class="production-menu-grid">
+    <button id="prodProductSearchBtn" type="button">🔎<b>제품·품목 검색</b><small>ERP 품번·품명 / WMS 수량·위치</small></button>
+    <button id="prodImageSearchBtn" type="button">📷<b>이미지 검색</b><small>사진으로 제품 찾기</small></button>
+    <button id="prodQuickOutboundBtn" type="button">📦<b>빠른 출고</b><small>출고할 때 작업자 선택</small></button>
+    <button id="prodInboundBtn" type="button">📥<b>입고 등록</b><small>품목·수량·위치 등록</small></button>
+    <button id="prodStockBtn" type="button">📍<b>재고·위치 확인</b><small>창고수량과 보관위치 확인</small></button>
+    <button id="prodPhotoBtn" type="button">🖼️<b>사진 등록</b><small>누구나 품목 사진 등록·변경</small></button>
+  </div>
+</div>
+
+<div id="cooperationNotice" class="coop-notice">
       <div class="coop-notice-head">
         <div class="coop-notice-title">📢 협조사항</div>
         <button id="closeCooperationNotice" type="button" class="coop-notice-close" aria-label="협조사항 닫기">×</button>
@@ -3220,13 +3239,6 @@ async function login(options={}){
  await loadAll();
  applyGeneralSimpleMode();
  syncWorkerLoginGate();
- if(isGeneralRole()){
-   selectedDailyWorker='';
-   if($('dailyWorkerSelect')) $('dailyWorkerSelect').value='';
-   if($('workerLoginGateSelect')) $('workerLoginGateSelect').value='';
-   $('workerLoginGateMsg').textContent='';
-   $('workerLoginGate').classList.remove('hidden');
- }
 
  if(session.role==='vvip'){ switchTab('vvip'); await loadVvipAnalysis(); }
  else switchTab('search');
@@ -8367,20 +8379,37 @@ setTimeout(addQuickOutboundButtonsToSearch,500);
 
 // SQL38: 일반모드 작업자 로그인 강제
 function enforceGeneralWorkerLogin(){
-  try{
-    const isGeneral = document.body.classList.contains('general-mode') ||
-      (typeof currentMode!=='undefined' && currentMode==='general');
-    if(!isGeneral) return;
-    const worker = (typeof selectedDailyWorker!=='undefined' ? selectedDailyWorker : '') || '';
-    if(!worker){
-      syncWorkerLoginGate();
-      if($('workerLoginGateSelect')) $('workerLoginGateSelect').value='';
-      if($('workerLoginGateMsg')) $('workerLoginGateMsg').textContent='오늘 작업자 이름을 선택하고 로그인해야 검색과 출고 작업을 할 수 있습니다.';
-      $('workerLoginGate')?.classList.remove('hidden');
-    }
-  }catch(e){ console.warn(e); }
+  // 생산 PC 홈페이지형: 시작 시 작업자 로그인 강제 안 함
+  $('workerLoginGate')?.classList.add('hidden');
 }
 document.addEventListener('DOMContentLoaded',()=>setTimeout(enforceGeneralWorkerLogin,150));
+
+// 생산 PC 홈페이지 메뉴
+function openProductionSearch(mode='product'){
+ const searchCard=$('searchQ')?.closest('.card');
+ searchCard?.classList.remove('general-general-hidden');
+ $('searchResults')?.classList.remove('general-general-hidden');
+ if(mode==='image') $('photoSearchBtn')?.click();
+ else $('searchQ')?.focus();
+}
+if($('prodProductSearchBtn')) $('prodProductSearchBtn').onclick=()=>openProductionSearch('product');
+if($('prodImageSearchBtn')) $('prodImageSearchBtn').onclick=()=>openProductionSearch('image');
+if($('prodQuickOutboundBtn')) $('prodQuickOutboundBtn').onclick=()=>{
+ openProductionSearch('product');
+ if($('searchQ')) $('searchQ').placeholder='출고할 품번 또는 품명을 검색하세요';
+};
+if($('prodInboundBtn')) $('prodInboundBtn').onclick=()=>{
+ const btn=$('navInbound')||document.querySelector('[data-view="inbound"]');
+ if(btn) btn.click(); else $('inPartSearch')?.scrollIntoView({behavior:'smooth',block:'start'});
+};
+if($('prodStockBtn')) $('prodStockBtn').onclick=()=>{
+ openProductionSearch('product');
+ if($('searchQ')) $('searchQ').placeholder='재고·위치를 확인할 품번 또는 품명을 검색하세요';
+};
+if($('prodPhotoBtn')) $('prodPhotoBtn').onclick=()=>{
+ openProductionSearch('product');
+ if($('searchQ')) $('searchQ').placeholder='사진을 등록할 품번 또는 품명을 검색하세요';
+};
 </script>
 
 <div id="inventoryPrintArea" style="display:none"></div>
