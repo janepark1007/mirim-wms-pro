@@ -1202,6 +1202,24 @@ img{
   #inErpStockQty{font-size:18px!important}
 }
 </style>
+
+<style id="general-simple-home-style">
+#generalSimpleHome{padding:18px}
+.general-home-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.general-worker-name{font-size:22px;font-weight:900}
+.general-home-title{font-size:19px;font-weight:900;margin-bottom:12px}
+.general-home-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.general-home-actions button{min-height:128px;font-size:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border-radius:18px}
+.general-home-actions button b{font-size:19px}
+.general-home-actions button small{font-size:13px;font-weight:700;opacity:.9}
+.general-general-hidden{display:none!important}
+@media(max-width:720px){
+ .general-home-actions{grid-template-columns:1fr}
+ .general-home-actions button{min-height:112px}
+ .general-worker-name{font-size:24px}
+ #generalChangeWorkerBtn{width:auto!important}
+}
+</style>
 </head>
 <body>
 <header>
@@ -1276,6 +1294,22 @@ img{
     </div>
   </div>
 
+
+    <div id="generalSimpleHome" class="card hidden">
+      <div class="general-home-head">
+        <div>
+          <div class="muted">현재 작업자</div>
+          <div id="generalWorkerName" class="general-worker-name">작업자를 선택하세요</div>
+        </div>
+        <button id="generalChangeWorkerBtn" type="button" class="secondary">작업자 변경</button>
+      </div>
+      <div class="general-home-title">오늘 할 작업을 선택하세요</div>
+      <div class="general-home-actions">
+        <button id="generalProductSearchBtn" type="button">🔎<b>제품·품목 검색</b><small>ERP 품번·품명 자동연동</small></button>
+        <button id="generalImageSearchBtn" type="button">📷<b>이미지 검색</b><small>사진으로 제품 찾기</small></button>
+        <button id="generalQuickOutboundBtn" type="button">📦<b>빠른 출고 등록</b><small>검색 후 바로 출고</small></button>
+      </div>
+    </div>
 
     <div id="cooperationNotice" class="coop-notice">
       <div class="coop-notice-head">
@@ -2887,6 +2921,66 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const norm=v=>String(v||'').toLowerCase().replace(/\s+/g,'').trim();
 const total=x=>(x.item_locations||[]).reduce((s,l)=>s+Number(l.qty||0),0);
 
+
+function isGeneralRole(){
+ return !!session && session.role!=='admin' && session.role!=='vvip';
+}
+
+function applyGeneralSimpleMode(){
+ const general=isGeneralRole();
+ if(!$('generalSimpleHome')) return;
+
+ $('generalSimpleHome').classList.toggle('hidden',!general);
+
+ // 일반 작업자는 복잡한 안내/검색창을 작업자 선택 전에는 보지 않음
+ if(general){
+   $('cooperationNotice')?.classList.add('general-general-hidden');
+   const searchCard=$('searchQ')?.closest('.card');
+   if(searchCard) searchCard.classList.add('generalSearchWorkArea');
+   if(searchCard) searchCard.classList.add('general-general-hidden');
+   $('searchResults')?.classList.add('general-general-hidden');
+   $('dailyWorkerCard')?.classList.remove('hidden');
+   updateGeneralWorkerHome();
+ }else{
+   $('generalSimpleHome')?.classList.add('hidden');
+ }
+}
+
+function updateGeneralWorkerHome(){
+ if(!$('generalWorkerName')) return;
+ const worker=selectedDailyWorker||$('dailyWorkerSelect')?.value||'';
+ $('generalWorkerName').textContent=worker||'작업자를 선택하세요';
+}
+
+function showGeneralSearchWork(mode='product'){
+ if(!isGeneralRole()) return;
+ const worker=selectedDailyWorker||$('dailyWorkerSelect')?.value||'';
+ if(!worker){
+   alert('먼저 작업자 이름을 선택하세요.');
+   $('dailyWorkerSelect')?.focus();
+   return;
+ }
+ const searchCard=$('searchQ')?.closest('.card');
+ searchCard?.classList.remove('general-general-hidden');
+ $('searchResults')?.classList.remove('general-general-hidden');
+ if(mode==='image'){
+   $('photoSearchBtn')?.click();
+ }else{
+   $('searchQ')?.focus();
+ }
+}
+
+async function recordGeneralWorkerLogin(worker){
+ if(!isGeneralRole()||!worker) return;
+ try{
+   await db.rpc('record_general_worker_login',{
+     p_username:session.username,
+     p_password:session.password,
+     p_worker_name:worker
+   });
+ }catch(_){}
+}
+
 async function login(options={}){
  const username=options.username ?? $('loginId').value.trim();
  const password=options.password ?? $('loginPw').value;
@@ -2966,6 +3060,7 @@ async function login(options={}){
      : '일반 검색: ERP 전체 품목은 검색되며, 화면에는 현 창고수량과 자재위치만 표시합니다.';
  }
  await loadAll();
+ applyGeneralSimpleMode();
  if(session.role==='vvip'){ switchTab('vvip'); await loadVvipAnalysis(); }
  else switchTab('search');
  return true;
@@ -4249,9 +4344,10 @@ function renderMergedSearch(rows){
    const item=r.item;
    const erp=r.erp;
    const part=item?.part_no||erp?.erp_item_code||'-';
-   const name=item?displayItemNameSpec(item):(
-     erp?.specification ? `${erp.item_name||''} [${erp.specification}]` : (erp?.item_name||'-')
-   );
+   // 품명은 ERP 기준자료를 최우선으로 자동연동
+   const name=erp
+     ? (erp?.specification ? `${erp.item_name||''} [${erp.specification}]` : (erp?.item_name||'-'))
+     : (item?displayItemNameSpec(item):'-');
    const wmsQty=item?total(item):null;
    const erpQty=erp?.erp_stock_qty;
    const locations=item?.item_locations||[];
@@ -5964,10 +6060,34 @@ async function loadDailyWorkerSummary(){
    : `오늘 전체 작업자 합계 · 작업하려면 왼쪽에서 이름을 선택하세요.`;
 }
 if($('dailyWorkerSelect')){
- $('dailyWorkerSelect').onchange=()=>{
+ $('dailyWorkerSelect').onchange=async()=>{
    selectedDailyWorker=$('dailyWorkerSelect').value||'';
-   if(selectedDailyWorker) localStorage.setItem('mirim_daily_worker_'+todayKST(),selectedDailyWorker);
+   if(selectedDailyWorker){
+     localStorage.setItem('mirim_daily_worker_'+todayKST(),selectedDailyWorker);
+     updateGeneralWorkerHome();
+     await recordGeneralWorkerLogin(selectedDailyWorker);
+   }
    loadDailyWorkerSummary();
+ };
+}
+
+
+if($('generalChangeWorkerBtn')){
+ $('generalChangeWorkerBtn').onclick=()=>{
+   $('dailyWorkerSelect')?.focus();
+   $('dailyWorkerSelect')?.scrollIntoView({behavior:'smooth',block:'center'});
+ };
+}
+if($('generalProductSearchBtn')){
+ $('generalProductSearchBtn').onclick=()=>showGeneralSearchWork('product');
+}
+if($('generalImageSearchBtn')){
+ $('generalImageSearchBtn').onclick=()=>showGeneralSearchWork('image');
+}
+if($('generalQuickOutboundBtn')){
+ $('generalQuickOutboundBtn').onclick=()=>{
+   showGeneralSearchWork('product');
+   if($('searchQ')) $('searchQ').placeholder='출고할 품번 또는 품명을 검색하세요';
  };
 }
 
