@@ -186,6 +186,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 .worker-note{background:#eef6f1;border:1px solid #d5e7dc;padding:10px 12px;border-radius:10px;font-weight:800;color:#28523f;margin-bottom:10px}
 @media(max-width:720px){.home-summary{grid-template-columns:1fr 1fr}.top-actions{gap:5px}.admin-btn{padding:0 9px}}
 </style>
+
+<style id="location-custom-detail-v9-4">
+.loc-editor label input{width:100%;min-height:48px;border:1px solid #ccd7d1;border-radius:10px;padding:9px;background:#fff}
+.loc-editor .custom-note{grid-column:1/-1;color:var(--muted);font-size:13px}
+</style>
 </head>
 <body>
 <header>
@@ -329,18 +334,22 @@ function locationEditor(x,i){
  <label>자재보관실<select id="lr_${i}">${opt(LOC_OPTIONS.room,e.room)}</select></label>
  <label>구역<select id="lz_${i}">${opt(LOC_OPTIONS.zone,e.zone)}</select></label>
  <label>단<select id="ll_${i}">${opt(LOC_OPTIONS.level,e.level)}</select></label>
- <label>높이<select id="lh_${i}">${opt(LOC_OPTIONS.height,e.height)}</select></label>
+ <label>선반위치<select id="lh_${i}">${opt(LOC_OPTIONS.height,e.height)}</select></label>
  <label>보관형태<select id="ls_${i}">${opt(LOC_OPTIONS.storage,e.storage)}</select></label>
  <label>세부위치<select id="ld_${i}">${opt(LOC_OPTIONS.detail,e.detail)}</select></label>
+ <label>세부위치 직접입력<input id="ld_custom_${i}" placeholder="예: 2005 / 박스A / 임시보관" value="${e.detailCustom||''}"></label>
  </div>
  <button class="loc-save" onclick="saveLocation('${esc(x.part)}',${i})">📍 위치 저장</button>
  </div>`;
 }
 async function saveLocation(part,i){
  if(!isAdmin){alert('위치 등록/수정은 관리자만 가능합니다.');return;}
+ const customDetail=($('ld_custom_'+i)?.value||'').trim();
  const e={
   room:$('lr_'+i).value,zone:$('lz_'+i).value,level:$('ll_'+i).value,
-  height:$('lh_'+i).value,storage:$('ls_'+i).value,detail:$('ld_'+i).value
+  height:$('lh_'+i).value,storage:$('ls_'+i).value,
+  detail:customDetail||$('ld_'+i).value,
+  detailCustom:customDetail
  };
  if(!e.room && !e.zone && !e.level && !e.height && !e.storage && !e.detail){
    return alert('위치를 하나 이상 선택해 주세요.');
@@ -436,7 +445,8 @@ async function loadSharedCache(){
    sharedCache.stock[String(r.part_no)]=Number(r.current_stock);
    sharedCache.location[String(r.part_no)]={
      room:r.room||'',zone:r.zone||'',level:r.level||'',height:r.height||'',
-     storage:r.storage||'',detail:r.detail||''
+     storage:r.storage||'',detail:r.detail||'',
+     detailCustom:(r.detail && !LOC_OPTIONS.detail.includes(String(r.detail))) ? String(r.detail) : ''
    };
  });
  (moves||[]).forEach(r=>{
