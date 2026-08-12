@@ -122,6 +122,20 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 .loc-save{width:100%;min-height:50px;margin-top:10px;background:#0b7a45;color:white;border:0;border-radius:11px;font-weight:900}
 @media(max-width:720px){.loc-grid{grid-template-columns:1fr 1fr}}
 </style>
+
+<style id="qty-compare-v6">
+.qty-compare{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.qty-box{background:#f3f7f5;border:1px solid #e0e7e3;border-radius:11px;padding:11px}
+.qty-box small{display:block;color:var(--muted);margin-bottom:4px}
+.qty-box b{font-size:20px}
+.qty-box.diff-ok{background:#edf8f2;border-color:#cbe7d5;color:#0b6b3e}
+.qty-box.diff-warn{background:#fff3f0;border-color:#f0c9c0;color:#b42318}
+.current-stock-edit{margin-top:10px;padding:12px;background:#fffaf0;border:1px solid #f0dfb6;border-radius:12px}
+.current-stock-edit label{font-weight:800;display:block;margin-bottom:6px}
+.current-stock-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.current-stock-row button{min-width:110px}
+@media(max-width:720px){.qty-compare{grid-template-columns:1fr}.current-stock-row{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header><div><b>미림테크놀러지</b><small>생산 자재관리</small></div><button id="homeBtn" class="primary" style="min-height:42px">메인</button></header>
@@ -259,6 +273,41 @@ function saveLocation(part,i){
  search();
  alert('위치 저장 완료');
 }
+
+function stockKey(part){return 'mirim_current_stock_'+part}
+function getCurrentStock(x){
+ const v=localStorage.getItem(stockKey(x.part));
+ if(v===null||v==='') return null;
+ const n=Number(v); return Number.isFinite(n)?n:null;
+}
+function saveCurrentStock(part,i){
+ const v=$('stock_'+i).value;
+ if(v==='') return alert('현 창고수량을 입력하세요.');
+ const n=Number(v);
+ if(!Number.isFinite(n)) return alert('숫자로 입력하세요.');
+ localStorage.setItem(stockKey(part),String(n));
+ search();
+ alert('현 창고수량 저장 완료');
+}
+function qtyCompareHtml(x,i){
+ const erp=Number(x.erpQty||0);
+ const current=getCurrentStock(x);
+ const diff=current===null?null:current-erp;
+ const diffClass=diff===0?'diff-ok':'diff-warn';
+ const diffText=diff===null?'⚠️ 미입력':(diff>0?'+'+diff.toLocaleString():diff.toLocaleString());
+ return `<div class="qty-compare">
+   <div class="qty-box"><small>ERP 수량</small><b>${erp.toLocaleString()}</b></div>
+   <div class="qty-box"><small>현 창고수량</small><b>${current===null?'⚠️ 확인 필요':current.toLocaleString()}</b></div>
+   <div class="qty-box ${diff===null?'':diffClass}"><small>재고 차이</small><b>${diffText}</b></div>
+ </div>
+ <div class="current-stock-edit">
+   <label>현 창고수량 입력/수정</label>
+   <div class="current-stock-row">
+     <input id="stock_${i}" type="number" inputmode="numeric" placeholder="실제 확인 수량" value="${current===null?'':current}">
+     <button class="primary" onclick="saveCurrentStock('${esc(x.part)}',${i})">수량 저장</button>
+   </div>
+ </div>`;
+}
 function search(){
  const q=norm($('q').value);
  if(!q){
@@ -317,9 +366,10 @@ function search(){
 
           <div class="meta">
             <div><small>구분</small><b>${esc(x.category||'미분류')}</b></div>
-            <div><small>ERP수량</small><b>${Number(x.erpQty||0).toLocaleString()}</b></div>
             <div><small>보관형태</small><b>${esc(x.storage||'-')}</b></div>
+            <div><small>규격</small><b>${esc(x.spec||'-')}</b></div>
           </div>
+          ${qtyCompareHtml(x,i)}
           ${locEdit}
           ${inbound}
           ${outbound}
