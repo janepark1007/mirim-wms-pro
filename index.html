@@ -18,6 +18,10 @@ header b{font-size:20px}header small{display:block;color:var(--muted);margin-top
 input{width:100%;min-height:52px;border:1px solid #ccd7d1;border-radius:12px;padding:12px 14px;font-size:17px}
 .primary{background:var(--g);color:#fff;border:0;border-radius:12px;padding:0 18px;font-weight:800}
 .result{border:1px solid var(--line);border-radius:14px;padding:15px;margin-top:12px;background:#fbfdfc}
+.photo-wrap{display:grid;grid-template-columns:130px 1fr;gap:14px;align-items:start}
+.item-photo{width:130px;height:130px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:12px}
+.no-photo{width:130px;height:130px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed #a9b6af;border-radius:12px;color:var(--muted);font-weight:700}
+.photo-btn{margin-top:8px;min-height:40px;width:130px;background:#eef6f1;color:#0b6b3e;border:1px solid #cfe2d6;border-radius:10px;font-weight:800}
 .part{font-size:23px;font-weight:900}.name{font-size:18px;font-weight:800;margin:6px 0}
 .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .meta div{background:#f3f7f5;border-radius:10px;padding:10px}.meta small{display:block;color:var(--muted);margin-bottom:4px}
@@ -62,6 +66,26 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function openMode(m){mode=m;$('home').classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='outbound'?'빠른 출고':(m==='location'?'위치 확인':'품목 검색');$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>openMode(b.dataset.mode));
 $('homeBtn').onclick=()=>{$('work').classList.add('hidden');$('home').classList.remove('hidden')};
+function photoKey(part){return 'mirim_item_photo_'+part}
+function getPhoto(part){return localStorage.getItem(photoKey(part))||''}
+function choosePhoto(part){
+ const input=document.createElement('input');
+ input.type='file'; input.accept='image/*'; input.setAttribute('capture','environment');
+ input.onchange=()=>{
+   const file=input.files?.[0]; if(!file)return;
+   if(file.size>4*1024*1024){alert('사진은 4MB 이하로 선택해 주세요.');return}
+   const reader=new FileReader();
+   reader.onload=()=>{
+     try{localStorage.setItem(photoKey(part),reader.result);search();alert('사진 저장 완료');}
+     catch(e){alert('사진 저장 공간이 부족합니다.');}
+   };
+   reader.readAsDataURL(file);
+ };
+ input.click();
+}
+function removePhoto(part){
+ if(confirm('이 품목 사진을 삭제할까요?')){localStorage.removeItem(photoKey(part));search();}
+}
 function search(){
  const q=norm($('q').value); if(!q){$('count').textContent='검색어를 입력하세요.';return}
  const exact=ITEMS.filter(x=>norm(x.part)===q||norm(x.name)===q);
@@ -69,7 +93,11 @@ function search(){
  $('count').textContent='검색결과 '+rows.length+'개';
  $('results').innerHTML=rows.map((x,i)=>{
    const out=mode==='outbound'?`<div class="outgrid"><input id="w_${i}" placeholder="작업자 이름"><input id="qty_${i}" type="number" inputmode="numeric" placeholder="출고수량"></div><button class="primary" style="width:100%;min-height:50px;margin-top:9px" onclick='saveOut(${JSON.stringify(x)},${i})'>출고 저장</button>`:'';
-   return `<div class="result"><div class="part">${esc(x.part)}</div><div class="name">${esc(x.name)}</div><div style="color:var(--muted)">${esc(x.spec||'')}</div><div class="meta"><div><small>구분</small><b>${esc(x.category||'미분류')}</b></div><div><small>ERP수량</small><b>${Number(x.erpQty||0).toLocaleString()}</b></div><div><small>위치</small><b>${esc(x.location||'⚠️ 위치 확인 필요')}</b></div></div>${out}</div>`;
+   const photo=getPhoto(x.part);
+   const photoHtml=photo
+     ? `<div><img class="item-photo" src="${photo}" alt="품목 사진"><button class="photo-btn" onclick="choosePhoto('${esc(x.part)}')">📷 사진 변경</button><button class="photo-btn" onclick="removePhoto('${esc(x.part)}')" style="margin-top:5px">삭제</button></div>`
+     : `<div><div class="no-photo">사진 없음</div><button class="photo-btn" onclick="choosePhoto('${esc(x.part)}')">📷 사진 등록</button></div>`;
+   return `<div class="result"><div class="photo-wrap">${photoHtml}<div><div class="part">${esc(x.part)}</div><div class="name">${esc(x.name)}</div><div style="color:var(--muted)">${esc(x.spec||'')}</div><div class="meta"><div><small>구분</small><b>${esc(x.category||'미분류')}</b></div><div><small>ERP수량</small><b>${Number(x.erpQty||0).toLocaleString()}</b></div><div><small>위치</small><b>${esc(x.location||'⚠️ 위치 확인 필요')}</b></div></div>${out}</div></div></div>`;
  }).join('');
 }
 $('searchBtn').onclick=search;$('q').addEventListener('keyup',e=>{if(e.key==='Enter')search()});
