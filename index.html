@@ -871,7 +871,7 @@ function orderRequestHtml(x,i){
      <input id="order_qty_${i}" type="number" min="1" inputmode="numeric" placeholder="주문 요청수량 (선택)">
      <button class="kakao-share-btn" onclick='shareOrderRequest(${JSON.stringify(x)},${i})'>카톡으로 보내기</button>
    </div>
-   <small>현재수량이 부족해 보이면 품번·품명·위치·현재수량을 카카오톡으로 바로 공유할 수 있습니다.</small>
+   <small>현재수량이 부족해 보이면 품번·품명·위치·현재수량과 등록 사진을 함께 공유할 수 있습니다.</small>
    ${current===null?'<span class="low-stock-badge">⚠️ 현 수량 확인 필요</span>':''}
  </div>`;
 }
@@ -881,6 +881,7 @@ async function shareOrderRequest(x,i){
  const qtyEl=$('order_qty_'+i);
  const orderQty=qtyEl ? qtyEl.value.trim() : '';
  const loc=applyLocEdit(x).location||'위치 확인 필요';
+ const photoUrl=getPhoto(x.part);
 
  const lines=[
    '[미림 자재 주문 요청]',
@@ -893,25 +894,50 @@ async function shareOrderRequest(x,i){
  ];
  if(orderQty) lines.push('주문 요청수량: '+Number(orderQty).toLocaleString());
  lines.push('요청일시: '+new Date().toLocaleString('ko-KR'));
-
  const msg=lines.join('\n');
 
- // 모바일에서는 공유창이 열리고 KakaoTalk을 선택할 수 있음
+ let photoFile=null;
+ if(photoUrl){
+   try{
+     const res=await fetch(photoUrl);
+     const blob=await res.blob();
+     const ext=(blob.type&&blob.type.includes('png'))?'png':'jpg';
+     photoFile=new File([blob],`미림_${String(x.part).replace(/[^a-zA-Z0-9._-]/g,'_')}.${ext}`,{type:blob.type||'image/jpeg'});
+   }catch(e){console.warn('사진 공유용 변환 실패',e);}
+ }
+
+ // 모바일: 사진 파일 + 주문내용을 한 번에 시스템 공유창으로 전달
  if(navigator.share){
    try{
-     await navigator.share({title:'미림 자재 주문 요청',text:msg});
+     const data={title:'미림 자재 주문 요청',text:msg};
+     if(photoFile && navigator.canShare && navigator.canShare({files:[photoFile]})){
+       data.files=[photoFile];
+     }
+     await navigator.share(data);
      return;
    }catch(e){
      if(e && e.name==='AbortError') return;
+     console.warn('공유 실패, PC 방식으로 전환',e);
    }
  }
 
- // 공유 API가 없는 PC/브라우저에서는 클립보드 복사
+ // PC: 주문문구 복사 + 사진이 있으면 새 창에 표시하여 카카오톡 PC로 드래그/복사 가능
  try{
    await navigator.clipboard.writeText(msg);
-   alert('주문 요청내용을 복사했습니다. 카카오톡에 붙여넣어 보내주세요.');
- }catch(e){
-   prompt('아래 내용을 복사해서 카카오톡으로 보내주세요.',msg);
+ }catch(e){}
+
+ if(photoUrl){
+   const w=window.open('','_blank','width=760,height=760');
+   if(w){
+     w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>미림 주문요청 사진</title>
+     <style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.55}img{max-width:100%;max-height:480px;object-fit:contain;border:1px solid #ddd;border-radius:12px}pre{white-space:pre-wrap;background:#f5f7f6;padding:14px;border-radius:10px}b{font-size:20px}</style></head>
+     <body><b>PC 카카오톡 주문요청</b><p>주문내용은 클립보드에 복사되었습니다. 아래 사진을 카카오톡 PC 대화창으로 드래그하거나 복사해 보내세요.</p>
+     <img src="${photoUrl}" alt="품목 사진"><pre>${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`);
+     w.document.close();
+   }
+   alert('주문내용을 복사했습니다. 열린 사진과 함께 카카오톡 PC로 보내주세요.');
+ }else{
+   alert('주문내용을 복사했습니다. 등록된 품목 사진이 없어 문자내용만 카카오톡에 붙여넣어 주세요.');
  }
 }
 function search(){
