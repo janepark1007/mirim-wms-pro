@@ -256,7 +256,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.1</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.2</small></div>
 <div class="top-actions">
   <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
   <button id="homeBtn" class="primary" style="min-height:42px">메인</button>
@@ -267,7 +267,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   공용 동기화 확인 중...
 </div>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.1 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.2 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -1052,37 +1052,64 @@ async function saveIn(x,i){
  try{
    if(sharedReady){
      await sharedAddMovement('IN',x,qty,worker);
+     await refreshSharedHistories();
    }else{
      const a=getInHist();
-     a.unshift({time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),part:x.part,name:x.name,qty,worker,location:x.location||''});
+     a.unshift({
+       time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+       part:x.part,name:x.name,qty,worker,location:x.location||''
+     });
      setInHist(a);
+     renderInHist();
    }
-   
+   const qtyEl=$('in_qty_'+i);
+   if(qtyEl) qtyEl.value='';
+   updateHomeSummary();
+   search();
+   alert(sharedReady?'공용 입고 저장 완료':'이 기기에 입고 기록 저장 완료');
+ }catch(err){
+   console.error(err);
+   alert('입고 저장 실패: '+(err.message||err));
+ }
+}
+
 async function refreshSharedHistories(){
  if(!sharedReady||!sharedDb)return;
- const today=new Date(); today.setHours(0,0,0,0);
+ const today=new Date();
+ today.setHours(0,0,0,0);
+
  const {data,error}=await sharedDb.from('production_movements')
-   .select('*').gte('created_at',today.toISOString()).order('created_at',{ascending:false}).limit(300);
- if(error){console.error(error);updateHomeSummary();return}
+   .select('*')
+   .gte('created_at',today.toISOString())
+   .order('created_at',{ascending:false})
+   .limit(300);
+
+ if(error){
+   console.error(error);
+   updateHomeSummary();
+   return;
+ }
+
  const rows=data||[];
  sharedTodayIns=rows.filter(r=>r.movement_type==='IN').map(r=>({
    time:new Date(r.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
-   part:String(r.part_no||''),name:r.item_name||'',qty:Number(r.qty||0),
-   worker:r.worker_name||'',location:r.location||''
+   part:String(r.part_no||''),
+   name:r.item_name||'',
+   qty:Number(r.qty||0),
+   worker:r.worker_name||'',
+   location:r.location||''
  }));
  sharedTodayOuts=rows.filter(r=>r.movement_type==='OUT').map(r=>({
    time:new Date(r.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
-   part:String(r.part_no||''),name:r.item_name||'',qty:Number(r.qty||0),
-   worker:r.worker_name||'',location:r.location||''
+   part:String(r.part_no||''),
+   name:r.item_name||'',
+   qty:Number(r.qty||0),
+   worker:r.worker_name||'',
+   location:r.location||''
  }));
+
  renderDailyHistories();
  updateHomeSummary();
-}
-if(sharedReady) await refreshSharedHistories(); else renderInHist();$('in_qty_'+i).value='';search();updateHomeSummary();
-   updateHomeSummary(); alert(sharedReady?'공용 입고 저장 완료':'이 기기에 입고 기록 저장 완료');
- }catch(err){
-   console.error(err);alert('입고 저장 실패: '+(err.message||err));
- }
 }
 
 function localAllInTotal(){
@@ -1122,7 +1149,7 @@ function updateHomeSummary(){
      enteredItemCount=seen.size;
    }
 
-   const erpItemCount = new Set((ITEMS||[]).map(x=>String(x.part||'')).filter(Boolean)).size || 1438;
+   const erpItemCount = new Set((ITEMS||[]).map(x=>String(x.part||'')).filter(p=>p && p!=='합계')).size || 1438;
 
    const a=$('homeStockTotal'), b=$('homeInTotal'), c=$('homeOutTotal'), d=$('homeExpectedTotal');
    if(a) a.textContent=enteredItemCount.toLocaleString();
@@ -1206,7 +1233,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  }catch(e){console.error('초기 버튼 연결 오류',e);}
 });
 
-let __mirimVersion='v13.1';
+let __mirimVersion='v13.2';
 async function checkForNewBuild(){
   try{
     const r=await fetch('./version.json?ts='+Date.now(),{cache:'no-store'});
