@@ -315,9 +315,9 @@ body.worker-locked #workerLoginPanel{
   opacity:1!important;
   filter:none!important;
 }
-body.worker-locked header .top-actions > *:not(.worker-auth){
-  pointer-events:none;
-  opacity:.35;
+body.worker-locked header .top-actions > *{
+  pointer-events:auto;
+  opacity:1;
 }
 body.worker-locked .worker-auth{
   pointer-events:auto;
@@ -327,7 +327,7 @@ body.worker-locked .worker-auth{
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.1</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.2</small></div>
 <div class="top-actions">
   <div class="worker-auth">
     <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
@@ -387,7 +387,7 @@ body.worker-locked .worker-auth{
   </div>
 </section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.1 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.2 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -728,9 +728,9 @@ function updateWorkerUI(){
  if(badge) badge.textContent=currentWorker ? `작업자: ${currentWorker.name}` : '작업자 미로그인';
  if(btn) btn.textContent=currentWorker ? '작업자 로그아웃' : '작업자 로그인';
 
- document.body.classList.toggle('worker-locked',!currentWorker);
+ document.body.classList.toggle('worker-locked',!currentWorker && !isAdmin);
 
- if(!currentWorker){
+ if(!currentWorker && !isAdmin){
    $('home')?.classList.add('hidden');
    $('work')?.classList.add('hidden');
    $('photoSearchPanel')?.classList.add('hidden');
@@ -844,6 +844,7 @@ async function workerLogout(){
  currentWorker=null;
  sessionStorage.removeItem('mirim_worker_session');
  updateWorkerUI();
+ if(isAdmin){$('home')?.classList.remove('hidden');}
  alert('작업자 로그아웃 완료');
 }
 
@@ -897,11 +898,11 @@ function updateAdminUI(){
  }catch(e){ console.error('관리자 UI 표시 오류',e); }
 }
 function adminLogin(){
- if(!currentWorker){showWorkerLogin();alert('먼저 작업자 로그인을 해주세요.');return;}
  if(isAdmin){
    isAdmin=false;
    sessionStorage.removeItem('mirim_prod_admin');
    updateAdminUI();
+   if(!currentWorker) updateWorkerUI();
    return;
  }
  const cfg=window.MIRIM_CONFIG||{};
@@ -911,7 +912,11 @@ function adminLogin(){
  if(String(pin)===adminPin){
    isAdmin=true;
    sessionStorage.setItem('mirim_prod_admin','1');
+   document.body.classList.remove('worker-locked');
+   $('workerLoginPanel')?.classList.add('hidden');
+   $('home')?.classList.remove('hidden');
    updateAdminUI();
+   try{updateHomeSummary();}catch(e){}
    alert('관리자 로그인 완료');
  }else{
    alert('관리자 PIN이 맞지 않습니다.');
