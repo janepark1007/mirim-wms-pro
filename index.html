@@ -216,10 +216,10 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 <div class="hero"><h1>생산 자재관리</h1><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
-  <div class="hbox"><small>등록된 현 창고수량 합계</small><b id="homeStockTotal">0</b></div>
-  <div class="hbox"><small>오늘 입고수량</small><b id="homeInTotal">0</b></div>
-  <div class="hbox"><small>오늘 출고수량</small><b id="homeOutTotal">0</b></div>
-  <div class="hbox green"><small>오늘 반영 예상재고</small><b id="homeExpectedTotal">0</b></div>
+  <div class="hbox"><small>현 창고수량</small><b id="homeStockTotal">0</b></div>
+  <div class="hbox"><small>오늘 입고 합계</small><b id="homeInTotal">0</b></div>
+  <div class="hbox"><small>오늘 출고 합계</small><b id="homeOutTotal">0</b></div>
+  <div class="hbox green"><small>입출고 반영 재고</small><b id="homeExpectedTotal">0</b></div>
 </div>
 <div class="quick">
 <button data-mode="search">🔎<span>품목검색</span></button>
@@ -260,7 +260,11 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
  openMode(m);
 });
 $('adminLoginBtn').onclick=adminLogin;
-$('homeBtn').onclick=()=>{$('work').classList.add('hidden');$('home').classList.remove('hidden');renderDailyHistories();updateHomeSummary();};
+$('homeBtn').onclick=async()=>{
+ $('work').classList.add('hidden');$('home').classList.remove('hidden');
+ if(sharedReady){try{await refreshSharedHistories()}catch(e){console.error(e)}}
+ renderDailyHistories();updateHomeSummary();
+};
 function photoKey(part){return 'mirim_item_photo_'+part}
 function getPhoto(part){return localStorage.getItem(photoKey(part))||''}
 function choosePhoto(part){
@@ -491,13 +495,25 @@ async function sharedSaveLocation(part,e){
 }
 async function sharedAddMovement(type,x,qty,worker){
  if(!sharedDb)return false;
- const {error}=await sharedDb.from('production_movements').insert({
+ const now=new Date();
+ const row={
    movement_type:type,part_no:String(x.part),item_name:x.name||'',qty:Number(qty),
-   worker_name:worker||'',location:x.location||'',created_at:new Date().toISOString()
- });
+   worker_name:worker||'',location:x.location||'',created_at:now.toISOString()
+ };
+ const {error}=await sharedDb.from('production_movements').insert(row);
  if(error)throw error;
+
  const cache=type==='IN'?sharedCache.inTotal:sharedCache.outTotal;
  cache[String(x.part)]=(cache[String(x.part)]||0)+Number(qty);
+
+ const viewRow={
+   time:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+   part:String(x.part),name:x.name||'',qty:Number(qty),worker:worker||'',location:x.location||''
+ };
+ if(type==='IN') sharedTodayIns.unshift(viewRow);
+ else sharedTodayOuts.unshift(viewRow);
+
+ updateHomeSummary();
  return true;
 }
 function stockKey(part){return 'mirim_current_stock_'+part}
@@ -687,7 +703,7 @@ async function refreshSharedHistories(){
  const today=new Date(); today.setHours(0,0,0,0);
  const {data,error}=await sharedDb.from('production_movements')
    .select('*').gte('created_at',today.toISOString()).order('created_at',{ascending:false}).limit(300);
- if(error){console.error(error);return}
+ if(error){console.error(error);updateHomeSummary();return}
  const rows=data||[];
  sharedTodayIns=rows.filter(r=>r.movement_type==='IN').map(r=>({
    time:new Date(r.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
@@ -719,23 +735,31 @@ function localAllOutTotal(){
 }
 function updateHomeSummary(){
  try{
- let stock=0,inTotal=0,outTotal=0;
- if(sharedReady){
-   stock=Object.values(sharedCache.stock).reduce((s,v)=>s+Number(v||0),0);
-   inTotal=sharedTodayIns.reduce((s,r)=>s+Number(r.qty||0),0);
-   outTotal=sharedTodayOuts.reduce((s,r)=>s+Number(r.qty||0),0);
- }else{
-   stock=ITEMS.reduce((s,x)=>{
-     const v=getCurrentStock(x); return s+(v===null?0:Number(v||0));
-   },0);
-   inTotal=localAllInTotal();
-   outTotal=localAllOutTotal();
- }
- if($('homeStockTotal')) $('homeStockTotal').textContent=stock.toLocaleString();
- if($('homeInTotal')) $('homeInTotal').textContent=inTotal.toLocaleString();
- if($('homeOutTotal')) $('homeOutTotal').textContent=outTotal.toLocaleString();
- if($('homeExpectedTotal')) $('homeExpectedTotal').textContent=(stock+inTotal-outTotal).toLocaleString();
- }catch(e){ console.error(e); }
+   const inRows = sharedReady ? sharedTodayIns : getInHist();
+   const outRows = sharedReady ? sharedTodayOuts : getHist();
+
+   const inTotal = inRows.reduce((s,r)=>s+Number(r.qty||0),0);
+   const outTotal = outRows.reduce((s,r)=>s+Number(r.qty||0),0);
+
+   let stockTotal=0;
+   if(sharedReady){
+     stockTotal=Object.values(sharedCache.stock).reduce((s,v)=>s+Number(v||0),0);
+   }else{
+     const seen=new Set();
+     ITEMS.forEach(x=>{
+       const p=String(x.part);
+       if(seen.has(p))return;
+       seen.add(p);
+       const v=getCurrentStock(x);
+       if(v!==null)stockTotal+=Number(v||0);
+     });
+   }
+
+   $('homeStockTotal').textContent=stockTotal.toLocaleString();
+   $('homeInTotal').textContent=inTotal.toLocaleString();
+   $('homeOutTotal').textContent=outTotal.toLocaleString();
+   $('homeExpectedTotal').textContent=(stockTotal+inTotal-outTotal).toLocaleString();
+ }catch(e){console.error(e)}
 }
 function getTodayInRows(){
  return sharedReady ? sharedTodayIns : getInHist();
@@ -771,5 +795,16 @@ $('csvBtn').onclick=()=>{
  link.download='미림_생산_출고_'+new Date().toISOString().slice(0,10)+'.csv';link.click();URL.revokeObjectURL(link.href);
 };
 renderHist();
+
+window.addEventListener('focus',async()=>{
+ if(sharedReady){try{await refreshSharedHistories()}catch(e){console.error(e)}}
+ updateHomeSummary();
+});
+document.addEventListener('visibilitychange',async()=>{
+ if(!document.hidden){
+   if(sharedReady){try{await refreshSharedHistories()}catch(e){console.error(e)}}
+   updateHomeSummary();
+ }
+});
 </script>
 </body></html>
