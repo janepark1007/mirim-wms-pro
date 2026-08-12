@@ -113,6 +113,15 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   .result-location b{font-size:18px}
 }
 </style>
+
+<style id="location-editor-v5">
+.loc-editor{margin-top:14px;padding:14px;background:#f7faf8;border:1px solid #dce7e1;border-radius:14px}
+.loc-editor h3{margin:0 0 10px}
+.loc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.loc-grid select,.loc-grid input{width:100%;min-height:48px;border:1px solid #ccd7d1;border-radius:10px;padding:9px;background:#fff}
+.loc-save{width:100%;min-height:50px;margin-top:10px;background:#0b7a45;color:white;border:0;border-radius:11px;font-weight:900}
+@media(max-width:720px){.loc-grid{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
 <header><div><b>미림테크놀러지</b><small>생산 자재관리</small></div><button id="homeBtn" class="primary" style="min-height:42px">메인</button></header>
@@ -205,6 +214,51 @@ function removePhoto(part){
    search();
  }
 }
+
+const LOC_OPTIONS={
+ room:['생산','1층자재실','2층자재실'],
+ zone:['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','Q'],
+ level:['1단','2단','3단','4단','5단','6단','상단','하단'],
+ height:['001','002','003','004','005','006'],
+ storage:['박스','선반','서랍'],
+ detail:Array.from({length:100},(_,i)=>String(i+1).padStart(3,'0'))
+};
+function locKey(part){return 'mirim_item_location_'+part}
+function getLocEdit(part){try{return JSON.parse(localStorage.getItem(locKey(part))||'null')}catch(e){return null}}
+function applyLocEdit(x){
+ const e=getLocEdit(x.part); if(!e)return x;
+ return {...x,...e,location:[e.room,e.zone,e.level,e.height,e.storage,e.detail].filter(Boolean).join('-')};
+}
+function opt(list,current){
+ return '<option value="">선택</option>'+list.map(v=>`<option value="${v}" ${v===current?'selected':''}>${v}</option>`).join('');
+}
+function locationEditor(x,i){
+ const e=getLocEdit(x.part)||x;
+ return `<div class="loc-editor">
+ <h3>📍 위치 등록·수정</h3>
+ <div class="loc-grid">
+ <label>자재보관실<select id="lr_${i}">${opt(LOC_OPTIONS.room,e.room)}</select></label>
+ <label>구역<select id="lz_${i}">${opt(LOC_OPTIONS.zone,e.zone)}</select></label>
+ <label>단<select id="ll_${i}">${opt(LOC_OPTIONS.level,e.level)}</select></label>
+ <label>높이<select id="lh_${i}">${opt(LOC_OPTIONS.height,e.height)}</select></label>
+ <label>보관형태<select id="ls_${i}">${opt(LOC_OPTIONS.storage,e.storage)}</select></label>
+ <label>세부위치<select id="ld_${i}">${opt(LOC_OPTIONS.detail,e.detail)}</select></label>
+ </div>
+ <button class="loc-save" onclick="saveLocation('${esc(x.part)}',${i})">📍 위치 저장</button>
+ </div>`;
+}
+function saveLocation(part,i){
+ const e={
+  room:$('lr_'+i).value,zone:$('lz_'+i).value,level:$('ll_'+i).value,
+  height:$('lh_'+i).value,storage:$('ls_'+i).value,detail:$('ld_'+i).value
+ };
+ if(!e.room && !e.zone && !e.level && !e.height && !e.storage && !e.detail){
+   return alert('위치를 하나 이상 선택해 주세요.');
+ }
+ localStorage.setItem(locKey(part),JSON.stringify(e));
+ search();
+ alert('위치 저장 완료');
+}
 function search(){
  const q=norm($('q').value);
  if(!q){
@@ -213,7 +267,7 @@ function search(){
    return;
  }
  const exact=ITEMS.filter(x=>norm(x.part)===q||norm(x.name)===q);
- const rows=(exact.length?exact:ITEMS.filter(x=>norm(x.part).includes(q)||norm(x.name).includes(q))).slice(0,30);
+ const rows=(exact.length?exact:ITEMS.filter(x=>norm(x.part).includes(q)||norm(x.name).includes(q))).slice(0,30).map(applyLocEdit);
  $('count').textContent='검색결과 '+rows.length+'개';
 
  $('results').innerHTML=rows.map((x,i)=>{
@@ -229,6 +283,7 @@ function search(){
           <button type="button" onclick="choosePhoto('${esc(x.part)}')">📷 사진 등록</button>
         </div>`;
 
+   const locEdit=mode==='location'?locationEditor(x,i):'';
    const inbound=mode==='inbound'
      ? `<div class="outgrid">
           <input id="in_worker_${i}" placeholder="등록자 이름">
@@ -265,6 +320,7 @@ function search(){
             <div><small>ERP수량</small><b>${Number(x.erpQty||0).toLocaleString()}</b></div>
             <div><small>보관형태</small><b>${esc(x.storage||'-')}</b></div>
           </div>
+          ${locEdit}
           ${inbound}
           ${outbound}
         </div>
