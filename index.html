@@ -247,7 +247,6 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
  openMode(m);
 });
 $('adminLoginBtn').onclick=adminLogin;
-updateAdminUI();
 $('homeBtn').onclick=()=>{$('work').classList.add('hidden');$('home').classList.remove('hidden')};
 function photoKey(part){return 'mirim_item_photo_'+part}
 function getPhoto(part){return localStorage.getItem(photoKey(part))||''}
@@ -405,6 +404,9 @@ function adminLogin(){
    alert('관리자 PIN이 맞지 않습니다.');
  }
 }
+// 관리자 상태 선언이 완료된 뒤 UI 초기화
+updateAdminUI();
+
 async function initSharedDb(){
  try{
   const cfg=window.MIRIM_CONFIG||{};
