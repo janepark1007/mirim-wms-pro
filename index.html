@@ -269,11 +269,29 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 .notif-meta{font-size:13px;color:var(--muted);line-height:1.5}
 #notifCount{display:inline-block;min-width:20px;padding:1px 6px;border-radius:10px;background:#d92d20;color:#fff;font-size:12px}
 </style>
+
+<style id="worker-login-v1339">
+.worker-auth{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.worker-badge{padding:7px 10px;border-radius:10px;background:#eef6f1;color:#174c36;font-weight:800}
+.worker-login-panel{max-width:520px;margin:16px auto}
+.worker-login-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.worker-login-grid input{min-height:48px}
+.worker-login-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.worker-login-actions button{min-height:46px}
+.admin-log-table{overflow:auto;margin-top:12px}
+@media(max-width:560px){.worker-login-grid,.worker-login-actions{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.8</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.9</small></div>
 <div class="top-actions">
+  <div class="worker-auth">
+    <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
+    <button id="workerLoginBtn" class="admin-btn">작업자 로그인</button>
+  </div>
+
+  <button id="loginLogBtn" class="admin-btn hidden">👤 로그인 이력</button>
   <button id="notifBtn" class="admin-btn hidden">🔔 알림 <span id="notifCount">0</span></button>
   <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
   <button id="homeBtn" class="primary" style="min-height:42px">메인</button>
@@ -293,8 +311,38 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
     <div id="notifList" style="margin-top:12px"></div>
   </div>
 </section>
+
+<section id="workerLoginPanel" class="hidden">
+  <div class="card worker-login-panel">
+    <h2 style="margin-top:0">👤 작업자 로그인 / 간편가입</h2>
+    <div class="worker-login-grid">
+      <input id="workerNameInput" placeholder="이름">
+      <input id="workerPinInput" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 4자리">
+    </div>
+    <div class="worker-login-actions">
+      <button id="workerLoginSubmit" class="primary">로그인</button>
+      <button id="workerRegisterSubmit" class="admin-btn">처음 사용 · 가입</button>
+    </div>
+    <div style="margin-top:8px;color:var(--muted);font-size:13px">가입 후에는 이름 + 4자리 비밀번호로 로그인합니다. 출고 시 작업자 이름이 자동 적용됩니다.</div>
+  </div>
+</section>
+
+<section id="loginLogPanel" class="hidden">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h2 style="margin:0">👤 작업자 로그인 이력</h2>
+      <button id="loginLogCloseBtn" class="admin-btn">닫기</button>
+    </div>
+    <div class="admin-log-table">
+      <table>
+        <thead><tr><th>시간</th><th>이름</th><th>구분</th><th>결과</th><th>기기</th></tr></thead>
+        <tbody id="loginLogBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.8 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.9 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -623,6 +671,108 @@ function syncBar(msg,ok=false){
  b.style.color=ok?'#0b6b3e':'#7a5a00';
 }
 
+
+let currentWorker=null;
+try{ currentWorker=JSON.parse(sessionStorage.getItem('mirim_worker_session')||'null'); }catch(e){currentWorker=null;}
+
+function updateWorkerUI(){
+ const badge=$('workerBadge'), btn=$('workerLoginBtn');
+ if(badge) badge.textContent=currentWorker ? `작업자: ${currentWorker.name}` : '작업자 미로그인';
+ if(btn) btn.textContent=currentWorker ? '작업자 로그아웃' : '작업자 로그인';
+}
+
+function showWorkerLogin(){
+ $('home')?.classList.add('hidden');
+ $('work')?.classList.add('hidden');
+ $('photoSearchPanel')?.classList.add('hidden');
+ $('notifPanel')?.classList.add('hidden');
+ $('loginLogPanel')?.classList.add('hidden');
+ $('workerLoginPanel')?.classList.remove('hidden');
+}
+
+async function workerRegister(){
+ const name=($('workerNameInput')?.value||'').trim();
+ const pin=($('workerPinInput')?.value||'').trim();
+ if(!name) return alert('이름을 입력하세요.');
+ if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
+ if(!sharedReady||!sharedDb) return alert('공용 동기화 연결 후 가입할 수 있습니다.');
+ try{
+   const {data,error}=await sharedDb.rpc('register_worker',{p_name:name,p_pin:pin});
+   if(error) throw error;
+   const row=Array.isArray(data)?data[0]:data;
+   if(row?.ok===false) return alert(row.message||'가입 실패');
+   alert('가입 완료. 이제 로그인해 주세요.');
+ }catch(e){
+   console.error(e);
+   alert('가입 실패: '+(e.message||e));
+ }
+}
+
+async function workerLogin(){
+ const name=($('workerNameInput')?.value||'').trim();
+ const pin=($('workerPinInput')?.value||'').trim();
+ if(!name) return alert('이름을 입력하세요.');
+ if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
+ if(!sharedReady||!sharedDb) return alert('공용 동기화 연결 후 로그인할 수 있습니다.');
+ try{
+   const device=(navigator.userAgent||'').slice(0,180);
+   const {data,error}=await sharedDb.rpc('worker_login',{p_name:name,p_pin:pin,p_device:device});
+   if(error) throw error;
+   const row=Array.isArray(data)?data[0]:data;
+   if(!row || row.ok!==true) return alert(row?.message||'이름 또는 비밀번호를 확인하세요.');
+   currentWorker={id:row.worker_id,name:row.worker_name};
+   sessionStorage.setItem('mirim_worker_session',JSON.stringify(currentWorker));
+   updateWorkerUI();
+   $('workerLoginPanel')?.classList.add('hidden');
+   $('home')?.classList.remove('hidden');
+   alert(`${currentWorker.name}님 로그인 완료`);
+ }catch(e){
+   console.error(e);
+   alert('로그인 실패: '+(e.message||e));
+ }
+}
+
+async function workerLogout(){
+ if(!currentWorker){showWorkerLogin();return;}
+ try{
+   if(sharedReady&&sharedDb){
+     await sharedDb.rpc('worker_logout',{
+       p_worker_id:currentWorker.id,
+       p_device:(navigator.userAgent||'').slice(0,180)
+     });
+   }
+ }catch(e){console.warn(e);}
+ currentWorker=null;
+ sessionStorage.removeItem('mirim_worker_session');
+ updateWorkerUI();
+ alert('작업자 로그아웃 완료');
+}
+
+async function loadWorkerLoginLogs(){
+ if(!isAdmin) return;
+ if(!sharedReady||!sharedDb) return alert('공용 동기화 연결이 필요합니다.');
+ try{
+   const cfg=window.MIRIM_CONFIG||{};
+   const {data,error}=await sharedDb.rpc('admin_worker_login_logs',{
+     p_admin_pin:String(cfg.adminPin||'2589'),
+     p_limit:200
+   });
+   if(error) throw error;
+   const body=$('loginLogBody');
+   if(!body)return;
+   body.innerHTML=(data||[]).length ? (data||[]).map(r=>`
+     <tr>
+       <td>${new Date(r.created_at).toLocaleString('ko-KR')}</td>
+       <td>${esc(r.worker_name||'')}</td>
+       <td>${esc(r.event_type||'')}</td>
+       <td>${r.success?'성공':'실패'}</td>
+       <td>${esc(r.device_info||'')}</td>
+     </tr>`).join('') : '<tr><td colspan="5">로그인 이력이 없습니다.</td></tr>';
+ }catch(e){
+   console.error(e);
+   alert('로그인 이력 불러오기 실패: '+(e.message||e));
+ }
+}
 let isAdmin=sessionStorage.getItem('mirim_prod_admin')==='1';
 
 function updateAdminUI(){
@@ -632,30 +782,20 @@ function updateAdminUI(){
      btn.textContent=isAdmin?'관리자 로그아웃':'관리자 로그인';
      btn.classList.toggle('active',isAdmin);
    }
-
-   document.querySelectorAll('.admin-only').forEach(el=>{
-     el.classList.toggle('hidden-admin',!isAdmin);
-   });
-
+   document.querySelectorAll('.admin-only').forEach(el=>el.classList.toggle('hidden-admin',!isAdmin));
    const note=$('roleNote');
-   if(note){
-     note.textContent=isAdmin
-       ? '관리자 모드: 검색 · 입고 · 출고 · 현창고수량 · 위치 등록/수정 가능'
-       : '일반 작업자: 검색 · 출고 · 수량 확인 가능';
-   }
-
+   if(note) note.textContent=isAdmin
+     ? '관리자 모드: 검색 · 입고 · 출고 · 현창고수량 · 위치 등록/수정 가능'
+     : '일반 작업자: 검색 · 출고 · 수량 확인 가능';
    const notifBtn=$('notifBtn');
-   if(notifBtn){
-     notifBtn.classList.toggle('hidden',!isAdmin);
-   }
-
+   if(notifBtn) notifBtn.classList.toggle('hidden',!isAdmin);
+   const logBtn=$('loginLogBtn');
+   if(logBtn) logBtn.classList.toggle('hidden',!isAdmin);
    if(!isAdmin){
-     const panel=$('notifPanel');
-     if(panel) panel.classList.add('hidden');
+     $('notifPanel')?.classList.add('hidden');
+     $('loginLogPanel')?.classList.add('hidden');
    }
- }catch(e){
-   console.error('관리자 UI 표시 오류',e);
- }
+ }catch(e){ console.error('관리자 UI 표시 오류',e); }
 }
 function adminLogin(){
  if(isAdmin){
@@ -1197,6 +1337,16 @@ function search(){
  const rows=(exact.length?exact:ITEMS.filter(x=>norm(x.part).includes(q)||norm(x.name).includes(q))).slice(0,30).map(applyLocEdit);
  $('count').textContent='검색결과 '+rows.length+'개';
  renderDailyHistories(rows.map(x=>x.part));
+ if(currentWorker){
+   rows.forEach((x,i)=>{
+     const w=$('w_'+i);
+     if(w){
+       w.value=currentWorker.name;
+       w.readOnly=true;
+       w.title='로그인한 작업자 이름이 자동 적용됩니다.';
+     }
+   });
+ }
 
  $('results').innerHTML=rows.map((x,i)=>{
    const photo=getPhoto(x.part);
@@ -1505,10 +1655,11 @@ async function notifyAdminOutbound(x,qty,worker,approved,approvalReason){
  }
 }
 async function saveOut(x,i){
- const worker=($('w_'+i)?.value||'').trim();
+ if(!currentWorker) return alert('출고 저장 전 작업자 로그인이 필요합니다.');
+ const worker=currentWorker.name;
  const qty=Number($('qty_'+i)?.value);
 
- if(!worker) return alert('작업자 이름을 입력하세요.');
+ 
  if(!qty || qty<=0) return alert('출고수량을 입력하세요.');
 
  const base=getCurrentStock(x);
@@ -1717,6 +1868,37 @@ document.addEventListener('DOMContentLoaded',()=>{
   try{ updateAdminUI(); }catch(e){console.error(e);}
   try{ updateHomeSummary(); }catch(e){console.error(e);}
   try{ if(typeof loadAdminNotifications==='function' && isAdmin) loadAdminNotifications(); }catch(e){console.error(e);}
+});
+
+document.addEventListener('DOMContentLoaded',()=>{
+ updateWorkerUI();
+
+ const wb=$('workerLoginBtn');
+ if(wb) wb.onclick=()=>{ currentWorker ? workerLogout() : showWorkerLogin(); };
+
+ const login=$('workerLoginSubmit');
+ if(login) login.onclick=workerLogin;
+
+ const reg=$('workerRegisterSubmit');
+ if(reg) reg.onclick=workerRegister;
+
+ const lb=$('loginLogBtn');
+ if(lb) lb.onclick=async()=>{
+   if(!isAdmin)return;
+   $('home')?.classList.add('hidden');
+   $('work')?.classList.add('hidden');
+   $('photoSearchPanel')?.classList.add('hidden');
+   $('notifPanel')?.classList.add('hidden');
+   $('workerLoginPanel')?.classList.add('hidden');
+   $('loginLogPanel')?.classList.remove('hidden');
+   await loadWorkerLoginLogs();
+ };
+
+ const lc=$('loginLogCloseBtn');
+ if(lc) lc.onclick=()=>{
+   $('loginLogPanel')?.classList.add('hidden');
+   $('home')?.classList.remove('hidden');
+ };
 });
 </script>
 </body></html>
