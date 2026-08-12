@@ -136,12 +136,46 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 .current-stock-row button{min-width:110px}
 @media(max-width:720px){.qty-compare{grid-template-columns:1fr}.current-stock-row{grid-template-columns:1fr}}
 </style>
+
+<style id="qty-total-location-v7">
+.stock-summary{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  margin-top:12px;
+}
+.stock-summary .sbox{
+  border:1px solid #dde6e1;
+  border-radius:12px;
+  padding:12px;
+  background:#f8faf9;
+}
+.stock-summary .sbox small{display:block;color:var(--muted);margin-bottom:5px}
+.stock-summary .sbox b{font-size:20px}
+.stock-summary .total{background:#eaf7ef;border-color:#c8e4d3;color:#0b6b3e}
+.stock-summary .diff-ok{background:#eaf7ef;border-color:#c8e4d3;color:#0b6b3e}
+.stock-summary .diff-warn{background:#fff1ee;border-color:#edc6be;color:#b42318}
+.location-always{
+  margin-top:14px;
+  padding:14px;
+  background:#f7faf8;
+  border:1px solid #dbe6e0;
+  border-radius:14px;
+}
+.location-always h3{margin:0 0 10px}
+@media(max-width:900px){
+  .stock-summary{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  .stock-summary{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
 <header><div><b>미림테크놀러지</b><small>생산 자재관리</small></div><button id="homeBtn" class="primary" style="min-height:42px">메인</button></header>
 <main>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><p>품번·품명 검색 → 위치 확인 → 입고·출고 바로 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div class="quick">
 <button data-mode="search">🔎<span>품목검색</span></button>
 <button data-mode="inbound">📥<span>빠른입고</span></button>
@@ -249,7 +283,7 @@ function opt(list,current){
 function locationEditor(x,i){
  const e=getLocEdit(x.part)||x;
  return `<div class="loc-editor">
- <h3>📍 위치 등록·수정</h3>
+ <h3>📍 위치 등록·수정 <small style="color:var(--muted);font-weight:500">(검색/입고/출고에서 바로 가능)</small></h3>
  <div class="loc-grid">
  <label>자재보관실<select id="lr_${i}">${opt(LOC_OPTIONS.room,e.room)}</select></label>
  <label>구역<select id="lz_${i}">${opt(LOC_OPTIONS.zone,e.zone)}</select></label>
@@ -289,21 +323,39 @@ function saveCurrentStock(part,i){
  search();
  alert('현 창고수량 저장 완료');
 }
+
+function inboundTotalFor(part){
+ const rows=getInHist?getInHist():[];
+ return rows.filter(r=>String(r.part)===String(part)).reduce((s,r)=>s+Number(r.qty||0),0);
+}
+function outboundTotalFor(part){
+ const rows=getHist?getHist():[];
+ return rows.filter(r=>String(r.part)===String(part)).reduce((s,r)=>s+Number(r.qty||0),0);
+}
 function qtyCompareHtml(x,i){
  const erp=Number(x.erpQty||0);
- const current=getCurrentStock(x);
- const diff=current===null?null:current-erp;
+ const base=getCurrentStock(x);
+ const inTotal=inboundTotalFor(x.part);
+ const outTotal=outboundTotalFor(x.part);
+ const total=base===null?null:(base+inTotal-outTotal);
+ const diff=total===null?null:(total-erp);
  const diffClass=diff===0?'diff-ok':'diff-warn';
- const diffText=diff===null?'⚠️ 미입력':(diff>0?'+'+diff.toLocaleString():diff.toLocaleString());
- return `<div class="qty-compare">
-   <div class="qty-box"><small>ERP 수량</small><b>${erp.toLocaleString()}</b></div>
-   <div class="qty-box"><small>현 창고수량</small><b>${current===null?'⚠️ 확인 필요':current.toLocaleString()}</b></div>
-   <div class="qty-box ${diff===null?'':diffClass}"><small>재고 차이</small><b>${diffText}</b></div>
+ const diffText=diff===null?'⚠️ 현창고수량 입력':(diff>0?'+'+diff.toLocaleString():diff.toLocaleString());
+
+ return `<div class="stock-summary">
+   <div class="sbox"><small>ERP 수량</small><b>${erp.toLocaleString()}</b></div>
+   <div class="sbox"><small>현 창고수량</small><b>${base===null?'⚠️ 미입력':base.toLocaleString()}</b></div>
+   <div class="sbox"><small>입고 누적</small><b>+${inTotal.toLocaleString()}</b></div>
+   <div class="sbox"><small>출고 누적</small><b>-${outTotal.toLocaleString()}</b></div>
+   <div class="sbox total"><small>토탈 예상재고</small><b>${total===null?'⚠️ 확인 필요':total.toLocaleString()}</b></div>
+ </div>
+ <div class="stock-summary" style="grid-template-columns:1fr">
+   <div class="sbox ${diff===null?'':diffClass}"><small>ERP ↔ 토탈 재고 차이</small><b>${diffText}</b></div>
  </div>
  <div class="current-stock-edit">
    <label>현 창고수량 입력/수정</label>
    <div class="current-stock-row">
-     <input id="stock_${i}" type="number" inputmode="numeric" placeholder="실제 확인 수량" value="${current===null?'':current}">
+     <input id="stock_${i}" type="number" inputmode="numeric" placeholder="실제 확인 수량" value="${base===null?'':base}">
      <button class="primary" onclick="saveCurrentStock('${esc(x.part)}',${i})">수량 저장</button>
    </div>
  </div>`;
@@ -332,7 +384,7 @@ function search(){
           <button type="button" onclick="choosePhoto('${esc(x.part)}')">📷 사진 등록</button>
         </div>`;
 
-   const locEdit=mode==='location'?locationEditor(x,i):'';
+   const locEdit=locationEditor(x,i);
    const inbound=mode==='inbound'
      ? `<div class="outgrid">
           <input id="in_worker_${i}" placeholder="등록자 이름">
@@ -394,7 +446,7 @@ function saveIn(x,i){
    time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
    part:x.part,name:x.name,qty,worker,location:x.location||''
  });
- setInHist(a);renderInHist();$('in_qty_'+i).value='';alert('입고 기록 저장 완료');
+ setInHist(a);renderInHist();$('in_qty_'+i).value='';search();alert('입고 기록 저장 완료');
 }
 function renderInHist(){
  const a=getInHist();
