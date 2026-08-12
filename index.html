@@ -327,7 +327,7 @@ body.worker-locked .worker-auth{
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.0</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.1</small></div>
 <div class="top-actions">
   <div class="worker-auth">
     <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
@@ -387,7 +387,7 @@ body.worker-locked .worker-auth{
   </div>
 </section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.0 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.1 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -758,12 +758,34 @@ async function workerRegister(){
  if(!name) return alert('이름을 입력하세요.');
  if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
  if(!sharedReady||!sharedDb) return alert('공용 동기화 연결 후 가입할 수 있습니다.');
+
  try{
    const {data,error}=await sharedDb.rpc('register_worker',{p_name:name,p_pin:pin});
    if(error) throw error;
    const row=Array.isArray(data)?data[0]:data;
    if(row?.ok===false) return alert(row.message||'가입 실패');
-   alert('가입 완료. 이제 로그인해 주세요.');
+
+   // 관리자 알림에 회원가입 기록
+   try{
+     await sharedDb.from('wms_admin_notifications').insert({
+       type:'WORKER_REGISTER',
+       title:'👤 신규 작업자 가입',
+       message:`${name}님이 간편가입을 완료했습니다.`,
+       payload:{
+         worker_name:name,
+         event_type:'REGISTER',
+         created_at:new Date().toISOString()
+       },
+       created_at:new Date().toISOString()
+     });
+   }catch(e){
+     console.warn('가입 관리자 알림 기록 실패',e);
+   }
+
+   alert(`✅ 가입 완료\n\n${name}님 가입이 완료되었습니다.\n이제 같은 이름과 4자리 비밀번호로 로그인해 주세요.`);
+
+   // 가입 후 입력값 유지, 로그인 버튼으로 바로 진행 가능
+   $('workerPinInput')?.focus();
  }catch(e){
    console.error(e);
    alert('가입 실패: '+(e.message||e));
@@ -776,18 +798,33 @@ async function workerLogin(){
  if(!name) return alert('이름을 입력하세요.');
  if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
  if(!sharedReady||!sharedDb) return alert('공용 동기화 연결 후 로그인할 수 있습니다.');
+
  try{
    const device=(navigator.userAgent||'').slice(0,180);
    const {data,error}=await sharedDb.rpc('worker_login',{p_name:name,p_pin:pin,p_device:device});
    if(error) throw error;
+
    const row=Array.isArray(data)?data[0]:data;
    if(!row || row.ok!==true) return alert(row?.message||'이름 또는 비밀번호를 확인하세요.');
+
    currentWorker={id:row.worker_id,name:row.worker_name};
    sessionStorage.setItem('mirim_worker_session',JSON.stringify(currentWorker));
+
+   // 로그인 후 잠금 해제 + 메인 강제 표시
+   document.body.classList.remove('worker-locked');
+   $('workerLoginPanel')?.classList.add('hidden');
+   $('work')?.classList.add('hidden');
+   $('photoSearchPanel')?.classList.add('hidden');
+   $('notifPanel')?.classList.add('hidden');
+   $('loginLogPanel')?.classList.add('hidden');
+   $('home')?.classList.remove('hidden');
+
    updateWorkerUI();
    try{updateHomeSummary();}catch(e){}
    try{renderDailyHistories();}catch(e){}
-   alert(`${currentWorker.name}님 로그인 완료`);
+
+   alert(`✅ 로그인 완료\n\n${currentWorker.name}님, 메인 화면으로 이동합니다.`);
+   window.scrollTo({top:0,behavior:'smooth'});
  }catch(e){
    console.error(e);
    alert('로그인 실패: '+(e.message||e));
@@ -1607,6 +1644,16 @@ function renderAdminNotifications(){
    ? adminNotifRows.slice(0,30).map(r=>{
       const p=r.payload||{};
       const important=(p.approval_required||false);
+      const isRegister=r.type==='WORKER_REGISTER';
+      if(isRegister){
+        return `<div class="notif-item ${r.read_at?'':'unread'}">
+          <b>👤 신규 작업자 가입 · ${esc(p.worker_name||'')}</b>
+          <div class="notif-meta">
+            간편가입 완료<br>
+            ${new Date(r.created_at).toLocaleString('ko-KR')}
+          </div>
+        </div>`;
+      }
       return `<div class="notif-item ${r.read_at?'':'unread'}">
         <b>${important?'⚠️ 중요 출고':'📤 일반 출고'} · ${esc(p.part_no||'')}</b>
         <div>${esc(p.item_name||'')}</div>
@@ -1665,8 +1712,11 @@ async function startAdminRealtimeNotifications(){
        // 관리자 웹이 열려 있으면 승인 여부와 무관하게 모든 출고 알림
        try{
          const p=row.payload||{};
-         const title=p.approval_required?'⚠️ 중요 자재 출고':'📤 자재 출고';
-         const body=`${p.part_no||''} / ${p.item_name||''} / ${Number(p.qty||0).toLocaleString()} / ${p.worker_name||''}`;
+         const isRegister=row.type==='WORKER_REGISTER';
+         const title=isRegister ? '👤 신규 작업자 가입' : (p.approval_required?'⚠️ 중요 자재 출고':'📤 자재 출고');
+         const body=isRegister
+           ? `${p.worker_name||''}님이 간편가입을 완료했습니다.`
+           : `${p.part_no||''} / ${p.item_name||''} / ${Number(p.qty||0).toLocaleString()} / ${p.worker_name||''}`;
          if('Notification' in window && Notification.permission==='granted'){
            new Notification(title,{body});
          }
