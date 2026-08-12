@@ -257,7 +257,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.1</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.2</small></div>
 <div class="top-actions">
   <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
   <button id="homeBtn" class="primary" style="min-height:42px">메인</button>
@@ -268,7 +268,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   공용 동기화 확인 중...
 </div>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.1 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.2 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -634,8 +634,138 @@ function adminLogin(){
 // 관리자 상태 선언이 완료된 뒤 UI 초기화
 updateAdminUI();
 
+
+async function migrateLocalDataToSharedOnce(){
+  if(!sharedDb) return;
+  const marker='mirim_local_to_supabase_migrated_v1332';
+  if(localStorage.getItem(marker)==='1') return;
+
+  try{
+    // 기존 로컬 입고/출고 기록 가져오기
+    const localIns = (typeof getInHist==='function') ? getInHist() : [];
+    const localOuts = (typeof getHist==='function') ? getHist() : [];
+
+    // 공용 DB가 비어 있거나, 로컬 기록이 존재할 때만 이전
+    const {data:existingMoves,error:moveCheckErr}=await sharedDb
+      .from('production_movements')
+      .select('id')
+      .limit(1);
+    if(moveCheckErr) throw moveCheckErr;
+
+    const movementRows=[];
+    if(!existingMoves || existingMoves.length===0){
+      localIns.forEach(r=>{
+        if(!r.part || !Number(r.qty)) return;
+        movementRows.push({
+          movement_type:'IN',
+          part_no:String(r.part),
+          item_name:r.name||'',
+          qty:Number(r.qty),
+          worker_name:r.worker||'',
+          location:r.location||'',
+          created_at:new Date().toISOString()
+        });
+      });
+      localOuts.forEach(r=>{
+        if(!r.part || !Number(r.qty)) return;
+        movementRows.push({
+          movement_type:'OUT',
+          part_no:String(r.part),
+          item_name:r.name||'',
+          qty:Number(r.qty),
+          worker_name:r.worker||'',
+          location:r.location||'',
+          created_at:new Date().toISOString()
+        });
+      });
+      if(movementRows.length){
+        const {error}=await sharedDb.from('production_movements').insert(movementRows);
+        if(error) throw error;
+      }
+    }
+
+    // 기존 로컬 현창고수량 / 위치를 공용 DB로 이전
+    const invRows=[];
+    const seen=new Set();
+    (ITEMS||[]).forEach(x=>{
+      const part=String(x.part||'');
+      if(!part || seen.has(part)) return;
+      seen.add(part);
+
+      let stockVal=null;
+      try{
+        const raw=localStorage.getItem(stockKey(part));
+        if(raw!==null && raw!==''){
+          const n=Number(raw);
+          if(Number.isFinite(n)) stockVal=n;
+        }
+      }catch(e){}
+
+      let loc=null;
+      try{
+        loc=JSON.parse(localStorage.getItem(locKey(part))||'null');
+      }catch(e){loc=null;}
+
+      if(stockVal!==null || loc){
+        invRows.push({
+          part_no:part,
+          current_stock:stockVal===null?0:stockVal,
+          room:loc?.room||'',
+          zone:loc?.zone||'',
+          level:loc?.level||'',
+          height:loc?.height||'',
+          storage:loc?.storage||'',
+          detail:loc?.detail||'',
+          updated_at:new Date().toISOString()
+        });
+      }
+    });
+    if(invRows.length){
+      const {error}=await sharedDb
+        .from('production_inventory_sync')
+        .upsert(invRows,{onConflict:'part_no'});
+      if(error) throw error;
+    }
+
+    // 사용빈도/최소수량 로컬값 이전
+    const metaRows=[];
+    seen.clear();
+    (ITEMS||[]).forEach(x=>{
+      const part=String(x.part||'');
+      if(!part || seen.has(part)) return;
+      seen.add(part);
+      try{
+        const m=JSON.parse(localStorage.getItem(itemMetaKey(part))||'null');
+        if(m && (m.usage || m.minQty!=='')){
+          metaRows.push({
+            part_no:part,
+            usage:m.usage||'',
+            min_qty:m.minQty===''?null:Number(m.minQty),
+            updated_at:new Date().toISOString()
+          });
+        }
+      }catch(e){}
+    });
+    if(metaRows.length){
+      const {error}=await sharedDb
+        .from('production_item_meta')
+        .upsert(metaRows,{onConflict:'part_no'});
+      if(error) throw error;
+    }
+
+    localStorage.setItem(marker,'1');
+    console.log('기존 로컬 기록 → 공용 DB 이전 완료', {
+      movements:movementRows.length,
+      inventory:invRows.length,
+      meta:metaRows.length
+    });
+  }catch(e){
+    console.error('기존 기록 공용 이전 실패',e);
+    // 실패 시 marker를 찍지 않아 다음 접속 때 재시도
+  }
+}
 async function initSharedDb(){
- const status=$('syncStatus');
+ const status=$('syncBar');
  const cfg=window.MIRIM_CONFIG||window.MIRIM_SUPABASE||{};
  const url=cfg.url||cfg.URL||'';
  const key=cfg.publishableKey||cfg.publishable_key||cfg.anonKey||'';
@@ -663,8 +793,13 @@ async function initSharedDb(){
    if(test.error) throw test.error;
 
    sharedReady=true;
-   if(status) status.textContent='✅ 공용 동기화 연결';
+   if(status){
+     status.textContent='✅ 공용 동기화 연결';
+     status.style.background='#eaf7ef';
+     status.style.color='#0b6b3e';
+   }
 
+   await migrateLocalDataToSharedOnce();
    await loadSharedCache();
    await refreshSharedHistories();
    updateHomeSummary();
@@ -683,7 +818,7 @@ async function initSharedDb(){
    console.error('Supabase init failed',e);
    sharedReady=false;
    sharedDb=null;
-   if(status) status.textContent='⚠️ 공용 동기화 실패';
+   if(status){status.textContent='⚠️ 공용 동기화 실패';status.style.background='#fff0ed';status.style.color='#b42318';}
    updateHomeSummary();
  }
 }
