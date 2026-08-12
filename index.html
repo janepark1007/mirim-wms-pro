@@ -254,10 +254,17 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 }
 </style>
 <script src="config.js?v=13.3"></script>
+
+<style id="admin-approval-alert-v1334">
+.approval-box{margin-top:10px;padding:12px;border:1px solid #f0c9c0;background:#fff3f0;border-radius:12px}
+.approval-box b{color:#b42318}
+.stock-gap-warn{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff4d6;border:1px solid #efdca9;font-weight:800;color:#7a5a00}
+.notify-log{margin-top:8px;font-size:13px;color:var(--muted)}
+</style>
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.3</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.4</small></div>
 <div class="top-actions">
   <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
   <button id="homeBtn" class="primary" style="min-height:42px">메인</button>
@@ -268,7 +275,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   공용 동기화 확인 중...
 </div>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.3 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.4 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -945,6 +952,10 @@ function qtyCompareHtml(x,i){
  const diff=total===null?null:(total-erp);
  const diffClass=diff===0?'diff-ok':'diff-warn';
  const diffText=diff===null?'⚠️ 현창고수량 입력':(diff>0?'+'+diff.toLocaleString():diff.toLocaleString());
+ const gapAbs=(base===null)?null:Math.abs(base-erp);
+ const gapWarn=(gapAbs!==null && gapAbs>=20 && (erp===0?gapAbs>0:gapAbs/Math.max(Math.abs(erp),1)>=0.20))
+   ? `<div class="stock-gap-warn">⚠️ ERP수량과 현 창고수량 차이가 큽니다. 관리자 확인 권장 · 차이 ${gapAbs.toLocaleString()}</div>`
+   : '';
 
  return `<div class="stock-summary">
    <div class="sbox"><small>ERP 수량</small><b>${erp.toLocaleString()}</b></div>
@@ -956,6 +967,7 @@ function qtyCompareHtml(x,i){
  <div class="stock-summary" style="grid-template-columns:1fr">
    <div class="sbox ${diff===null?'':diffClass}"><small>ERP ↔ 토탈 재고 차이</small><b>${diffText}</b></div>
  </div>
+ ${gapWarn}
  ${isAdmin?`<div class="current-stock-edit admin-only">
    <label>현 창고수량 입력/수정</label>
    <div class="current-stock-row">
@@ -1283,6 +1295,89 @@ async function refreshSharedHistories(){
  updateHomeSummary();
 }
 
+
+function needsAdminApproval(x,qty){
+ const erp=Number(x.erpQty||0);
+ const base=getCurrentStock(x);
+ const inTotal=inboundTotalFor(x.part);
+ const outTotal=outboundTotalFor(x.part);
+ const expected=base===null?null:(Number(base)+Number(inTotal)-Number(outTotal));
+ const gap=base===null?null:Math.abs(Number(base)-erp);
+
+ // 승인 조건:
+ // 1) 출고요청이 ERP수량 초과
+ // 2) ERP와 현창고수량 차이가 큰 경우 (절대 20개 이상이면서 ERP의 20% 이상)
+ const bigGap = gap===null ? false : (gap>=20 && (erp===0 ? gap>0 : gap/Math.max(Math.abs(erp),1)>=0.20));
+ const overErp = qty>erp;
+ return {required:overErp||bigGap, overErp, bigGap, erp, base, expected, gap};
+}
+
+function adminApproveForOutbound(x,qty,info){
+ if(!info.required) return true;
+ const cfg=window.MIRIM_CONFIG||window.MIRIM_SUPABASE||{};
+ const correct=String(cfg.adminPin||'2589');
+
+ let msg='⚠️ 관리자 확인 필요\n\n';
+ if(info.overErp) msg+='• 출고수량이 ERP수량을 초과합니다.\n';
+ if(info.bigGap) msg+='• ERP수량과 현 창고수량 차이가 큽니다.\n';
+ msg+='\nERP수량: '+info.erp.toLocaleString();
+ msg+='\n현 창고수량: '+(info.base===null?'미입력':Number(info.base).toLocaleString());
+ msg+='\n예상재고: '+(info.expected===null?'확인 필요':Number(info.expected).toLocaleString());
+ msg+='\n출고 요청수량: '+Number(qty).toLocaleString();
+ if(info.gap!==null) msg+='\nERP↔현창고 차이: '+Number(info.gap).toLocaleString();
+ msg+='\n\n관리자 PIN을 입력하세요.';
+
+ const pin=prompt(msg);
+ if(pin===null) return false;
+ if(String(pin)!==correct){
+   alert('관리자 PIN이 맞지 않습니다.');
+   return false;
+ }
+ return true;
+}
+
+async function notifyAdminOutbound(x,qty,worker,approved,approvalReason){
+ const payload={
+   title:'📤 자재 출고 알림',
+   body:`${x.part} / ${x.name} / ${Number(qty).toLocaleString()} / ${worker}`,
+   part_no:String(x.part),
+   item_name:x.name||'',
+   qty:Number(qty),
+   worker_name:worker||'',
+   approved:!!approved,
+   approval_reason:approvalReason||'',
+   created_at:new Date().toISOString()
+ };
+
+ // 1) 관리자용 DB 알림 로그
+ try{
+   if(sharedReady && sharedDb){
+     await sharedDb.from('wms_admin_notifications').insert({
+       type:'OUTBOUND',
+       title:payload.title,
+       message:payload.body,
+       payload:payload,
+       created_at:payload.created_at
+     });
+   }
+ }catch(e){
+   console.warn('관리자 알림 DB 기록 실패',e);
+ }
+
+ // 2) 현재 관리자 브라우저 알림
+ try{
+   if('Notification' in window){
+     if(Notification.permission==='default'){
+       await Notification.requestPermission();
+     }
+     if(Notification.permission==='granted'){
+       new Notification(payload.title,{body:payload.body});
+     }
+   }
+ }catch(e){
+   console.warn('브라우저 알림 실패',e);
+ }
+}
 async function saveOut(x,i){
  const worker=($('w_'+i)?.value||'').trim();
  const qty=Number($('qty_'+i)?.value);
@@ -1290,7 +1385,6 @@ async function saveOut(x,i){
  if(!worker) return alert('작업자 이름을 입력하세요.');
  if(!qty || qty<=0) return alert('출고수량을 입력하세요.');
 
- // 현재 화면 기준 사용 가능 예상재고
  const base=getCurrentStock(x);
  const inTotal=inboundTotalFor(x.part);
  const outTotal=outboundTotalFor(x.part);
@@ -1304,6 +1398,9 @@ async function saveOut(x,i){
      '부족수량: '+(qty-available).toLocaleString()
    );
  }
+
+ const approval=needsAdminApproval(x,qty);
+ if(approval.required && !adminApproveForOutbound(x,qty,approval)) return;
 
  try{
    if(sharedReady){
@@ -1321,6 +1418,11 @@ async function saveOut(x,i){
 
    const qtyEl=$('qty_'+i);
    if(qtyEl) qtyEl.value='';
+
+   const reasons=[];
+   if(approval.overErp) reasons.push('ERP수량 초과');
+   if(approval.bigGap) reasons.push('ERP-현창고 차이 큼');
+   await notifyAdminOutbound(x,qty,worker,approval.required,reasons.join(', '));
 
    updateHomeSummary();
    search();
