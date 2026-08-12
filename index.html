@@ -261,11 +261,20 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 .stock-gap-warn{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff4d6;border:1px solid #efdca9;font-weight:800;color:#7a5a00}
 .notify-log{margin-top:8px;font-size:13px;color:var(--muted)}
 </style>
+
+<style id="notif-panel-v1335">
+.notif-item{padding:12px;border:1px solid #dde6e1;border-radius:12px;margin-bottom:8px;background:#fff}
+.notif-item.unread{background:#fff9e9;border-color:#efdca9}
+.notif-item b{display:block;margin-bottom:4px}
+.notif-meta{font-size:13px;color:var(--muted);line-height:1.5}
+#notifCount{display:inline-block;min-width:20px;padding:1px 6px;border-radius:10px;background:#d92d20;color:#fff;font-size:12px}
+</style>
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.4</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.5</small></div>
 <div class="top-actions">
+  <button id="notifBtn" class="admin-btn">🔔 알림 <span id="notifCount">0</span></button>
   <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
   <button id="homeBtn" class="primary" style="min-height:42px">메인</button>
 </div>
@@ -274,8 +283,18 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 <div id="syncBar" style="margin-bottom:10px;padding:10px 12px;border-radius:10px;background:#fff4d6;font-weight:800">
   공용 동기화 확인 중...
 </div>
+
+<section id="notifPanel" class="hidden">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h2 style="margin:0">🔔 관리자 출고 알림</h2>
+      <button id="notifCloseBtn" class="admin-btn">닫기</button>
+    </div>
+    <div id="notifList" style="margin-top:12px"></div>
+  </div>
+</section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.4 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.5 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -809,6 +828,8 @@ async function initSharedDb(){
    await migrateLocalDataToSharedOnce();
    await loadSharedCache();
    await refreshSharedHistories();
+   await loadAdminNotifications();
+   await startAdminRealtimeNotifications();
    updateHomeSummary();
 
    // 다른 기기에서 저장한 값도 주기적으로 다시 읽음
@@ -1336,6 +1357,90 @@ function adminApproveForOutbound(x,qty,info){
  return true;
 }
 
+
+let adminNotifRows=[];
+let adminNotifChannel=null;
+
+function renderAdminNotifications(){
+ const list=$('notifList');
+ const count=$('notifCount');
+ if(!list||!count)return;
+
+ const unread=adminNotifRows.filter(r=>!r.read_at).length;
+ count.textContent=String(unread);
+
+ list.innerHTML=adminNotifRows.length
+   ? adminNotifRows.slice(0,30).map(r=>{
+      const p=r.payload||{};
+      const important=(p.approval_required||false);
+      return `<div class="notif-item ${r.read_at?'':'unread'}">
+        <b>${important?'⚠️ 중요 출고':'📤 일반 출고'} · ${esc(p.part_no||'')}</b>
+        <div>${esc(p.item_name||'')}</div>
+        <div class="notif-meta">
+          출고수량: ${Number(p.qty||0).toLocaleString()} · 작업자: ${esc(p.worker_name||'')}<br>
+          ${important?'관리자 승인 필요/확인 출고':'관리자 승인 없이 정상 출고'}<br>
+          ${new Date(r.created_at).toLocaleString('ko-KR')}
+        </div>
+      </div>`;
+   }).join('')
+   : '<div class="notice">출고 알림이 없습니다.</div>';
+}
+
+async function loadAdminNotifications(){
+ if(!sharedReady||!sharedDb)return;
+ try{
+   const {data,error}=await sharedDb
+     .from('wms_admin_notifications')
+     .select('*')
+     .order('created_at',{ascending:false})
+     .limit(100);
+   if(error)throw error;
+   adminNotifRows=data||[];
+   renderAdminNotifications();
+ }catch(e){console.warn('알림 목록 불러오기 실패',e);}
+}
+
+async function markAdminNotificationsRead(){
+ if(!sharedReady||!sharedDb)return;
+ try{
+   const ids=adminNotifRows.filter(r=>!r.read_at).map(r=>r.id);
+   if(ids.length){
+     const {error}=await sharedDb.from('wms_admin_notifications')
+       .update({read_at:new Date().toISOString()})
+       .in('id',ids);
+     if(error)throw error;
+     adminNotifRows.forEach(r=>{if(!r.read_at)r.read_at=new Date().toISOString();});
+   }
+   renderAdminNotifications();
+ }catch(e){console.warn('알림 읽음 처리 실패',e);}
+}
+
+async function startAdminRealtimeNotifications(){
+ if(!sharedReady||!sharedDb||adminNotifChannel)return;
+ try{
+   adminNotifChannel=sharedDb.channel('mirim-admin-outbound-notifications')
+     .on('postgres_changes',{
+       event:'INSERT',
+       schema:'public',
+       table:'wms_admin_notifications'
+     },payload=>{
+       const row=payload.new;
+       adminNotifRows.unshift(row);
+       renderAdminNotifications();
+
+       // 관리자 웹이 열려 있으면 승인 여부와 무관하게 모든 출고 알림
+       try{
+         const p=row.payload||{};
+         const title=p.approval_required?'⚠️ 중요 자재 출고':'📤 자재 출고';
+         const body=`${p.part_no||''} / ${p.item_name||''} / ${Number(p.qty||0).toLocaleString()} / ${p.worker_name||''}`;
+         if('Notification' in window && Notification.permission==='granted'){
+           new Notification(title,{body});
+         }
+       }catch(e){}
+     })
+     .subscribe();
+ }catch(e){console.warn('실시간 출고알림 시작 실패',e);}
+}
 async function notifyAdminOutbound(x,qty,worker,approved,approvalReason){
  const payload={
    title:'📤 자재 출고 알림',
@@ -1345,6 +1450,7 @@ async function notifyAdminOutbound(x,qty,worker,approved,approvalReason){
    qty:Number(qty),
    worker_name:worker||'',
    approved:!!approved,
+   approval_required:!!approved,
    approval_reason:approvalReason||'',
    created_at:new Date().toISOString()
  };
@@ -1569,5 +1675,21 @@ document.addEventListener('DOMContentLoaded',()=>{
    bootShared();
  }
 })();
+
+document.addEventListener('DOMContentLoaded',()=>{
+ const nb=$('notifBtn'), nc=$('notifCloseBtn');
+ if(nb) nb.onclick=async()=>{
+   $('home')?.classList.add('hidden');
+   $('work')?.classList.add('hidden');
+   $('photoSearchPanel')?.classList.add('hidden');
+   $('notifPanel')?.classList.remove('hidden');
+   await loadAdminNotifications();
+   await markAdminNotificationsRead();
+ };
+ if(nc) nc.onclick=()=>{
+   $('notifPanel')?.classList.add('hidden');
+   $('home')?.classList.remove('hidden');
+ };
+});
 </script>
 </body></html>
