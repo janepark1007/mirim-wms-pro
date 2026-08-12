@@ -488,6 +488,41 @@ function removePhoto(part){
  }
 }
 
+
+function getPhoto(part){
+ const p=String(part);
+ if(sharedReady && sharedCache.photo[p]) return sharedCache.photo[p];
+ return localStorage.getItem(photoKey(part))||'';
+}
+function choosePhoto(part){
+ const input=document.createElement('input');
+ input.type='file'; input.accept='image/*'; input.setAttribute('capture','environment');
+ input.onchange=async()=>{
+   const file=input.files?.[0]; if(!file)return;
+   if(file.size>5*1024*1024){alert('사진은 5MB 이하로 선택해 주세요.');return;}
+   try{
+     if(sharedReady){
+       await sharedUploadPhoto(part,file);
+     }else{
+       const reader=new FileReader();
+       reader.onload=()=>{localStorage.setItem(photoKey(part),reader.result);search();};
+       reader.readAsDataURL(file);
+       alert('이 기기에 사진 저장 완료');
+       return;
+     }
+     search(); alert('공용 사진 저장 완료');
+   }catch(e){console.error(e);alert('사진 저장 실패: '+(e.message||e));}
+ };
+ input.click();
+}
+async function removePhoto(part){
+ if(!confirm('이 품목 사진을 삭제할까요?'))return;
+ try{
+   if(sharedReady) await sharedDeletePhoto(part);
+   else localStorage.removeItem(photoKey(part));
+   search(); alert('사진 삭제 완료');
+ }catch(e){console.error(e);alert('사진 삭제 실패: '+(e.message||e));}
+}
 const LOC_OPTIONS={
  room:['생산','1층자재실','2층자재실'],
  zone:['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','Q'],
@@ -550,7 +585,7 @@ async function saveLocation(part,i){
 
 let sharedDb=null;
 let sharedReady=false;
-const sharedCache={stock:{},inTotal:{},outTotal:{},location:{}};
+const sharedCache={stock:{},inTotal:{},outTotal:{},location:{},meta:{},photo:{}};
 let sharedTodayIns=[];
 let sharedTodayOuts=[];
 
@@ -618,14 +653,16 @@ async function initSharedDb(){
 }
 async function loadSharedCache(){
  if(!sharedDb)return;
- const [{data:stocks,error:e1},{data:moves,error:e2}]=await Promise.all([
+ const [{data:stocks,error:e1},{data:moves,error:e2},{data:meta,error:e3}]=await Promise.all([
    sharedDb.from('production_inventory_sync').select('*'),
-   sharedDb.from('production_movements').select('part_no,movement_type,qty')
+   sharedDb.from('production_movements').select('part_no,movement_type,qty'),
+   sharedDb.from('production_item_meta').select('*')
  ]);
  if(e1)throw e1;
  if(e2)throw e2;
+ if(e3)throw e3;
 
- sharedCache.stock={}; sharedCache.location={}; sharedCache.inTotal={}; sharedCache.outTotal={};
+ sharedCache.stock={}; sharedCache.location={}; sharedCache.inTotal={}; sharedCache.outTotal={}; sharedCache.meta={}; sharedCache.photo={};
  (stocks||[]).forEach(r=>{
    sharedCache.stock[String(r.part_no)]=Number(r.current_stock);
    sharedCache.location[String(r.part_no)]={
@@ -638,6 +675,11 @@ async function loadSharedCache(){
    const p=String(r.part_no), q=Number(r.qty||0);
    if(r.movement_type==='IN') sharedCache.inTotal[p]=(sharedCache.inTotal[p]||0)+q;
    if(r.movement_type==='OUT') sharedCache.outTotal[p]=(sharedCache.outTotal[p]||0)+q;
+ });
+ (meta||[]).forEach(r=>{
+   const p=String(r.part_no);
+   sharedCache.meta[p]={usage:r.usage||'',minQty:r.min_qty==null?'':Number(r.min_qty)};
+   if(r.photo_url) sharedCache.photo[p]=r.photo_url;
  });
 }
 async function sharedSaveStock(part,n){
@@ -752,15 +794,63 @@ function qtyCompareHtml(x,i){
  </div>`:''}`;
 }
 
+
+async function sharedSaveItemMeta(part,usage,minQty){
+ if(!sharedDb)return false;
+ const row={part_no:String(part),usage:usage||'',min_qty:minQty===''?null:Number(minQty),updated_at:new Date().toISOString()};
+ const {error}=await sharedDb.from('production_item_meta').upsert(row,{onConflict:'part_no'});
+ if(error)throw error;
+ sharedCache.meta[String(part)]={usage:row.usage,minQty:row.min_qty==null?'':Number(row.min_qty)};
+ return true;
+}
+async function sharedUploadPhoto(part,file){
+ if(!sharedDb)return '';
+ const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
+ const ext=(file.name&&file.name.includes('.'))?file.name.split('.').pop().toLowerCase():'jpg';
+ const path=`${safe}.${ext}`;
+ const {error:upErr}=await sharedDb.storage.from('production-item-photos').upload(path,file,{upsert:true,contentType:file.type||'image/jpeg'});
+ if(upErr)throw upErr;
+ const {data}=sharedDb.storage.from('production-item-photos').getPublicUrl(path);
+ const url=(data&&data.publicUrl)?data.publicUrl+'?v='+Date.now():'';
+ const current=sharedCache.meta[String(part)]||{usage:'',minQty:''};
+ const {error:metaErr}=await sharedDb.from('production_item_meta').upsert({
+   part_no:String(part),usage:current.usage||'',min_qty:current.minQty===''?null:Number(current.minQty),
+   photo_url:url,updated_at:new Date().toISOString()
+ },{onConflict:'part_no'});
+ if(metaErr)throw metaErr;
+ sharedCache.photo[String(part)]=url;
+ return url;
+}
+async function sharedDeletePhoto(part){
+ if(!sharedDb)return;
+ const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
+ const {data:list}=await sharedDb.storage.from('production-item-photos').list('',{search:safe});
+ const paths=(list||[]).filter(x=>x.name.startsWith(safe+'.')).map(x=>x.name);
+ if(paths.length) await sharedDb.storage.from('production-item-photos').remove(paths);
+ const current=sharedCache.meta[String(part)]||{usage:'',minQty:''};
+ const {error}=await sharedDb.from('production_item_meta').upsert({
+   part_no:String(part),usage:current.usage||'',min_qty:current.minQty===''?null:Number(current.minQty),
+   photo_url:null,updated_at:new Date().toISOString()
+ },{onConflict:'part_no'});
+ if(error)throw error;
+ delete sharedCache.photo[String(part)];
+}
 function itemMetaKey(part){return 'mirim_item_meta_'+part}
-function getItemMeta(part){try{return JSON.parse(localStorage.getItem(itemMetaKey(part))||'null')||{usage:'',minQty:''}}catch(e){return {usage:'',minQty:''}}}
-function saveItemMeta(part,i){
+function getItemMeta(part){
+ const p=String(part);
+ if(sharedReady && sharedCache.meta[p]) return sharedCache.meta[p];
+ try{return JSON.parse(localStorage.getItem(itemMetaKey(part))||'null')||{usage:'',minQty:''}}catch(e){return {usage:'',minQty:''}}
+}
+async function saveItemMeta(part,i){
  if(!isAdmin){alert('사용빈도와 최소수량은 관리자만 수정할 수 있습니다.');return;}
  const usage=$('usage_'+i).value, raw=$('minqty_'+i).value;
  const minQty=raw===''?'':Number(raw);
  if(raw!==''&&(!Number.isFinite(minQty)||minQty<0)){alert('최소수량은 0 이상의 숫자로 입력하세요.');return;}
- localStorage.setItem(itemMetaKey(part),JSON.stringify({usage,minQty}));
- search(); alert('사용빈도 / 최소수량 저장 완료');
+ try{
+   if(sharedReady) await sharedSaveItemMeta(part,usage,minQty);
+   else localStorage.setItem(itemMetaKey(part),JSON.stringify({usage,minQty}));
+   search(); alert(sharedReady?'공용 품목 설정 저장 완료':'이 기기에 품목 설정 저장 완료');
+ }catch(e){console.error(e);alert('품목 설정 저장 실패: '+(e.message||e));}
 }
 function itemMetaHtml(x,i){
  const m=getItemMeta(x.part);
