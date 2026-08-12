@@ -257,7 +257,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.3.1</small></div>
 <div class="top-actions">
   <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
   <button id="homeBtn" class="primary" style="min-height:42px">메인</button>
@@ -268,7 +268,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   공용 동기화 확인 중...
 </div>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.3.1 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -665,7 +665,7 @@ async function initSharedDb(){
    sharedReady=true;
    if(status) status.textContent='✅ 공용 동기화 연결';
 
-   await sharedLoadAll();
+   await loadSharedCache();
    await refreshSharedHistories();
    updateHomeSummary();
 
@@ -674,7 +674,7 @@ async function initSharedDb(){
    window.__mirimSharedTimer=setInterval(async()=>{
      try{
        if(!sharedReady)return;
-       await sharedLoadAll();
+       await loadSharedCache();
        await refreshSharedHistories();
        updateHomeSummary();
      }catch(e){ console.error('공용 자동동기화 오류',e); }
@@ -1268,20 +1268,6 @@ document.addEventListener('DOMContentLoaded',()=>{
    updateHomeSummary();
  }catch(e){console.error('초기 버튼 연결 오류',e);}
 });
-
-let __mirimVersion='v13.3';
-async function checkForNewBuild(){
-  try{
-    const r=await fetch('./version.json?ts='+Date.now(),{cache:'no-store'});
-    if(!r.ok)return;
-    const v=await r.json();
-    if(v && v.version && v.version!==__mirimVersion){
-      location.reload();
-    }
-  }catch(e){}
-}
-setInterval(checkForNewBuild,30000);
-window.addEventListener('pageshow',()=>checkForNewBuild());
 
 (function(){
  async function bootShared(){
