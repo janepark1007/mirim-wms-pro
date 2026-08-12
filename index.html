@@ -242,8 +242,9 @@ function norm(v){return String(v||'').toLowerCase().replace(/\s+/g,'').trim()}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function openMode(m){mode=m;$('home').classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='location'?'위치 확인':'품목 검색'));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
- if(b.dataset.mode==='inbound' && !isAdmin){alert('입고는 관리자만 가능합니다.');return;}
- openMode(b.dataset.mode);
+ const m=b.dataset.mode;
+ if(m==='inbound' && !isAdmin){alert('입고는 관리자만 가능합니다.');return;}
+ openMode(m);
 });
 $('adminLoginBtn').onclick=adminLogin;
 updateAdminUI();
@@ -411,6 +412,7 @@ async function initSharedDb(){
     syncBar('⚠️ 공용 DB 미연결 · 현재는 이 기기에만 저장됩니다.');
     return;
   }
+  if(!window.supabase){ syncBar('⚠️ 공용 DB 라이브러리 로드 실패 · 검색은 정상 사용 가능'); return; }
   sharedDb=window.supabase.createClient(cfg.url,cfg.publishableKey);
   await loadSharedCache();
   sharedReady=true;
@@ -544,6 +546,8 @@ function qtyCompareHtml(x,i){
  </div>`:''}`;
 }
 function search(){
+ try{
+
  const q=norm($('q').value);
  if(!q){
    $('count').textContent='검색어를 입력하세요.';
@@ -612,6 +616,8 @@ function search(){
       </div>
    </div>`;
  }).join('');
+
+ }catch(e){ console.error(e); if($('count')) $('count').textContent='검색 오류가 발생했습니다. 새로고침 후 다시 검색해 주세요.'; }
 }
 $('searchBtn').onclick=search;$('q').addEventListener('keyup',e=>{if(e.key==='Enter')search()});
 function key(){return 'mirim_prod_'+new Date().toISOString().slice(0,10)} function getHist(){return JSON.parse(localStorage.getItem(key())||'[]')} function setHist(a){localStorage.setItem(key(),JSON.stringify(a))}
@@ -662,6 +668,7 @@ function localAllOutTotal(){
  return a.reduce((s,r)=>s+Number(r.qty||0),0);
 }
 function updateHomeSummary(){
+ try{
  let stock=0,inTotal=0,outTotal=0;
  if(sharedReady){
    stock=Object.values(sharedCache.stock).reduce((s,v)=>s+Number(v||0),0);
@@ -678,6 +685,7 @@ function updateHomeSummary(){
  if($('homeInTotal')) $('homeInTotal').textContent=inTotal.toLocaleString();
  if($('homeOutTotal')) $('homeOutTotal').textContent=outTotal.toLocaleString();
  if($('homeExpectedTotal')) $('homeExpectedTotal').textContent=(stock+inTotal-outTotal).toLocaleString();
+ }catch(e){ console.error(e); }
 }
 function renderInHist(){
  const a=getInHist();
