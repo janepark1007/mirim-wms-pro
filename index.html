@@ -207,6 +207,52 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 .photo-match .score{display:inline-block;margin-top:6px;padding:5px 8px;border-radius:8px;background:#edf8f2;color:#0b6b3e;font-weight:800}
 @media(max-width:560px){.photo-match{grid-template-columns:90px 1fr}.photo-match img{width:90px;height:90px}}
 </style>
+
+<style id="kakao-order-v10">
+.order-share{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid #f0d7a6;
+  background:#fff9e9;
+  border-radius:12px;
+}
+.order-share-title{font-weight:900;margin-bottom:8px}
+.order-share-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+.order-share-row input{
+  width:100%;
+  min-height:46px;
+  border:1px solid #d7d0bd;
+  border-radius:10px;
+  padding:9px 11px;
+}
+.kakao-share-btn{
+  min-height:46px;
+  padding:0 16px;
+  border:0;
+  border-radius:10px;
+  background:#fee500;
+  color:#191919;
+  font-weight:900;
+}
+.order-share small{display:block;color:#786d53;margin-top:7px;line-height:1.45}
+.low-stock-badge{
+  display:inline-block;
+  margin-top:8px;
+  padding:6px 9px;
+  border-radius:9px;
+  background:#fff0ed;
+  color:#b42318;
+  font-weight:900;
+}
+@media(max-width:560px){
+  .order-share-row{grid-template-columns:1fr}
+  .kakao-share-btn{width:100%}
+}
+</style>
 </head>
 <body>
 <header>
@@ -236,7 +282,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 <button data-mode="location">📍<span>위치확인</span></button>
 <button id="photoSearchBtn">📷<span>사진검색</span></button>
 </div>
-<div class="card"><div class="notice">메인 현황은 수량 합계가 아니라 품목 개수 기준입니다.</div><p style="color:var(--muted)">기준 품목 1,438개</p></div>
+<div class="card"><div class="notice">메인 현황은 품목 개수 기준이며, 검색 후 카톡으로 자재 주문요청을 보낼 수 있습니다.</div><p style="color:var(--muted)">기준 품목 1,438개</p></div>
 
 </section>
 
@@ -725,6 +771,59 @@ function itemMetaHtml(x,i){
  <label>최소수량<input id="minqty_${i}" type="number" min="0" inputmode="numeric" placeholder="예: 20" value="${m.minQty===''?'':m.minQty}"></label>
  </div><button class="primary" onclick="saveItemMeta('${esc(x.part)}',${i})">품목 설정 저장</button></div>`;
 }
+
+function orderRequestHtml(x,i){
+ const current=getCurrentStock(x);
+ const currentText=current===null?'확인 필요':Number(current).toLocaleString();
+ return `<div class="order-share">
+   <div class="order-share-title">💬 카톡 주문요청</div>
+   <div class="order-share-row">
+     <input id="order_qty_${i}" type="number" min="1" inputmode="numeric" placeholder="주문 요청수량 (선택)">
+     <button class="kakao-share-btn" onclick='shareOrderRequest(${JSON.stringify(x)},${i})'>카톡으로 보내기</button>
+   </div>
+   <small>현재수량이 부족해 보이면 품번·품명·위치·현재수량을 카카오톡으로 바로 공유할 수 있습니다.</small>
+   ${current===null?'<span class="low-stock-badge">⚠️ 현 수량 확인 필요</span>':''}
+ </div>`;
+}
+
+async function shareOrderRequest(x,i){
+ const current=getCurrentStock(x);
+ const qtyEl=$('order_qty_'+i);
+ const orderQty=qtyEl ? qtyEl.value.trim() : '';
+ const loc=applyLocEdit(x).location||'위치 확인 필요';
+
+ const lines=[
+   '[미림 자재 주문 요청]',
+   '품번: '+(x.part||''),
+   '품명: '+(x.name||''),
+   '규격: '+(x.spec||'-'),
+   '위치: '+loc,
+   '현 입력수량: '+(current===null?'확인 필요':Number(current).toLocaleString()),
+   'ERP수량: '+Number(x.erpQty||0).toLocaleString()
+ ];
+ if(orderQty) lines.push('주문 요청수량: '+Number(orderQty).toLocaleString());
+ lines.push('요청일시: '+new Date().toLocaleString('ko-KR'));
+
+ const msg=lines.join('\n');
+
+ // 모바일에서는 공유창이 열리고 KakaoTalk을 선택할 수 있음
+ if(navigator.share){
+   try{
+     await navigator.share({title:'미림 자재 주문 요청',text:msg});
+     return;
+   }catch(e){
+     if(e && e.name==='AbortError') return;
+   }
+ }
+
+ // 공유 API가 없는 PC/브라우저에서는 클립보드 복사
+ try{
+   await navigator.clipboard.writeText(msg);
+   alert('주문 요청내용을 복사했습니다. 카카오톡에 붙여넣어 보내주세요.');
+ }catch(e){
+   prompt('아래 내용을 복사해서 카카오톡으로 보내주세요.',msg);
+ }
+}
 function search(){
  try{
 
@@ -794,6 +893,7 @@ function search(){
           ${locEdit}
           ${inbound}
           ${outbound}
+          ${orderRequestHtml(x,i)}
           ${itemMetaHtml(x,i)}
         </div>
       </div>
