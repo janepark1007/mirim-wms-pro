@@ -170,10 +170,15 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   .stock-summary{grid-template-columns:1fr}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
 </head>
 <body>
 <header><div><b>미림테크놀러지</b><small>생산 자재관리</small></div><button id="homeBtn" class="primary" style="min-height:42px">메인</button></header>
 <main>
+<div id="syncBar" style="margin-bottom:10px;padding:10px 12px;border-radius:10px;background:#fff4d6;font-weight:800">
+  공용 동기화 확인 중...
+</div>
 <section id="home">
 <div class="hero"><h1>생산 자재관리</h1><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div class="quick">
@@ -272,7 +277,11 @@ const LOC_OPTIONS={
  detail:Array.from({length:100},(_,i)=>String(i+1).padStart(3,'0'))
 };
 function locKey(part){return 'mirim_item_location_'+part}
-function getLocEdit(part){try{return JSON.parse(localStorage.getItem(locKey(part))||'null')}catch(e){return null}}
+function getLocEdit(part){
+ const p=String(part);
+ if(sharedReady && sharedCache.location[p]) return sharedCache.location[p];
+ try{return JSON.parse(localStorage.getItem(locKey(part))||'null')}catch(e){return null}
+}
 function applyLocEdit(x){
  const e=getLocEdit(x.part); if(!e)return x;
  return {...x,...e,location:[e.room,e.zone,e.level,e.height,e.storage,e.detail].filter(Boolean).join('-')};
@@ -295,7 +304,7 @@ function locationEditor(x,i){
  <button class="loc-save" onclick="saveLocation('${esc(x.part)}',${i})">📍 위치 저장</button>
  </div>`;
 }
-function saveLocation(part,i){
+async function saveLocation(part,i){
  const e={
   room:$('lr_'+i).value,zone:$('lz_'+i).value,level:$('ll_'+i).value,
   height:$('lh_'+i).value,storage:$('ls_'+i).value,detail:$('ld_'+i).value
@@ -303,34 +312,135 @@ function saveLocation(part,i){
  if(!e.room && !e.zone && !e.level && !e.height && !e.storage && !e.detail){
    return alert('위치를 하나 이상 선택해 주세요.');
  }
- localStorage.setItem(locKey(part),JSON.stringify(e));
- search();
- alert('위치 저장 완료');
+ try{
+   if(sharedReady) await sharedSaveLocation(part,e);
+   else localStorage.setItem(locKey(part),JSON.stringify(e));
+   search();
+   alert(sharedReady?'공용 위치 저장 완료':'이 기기에 위치 저장 완료');
+ }catch(err){
+   console.error(err); alert('위치 저장 실패: '+(err.message||err));
+ }
 }
 
+
+let sharedDb=null;
+let sharedReady=false;
+const sharedCache={stock:{},inTotal:{},outTotal:{},location:{}};
+
+function syncBar(msg,ok=false){
+ const b=$('syncBar'); if(!b)return;
+ b.textContent=msg;
+ b.style.background=ok?'#eaf7ef':'#fff4d6';
+ b.style.color=ok?'#0b6b3e':'#7a5a00';
+}
+async function initSharedDb(){
+ try{
+  const cfg=window.MIRIM_CONFIG||{};
+  if(!cfg.url||!cfg.publishableKey){
+    syncBar('⚠️ 공용 DB 미연결 · 현재는 이 기기에만 저장됩니다.');
+    return;
+  }
+  sharedDb=window.supabase.createClient(cfg.url,cfg.publishableKey);
+  await loadSharedCache();
+  sharedReady=true;
+  syncBar('✅ 공용 동기화 연결 · 모든 휴대폰에서 같은 수량/위치가 보입니다.',true);
+ }catch(e){
+  console.error(e);
+  syncBar('⚠️ 공용 동기화 연결 실패 · 이 기기 저장모드');
+ }
+}
+async function loadSharedCache(){
+ if(!sharedDb)return;
+ const [{data:stocks,error:e1},{data:moves,error:e2}]=await Promise.all([
+   sharedDb.from('production_inventory_sync').select('*'),
+   sharedDb.from('production_movements').select('part_no,movement_type,qty')
+ ]);
+ if(e1)throw e1;
+ if(e2)throw e2;
+
+ sharedCache.stock={}; sharedCache.location={}; sharedCache.inTotal={}; sharedCache.outTotal={};
+ (stocks||[]).forEach(r=>{
+   sharedCache.stock[String(r.part_no)]=Number(r.current_stock);
+   sharedCache.location[String(r.part_no)]={
+     room:r.room||'',zone:r.zone||'',level:r.level||'',height:r.height||'',
+     storage:r.storage||'',detail:r.detail||''
+   };
+ });
+ (moves||[]).forEach(r=>{
+   const p=String(r.part_no), q=Number(r.qty||0);
+   if(r.movement_type==='IN') sharedCache.inTotal[p]=(sharedCache.inTotal[p]||0)+q;
+   if(r.movement_type==='OUT') sharedCache.outTotal[p]=(sharedCache.outTotal[p]||0)+q;
+ });
+}
+async function sharedSaveStock(part,n){
+ if(!sharedDb)return false;
+ const {error}=await sharedDb.from('production_inventory_sync').upsert(
+   {part_no:String(part),current_stock:Number(n),updated_at:new Date().toISOString()},
+   {onConflict:'part_no'}
+ );
+ if(error)throw error;
+ sharedCache.stock[String(part)]=Number(n);
+ return true;
+}
+async function sharedSaveLocation(part,e){
+ if(!sharedDb)return false;
+ const current=sharedCache.stock[String(part)];
+ const row={
+   part_no:String(part),
+   current_stock:Number.isFinite(current)?current:0,
+   room:e.room||'',zone:e.zone||'',level:e.level||'',height:e.height||'',
+   storage:e.storage||'',detail:e.detail||'',updated_at:new Date().toISOString()
+ };
+ const {error}=await sharedDb.from('production_inventory_sync').upsert(row,{onConflict:'part_no'});
+ if(error)throw error;
+ sharedCache.location[String(part)]=e;
+ return true;
+}
+async function sharedAddMovement(type,x,qty,worker){
+ if(!sharedDb)return false;
+ const {error}=await sharedDb.from('production_movements').insert({
+   movement_type:type,part_no:String(x.part),item_name:x.name||'',qty:Number(qty),
+   worker_name:worker||'',location:x.location||'',created_at:new Date().toISOString()
+ });
+ if(error)throw error;
+ const cache=type==='IN'?sharedCache.inTotal:sharedCache.outTotal;
+ cache[String(x.part)]=(cache[String(x.part)]||0)+Number(qty);
+ return true;
+}
 function stockKey(part){return 'mirim_current_stock_'+part}
 function getCurrentStock(x){
+ const p=String(x.part);
+ if(sharedReady && Object.prototype.hasOwnProperty.call(sharedCache.stock,p)) return Number(sharedCache.stock[p]);
  const v=localStorage.getItem(stockKey(x.part));
  if(v===null||v==='') return null;
  const n=Number(v); return Number.isFinite(n)?n:null;
 }
-function saveCurrentStock(part,i){
+async function saveCurrentStock(part,i){
  const v=$('stock_'+i).value;
  if(v==='') return alert('현 창고수량을 입력하세요.');
  const n=Number(v);
  if(!Number.isFinite(n)) return alert('숫자로 입력하세요.');
- localStorage.setItem(stockKey(part),String(n));
- search();
- alert('현 창고수량 저장 완료');
+ try{
+  if(sharedReady) await sharedSaveStock(part,n);
+  else localStorage.setItem(stockKey(part),String(n));
+  search();
+  alert(sharedReady?'공용 현 창고수량 저장 완료':'이 기기에 현 창고수량 저장 완료');
+ }catch(err){
+  console.error(err); alert('수량 저장 실패: '+(err.message||err));
+ }
 }
 
 function inboundTotalFor(part){
+ const p=String(part);
+ if(sharedReady) return Number(sharedCache.inTotal[p]||0);
  const rows=getInHist?getInHist():[];
- return rows.filter(r=>String(r.part)===String(part)).reduce((s,r)=>s+Number(r.qty||0),0);
+ return rows.filter(r=>String(r.part)===p).reduce((s,r)=>s+Number(r.qty||0),0);
 }
 function outboundTotalFor(part){
+ const p=String(part);
+ if(sharedReady) return Number(sharedCache.outTotal[p]||0);
  const rows=getHist?getHist():[];
- return rows.filter(r=>String(r.part)===String(part)).reduce((s,r)=>s+Number(r.qty||0),0);
+ return rows.filter(r=>String(r.part)===p).reduce((s,r)=>s+Number(r.qty||0),0);
 }
 function qtyCompareHtml(x,i){
  const erp=Number(x.erpQty||0);
@@ -436,17 +546,37 @@ function key(){return 'mirim_prod_'+new Date().toISOString().slice(0,10)} functi
 function inKey(){return 'mirim_prod_in_'+new Date().toISOString().slice(0,10)}
 function getInHist(){return JSON.parse(localStorage.getItem(inKey())||'[]')}
 function setInHist(a){localStorage.setItem(inKey(),JSON.stringify(a))}
-function saveIn(x,i){
+async function saveIn(x,i){
  const worker=$('in_worker_'+i).value.trim();
  const qty=Number($('in_qty_'+i).value);
  if(!worker)return alert('등록자 이름을 입력하세요.');
  if(!qty||qty<=0)return alert('입고수량을 입력하세요.');
- const a=getInHist();
- a.unshift({
-   time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
-   part:x.part,name:x.name,qty,worker,location:x.location||''
- });
- setInHist(a);renderInHist();$('in_qty_'+i).value='';search();alert('입고 기록 저장 완료');
+ try{
+   if(sharedReady){
+     await sharedAddMovement('IN',x,qty,worker);
+   }else{
+     const a=getInHist();
+     a.unshift({time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),part:x.part,name:x.name,qty,worker,location:x.location||''});
+     setInHist(a);
+   }
+   
+async function refreshSharedHistories(){
+ if(!sharedReady||!sharedDb)return;
+ const today=new Date(); today.setHours(0,0,0,0);
+ const {data,error}=await sharedDb.from('production_movements')
+   .select('*').gte('created_at',today.toISOString()).order('created_at',{ascending:false}).limit(300);
+ if(error){console.error(error);return}
+ const rows=data||[];
+ const ins=rows.filter(r=>r.movement_type==='IN');
+ const outs=rows.filter(r=>r.movement_type==='OUT');
+ if($('inHist')) $('inHist').innerHTML=ins.length?ins.map(x=>`<tr><td>${new Date(x.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</td><td>${esc(x.part_no)}</td><td>${esc(x.item_name)}</td><td>${Number(x.qty).toLocaleString()}</td><td>${esc(x.worker_name)}</td><td>${esc(x.location)}</td></tr>`).join(''):'<tr><td colspan="6">오늘 입고기록이 없습니다.</td></tr>';
+ if($('hist')) $('hist').innerHTML=outs.length?outs.map(x=>`<tr><td>${new Date(x.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</td><td>${esc(x.part_no)}</td><td>${esc(x.item_name)}</td><td>${Number(x.qty).toLocaleString()}</td><td>${esc(x.worker_name)}</td><td>${esc(x.location)}</td></tr>`).join(''):'<tr><td colspan="6">오늘 출고기록이 없습니다.</td></tr>';
+}
+if(sharedReady) await refreshSharedHistories(); else renderInHist();$('in_qty_'+i).value='';search();
+   alert(sharedReady?'공용 입고 저장 완료':'이 기기에 입고 기록 저장 완료');
+ }catch(err){
+   console.error(err);alert('입고 저장 실패: '+(err.message||err));
+ }
 }
 function renderInHist(){
  const a=getInHist();
@@ -454,21 +584,25 @@ function renderInHist(){
    ? a.map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.part)}</td><td>${esc(x.name)}</td><td>${x.qty}</td><td>${esc(x.worker)}</td><td>${esc(x.location)}</td></tr>`).join('')
    : '<tr><td colspan="6">오늘 입고기록이 없습니다.</td></tr>';
 }
-function saveOut(x,i){const w=$('w_'+i).value.trim();const qty=Number($('qty_'+i).value);if(!w)return alert('작업자 이름을 입력하세요.');if(!qty||qty<=0)return alert('출고수량을 입력하세요.');const a=getHist();a.unshift({time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),part:x.part,name:x.name,qty,worker:w,location:x.location||''});setHist(a);
-$('inCsvBtn').onclick=()=>{
- const a=getInHist();
- if(!a.length)return alert('저장할 입고기록이 없습니다.');
- const rows=[['시간','품번','품명','입고수량','등록자','위치'],...a.map(x=>[x.time,x.part,x.name,x.qty,x.worker,x.location])];
- const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
- const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
- const link=document.createElement('a');
- link.href=URL.createObjectURL(blob);
- link.download='미림_생산_입고_'+new Date().toISOString().slice(0,10)+'.csv';
- link.click();
- URL.revokeObjectURL(link.href);
-};
-renderInHist();
-renderHist();$('qty_'+i).value='';alert('출고 기록 저장 완료')}
+async function saveOut(x,i){
+ const w=$('w_'+i).value.trim();
+ const qty=Number($('qty_'+i).value);
+ if(!w)return alert('작업자 이름을 입력하세요.');
+ if(!qty||qty<=0)return alert('출고수량을 입력하세요.');
+ try{
+   if(sharedReady){
+     await sharedAddMovement('OUT',x,qty,w);
+   }else{
+     const a=getHist();
+     a.unshift({time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),part:x.part,name:x.name,qty,worker:w,location:x.location||''});
+     setHist(a);
+   }
+   if(sharedReady) await refreshSharedHistories(); else renderHist();$('qty_'+i).value='';search();
+   alert(sharedReady?'공용 출고 저장 완료':'이 기기에 출고 기록 저장 완료');
+ }catch(err){
+   console.error(err);alert('출고 저장 실패: '+(err.message||err));
+ }
+}
 function renderHist(){const a=getHist();$('hist').innerHTML=a.length?a.map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.part)}</td><td>${esc(x.name)}</td><td>${x.qty}</td><td>${esc(x.worker)}</td><td>${esc(x.location)}</td></tr>`).join(''):'<tr><td colspan="6">오늘 출고기록이 없습니다.</td></tr>'}
 $('csvBtn').onclick=()=>{const a=getHist();if(!a.length)return alert('저장할 기록이 없습니다.');const rows=[['시간','품번','품명','출고수량','작업자','위치'],...a.map(x=>[x.time,x.part,x.name,x.qty,x.worker,x.location])];const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='미림_생산_출고_'+new Date().toISOString().slice(0,10)+'.csv';link.click();URL.revokeObjectURL(link.href)};
 renderHist();
