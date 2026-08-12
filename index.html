@@ -282,7 +282,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
 <button data-mode="location">📍<span>위치확인</span></button>
 <button id="photoSearchBtn">📷<span>사진검색</span></button>
 </div>
-<div class="card"><div class="notice">메인 현황은 품목 개수 기준이며, 검색 후 카톡으로 자재 주문요청을 보낼 수 있습니다.</div><p style="color:var(--muted)">기준 품목 1,438개</p></div>
+<div class="card"><div class="notice">메인 현황은 품목 개수 기준이며, 검색 후 「미림 자재 문의」로 주문·자재찾기·입고확인을 보낼 수 있습니다.</div><p style="color:var(--muted)">기준 품목 1,438개</p></div>
 
 </section>
 
@@ -864,27 +864,51 @@ function itemMetaHtml(x,i){
 
 function orderRequestHtml(x,i){
  const current=getCurrentStock(x);
- const currentText=current===null?'확인 필요':Number(current).toLocaleString();
  return `<div class="order-share">
-   <div class="order-share-title">💬 카톡 주문요청</div>
-   <div class="order-share-row">
-     <input id="order_qty_${i}" type="number" min="1" inputmode="numeric" placeholder="주문 요청수량 (선택)">
-     <button class="kakao-share-btn" onclick='shareOrderRequest(${JSON.stringify(x)},${i})'>카톡으로 보내기</button>
+   <div class="order-share-title">💬 미림 자재 문의</div>
+   <div class="item-admin-grid">
+     <label>문의종류
+       <select id="inq_type_${i}">
+         <option value="자재 주문요청">🛒 자재 주문요청</option>
+         <option value="자재 찾기">🔎 자재 찾기</option>
+         <option value="입고 확인">📥 입고 확인</option>
+         <option value="기타 문의">❓ 기타 문의</option>
+       </select>
+     </label>
+     <label>요청자
+       <input id="inq_worker_${i}" placeholder="이름 입력">
+     </label>
    </div>
-   <small>현재수량이 부족해 보이면 품번·품명·위치·현재수량과 등록 사진을 함께 공유할 수 있습니다.</small>
+   <div class="order-share-row" style="margin-top:8px">
+     <input id="order_qty_${i}" type="number" min="1" inputmode="numeric" placeholder="요청수량 (필요할 때만)">
+     <button class="kakao-share-btn" onclick='shareOrderRequest(${JSON.stringify(x)},${i})'>문의 보내기</button>
+   </div>
+   <input id="inq_note_${i}" style="width:100%;min-height:46px;margin-top:8px;border:1px solid #d7d0bd;border-radius:10px;padding:9px 11px"
+          placeholder="추가 문의내용 (선택)">
+   <small>주문 · 자재찾기 · 입고확인 · 기타문의 중 선택하면 품번·품명·위치·수량·사진을 함께 공유합니다.</small>
    ${current===null?'<span class="low-stock-badge">⚠️ 현 수량 확인 필요</span>':''}
  </div>`;
 }
 
 async function shareOrderRequest(x,i){
  const current=getCurrentStock(x);
- const qtyEl=$('order_qty_'+i);
- const orderQty=qtyEl ? qtyEl.value.trim() : '';
+ const type=$('inq_type_'+i)?.value||'기타 문의';
+ const worker=($('inq_worker_'+i)?.value||'').trim();
+ const qty=($('order_qty_'+i)?.value||'').trim();
+ const note=($('inq_note_'+i)?.value||'').trim();
  const loc=applyLocEdit(x).location||'위치 확인 필요';
  const photoUrl=getPhoto(x.part);
 
+ if(!worker){
+   alert('요청자 이름을 입력해 주세요.');
+   $('inq_worker_'+i)?.focus();
+   return;
+ }
+
  const lines=[
-   '[미림 자재 주문 요청]',
+   '[미림 자재 문의]',
+   '문의종류: '+type,
+   '요청자: '+worker,
    '품번: '+(x.part||''),
    '품명: '+(x.name||''),
    '규격: '+(x.spec||'-'),
@@ -892,8 +916,9 @@ async function shareOrderRequest(x,i){
    '현 입력수량: '+(current===null?'확인 필요':Number(current).toLocaleString()),
    'ERP수량: '+Number(x.erpQty||0).toLocaleString()
  ];
- if(orderQty) lines.push('주문 요청수량: '+Number(orderQty).toLocaleString());
- lines.push('요청일시: '+new Date().toLocaleString('ko-KR'));
+ if(qty) lines.push('요청수량: '+Number(qty).toLocaleString());
+ if(note) lines.push('문의내용: '+note);
+ lines.push('문의일시: '+new Date().toLocaleString('ko-KR'));
  const msg=lines.join('\n');
 
  let photoFile=null;
@@ -906,38 +931,32 @@ async function shareOrderRequest(x,i){
    }catch(e){console.warn('사진 공유용 변환 실패',e);}
  }
 
- // 모바일: 사진 파일 + 주문내용을 한 번에 시스템 공유창으로 전달
  if(navigator.share){
    try{
-     const data={title:'미림 자재 주문 요청',text:msg};
-     if(photoFile && navigator.canShare && navigator.canShare({files:[photoFile]})){
-       data.files=[photoFile];
-     }
+     const data={title:'미림 자재 문의 - '+type,text:msg};
+     if(photoFile && navigator.canShare && navigator.canShare({files:[photoFile]})) data.files=[photoFile];
      await navigator.share(data);
      return;
    }catch(e){
-     if(e && e.name==='AbortError') return;
-     console.warn('공유 실패, PC 방식으로 전환',e);
+     if(e&&e.name==='AbortError')return;
+     console.warn(e);
    }
  }
 
- // PC: 주문문구 복사 + 사진이 있으면 새 창에 표시하여 카카오톡 PC로 드래그/복사 가능
- try{
-   await navigator.clipboard.writeText(msg);
- }catch(e){}
-
+ try{await navigator.clipboard.writeText(msg)}catch(e){}
  if(photoUrl){
    const w=window.open('','_blank','width=760,height=760');
    if(w){
-     w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>미림 주문요청 사진</title>
-     <style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.55}img{max-width:100%;max-height:480px;object-fit:contain;border:1px solid #ddd;border-radius:12px}pre{white-space:pre-wrap;background:#f5f7f6;padding:14px;border-radius:10px}b{font-size:20px}</style></head>
-     <body><b>PC 카카오톡 주문요청</b><p>주문내용은 클립보드에 복사되었습니다. 아래 사진을 카카오톡 PC 대화창으로 드래그하거나 복사해 보내세요.</p>
-     <img src="${photoUrl}" alt="품목 사진"><pre>${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`);
+     const safeMsg=msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+     w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>미림 자재 문의</title>
+     <style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.55}img{max-width:100%;max-height:480px;object-fit:contain;border:1px solid #ddd;border-radius:12px}pre{white-space:pre-wrap;background:#f5f7f6;padding:14px;border-radius:10px}</style></head>
+     <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
+     <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
      w.document.close();
    }
-   alert('주문내용을 복사했습니다. 열린 사진과 함께 카카오톡 PC로 보내주세요.');
+   alert('문의내용을 복사했습니다. 사진과 함께 「미림 자재 문의」 카톡방으로 보내주세요.');
  }else{
-   alert('주문내용을 복사했습니다. 등록된 품목 사진이 없어 문자내용만 카카오톡에 붙여넣어 주세요.');
+   alert('문의내용을 복사했습니다. 「미림 자재 문의」 카톡방에 붙여넣어 주세요.');
  }
 }
 function search(){
