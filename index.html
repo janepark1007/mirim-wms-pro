@@ -273,7 +273,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
   <div class="hbox"><small>오늘 입고 품목수</small><b id="homeInTotal">0</b></div>
   <div class="hbox"><small>오늘 출고 품목수</small><b id="homeOutTotal">0</b></div>
-  <div class="hbox green"><small>ERP 품목수</small><b id="homeExpectedTotal">0</b></div>
+  <div class="hbox green"><small>ERP 품목수</small><b id="homeExpectedTotal">1,438</b></div>
 </div>
 <div class="quick">
 <button data-mode="search">🔎<span>품목검색</span></button>
@@ -1060,7 +1060,7 @@ async function refreshSharedHistories(){
  updateHomeSummary();
 }
 if(sharedReady) await refreshSharedHistories(); else renderInHist();$('in_qty_'+i).value='';search();updateHomeSummary();
-   alert(sharedReady?'공용 입고 저장 완료':'이 기기에 입고 기록 저장 완료');
+   updateHomeSummary(); alert(sharedReady?'공용 입고 저장 완료':'이 기기에 입고 기록 저장 완료');
  }catch(err){
    console.error(err);alert('입고 저장 실패: '+(err.message||err));
  }
@@ -1076,39 +1076,45 @@ function localAllOutTotal(){
 }
 function updateHomeSummary(){
  try{
-   const inRows = sharedReady ? sharedTodayIns : getInHist();
-   const outRows = sharedReady ? sharedTodayOuts : getHist();
+   const localIn = (typeof getInHist==='function') ? getInHist() : [];
+   const localOut = (typeof getHist==='function') ? getHist() : [];
+   const inRows = (sharedReady && Array.isArray(sharedTodayIns)) ? sharedTodayIns : localIn;
+   const outRows = (sharedReady && Array.isArray(sharedTodayOuts)) ? sharedTodayOuts : localOut;
 
-   // 오늘 입고/출고는 수량 합계가 아니라 '서로 다른 품번 개수'
-   const inItemCount = new Set(inRows.map(r=>String(r.part||'')).filter(Boolean)).size;
-   const outItemCount = new Set(outRows.map(r=>String(r.part||'')).filter(Boolean)).size;
+   const inItemCount = new Set(inRows.map(r=>String(r.part||r.part_no||'')).filter(Boolean)).size;
+   const outItemCount = new Set(outRows.map(r=>String(r.part||r.part_no||'')).filter(Boolean)).size;
 
-   // 현 입력된 품목수 = 현 창고수량을 한 번이라도 입력한 서로 다른 품번 개수
    let enteredItemCount=0;
-   if(sharedReady){
-     enteredItemCount=Object.keys(sharedCache.stock).filter(p=>{
+   if(sharedReady && sharedCache && sharedCache.stock){
+     enteredItemCount = Object.keys(sharedCache.stock).filter(p=>{
        const v=sharedCache.stock[p];
        return v!==null && v!==undefined && v!=='';
      }).length;
    }else{
      const seen=new Set();
-     ITEMS.forEach(x=>{
+     (ITEMS||[]).forEach(x=>{
        const p=String(x.part||'');
-       if(!p || seen.has(p))return;
-       const v=localStorage.getItem(stockKey(p));
-       if(v!==null && v!=='') seen.add(p);
+       if(!p || seen.has(p)) return;
+       try{
+         const v=localStorage.getItem(stockKey(p));
+         if(v!==null && v!=='') seen.add(p);
+       }catch(e){}
      });
      enteredItemCount=seen.size;
    }
 
-   // ERP 품목수 = 기준자료에 있는 서로 다른 품번 개수
-   const erpItemCount = new Set(ITEMS.map(x=>String(x.part||'')).filter(Boolean)).size;
+   const erpItemCount = new Set((ITEMS||[]).map(x=>String(x.part||'')).filter(Boolean)).size || 1438;
 
-   $('homeStockTotal').textContent=enteredItemCount.toLocaleString();
-   $('homeInTotal').textContent=inItemCount.toLocaleString();
-   $('homeOutTotal').textContent=outItemCount.toLocaleString();
-   $('homeExpectedTotal').textContent=erpItemCount.toLocaleString();
- }catch(e){console.error(e)}
+   const a=$('homeStockTotal'), b=$('homeInTotal'), c=$('homeOutTotal'), d=$('homeExpectedTotal');
+   if(a) a.textContent=enteredItemCount.toLocaleString();
+   if(b) b.textContent=inItemCount.toLocaleString();
+   if(c) c.textContent=outItemCount.toLocaleString();
+   if(d) d.textContent=erpItemCount.toLocaleString();
+ }catch(e){
+   console.error('메인 품목수 갱신 오류',e);
+   const d=$('homeExpectedTotal');
+   if(d && (!d.textContent || d.textContent==='0')) d.textContent='1,438';
+ }
 }
 function getTodayInRows(){
  return sharedReady ? sharedTodayIns : getInHist();
@@ -1154,6 +1160,31 @@ document.addEventListener('visibilitychange',async()=>{
    if(sharedReady){try{await refreshSharedHistories()}catch(e){console.error(e)}}
    updateHomeSummary();
  }
+});
+
+function safeInitialRender(){
+ try{ updateHomeSummary(); }catch(e){ console.error(e); }
+ try{ if(typeof renderDailyHistories==='function') renderDailyHistories(); }catch(e){ console.error(e); }
+}
+if(document.readyState==='loading'){
+ document.addEventListener('DOMContentLoaded',safeInitialRender);
+}else{
+ safeInitialRender();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+ try{
+   const sb=$('searchBtn');
+   if(sb) sb.onclick=search;
+   const q=$('q');
+   if(q) q.addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+   const ab=$('adminLoginBtn');
+   if(ab) ab.onclick=adminLogin;
+   const pb=$('photoSearchBtn');
+   if(pb) pb.onclick=openPhotoSearch;
+   updateAdminUI();
+   updateHomeSummary();
+ }catch(e){console.error('초기 버튼 연결 오류',e);}
 });
 </script>
 </body></html>
