@@ -347,7 +347,7 @@ body.worker-locked .worker-auth{
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.6</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.7</small></div>
 <div class="top-actions">
   <div class="worker-auth">
     <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
@@ -407,7 +407,7 @@ body.worker-locked .worker-auth{
   </div>
 </section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.6 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.7 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -448,13 +448,20 @@ body.worker-locked .worker-auth{
 
 
 <section class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 id="inHistTitle" style="margin:0">오늘 입고기록 · 최근 5건</h2><button id="inCsvBtn" class="primary" style="min-height:42px">CSV 저장</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 id="inHistTitle" style="margin:0">오늘 입고기록 · 최근 5건</h2><button id="inCsvBtn" class="primary" style="min-height:42px">입고 엑셀연동</button></div>
 <div style="overflow:auto;margin-top:10px"><table><thead><tr><th>시간</th><th>품번</th><th>품명</th><th>수량</th><th>등록자</th><th>위치</th></tr></thead><tbody id="inHist"></tbody></table></div>
 </section>
 
 <section class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 id="outHistTitle" style="margin:0">오늘 출고기록 · 최근 5건</h2><button id="csvBtn" class="primary" style="min-height:42px">CSV 저장</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 id="outHistTitle" style="margin:0">오늘 출고기록 · 최근 5건</h2><button id="csvBtn" class="primary" style="min-height:42px">출고 엑셀연동</button></div>
 <div style="overflow:auto;margin-top:10px"><table><thead><tr><th>시간</th><th>품번</th><th>품명</th><th>수량</th><th>작업자</th><th>위치</th></tr></thead><tbody id="hist"></tbody></table></div>
+</section>
+
+<section class="card">
+ <h2 style="margin-top:0">📥 NAS 엑셀 연동</h2>
+ <div class="notice">기존 V11 엑셀의 <b>입출고기록</b> 열 순서에 맞춰 오늘 입·출고를 한 번에 저장합니다.</div>
+ <button id="excelLinkBtn" class="primary" style="width:100%;min-height:54px;margin-top:10px">오늘 입·출고 엑셀 연동파일 저장</button>
+ <small style="display:block;margin-top:8px;color:var(--muted)">열 순서: 날짜 · 품번 · 품명 · 규격 · 자재분류 · 제조사 · 입출고구분 · 보관구분 · 수량 · 담당자 · 창고자리 · 생산서랍 · 비고</small>
 </section>
 </main>
 <script>
@@ -2221,14 +2228,58 @@ function renderDailyHistories(filterParts=null){
 }
 function renderInHist(){ renderDailyHistories(); }
 function renderHist(){ renderDailyHistories(); }
+
+function excelCsvCell(v){return `"${String(v??'').replace(/"/g,'""')}"`;}
+function itemForPart(part){return ITEMS.find(z=>String(z.part)===String(part))||{};}
+function excelLinkRows(rows,type){
+ const today=new Date().toLocaleDateString('ko-KR');
+ return rows.map(r=>{
+   const x=itemForPart(r.part);
+   const loc=String(r.location||'');
+   const storage=x.storage||'';
+   return [
+     today,
+     String(r.part||''),
+     r.name||x.name||'',
+     x.spec||'',
+     x.category||'',
+     x.maker||x.manufacturer||'',
+     type==='IN'?'입고':'출고',
+     storage,
+     Number(r.qty||0),
+     r.worker||'',
+     loc,
+     '',
+     `웹 연동 / ${r.time||''}`
+   ];
+ });
+}
+function downloadExcelLinkCsv(rows,filename){
+ const headers=['날짜','품번(선택)','품명(자동)','규격(자동)','자재분류(자동)','제조사(자동)','입출고구분','보관구분','수량','담당자','창고자리(자동)','생산서랍(자동)','비고'];
+ const csv='\ufeff'+[headers,...rows].map(r=>r.map(excelCsvCell).join(',')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+ const link=document.createElement('a');
+ link.href=URL.createObjectURL(blob);
+ link.download=filename;
+ document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+}
+if($('inCsvBtn')) $('inCsvBtn').onclick=()=>{
+ const a=getTodayInRows();
+ if(!a.length)return alert('오늘 저장할 입고기록이 없습니다.');
+ downloadExcelLinkCsv(excelLinkRows(a,'IN'),'미림_V11_입고연동_'+new Date().toISOString().slice(0,10)+'.csv');
+};
+if($('excelLinkBtn')) $('excelLinkBtn').onclick=()=>{
+ const ins=getTodayInRows(), outs=getTodayOutRows();
+ if(!ins.length&&!outs.length)return alert('오늘 저장할 입·출고기록이 없습니다.');
+ const rows=[...excelLinkRows(ins,'IN'),...excelLinkRows(outs,'OUT')];
+ downloadExcelLinkCsv(rows,'미림_V11_입출고연동_'+new Date().toISOString().slice(0,10)+'.csv');
+ alert(`✅ 엑셀 연동파일 저장 완료\n입고 ${ins.length}건 / 출고 ${outs.length}건\n\n기존 V11 엑셀의 '입출고기록'에 붙여넣으면 됩니다.`);
+};
 $('csvBtn').onclick=()=>{
  const a=getTodayOutRows();
- if(!a.length)return alert('저장할 출고기록이 없습니다.');
- const rows=[['시간','품번','품명','출고수량','작업자','위치'],...a.map(x=>[x.time,x.part,x.name,x.qty,x.worker,x.location])];
- const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
- const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
- const link=document.createElement('a');link.href=URL.createObjectURL(blob);
- link.download='미림_생산_출고_'+new Date().toISOString().slice(0,10)+'.csv';link.click();URL.revokeObjectURL(link.href);
+ if(!a.length)return alert('오늘 저장할 출고기록이 없습니다.');
+ downloadExcelLinkCsv(excelLinkRows(a,'OUT'),'미림_V11_출고연동_'+new Date().toISOString().slice(0,10)+'.csv');
 };
 renderHist();
 
