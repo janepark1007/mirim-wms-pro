@@ -324,10 +324,26 @@ body.worker-locked .worker-auth{
   opacity:1;
 }
 </style>
+
+<style id="multi-location-v1345">
+.multi-loc-list{margin-top:10px;display:grid;gap:8px}
+.multi-loc-item{padding:10px 12px;border:1px solid #dbe6e0;border-radius:11px;background:#fff}
+.multi-loc-item.primary-loc{background:#edf8f2;border-color:#cfe7d8}
+.multi-loc-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.multi-loc-badge{display:inline-block;padding:4px 7px;border-radius:8px;font-size:12px;font-weight:900;background:#dff2e6;color:#0b6b3e}
+.multi-loc-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.multi-loc-actions button{min-height:34px;border:1px solid #cfd9d3;background:#fff;border-radius:8px;padding:0 10px;font-weight:800}
+.multi-loc-actions .danger{color:#b42318;border-color:#efc7c1}
+.loc-editor .loc-editing-note{margin-bottom:8px;padding:8px 10px;border-radius:9px;background:#fff4d6;color:#725600;font-weight:800}
+.loc-editor .loc-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.loc-editor .loc-secondary{min-height:50px;border:1px solid #cfd9d3;background:#fff;border-radius:11px;font-weight:900}
+.all-location-line{display:block;margin-top:4px}
+@media(max-width:560px){.loc-editor .loc-buttons{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.4</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.5</small></div>
 <div class="top-actions">
   <div class="worker-auth">
     <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
@@ -387,7 +403,7 @@ body.worker-locked .worker-auth{
   </div>
 </section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.4 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.5 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -665,51 +681,145 @@ const LOC_OPTIONS={
  detail:Array.from({length:100},(_,i)=>String(i+1).padStart(3,'0'))
 };
 function locKey(part){return 'mirim_item_location_'+part}
+function locArrayKey(part){return 'mirim_item_locations_'+part}
+function formatLoc(e){
+ if(!e)return '';
+ return [e.room,e.zone,e.level,e.height,e.storage,e.detail].filter(Boolean).join('-');
+}
+function getAllLocations(part){
+ const p=String(part);
+ if(sharedReady && Array.isArray(sharedCache.locations[p]) && sharedCache.locations[p].length){
+   return sharedCache.locations[p];
+ }
+ try{
+   const arr=JSON.parse(localStorage.getItem(locArrayKey(part))||'[]');
+   if(Array.isArray(arr)&&arr.length)return arr;
+ }catch(e){}
+ const one=getLocEdit(part);
+ return one?[{...one,id:null,is_primary:true}]:[];
+}
+function getPrimaryLocation(part){
+ const arr=getAllLocations(part);
+ return arr.find(x=>x.is_primary)||arr[0]||null;
+}
+function allLocationText(part){
+ const arr=getAllLocations(part);
+ if(!arr.length)return '⚠️ 위치 확인 필요';
+ return arr.map((e,idx)=>`${e.is_primary?'★ 주 위치':'• 추가 위치'} ${formatLoc(e)}`).join(' / ');
+}
+
 function getLocEdit(part){
  const p=String(part);
- if(sharedReady && sharedCache.location[p]) return sharedCache.location[p];
+ if(sharedReady){
+   const arr=sharedCache.locations[p];
+   if(Array.isArray(arr)&&arr.length) return arr.find(x=>x.is_primary)||arr[0];
+   if(sharedCache.location[p]) return sharedCache.location[p];
+ }
+ try{
+   const arr=JSON.parse(localStorage.getItem(locArrayKey(part))||'[]');
+   if(Array.isArray(arr)&&arr.length) return arr.find(x=>x.is_primary)||arr[0];
+ }catch(e){}
  try{return JSON.parse(localStorage.getItem(locKey(part))||'null')}catch(e){return null}
 }
 function applyLocEdit(x){
- const e=getLocEdit(x.part); if(!e)return x;
- return {...x,...e,location:[e.room,e.zone,e.level,e.height,e.storage,e.detail].filter(Boolean).join('-')};
+ const e=getPrimaryLocation(x.part)||getLocEdit(x.part);
+ if(!e)return x;
+ return {...x,...e,location:formatLoc(e)};
 }
 function opt(list,current){
  return '<option value="">선택</option>'+list.map(v=>`<option value="${v}" ${v===current?'selected':''}>${v}</option>`).join('');
 }
+function locationListHtml(part,i){
+ const arr=getAllLocations(part);
+ if(!arr.length){
+   return `<div class="multi-loc-list"><div class="multi-loc-item">⚠️ 등록된 보관장소가 없습니다.</div></div>`;
+ }
+ return `<div class="multi-loc-list">${arr.map((e,idx)=>`
+   <div class="multi-loc-item ${e.is_primary?'primary-loc':''}">
+     <div class="multi-loc-head">
+       <b>${esc(formatLoc(e)||'위치 확인 필요')}</b>
+       ${e.is_primary?'<span class="multi-loc-badge">★ 주 위치</span>':'<span class="multi-loc-badge" style="background:#eef1f0;color:#53615a">추가 위치</span>'}
+     </div>
+     ${isAdmin?`<div class="multi-loc-actions">
+       <button type="button" onclick='editMultiLocation(${JSON.stringify(String(part))},${JSON.stringify(e)},${i})'>수정</button>
+       ${e.is_primary?'':`<button type="button" onclick="setPrimaryLocation('${esc(part)}',${JSON.stringify(e.id)},${i})">주 위치 지정</button>`}
+       <button type="button" class="danger" onclick="deleteMultiLocation('${esc(part)}',${JSON.stringify(e.id)},${i})">삭제</button>
+     </div>`:''}
+   </div>`).join('')}</div>`;
+}
+
 function locationEditor(x,i){
- const e=getLocEdit(x.part)||x;
  return `<div class="loc-editor">
- <h3>📍 위치 등록·수정 <small style="color:var(--muted);font-weight:500">(검색/입고/출고에서 바로 가능)</small></h3>
- <div class="loc-grid">
- <label>자재보관실<select id="lr_${i}">${opt(LOC_OPTIONS.room,e.room)}</select></label>
- <label>구역<select id="lz_${i}">${opt(LOC_OPTIONS.zone,e.zone)}</select></label>
- <label>단<select id="ll_${i}">${opt(LOC_OPTIONS.level,e.level)}</select></label>
- <label>선반위치<select id="lh_${i}">${opt(LOC_OPTIONS.height,e.height)}</select></label>
- <label>보관형태<select id="ls_${i}">${opt(LOC_OPTIONS.storage,e.storage)}</select></label>
- <label>세부위치<select id="ld_${i}">${opt(LOC_OPTIONS.detail,e.detail)}</select></label>
- <label>세부위치 직접입력<input id="ld_custom_${i}" placeholder="예: 2005 / 박스A / 임시보관" value="${e.detailCustom||''}"></label>
+ <h3>📍 보관장소 관리 <small style="color:var(--muted);font-weight:500">(한 품목에 여러 위치 등록 가능)</small></h3>
+ ${locationListHtml(x.part,i)}
+ <div id="loc_edit_note_${i}" class="loc-editing-note" style="display:none">수정 중인 위치입니다.</div>
+ <input type="hidden" id="loc_id_${i}" value="">
+ <div class="loc-grid" style="margin-top:10px">
+ <label>자재보관실<select id="lr_${i}">${opt(LOC_OPTIONS.room,'')}</select></label>
+ <label>구역<select id="lz_${i}">${opt(LOC_OPTIONS.zone,'')}</select></label>
+ <label>단<select id="ll_${i}">${opt(LOC_OPTIONS.level,'')}</select></label>
+ <label>선반위치<select id="lh_${i}">${opt(LOC_OPTIONS.height,'')}</select></label>
+ <label>보관형태<select id="ls_${i}">${opt(LOC_OPTIONS.storage,'')}</select></label>
+ <label>세부위치<select id="ld_${i}">${opt(LOC_OPTIONS.detail,'')}</select></label>
+ <label>세부위치 직접입력<input id="ld_custom_${i}" placeholder="예: 2005 / 박스A / 임시보관"></label>
+ <label style="display:flex;align-items:center;gap:8px"><input id="lp_${i}" type="checkbox" style="width:auto;min-height:auto"> 주 위치로 지정</label>
  </div>
- <button class="loc-save" onclick="saveLocation('${esc(x.part)}',${i})">📍 위치 저장</button>
+ <div class="loc-buttons">
+   <button class="loc-save" onclick="saveLocation('${esc(x.part)}',${i})">➕ 보관장소 저장</button>
+   <button class="loc-secondary" onclick="clearLocationEditor(${i})">입력 초기화</button>
+ </div>
  </div>`;
 }
+
+function clearLocationEditor(i){
+ const ids=['lr_','lz_','ll_','lh_','ls_','ld_'];
+ ids.forEach(p=>{const el=$(p+i);if(el)el.value='';});
+ const c=$('ld_custom_'+i); if(c)c.value='';
+ const id=$('loc_id_'+i); if(id)id.value='';
+ const p=$('lp_'+i); if(p)p.checked=false;
+ const n=$('loc_edit_note_'+i); if(n)n.style.display='none';
+}
+function editMultiLocation(part,e,i){
+ const map={lr_:e.room,lz_:e.zone,ll_:e.level,lh_:e.height,ls_:e.storage,ld_:LOC_OPTIONS.detail.includes(String(e.detail||''))?String(e.detail||''):''};
+ Object.entries(map).forEach(([p,v])=>{const el=$(p+i);if(el)el.value=v||'';});
+ const c=$('ld_custom_'+i); if(c)c.value=e.detailCustom||(!LOC_OPTIONS.detail.includes(String(e.detail||''))?String(e.detail||''):'');
+ const id=$('loc_id_'+i); if(id)id.value=e.id||'';
+ const pp=$('lp_'+i); if(pp)pp.checked=!!e.is_primary;
+ const n=$('loc_edit_note_'+i); if(n){n.style.display='block';n.textContent='✏️ 기존 보관장소 수정 중';}
+}
+
 async function saveLocation(part,i){
  if(!isAdmin){alert('위치 등록/수정은 관리자만 가능합니다.');return;}
  const customDetail=($('ld_custom_'+i)?.value||'').trim();
  const e={
-  room:$('lr_'+i).value,zone:$('lz_'+i).value,level:$('ll_'+i).value,
-  height:$('lh_'+i).value,storage:$('ls_'+i).value,
-  detail:customDetail||$('ld_'+i).value,
-  detailCustom:customDetail
+  room:$('lr_'+i)?.value||'',zone:$('lz_'+i)?.value||'',level:$('ll_'+i)?.value||'',
+  height:$('lh_'+i)?.value||'',storage:$('ls_'+i)?.value||'',
+  detail:customDetail||$('ld_'+i)?.value||'',
+  detailCustom:customDetail,
+  is_primary:!!$('lp_'+i)?.checked
  };
+ const id=($('loc_id_'+i)?.value||'').trim();
  if(!e.room && !e.zone && !e.level && !e.height && !e.storage && !e.detail){
    return alert('위치를 하나 이상 선택해 주세요.');
  }
  try{
-   if(sharedReady) await sharedSaveLocation(part,e);
-   else localStorage.setItem(locKey(part),JSON.stringify(e));
+   if(sharedReady){
+     await sharedSaveMultiLocation(part,e,id||null);
+     await loadSharedLocations();
+   }else{
+     const arr=getAllLocations(part).map(x=>({...x}));
+     if(id){
+       const ix=arr.findIndex(x=>String(x.id)===String(id));
+       if(ix>=0)arr[ix]={...arr[ix],...e,id};
+     }else{
+       arr.push({...e,id:'local_'+Date.now(),is_primary:e.is_primary||arr.length===0});
+     }
+     if(e.is_primary) arr.forEach(x=>x.is_primary=String(x.id)===String(id||arr[arr.length-1].id));
+     localStorage.setItem(locArrayKey(part),JSON.stringify(arr));
+   }
+   clearLocationEditor(i);
    search();updateHomeSummary();
-   alert(sharedReady?'공용 위치 저장 완료':'이 기기에 위치 저장 완료');
+   alert(id?'✅ 보관장소 수정 완료':'✅ 보관장소 추가 완료');
  }catch(err){
    console.error(err); alert('위치 저장 실패: '+(err.message||err));
  }
@@ -718,7 +828,7 @@ async function saveLocation(part,i){
 
 let sharedDb=null;
 let sharedReady=false;
-const sharedCache={stock:{},inTotal:{},outTotal:{},location:{},meta:{},photo:{}};
+const sharedCache={stock:{},inTotal:{},outTotal:{},location:{},locations:{},meta:{},photo:{}};
 let sharedTodayIns=[];
 let sharedTodayOuts=[];
 
@@ -1174,6 +1284,7 @@ async function loadSharedCache(){
    sharedCache.meta[p]={usage:r.usage||'',minQty:r.min_qty==null?'':Number(r.min_qty)};
    if(r.photo_url) sharedCache.photo[p]=r.photo_url;
  });
+ await loadSharedLocations();
 }
 async function sharedSaveStock(part,n){
  if(!sharedDb)return false;
@@ -1184,6 +1295,117 @@ async function sharedSaveStock(part,n){
  if(error)throw error;
  sharedCache.stock[String(part)]=Number(n);
  return true;
+}
+
+async function loadSharedLocations(){
+ if(!sharedDb)return;
+ try{
+   const {data,error}=await sharedDb.from('production_item_locations')
+     .select('*')
+     .order('is_primary',{ascending:false})
+     .order('id',{ascending:true});
+   if(error)throw error;
+   sharedCache.locations={};
+   (data||[]).forEach(r=>{
+     const p=String(r.part_no);
+     (sharedCache.locations[p]||(sharedCache.locations[p]=[])).push({
+       id:r.id,room:r.room||'',zone:r.zone||'',level:r.level||'',height:r.height||'',
+       storage:r.storage||'',detail:r.detail||'',note:r.note||'',is_primary:!!r.is_primary,
+       detailCustom:(r.detail && !LOC_OPTIONS.detail.includes(String(r.detail)))?String(r.detail):''
+     });
+   });
+   Object.keys(sharedCache.locations).forEach(p=>{
+     const primary=sharedCache.locations[p].find(x=>x.is_primary)||sharedCache.locations[p][0];
+     if(primary) sharedCache.location[p]=primary;
+   });
+ }catch(e){
+   console.warn('다중 위치 테이블 불러오기 실패 - 기존 위치 사용',e);
+ }
+}
+
+async function syncPrimaryBackToInventory(part){
+ const arr=sharedCache.locations[String(part)]||[];
+ const e=arr.find(x=>x.is_primary)||arr[0];
+ if(!e)return;
+ const current=sharedCache.stock[String(part)];
+ const row={
+   part_no:String(part),
+   current_stock:Number.isFinite(current)?current:0,
+   room:e.room||'',zone:e.zone||'',level:e.level||'',height:e.height||'',
+   storage:e.storage||'',detail:e.detail||'',updated_at:new Date().toISOString()
+ };
+ const {error}=await sharedDb.from('production_inventory_sync').upsert(row,{onConflict:'part_no'});
+ if(error)throw error;
+ sharedCache.location[String(part)]=e;
+}
+
+async function sharedSaveMultiLocation(part,e,id=null){
+ if(!sharedDb)return false;
+ const p=String(part);
+
+ if(e.is_primary){
+   const {error:demoteErr}=await sharedDb.from('production_item_locations')
+     .update({is_primary:false,updated_at:new Date().toISOString()})
+     .eq('part_no',p);
+   if(demoteErr)throw demoteErr;
+ }
+
+ if(id){
+   const {error}=await sharedDb.from('production_item_locations').update({
+     room:e.room||'',zone:e.zone||'',level:e.level||'',height:e.height||'',
+     storage:e.storage||'',detail:e.detail||'',is_primary:!!e.is_primary,
+     updated_at:new Date().toISOString()
+   }).eq('id',id).eq('part_no',p);
+   if(error)throw error;
+ }else{
+   const existing=sharedCache.locations[p]||[];
+   const makePrimary=e.is_primary||existing.length===0;
+   const {error}=await sharedDb.from('production_item_locations').insert({
+     part_no:p,room:e.room||'',zone:e.zone||'',level:e.level||'',height:e.height||'',
+     storage:e.storage||'',detail:e.detail||'',is_primary:makePrimary,
+     updated_at:new Date().toISOString()
+   });
+   if(error)throw error;
+ }
+ await loadSharedLocations();
+ await syncPrimaryBackToInventory(p);
+ return true;
+}
+
+async function setPrimaryLocation(part,id,i){
+ if(!isAdmin)return alert('관리자만 변경할 수 있습니다.');
+ try{
+   const p=String(part);
+   let r=await sharedDb.from('production_item_locations').update({is_primary:false}).eq('part_no',p);
+   if(r.error)throw r.error;
+   r=await sharedDb.from('production_item_locations').update({is_primary:true,updated_at:new Date().toISOString()}).eq('id',id).eq('part_no',p);
+   if(r.error)throw r.error;
+   await loadSharedLocations();
+   await syncPrimaryBackToInventory(p);
+   search();
+   alert('★ 주 위치가 변경되었습니다.');
+ }catch(e){console.error(e);alert('주 위치 변경 실패: '+(e.message||e));}
+}
+
+async function deleteMultiLocation(part,id,i){
+ if(!isAdmin)return alert('관리자만 삭제할 수 있습니다.');
+ if(!confirm('이 보관장소를 삭제할까요?'))return;
+ try{
+   const p=String(part);
+   const arr=sharedCache.locations[p]||[];
+   const target=arr.find(x=>String(x.id)===String(id));
+   const {error}=await sharedDb.from('production_item_locations').delete().eq('id',id).eq('part_no',p);
+   if(error)throw error;
+   await loadSharedLocations();
+   const left=sharedCache.locations[p]||[];
+   if(target?.is_primary && left.length){
+     await setPrimaryLocation(p,left[0].id,i);
+     return;
+   }
+   if(left.length) await syncPrimaryBackToInventory(p);
+   search();
+   alert('보관장소 삭제 완료');
+ }catch(e){console.error(e);alert('보관장소 삭제 실패: '+(e.message||e));}
 }
 async function sharedSaveLocation(part,e){
  if(!sharedDb)return false;
@@ -1425,7 +1647,7 @@ async function shareOrderRequest(x,i){
  const worker=($('inq_worker_'+i)?.value||'').trim();
  const qty=($('order_qty_'+i)?.value||'').trim();
  const note=($('inq_note_'+i)?.value||'').trim();
- const loc=applyLocEdit(x).location||'위치 확인 필요';
+ const loc=allLocationText(x.part)||'위치 확인 필요';
  const photoUrl=getPhoto(x.part);
 
  if(!worker){
@@ -1555,8 +1777,10 @@ function search(){
           <div style="color:var(--muted);margin-top:6px">${esc(x.spec||'')}</div>
 
           <div class="result-location">
-            <small>📍 자재 위치</small>
-            <b>${esc(x.location||'⚠️ 위치 확인 필요')}</b>
+            <small>📍 자재 위치 ${getAllLocations(x.part).length>1?`· 총 ${getAllLocations(x.part).length}곳`:''}</small>
+            ${getAllLocations(x.part).length
+              ? getAllLocations(x.part).map(e=>`<b class="all-location-line">${e.is_primary?'★':'•'} ${esc(formatLoc(e))}${e.is_primary?' (주 위치)':''}</b>`).join('')
+              : `<b>⚠️ 위치 확인 필요</b>`}
           </div>
 
           <div class="meta">
