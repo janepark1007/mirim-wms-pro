@@ -380,10 +380,17 @@ body.worker-locked .worker-auth{
 .order-check{width:20px;height:20px}
 #pendingOrderAlert{display:none;margin-top:10px;padding:11px;border-radius:10px;background:#fff0ed;color:#8d2e1d;font-weight:900}
 </style>
+
+<style id="quick-inbound-mobile-v1353">
+#quickInboundBtn.hidden-admin{display:none!important}
+@media(max-width:720px){
+  #quickInboundBtn{display:flex;align-items:center;justify-content:center;flex-direction:column}
+}
+</style>
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.5.2</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.5.3</small></div>
 <div class="top-actions">
   <div class="worker-auth">
     <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
@@ -443,7 +450,7 @@ body.worker-locked .worker-auth{
   </div>
 </section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.5.2 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.5.3 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -453,7 +460,7 @@ body.worker-locked .worker-auth{
 </div>
 <div class="quick">
 <button data-mode="search">🔎<span>품목검색</span></button>
-<button data-mode="inbound" class="admin-only hidden-admin">📥<span>빠른입고</span></button>
+<button id="quickInboundBtn" data-mode="inbound" class="admin-only hidden-admin">📥<span>빠른입고</span></button>
 <button data-mode="outbound">📤<span>빠른출고</span></button>
 <button data-mode="location">📍<span>위치확인</span></button>
 <button data-mode="order">🛒<span>카톡 주문하기</span></button>
@@ -1175,6 +1182,12 @@ function updateAdminUI(){
  if(om)om.style.display=isAdmin?'block':'none';
  const pa=$('pendingOrderAlert');
  if(pa && !isAdmin)pa.style.display='none';
+
+ const quickInbound=$('quickInboundBtn');
+ if(quickInbound){
+   quickInbound.classList.toggle('hidden-admin',!isAdmin);
+   quickInbound.style.display=isAdmin?'':'none';
+ }
 }
 function adminLogin(){
  if(isAdmin){
@@ -1197,6 +1210,7 @@ function adminLogin(){
    updateAdminUI();
    try{updateHomeSummary();}catch(e){}
    try{loadAdminNotifications();}catch(e){}
+   updateAdminUI();
    alert('관리자 로그인 완료');
  }else{
    alert('관리자 PIN이 맞지 않습니다.');
