@@ -347,7 +347,7 @@ body.worker-locked .worker-auth{
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.8</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.9</small></div>
 <div class="top-actions">
   <div class="worker-auth">
     <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
@@ -407,7 +407,7 @@ body.worker-locked .worker-auth{
   </div>
 </section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.8 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.9 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -459,9 +459,26 @@ body.worker-locked .worker-auth{
 
 <section class="card admin-only" id="nasExcelAdminCard" style="display:none">
  <h2 style="margin-top:0">🔐 관리자 · NAS 엑셀 연동</h2>
- <div class="notice">기존 V11 엑셀의 <b>입출고기록</b> 열 순서에 맞춰 오늘 입·출고를 한 번에 저장합니다.</div>
- <button id="excelLinkBtn" class="primary" style="width:100%;min-height:54px;margin-top:10px">오늘 입·출고 엑셀 연동파일 저장</button>
- <small style="display:block;margin-top:8px;color:var(--muted)">열 순서: 날짜 · 품번 · 품명 · 규격 · 자재분류 · 제조사 · 입출고구분 · 보관구분 · 수량 · 담당자 · 창고자리 · 생산서랍 · 비고</small>
+ <div class="notice">Supabase 공용 입·출고 기록에서 날짜별 전체 내역을 직접 불러와 기존 V11 엑셀 형식으로 저장합니다.</div>
+
+ <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px">
+   <input id="excelLinkDate" type="date" style="min-height:48px;border:1px solid #ccd7d1;border-radius:10px;padding:9px">
+   <button id="excelPreviewBtn" class="admin-btn" style="min-height:48px">기록 불러오기</button>
+ </div>
+
+ <div id="excelLinkSummary" style="margin-top:10px;padding:10px 12px;border-radius:10px;background:#f5f8f6;color:#42554b">
+   날짜를 선택하고 기록 불러오기를 눌러주세요.
+ </div>
+
+ <div id="excelLinkPreview" style="margin-top:10px;overflow:auto"></div>
+
+ <button id="excelLinkBtn" class="primary" style="width:100%;min-height:54px;margin-top:10px">
+   선택 날짜 입·출고 엑셀 연동파일 저장
+ </button>
+
+ <small style="display:block;margin-top:8px;color:var(--muted)">
+   열 순서: 날짜 · 품번 · 품명 · 규격 · 자재분류 · 제조사 · 입출고구분 · 보관구분 · 수량 · 담당자 · 창고자리 · 생산서랍 · 비고
+ </small>
 </section>
 </main>
 <script>
@@ -2236,6 +2253,113 @@ function renderDailyHistories(filterParts=null){
 function renderInHist(){ renderDailyHistories(); }
 function renderHist(){ renderDailyHistories(); }
 
+
+let excelSelectedRows=[];
+
+function seoulDateString(d=new Date()){
+ try{
+   return new Intl.DateTimeFormat('en-CA',{
+     timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
+   }).format(d);
+ }catch(e){
+   return d.toISOString().slice(0,10);
+ }
+}
+
+function seoulDayUtcRange(dateStr){
+ // KST 00:00 = previous UTC day 15:00, KST next day 00:00 = UTC 15:00
+ const [y,m,d]=dateStr.split('-').map(Number);
+ const start=new Date(Date.UTC(y,m-1,d,0,0,0));
+ start.setUTCHours(start.getUTCHours()-9);
+ const end=new Date(start.getTime()+24*60*60*1000);
+ return {start:start.toISOString(),end:end.toISOString()};
+}
+
+async function loadMovementsForExcel(dateStr){
+ if(!isAdmin) throw new Error('관리자 로그인 후 사용할 수 있습니다.');
+ if(!sharedReady||!sharedDb) throw new Error('공용 동기화 연결이 필요합니다.');
+ if(!dateStr) throw new Error('날짜를 선택해 주세요.');
+
+ const range=seoulDayUtcRange(dateStr);
+ const {data,error}=await sharedDb
+   .from('production_movements')
+   .select('*')
+   .gte('created_at',range.start)
+   .lt('created_at',range.end)
+   .order('created_at',{ascending:true});
+
+ if(error)throw error;
+
+ return (data||[]).map(r=>({
+   id:r.id,
+   time:new Date(r.created_at).toLocaleTimeString('ko-KR',{
+     timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit'
+   }),
+   created_at:r.created_at,
+   part:String(r.part_no||''),
+   name:r.item_name||'',
+   qty:Number(r.qty||0),
+   worker:r.worker_name||'',
+   location:r.location||'',
+   movement_type:r.movement_type
+ }));
+}
+
+function renderExcelLinkPreview(rows,dateStr){
+ const sum=$('excelLinkSummary');
+ const prev=$('excelLinkPreview');
+ if(!sum||!prev)return;
+
+ const ins=rows.filter(r=>r.movement_type==='IN');
+ const outs=rows.filter(r=>r.movement_type==='OUT');
+
+ sum.innerHTML=`<b>${dateStr}</b> · 총 ${rows.length}건 / 입고 ${ins.length}건 / 출고 ${outs.length}건`;
+
+ if(!rows.length){
+   prev.innerHTML='<div class="notice">선택 날짜에 저장된 입·출고 기록이 없습니다.</div>';
+   return;
+ }
+
+ prev.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
+   <thead><tr>
+     <th style="padding:7px;border-bottom:1px solid #ddd">시간</th>
+     <th style="padding:7px;border-bottom:1px solid #ddd">구분</th>
+     <th style="padding:7px;border-bottom:1px solid #ddd">품번</th>
+     <th style="padding:7px;border-bottom:1px solid #ddd">품명</th>
+     <th style="padding:7px;border-bottom:1px solid #ddd">수량</th>
+     <th style="padding:7px;border-bottom:1px solid #ddd">담당자</th>
+   </tr></thead>
+   <tbody>${rows.slice(0,100).map(r=>`<tr>
+     <td style="padding:7px;border-bottom:1px solid #eee">${esc(r.time||'')}</td>
+     <td style="padding:7px;border-bottom:1px solid #eee">${r.movement_type==='IN'?'입고':'출고'}</td>
+     <td style="padding:7px;border-bottom:1px solid #eee">${esc(r.part)}</td>
+     <td style="padding:7px;border-bottom:1px solid #eee">${esc(r.name)}</td>
+     <td style="padding:7px;border-bottom:1px solid #eee">${Number(r.qty||0).toLocaleString()}</td>
+     <td style="padding:7px;border-bottom:1px solid #eee">${esc(r.worker||'')}</td>
+   </tr>`).join('')}</tbody>
+ </table>${rows.length>100?`<div class="notice">화면에는 100건까지만 표시합니다. 저장파일에는 ${rows.length}건 전체가 포함됩니다.</div>`:''}`;
+}
+
+function movementRowsToV11(rows,dateStr){
+ return rows.map(r=>{
+   const x=itemForPart(r.part);
+   return [
+     dateStr,
+     String(r.part||''),
+     r.name||x.name||'',
+     x.spec||'',
+     x.category||'',
+     x.maker||x.manufacturer||'',
+     r.movement_type==='IN'?'입고':'출고',
+     x.storage||'',
+     Number(r.qty||0),
+     r.worker||'',
+     r.location||'',
+     '',
+     `웹 연동 / ${r.time||''}`
+   ];
+ });
+}
 function excelCsvCell(v){return `"${String(v??'').replace(/"/g,'""')}"`;}
 function itemForPart(part){return ITEMS.find(z=>String(z.part)===String(part))||{};}
 function excelLinkRows(rows,type){
@@ -2277,13 +2401,35 @@ if($('inCsvBtn')) $('inCsvBtn').onclick=()=>{
  if(!a.length)return alert('오늘 저장할 입고기록이 없습니다.');
  downloadExcelLinkCsv(excelLinkRows(a,'IN'),'미림_V11_입고연동_'+new Date().toISOString().slice(0,10)+'.csv');
 };
-if($('excelLinkBtn')) $('excelLinkBtn').onclick=()=>{
+if($('excelPreviewBtn')) $('excelPreviewBtn').onclick=async()=>{
  if(!isAdmin)return alert('관리자 로그인 후 엑셀 연동이 가능합니다.');
- const ins=getTodayInRows(), outs=getTodayOutRows();
- if(!ins.length&&!outs.length)return alert('오늘 저장할 입·출고기록이 없습니다.');
- const rows=[...excelLinkRows(ins,'IN'),...excelLinkRows(outs,'OUT')];
- downloadExcelLinkCsv(rows,'미림_V11_입출고연동_'+new Date().toISOString().slice(0,10)+'.csv');
- alert(`✅ 엑셀 연동파일 저장 완료\n입고 ${ins.length}건 / 출고 ${outs.length}건\n\n기존 V11 엑셀의 '입출고기록'에 붙여넣으면 됩니다.`);
+ const dateStr=$('excelLinkDate')?.value||'';
+ try{
+   excelSelectedRows=await loadMovementsForExcel(dateStr);
+   renderExcelLinkPreview(excelSelectedRows,dateStr);
+ }catch(e){
+   console.error(e);
+   alert('기록 불러오기 실패: '+(e.message||e));
+ }
+};
+
+if($('excelLinkBtn')) $('excelLinkBtn').onclick=async()=>{
+ if(!isAdmin)return alert('관리자 로그인 후 엑셀 연동이 가능합니다.');
+ const dateStr=$('excelLinkDate')?.value||'';
+ if(!dateStr)return alert('날짜를 선택해 주세요.');
+ try{
+   excelSelectedRows=await loadMovementsForExcel(dateStr);
+   if(!excelSelectedRows.length)return alert('선택 날짜에 저장할 입·출고 기록이 없습니다.');
+   renderExcelLinkPreview(excelSelectedRows,dateStr);
+   const rows=movementRowsToV11(excelSelectedRows,dateStr);
+   downloadExcelLinkCsv(rows,`미림_V11_입출고연동_${dateStr}.csv`);
+   const ins=excelSelectedRows.filter(r=>r.movement_type==='IN').length;
+   const outs=excelSelectedRows.filter(r=>r.movement_type==='OUT').length;
+   alert(`✅ ${dateStr} 엑셀 연동파일 저장 완료\n입고 ${ins}건 / 출고 ${outs}건 / 총 ${excelSelectedRows.length}건`);
+ }catch(e){
+   console.error(e);
+   alert('엑셀 연동파일 저장 실패: '+(e.message||e));
+ }
 };
 $('csvBtn').onclick=()=>{
  if(!isAdmin)return alert('관리자 로그인 후 엑셀 연동이 가능합니다.');
@@ -2400,6 +2546,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 document.addEventListener('DOMContentLoaded',()=>{
   updateWorkerUI();
+});
+
+document.addEventListener('DOMContentLoaded',()=>{
+ const d=$('excelLinkDate');
+ if(d && !d.value)d.value=seoulDateString();
 });
 </script>
 </body></html>
