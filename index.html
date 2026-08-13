@@ -327,7 +327,7 @@ body.worker-locked .worker-auth{
 </head>
 <body>
 <header>
-<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.2</small></div>
+<div><b>미림테크놀러지</b><small>생산 자재관리 · v13.4.3</small></div>
 <div class="top-actions">
   <div class="worker-auth">
     <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
@@ -387,7 +387,7 @@ body.worker-locked .worker-auth{
   </div>
 </section>
 <section id="home">
-<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.2 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
+<div class="hero"><h1>생산 자재관리</h1><div style="margin-top:8px;font-size:13px;opacity:.9">현재버전: v13.4.3 · 모바일/PC 동일 빌드 확인용</div><p>품번·품명 검색 → 사진·위치 확인 → ERP/현창고 비교 → 입고·출고 등록</p></div>
 <div id="roleNote" class="worker-note">일반 작업자: 검색 · 출고 · 수량 확인 가능</div>
 <div class="home-summary">
   <div class="hbox"><small>현 입력된 품목수</small><b id="homeStockTotal">0</b></div>
@@ -618,23 +618,33 @@ function getPhoto(part){
  return localStorage.getItem(photoKey(part))||'';
 }
 function choosePhoto(part){
+ if(!isAdmin){
+   alert('사진 등록/변경은 관리자 로그인 후 가능합니다.');
+   return;
+ }
  const input=document.createElement('input');
- input.type='file'; input.accept='image/*'; input.setAttribute('capture','environment');
+ input.type='file';
+ input.accept='image/*';
+ input.setAttribute('capture','environment');
  input.onchange=async()=>{
-   const file=input.files?.[0]; if(!file)return;
-   if(file.size>5*1024*1024){alert('사진은 5MB 이하로 선택해 주세요.');return;}
+   const file=input.files?.[0];
+   if(!file)return;
+   if(file.size>5*1024*1024){
+     alert('사진은 5MB 이하로 선택해 주세요.');
+     return;
+   }
    try{
-     if(sharedReady){
-       await sharedUploadPhoto(part,file);
-     }else{
-       const reader=new FileReader();
-       reader.onload=()=>{localStorage.setItem(photoKey(part),reader.result);search();};
-       reader.readAsDataURL(file);
-       alert('이 기기에 사진 저장 완료');
-       return;
+     if(!sharedReady||!sharedDb){
+       throw new Error('공용 동기화 연결이 필요합니다.');
      }
-     search(); alert('공용 사진 저장 완료');
-   }catch(e){console.error(e);alert('사진 저장 실패: '+(e.message||e));}
+     await sharedUploadPhoto(part,file);
+     try{await loadSharedData();}catch(e){}
+     search();
+     alert('✅ 사진 저장 완료\n\n다른 PC와 휴대폰에서도 같은 사진이 보입니다.');
+   }catch(e){
+     console.error('사진 저장 실패',e);
+     alert('⚠️ 사진 저장 실패\n\n'+(e.message||e));
+   }
  };
  input.click();
 }
@@ -1273,20 +1283,51 @@ async function sharedSaveItemMeta(part,usage,minQty){
  return true;
 }
 async function sharedUploadPhoto(part,file){
- if(!sharedDb)return '';
+ if(!sharedDb) throw new Error('공용 동기화 연결이 없습니다.');
  const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
- const ext=(file.name&&file.name.includes('.'))?file.name.split('.').pop().toLowerCase():'jpg';
- const path=`${safe}.${ext}`;
- const {error:upErr}=await sharedDb.storage.from('production-item-photos').upload(path,file,{upsert:true,contentType:file.type||'image/jpeg'});
- if(upErr)throw upErr;
- const {data}=sharedDb.storage.from('production-item-photos').getPublicUrl(path);
- const url=(data&&data.publicUrl)?data.publicUrl+'?v='+Date.now():'';
+ let ext='jpg';
+ if(file.type==='image/png') ext='png';
+ else if(file.type==='image/webp') ext='webp';
+ else if(file.type==='image/heic'||file.type==='image/heif') ext='heic';
+ else if(file.name&&file.name.includes('.')) ext=file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+
+ const path=`items/${safe}.${ext}`;
+ const bucket=sharedDb.storage.from('production-item-photos');
+
+ const {error:upErr}=await bucket.upload(path,file,{
+   upsert:true,
+   contentType:file.type||'image/jpeg',
+   cacheControl:'0'
+ });
+ if(upErr){
+   console.error('사진 Storage 업로드 오류',upErr);
+   if(/row-level security|policy|permission|unauthorized|403/i.test(upErr.message||'')){
+     throw new Error('사진 저장 권한이 없습니다. Supabase 사진 저장 권한 SQL을 먼저 실행해 주세요.');
+   }
+   if(/bucket|not found/i.test(upErr.message||'')){
+     throw new Error('사진 저장소(production-item-photos)가 없습니다. Supabase 사진 저장 권한 SQL을 실행해 주세요.');
+   }
+   throw upErr;
+ }
+
+ const {data}=bucket.getPublicUrl(path);
+ const baseUrl=(data&&data.publicUrl)?data.publicUrl:'';
+ if(!baseUrl) throw new Error('사진 주소 생성에 실패했습니다.');
+ const url=baseUrl+'?v='+Date.now();
+
  const current=sharedCache.meta[String(part)]||{usage:'',minQty:''};
  const {error:metaErr}=await sharedDb.from('production_item_meta').upsert({
-   part_no:String(part),usage:current.usage||'',min_qty:current.minQty===''?null:Number(current.minQty),
-   photo_url:url,updated_at:new Date().toISOString()
+   part_no:String(part),
+   usage:current.usage||'',
+   min_qty:current.minQty===''?null:Number(current.minQty),
+   photo_url:url,
+   updated_at:new Date().toISOString()
  },{onConflict:'part_no'});
- if(metaErr)throw metaErr;
+ if(metaErr){
+   console.error('사진 메타 저장 오류',metaErr);
+   throw new Error('사진은 업로드됐지만 품목 연결 저장에 실패했습니다: '+(metaErr.message||metaErr));
+ }
+
  sharedCache.photo[String(part)]=url;
  return url;
 }
