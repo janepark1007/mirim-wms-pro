@@ -670,25 +670,6 @@ body:not(.admin-view) #homeErpTotal,
 body:not(.admin-view) #homeErpTotalCard{display:none!important}
 </style>
 
-
-<style id="material-inquiry-v1384">
-.material-inquiry-modal{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px}
-.material-inquiry-box{width:min(560px,100%);background:#fff;border-radius:20px;padding:18px;box-shadow:0 15px 45px rgba(0,0,0,.22)}
-.material-inquiry-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:14px}
-.material-inquiry-head b{display:block;font-size:22px;color:#073b24}
-.material-inquiry-head small{display:block;margin-top:4px;color:#66736c}
-.material-inquiry-head button{border:0;background:#eef3f0;border-radius:10px;width:38px;height:38px;font-size:18px}
-.material-inquiry-box label{display:block;font-weight:900;margin:10px 0 5px}
-.material-inquiry-box select,.material-inquiry-box input,.material-inquiry-box textarea{width:100%;box-sizing:border-box;border:1px solid #cfdcd4;border-radius:11px;padding:11px;font-size:16px;background:#fff}
-.mi-two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.mi-guide{margin-top:10px;padding:9px 11px;border-radius:10px;background:#fff5d7;color:#6c5400;font-weight:800;font-size:13px}
-.mi-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
-.mi-actions button{min-height:48px;border:0;border-radius:12px;font-weight:1000;font-size:15px}
-.mi-actions .primary{background:#0b8148;color:#fff}
-.mi-actions .kakao-send{background:#fee500;color:#191919}
-@media(max-width:520px){.mi-two,.mi-actions{grid-template-columns:1fr}.material-inquiry-head b{font-size:20px}}
-</style>
-
 </head>
 <body>
 <header class="mirim-topbar">
@@ -725,7 +706,6 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       <option value="IN">입고</option>
       <option value="OUT">출고</option>
       <option value="RETURN">반환</option>
-      <option value="INQUIRY">주문·문의</option>
       <option value="ITEM">품목입력 (현 입력 품목)</option>
       <option value="STOCK">자재현황 (확정 실재고)</option>
     </select>
@@ -868,7 +848,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       <button class="task-return" data-mode="return">
         <span class="qicon">↩️</span><span>자재반환</span><small>남은 자재 반환</small>
       </button>
-      <button class="task-order" data-kakao-order="1" onclick="openMaterialInquiry()">
+      <button class="task-order" data-mode="order">
         <span class="qicon">🛒</span><span>카톡 주문하기</span><small>필요 자재 요청</small>
       </button>
     </div>
@@ -1045,25 +1025,6 @@ async function exportFilteredRecords(){
  const type=$('exportType')?.value||'ALL';
  const from=$('exportFrom')?.value||'', to=$('exportTo')?.value||'';
  const kw=($('exportKeyword')?.value||'').trim().toLowerCase();
-
- if(type==='INQUIRY'){
-   const arr=getMaterialInquiries();
-   const labelRows=[['날짜·시간','문의종류','품번','주문수량','작업자','상태','품명/문의내용']];
-   arr.filter(r=>{
-     const dt=String(r.created_at||'').slice(0,10);
-     if(from&&dt<from)return false;
-     if(to&&dt>to)return false;
-     const hay=`${r.inquiry_type||''} ${r.part_no||''} ${r.worker_name||''} ${r.note||''}`.toLowerCase();
-     return !kw||hay.includes(kw);
-   }).forEach(r=>labelRows.push([
-     r.created_at?new Date(r.created_at).toLocaleString('ko-KR'):'',
-     r.inquiry_type||'',r.part_no||'',Number(r.qty||0),
-     r.worker_name||'',r.status||'요청',r.note||''
-   ]));
-   downloadCsv(labelRows,`미림_주문문의_${from||'전체'}_${to||'전체'}.csv`);
-   if($('exportSummary'))$('exportSummary').textContent=`☑ 주문·문의 ${Math.max(0,labelRows.length-1)}건 출력`;
-   return;
- }
 
  if(type==='ITEM'){
    let sourceRows=[];
@@ -4004,85 +3965,5 @@ document.addEventListener('DOMContentLoaded',()=>{
  const b=$('unregSaveBtn'); if(b)b.onclick=saveErpUnregisteredItem;
  fillUnregisteredWorker();
 });
-
-function openMaterialInquiry(){
-  const m=$('materialInquiryModal');
-  if(!m)return;
-  if($('miPart'))$('miPart').value='';
-  if($('miQty'))$('miQty').value='';
-  if($('miNote'))$('miNote').value='';
-  m.style.display='flex';
-}
-function closeMaterialInquiry(){
-  const m=$('materialInquiryModal'); if(m)m.style.display='none';
-}
-function materialInquiryKey(){return 'mirim_material_inquiries_v1';}
-function getMaterialInquiries(){
-  try{return JSON.parse(localStorage.getItem(materialInquiryKey())||'[]')}catch(e){return []}
-}
-async function saveMaterialInquiry(openKakao){
-  const type=$('miType')?.value||'기타';
-  const part=($('miPart')?.value||'').trim();
-  const qty=Number($('miQty')?.value||0);
-  const note=($('miNote')?.value||'').trim();
-  if(!Number.isFinite(qty)||qty<=0){alert('주문 수량을 입력해 주세요.');return;}
-
-  const rec={
-    id:'MI-'+Date.now(),
-    created_at:new Date().toISOString(),
-    inquiry_type:type,
-    part_no:part,
-    qty:qty,
-    note:note,
-    worker_name:(typeof workerName!=='undefined'&&workerName)?workerName:'작업자',
-    status:'요청'
-  };
-
-  // 브라우저에 즉시 보존. Supabase 전용 테이블이 없는 환경에서도 출력 가능.
-  const arr=getMaterialInquiries(); arr.unshift(rec);
-  localStorage.setItem(materialInquiryKey(),JSON.stringify(arr));
-
-  closeMaterialInquiry();
-  alert('주문·문의 기록이 저장되었습니다.');
-  if(openKakao){
-    window.open('https://open.kakao.com/o/gWZ1pbJi','_blank','noopener');
-  }
-}
-
 </script>
-
-<div id="materialInquiryModal" class="material-inquiry-modal" style="display:none">
-  <div class="material-inquiry-box">
-    <div class="material-inquiry-head">
-      <div><b>🛒 자재 주문 · 문의</b><small>주문 내용을 먼저 기록한 후 카톡으로 문의할 수 있습니다.</small></div>
-      <button type="button" onclick="closeMaterialInquiry()">✕</button>
-    </div>
-
-    <label>문의 종류</label>
-    <select id="miType">
-      <option value="단자">단자</option>
-      <option value="하우징">하우징</option>
-      <option value="튜브">튜브</option>
-      <option value="러그">러그</option>
-      <option value="기타">기타</option>
-      <option value="엑셀리스자재">엑셀리스자재</option>
-    </select>
-
-    <div class="mi-two">
-      <div><label>품번</label><input id="miPart" placeholder="품번 입력"></div>
-      <div><label>주문 수량</label><input id="miQty" type="number" min="1" step="1" inputmode="numeric" placeholder="수량 직접 입력"></div>
-    </div>
-
-    <label>품명 / 문의내용</label>
-    <textarea id="miNote" rows="3" placeholder="품명, 규격 또는 필요한 내용을 입력하세요."></textarea>
-
-    <div class="mi-guide">※ 주문요청수량은 실제 재고에 합산되지 않습니다.</div>
-
-    <div class="mi-actions">
-      <button type="button" class="primary" onclick="saveMaterialInquiry(false)">기록 저장</button>
-      <button type="button" class="kakao-send" onclick="saveMaterialInquiry(true)">저장 후 카톡 문의</button>
-    </div>
-  </div>
-</div>
-
 </body></html>
