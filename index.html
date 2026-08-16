@@ -671,28 +671,96 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 </style>
 
 
-<style id="manual-order-v1384">
-.manual-order-card{
-  margin-bottom:12px;padding:14px;border:2px solid #f0d674;background:#fff9df;border-radius:15px
+<style id="standalone-kakao-order-v1384">
+.order-modal-backdrop{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.46);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
 }
-.manual-order-head b{display:block;font-size:19px;color:#5f4b00}
-.manual-order-head small{display:block;margin-top:3px;color:#74694a;font-weight:700}
-.manual-order-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}
-.manual-order-grid label{font-weight:900;font-size:13px}
-.manual-order-grid input,.manual-order-grid select,#manualOrderLink,#manualOrderNote{
-  width:100%;min-height:46px;margin-top:5px;border:1px solid #d6cfb4;border-radius:10px;padding:9px;background:#fff
+.order-modal-backdrop.hidden{display:none!important}
+.order-modal-card{
+  width:min(620px,100%);
+  background:#fff;border-radius:20px;
+  padding:18px;border:2px solid #f2d54b;
+  box-shadow:0 18px 55px rgba(0,0,0,.24);
 }
-#manualOrderLink,#manualOrderNote{margin-top:8px}
-.manual-order-actions{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:9px}
-.manual-order-actions button{min-height:48px;border-radius:10px;border:1px solid #d2c9a7;font-weight:900}
-.manual-order-guide{margin-top:8px;font-size:12px;color:#6d6244;font-weight:800;line-height:1.45}
-@media(max-width:600px){
- .manual-order-grid,.manual-order-actions{grid-template-columns:1fr}
+.order-modal-head{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  padding-bottom:12px;border-bottom:1px solid #ece9dc
+}
+.order-modal-head h2{margin:0 0 5px;font-size:24px}
+.order-modal-head>div>div{color:#6b685d;font-weight:800;font-size:13px}
+.order-modal-close{
+  width:40px;height:40px;border:1px solid #ddd;border-radius:10px;background:#fff;font-weight:900
+}
+.order-required-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.order-modal-card label{display:block;font-weight:900;color:#2d342f}
+.order-modal-card input,.order-modal-card textarea{
+  display:block;width:100%;margin-top:6px;
+  border:1px solid #cfd8d2;border-radius:11px;
+  padding:11px 12px;background:#fff;font:inherit
+}
+.order-modal-card textarea{resize:vertical;min-height:100px}
+.order-note-label{margin-top:10px}
+.req{color:#d92d20;font-size:12px}
+.order-modal-guide{
+  margin-top:12px;padding:10px 12px;border-radius:10px;
+  background:#fff8d9;color:#645100;font-size:13px;font-weight:800;line-height:1.55
+}
+.kakao-order-send{
+  width:100%;min-height:52px;margin-top:12px;
+  border:0;border-radius:12px;background:#fee500;color:#191919;
+  font-weight:1000;font-size:16px
+}
+.kakao-order-send:disabled{opacity:.55}
+@media(max-width:560px){
+ .order-required-grid{grid-template-columns:1fr}
+ .order-modal-card{padding:14px}
+ .order-modal-head h2{font-size:21px}
 }
 </style>
 
 </head>
 <body>
+<div id="standaloneOrderModal" class="order-modal-backdrop hidden" aria-hidden="true">
+  <div class="order-modal-card" role="dialog" aria-modal="true" aria-labelledby="standaloneOrderTitle">
+    <div class="order-modal-head">
+      <div>
+        <h2 id="standaloneOrderTitle">🛒 카톡 주문하기</h2>
+        <div>아래 3개 필수항목을 입력해야 카톡으로 넘어갈 수 있습니다.</div>
+      </div>
+      <button type="button" class="order-modal-close" onclick="closeStandaloneOrder()">✕</button>
+    </div>
+
+    <div class="order-required-grid">
+      <label>품명 <b class="req">(필수)</b>
+        <input id="standaloneOrderName" autocomplete="off" placeholder="주문할 품명을 입력하세요">
+      </label>
+      <label>요청수량 <b class="req">(필수)</b>
+        <input id="standaloneOrderQty" type="number" min="1" inputmode="numeric" placeholder="예: 100">
+      </label>
+    </div>
+
+    <label class="order-note-label">추가주문내용 <b class="req">(필수)</b>
+      <textarea id="standaloneOrderNote" rows="4" placeholder="규격, 제조사, 사용처, 긴급 여부 등 필요한 내용을 입력하세요"></textarea>
+    </label>
+
+    <label>요청자
+      <input id="standaloneOrderWorker" readonly placeholder="로그인 작업자 자동입력">
+    </label>
+
+    <div class="order-modal-guide">
+      ☑ 필수항목 확인 → ☑ 웹 주문기록 저장 → ☑ 카톡 공유창 열기<br>
+      카톡 상대는 오픈채팅방·개인·단체방 중 직접 선택할 수 있습니다.
+    </div>
+
+    <button id="standaloneOrderSendBtn" type="button" class="kakao-order-send" onclick="submitStandaloneOrder()">
+      TALK&nbsp;&nbsp; 입력내용 저장 후 카톡으로 보내기
+    </button>
+  </div>
+</div>
+
 <header class="mirim-topbar">
   <div class="brand-wrap">
     <img class="brand-logo" src="data:image/png;base64,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" alt="미림 로고">
@@ -727,7 +795,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       <option value="IN">입고</option>
       <option value="OUT">출고</option>
       <option value="RETURN">반환</option>
-      <option value="ORDER">주문·문의</option>
+      <option value="ORDER">주문/문의</option>
       <option value="ITEM">품목입력 (현 입력 품목)</option>
       <option value="STOCK">자재현황 (확정 실재고)</option>
     </select>
@@ -871,7 +939,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
         <span class="qicon">↩️</span><span>자재반환</span><small>남은 자재 반환</small>
       </button>
       <button class="task-order" data-mode="order">
-        <span class="qicon">🛒</span><span>카톡 주문하기</span><small>검색 주문 · 수동 주문 · 개인/오픈채팅</small>
+        <span class="qicon">🛒</span><span>카톡 주문하기</span><small>필수내용 입력 후 카톡 전송</small>
       </button>
     </div>
   </div>
@@ -887,11 +955,11 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
     </div>
     <div class="unreg-grid" style="margin-top:10px">
       <label>품번<input id="unregPart" placeholder="확인 가능한 품번 / 없으면 확인 필요"></label>
-      <label>품명<input id="unregName" placeholder="품명"></label>
+      <label>품명<input id="unregName" name="unregistered_item_name" autocomplete="off" autocapitalize="off" placeholder="품명을 직접 입력하세요"></label>
       <label>규격<input id="unregSpec" placeholder="규격 (확인되지 않으면 비워두기)"></label>
       <label>현 창고수량<input id="unregQty" type="number" min="0" inputmode="decimal" placeholder="실제 확인 수량"></label>
       <label>보관위치<input id="unregLocation" placeholder="실제 확인한 위치"></label>
-      <label>등록자<input id="unregWorker" placeholder="로그인 작업자 자동입력"></label>
+      <label>등록자<input id="unregWorker" name="unregistered_registered_by" autocomplete="off" readonly placeholder="관리자 자동입력"></label>
     </div>
     <label style="display:block;margin-top:8px">비고
       <input id="unregNote" style="width:100%;min-height:44px;margin-top:5px" placeholder="ERP 미등록 확인내용 / 제조사 등">
@@ -958,43 +1026,6 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 <section id="work" class="hidden">
 <div class="card">
 <h2 id="title">품목검색</h2>
-
-<div id="manualOrderCard" class="manual-order-card hidden">
-  <div class="manual-order-head">
-    <div>
-      <b>📝 수동 자재 주문</b>
-      <small>웹에 없는 자재도 직접 입력해서 주문할 수 있습니다.</small>
-    </div>
-  </div>
-  <div class="manual-order-grid">
-    <label>품번<input id="manualOrderPart" placeholder="품번 / 없으면 확인 필요"></label>
-    <label>품명<input id="manualOrderName" placeholder="품명"></label>
-    <label>규격<input id="manualOrderSpec" placeholder="규격 (선택)"></label>
-    <label>요청수량<input id="manualOrderQty" type="number" min="1" inputmode="numeric" placeholder="필요수량"></label>
-    <label>요청자<input id="manualOrderWorker" placeholder="로그인 작업자 자동입력"></label>
-    <label>보낼 곳
-      <select id="manualOrderTarget" onchange="toggleManualOrderLink()">
-        <option value="SHARE">개인 카톡 / 원하는 상대에게 보내기</option>
-        <option value="MIRIM">미림 자재 문의 오픈채팅</option>
-        <option value="CUSTOM">다른 오픈채팅 링크 직접 입력</option>
-      </select>
-    </label>
-  </div>
-  <input id="manualOrderLink" class="hidden" placeholder="https://open.kakao.com/... 링크 입력">
-  <input id="manualOrderNote" placeholder="추가 주문내용 / 부서 / 납기 등 (선택)">
-  <div class="manual-order-actions">
-    <button class="primary" onclick="saveAndSendManualOrder()">💾 기록 저장 후 카톡 보내기</button>
-    <button type="button" onclick="copyManualOrderOnly()">📋 주문문구만 복사</button>
-  </div>
-  <div class="manual-order-guide">
-    주문기록은 웹에 먼저 저장됩니다. 이후 개인 카톡·오픈채팅 어디로 보내도 관리자 주문기록과 엑셀출력에는 남습니다.
-  </div>
-</div>
-
-<div id="orderSearchGuide" class="hidden notice" style="margin-bottom:10px">
-  등록된 자재는 아래에서 품번/품명 검색 후 주문할 수 있습니다. 위 수동입력은 등록되지 않은 자재 주문용입니다.
-</div>
-
 <div class="searchrow"><input id="q" placeholder="품번 또는 품명 입력"><button id="searchBtn" class="primary">검색</button></div>
 <div id="count" style="color:var(--muted);margin-top:8px"></div><div id="results"></div>
 </div>
@@ -1053,9 +1084,7 @@ function updateExportFilterGuide(){
      ? '품목입력 선택: 선택한 날짜 범위에 현창고수량이 입력·수정된 품목을 출력합니다.'
      : t==='STOCK'
        ? '자재현황 선택: 관리자가 수량 확정한 품목만 출력합니다.'
-       : t==='ORDER'
-         ? '주문·문의 선택: 선택 기간의 수동주문과 검색주문 기록을 출력합니다.'
-         : '기간과 구분을 선택한 후 출력하세요.';
+       : '기간과 구분을 선택한 후 출력하세요.';
  }
 }
 
@@ -1174,33 +1203,6 @@ async function exportFilteredRecords(){
    if($('exportSummary'))$('exportSummary').textContent=`☑ 품목입력 ${Math.max(0,rows.length-1)}개 품목 출력`;
    return;
  }
- if(type==='ORDER'){
-   let orderRows=[];
-   if(sharedReady&&sharedDb){
-     let q=sharedDb.from('production_order_requests').select('*').order('created_at',{ascending:false});
-     if(from)q=q.gte('created_at',from+'T00:00:00');
-     if(to){const d=new Date(to+'T00:00:00');d.setDate(d.getDate()+1);q=q.lt('created_at',localDateISO(d)+'T00:00:00');}
-     const res=await q;
-     if(res.error){alert('주문기록 조회 실패: '+res.error.message);return;}
-     orderRows=res.data||[];
-   }else{
-     orderRows=JSON.parse(localStorage.getItem('mirim_manual_order_requests')||'[]');
-   }
-   orderRows=orderRows.filter(r=>{
-     const hay=`${r.part_no||''} ${r.item_name||''} ${r.requester||''} ${r.note||''}`.toLowerCase();
-     return !kw||hay.includes(kw);
-   });
-   const rows=[['날짜·시간','품번','품명','규격','요청수량','요청자','상태','비고/전송대상']];
-   orderRows.forEach(r=>rows.push([
-     r.created_at?new Date(r.created_at).toLocaleString('ko-KR'):'',
-     r.part_no||'',r.item_name||'',r.spec||'',Number(r.request_qty||0),
-     r.requester||'',r.status||'요청',r.note||''
-   ]));
-   downloadCsv(rows,`미림_주문문의_${from||'전체'}_${to||'전체'}.csv`);
-   if($('exportSummary'))$('exportSummary').textContent=`☑ 주문·문의 ${Math.max(0,rows.length-1)}건 출력`;
-   return;
- }
-
  if(type==='STOCK'){
    const verified=getVerifiedStockMap();
    const rows=[['품번','품명','창고위치','관리자 확정 실재고','확인자','마지막 확인일','상태']];
@@ -1254,19 +1256,113 @@ async function exportFilteredRecords(){
 setTimeout(()=>{applyExportPeriod();updateExportFilterGuide();},0);
 
 
+
+const MIRIM_KAKAO_OPEN_URL='https://open.kakao.com/o/gWZ1pbJi';
+
+function openStandaloneOrder(){
+ if(!currentWorker){showWorkerLogin();alert('작업자 로그인 후 사용할 수 있습니다.');return;}
+ const m=$('standaloneOrderModal');
+ if(!m)return;
+ $('standaloneOrderName').value='';
+ $('standaloneOrderQty').value='';
+ $('standaloneOrderNote').value='';
+ $('standaloneOrderWorker').value=currentWorker?.name||'';
+ m.classList.remove('hidden');
+ m.setAttribute('aria-hidden','false');
+ setTimeout(()=>$('standaloneOrderName')?.focus(),80);
+}
+function closeStandaloneOrder(){
+ const m=$('standaloneOrderModal');
+ if(!m)return;
+ m.classList.add('hidden');
+ m.setAttribute('aria-hidden','true');
+}
+async function submitStandaloneOrder(){
+ const name=($('standaloneOrderName')?.value||'').trim();
+ const qtyRaw=($('standaloneOrderQty')?.value||'').trim();
+ const note=($('standaloneOrderNote')?.value||'').trim();
+ const worker=($('standaloneOrderWorker')?.value||currentWorker?.name||'').trim();
+
+ if(!name){
+   alert('품명은 필수입니다.');
+   $('standaloneOrderName')?.focus();
+   return;
+ }
+ if(!qtyRaw || Number(qtyRaw)<=0){
+   alert('요청수량은 필수입니다.');
+   $('standaloneOrderQty')?.focus();
+   return;
+ }
+ if(!note){
+   alert('추가주문내용은 필수입니다.');
+   $('standaloneOrderNote')?.focus();
+   return;
+ }
+ if(!worker){
+   alert('작업자 로그인 정보가 없습니다. 다시 로그인해 주세요.');
+   return;
+ }
+ if(!sharedReady||!sharedDb){
+   alert('공용 동기화 연결 후 주문기록을 저장할 수 있습니다.');
+   return;
+ }
+
+ const btn=$('standaloneOrderSendBtn');
+ if(btn){btn.disabled=true;btn.textContent='저장 중...';}
+
+ try{
+   // 카톡 전송 전에 웹 주문기록을 먼저 저장하여 관리자/엑셀 출력에 남김
+   await saveDailyOrderRequest(
+     {part:'',name:name,spec:''},
+     Number(qtyRaw),
+     worker,
+     note
+   );
+
+   const lines=[
+     '🛒 미림 자재 주문요청',
+     '',
+     '🔹 품명 : '+name,
+     '🔹 요청수량 : '+Number(qtyRaw).toLocaleString(),
+     '📝 추가주문내용 : '+note,
+     '',
+     '👤 요청자 : '+worker,
+     '🕒 요청일시 : '+new Date().toLocaleString('ko-KR')
+   ];
+   const msg=lines.join('\n');
+
+   closeStandaloneOrder();
+
+   // 모바일은 공유창에서 카카오톡의 개인/단체/오픈채팅 대상 선택 가능
+   if(navigator.share){
+     try{
+       await navigator.share({title:'미림 자재 주문요청',text:msg});
+       return;
+     }catch(e){
+       if(e && e.name==='AbortError'){
+         alert('☑ 주문기록은 웹에 저장되었습니다.\n카톡 공유는 취소되었습니다.');
+         return;
+       }
+       console.warn('공유창 열기 실패',e);
+     }
+   }
+
+   // 공유 API가 없는 PC 등에서는 내용 복사 후 기존 오픈채팅방 열기
+   try{await navigator.clipboard.writeText(msg);}catch(e){}
+   window.open(MIRIM_KAKAO_OPEN_URL,'_blank','noopener');
+   alert('☑ 주문기록을 저장했습니다.\n주문내용을 복사했으니 카톡에 붙여넣어 주세요.');
+ }catch(e){
+   console.error('카톡 주문 저장 실패',e);
+   alert('주문기록 저장 실패: '+(e.message||e));
+ }finally{
+   if(btn){btn.disabled=false;btn.innerHTML='TALK&nbsp;&nbsp; 입력내용 저장 후 카톡으로 보내기';}
+ }
+}
+
 function openMode(m){
  if(!currentWorker){showWorkerLogin();alert('작업자 로그인 후 사용할 수 있습니다.');return;}
- mode=m;
- $('home').classList.add('hidden');
- $('photoSearchPanel')?.classList.add('hidden');
- $('work').classList.remove('hidden');
- $('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':(m==='order'?'🛒 카톡 주문하기':'품목 검색'))));
- $('manualOrderCard')?.classList.toggle('hidden',m!=='order');
- $('orderSearchGuide')?.classList.toggle('hidden',m!=='order');
- if(m==='order' && $('manualOrderWorker'))$('manualOrderWorker').value=currentWorker?.name||'';
- $('q').value='';$('results').innerHTML='';$('count').textContent='';
- setTimeout(()=>{if(m==='order')$('manualOrderPart')?.focus();else $('q')?.focus();},50);
-}
+ if(m==='order'){openStandaloneOrder();return;}
+ mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
  const m=b.dataset.mode;
  if(m==='inbound' && !isAdmin){alert('📥 빠른입고는 관리자 로그인 후 사용할 수 있습니다.');return;}
@@ -2733,8 +2829,15 @@ async function matchErpUnregistered(id){
 }
 
 function fillUnregisteredWorker(){
- const el=$('unregWorker');
- if(el && !el.value && isAdmin)el.value='관리자';
+ const workerEl=$('unregWorker');
+ const nameEl=$('unregName');
+ if(workerEl && isAdmin)workerEl.value='관리자';
+ // 브라우저 자동완성으로 로그인 이름이 품명에 들어가는 현상 방지
+ if(nameEl){
+   const workerName=(currentWorker?.name||'').trim();
+   const v=(nameEl.value||'').trim();
+   if(v && (v===workerName || v==='박향숙' || v==='관리자')) nameEl.value='';
+ }
 }
 let todayOrderRows=[];
 
@@ -2801,131 +2904,6 @@ function renderTodayOrderRequests(){
      }).join('')
    : '<tr><td colspan="7">오늘 주문요청이 없습니다.</td></tr>';
 }
-
-const MIRIM_ORDER_CHAT_URL='https://open.kakao.com/o/gWZ1pbJi';
-
-function toggleManualOrderLink(){
- const t=$('manualOrderTarget')?.value||'SHARE';
- const el=$('manualOrderLink');
- if(!el)return;
- el.classList.toggle('hidden',t!=='CUSTOM');
-}
-
-function manualOrderData(){
- return {
-   part:($('manualOrderPart')?.value||'').trim()||'확인 필요',
-   name:($('manualOrderName')?.value||'').trim(),
-   spec:($('manualOrderSpec')?.value||'').trim(),
-   qty:Number($('manualOrderQty')?.value||0),
-   worker:($('manualOrderWorker')?.value||currentWorker?.name||'').trim(),
-   target:$('manualOrderTarget')?.value||'SHARE',
-   link:($('manualOrderLink')?.value||'').trim(),
-   note:($('manualOrderNote')?.value||'').trim()
- };
-}
-
-function manualOrderMessage(o){
- const lines=[
-   '🛒 미림 자재 주문요청',
-   '',
-   '품번 : '+(o.part||'확인 필요'),
-   '품명 : '+(o.name||'확인 필요'),
-   '규격 : '+(o.spec||'-'),
-   '요청수량 : '+Number(o.qty||0).toLocaleString(),
-   '요청자 : '+(o.worker||''),
-   '요청일시 : '+new Date().toLocaleString('ko-KR')
- ];
- if(o.note)lines.push('추가내용 : '+o.note);
- return lines.join('\n');
-}
-
-async function saveManualOrderRecord(o){
- if(!o.worker)throw new Error('요청자 이름이 필요합니다.');
- if(!o.name)throw new Error('품명을 입력해 주세요.');
- if(!o.qty||o.qty<=0)throw new Error('요청수량을 입력해 주세요.');
-
- const sendLabel=o.target==='MIRIM'?'미림 자재 문의 오픈채팅':
-                 o.target==='CUSTOM'?'직접 입력 카톡링크':'개인/원하는 카톡';
- const noteText=[o.note,`전송대상: ${sendLabel}`].filter(Boolean).join(' / ');
-
- if(sharedReady&&sharedDb){
-   const {error}=await sharedDb.from('production_order_requests').insert({
-     part_no:String(o.part||'확인 필요'),
-     item_name:o.name||'',
-     spec:o.spec||'',
-     request_qty:Number(o.qty),
-     requester:o.worker||'',
-     note:noteText,
-     status:'요청',
-     created_at:new Date().toISOString()
-   });
-   if(error)throw error;
-   await loadTodayOrderRequests();
-   await loadFiveDayOrders();
- }else{
-   const key='mirim_manual_order_requests';
-   const arr=JSON.parse(localStorage.getItem(key)||'[]');
-   arr.unshift({
-     created_at:new Date().toISOString(),part_no:o.part,item_name:o.name,spec:o.spec,
-     request_qty:o.qty,requester:o.worker,note:noteText,status:'요청'
-   });
-   localStorage.setItem(key,JSON.stringify(arr.slice(0,1000)));
- }
-}
-
-async function shareManualOrder(o,msg){
- if(o.target==='MIRIM'){
-   try{await navigator.clipboard.writeText(msg)}catch(e){}
-   window.open(MIRIM_ORDER_CHAT_URL,'_blank','noopener');
-   alert('✅ 주문기록 저장 완료\n주문문구도 복사했습니다. 오픈채팅방에 붙여넣어 주세요.');
-   return;
- }
- if(o.target==='CUSTOM'){
-   if(!/^https?:\/\//i.test(o.link||'')){
-     alert('다른 오픈채팅 링크를 정확히 입력해 주세요.');
-     return;
-   }
-   try{await navigator.clipboard.writeText(msg)}catch(e){}
-   window.open(o.link,'_blank','noopener');
-   alert('✅ 주문기록 저장 완료\n주문문구를 복사했습니다. 해당 카톡방에 붙여넣어 주세요.');
-   return;
- }
-
- // 개인 또는 원하는 상대: 휴대폰 공유창을 열어 카카오톡의 원하는 사람을 직접 선택
- if(navigator.share){
-   try{
-     await navigator.share({title:'미림 자재 주문요청',text:msg});
-     alert('✅ 주문기록 저장 완료');
-     return;
-   }catch(e){
-     if(e&&e.name==='AbortError')return;
-   }
- }
- try{await navigator.clipboard.writeText(msg)}catch(e){}
- alert('✅ 주문기록 저장 완료\n주문문구를 복사했습니다. 카카오톡에서 원하는 사람에게 붙여넣어 주세요.');
-}
-
-async function saveAndSendManualOrder(){
- const o=manualOrderData();
- try{
-   await saveManualOrderRecord(o);
-   await shareManualOrder(o,manualOrderMessage(o));
-   ['manualOrderPart','manualOrderName','manualOrderSpec','manualOrderQty','manualOrderNote'].forEach(id=>{if($(id))$(id).value='';});
- }catch(e){
-   alert('주문 저장 실패: '+(e.message||e));
- }
-}
-
-async function copyManualOrderOnly(){
- const o=manualOrderData();
- if(!o.worker)return alert('요청자 이름을 입력해 주세요.');
- if(!o.name)return alert('품명을 입력해 주세요.');
- if(!o.qty||o.qty<=0)return alert('요청수량을 입력해 주세요.');
- try{await navigator.clipboard.writeText(manualOrderMessage(o));alert('주문문구를 복사했습니다.');}
- catch(e){alert(manualOrderMessage(o));}
-}
-
-
 async function shareOrderRequest(x,i){
  const current=getCurrentStock(x);
  const type=$('inq_type_'+i)?.value||'기타 문의';
@@ -4188,6 +4166,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 document.addEventListener('DOMContentLoaded',()=>{
  const b=$('unregSaveBtn'); if(b)b.onclick=saveErpUnregisteredItem;
  fillUnregisteredWorker();
+ const un=$('unregName');
+ if(un){
+   un.setAttribute('autocomplete','off');
+   setTimeout(fillUnregisteredWorker,250);
+   setTimeout(fillUnregisteredWorker,1000);
+ }
 });
 </script>
 </body></html>
