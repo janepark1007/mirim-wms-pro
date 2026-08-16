@@ -534,38 +534,64 @@ body.admin-view #topExcelExportBtn{display:inline-flex!important;align-items:cen
 #excelExportPanel{scroll-margin-top:90px;border:2px solid #cfe7d8}
 </style>
 
-<style id="today-task-redesign-v1379">
-.today-task-heading-strong{
-  font-size:clamp(25px,5.6vw,34px)!important;
-  font-weight:1000!important;
-  color:#073b24!important;
-  letter-spacing:-1px!important;
-  padding:13px 15px!important;
-  margin:8px 0 12px!important;
-  border-left:8px solid #0b7a45!important;
-  background:linear-gradient(90deg,#e8f7ee 0%,#f8fcf9 100%)!important;
-  border-radius:14px!important;
-  box-shadow:0 3px 12px rgba(11,122,69,.10)!important;
+<style id="today-main-final-v1380">
+.today-task-box{
+  margin-top:14px!important;
+  padding:14px!important;
+  border:2px solid #b9dec9!important;
+  border-radius:22px!important;
+  background:linear-gradient(180deg,#f5fcf8 0%,#ffffff 100%)!important;
+  box-shadow:0 6px 20px rgba(4,91,49,.09)!important;
 }
-.today-task-section-strong{border:2px solid #d9ebe0!important;border-radius:20px!important;padding:12px!important}
-.today-moved-quick-grid{
+.today-task-title{
+  margin:0 0 13px!important;
+  padding:12px 15px!important;
+  border-radius:15px!important;
+  background:linear-gradient(90deg,#08763f,#0b9452)!important;
+  color:#fff!important;
+  font-size:26px!important;
+  font-weight:1000!important;
+  letter-spacing:-.8px!important;
+}
+.today-task-grid{
   display:grid!important;
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:10px!important;
-  margin:0 0 14px!important;
-}
-.today-moved-card{
-  display:flex!important;
-  min-height:104px!important;
+  gap:11px!important;
   margin:0!important;
-  width:100%!important;
-  border:2px solid #dce9e1!important;
-  border-radius:18px!important;
-  box-shadow:0 4px 12px rgba(0,0,0,.06)!important;
 }
+.today-task-grid button{
+  min-height:118px!important;
+  border:2px solid transparent!important;
+  border-radius:18px!important;
+  padding:14px 8px!important;
+  box-shadow:0 4px 12px rgba(0,0,0,.06)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  font-weight:1000!important;
+}
+.today-task-grid .qicon{font-size:31px!important;line-height:1!important}
+.today-task-grid button>span:nth-child(2){font-size:17px!important;font-weight:1000!important}
+.today-task-grid button small{display:block!important;font-size:11px!important;color:#526159!important;font-weight:800!important}
+.today-task-grid .task-out{background:#fff1eb!important;border-color:#ffd2bf!important}
+.today-task-grid .task-loc{background:#f5efff!important;border-color:#ddcafa!important}
+.today-task-grid .task-photo{background:#eef5ff!important;border-color:#c9ddff!important}
+.today-task-grid .task-in{background:#eaf9ef!important;border-color:#bde8cc!important}
+.today-task-grid .task-return{background:#eef2ff!important;border-color:#cbd5ff!important}
+.today-task-grid .task-order{background:#fff5c9!important;border-color:#ffe37a!important}
+
 @media(max-width:760px){
- .today-moved-quick-grid{grid-template-columns:1fr!important;gap:9px!important}
- .today-moved-card{min-height:88px!important}
+  .today-task-box{padding:11px!important}
+  .today-task-title{font-size:23px!important;padding:11px 13px!important}
+  .today-task-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .today-task-grid button{min-height:103px!important}
+  .today-task-grid button>span:nth-child(2){font-size:16px!important}
+}
+@media(max-width:390px){
+  .today-task-grid button{min-height:96px!important;padding:10px 5px!important}
+  .today-task-grid button>span:nth-child(2){font-size:15px!important}
 }
 </style>
 
@@ -576,7 +602,7 @@ body.admin-view #topExcelExportBtn{display:inline-flex!important;align-items:cen
     <img class="brand-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAABVCAYAAABZwUhdAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABbsSURBVHhe7d15VBNn2wbwi7CvIogCIlgUNQKCWllEWdzrUrWoVVt9rVgERfq51K0vn+3r+xW1iht1o3U5Wq2KtQJ1l6UKCFpQZNECKrsiKkSWACHz/REYyUMCCWu0z++c5xy575mwmCuTmXlmosQwDAOKohQChyxQFNV1aCApSoHQQFKUAqGBpCgFQgNJUQqEBpKiFAgNJEUpEBpIilIgNJAUpUBoIClKgdBAUpQCoYGkKAVCA0lRCoQGkqIUCA0kRSkQpff1esik/If47lIIrj1KQLWgFtYmlljpPh+LHKZCSUmJXLzdCIR1OHHnEn5NuorkgkeorOGjX4/emD98Evxd50JDVY1chaJY710gqwU1+Pcf+xEUdRJCRki28YXjNPw8L6BDQpnx/AlmH16PtGePyRYAYLDxBwj33glLw95ki6KA9y2Q2SX58Dy8FvcLMsmWmOBZa7F89Gyy3CY3s5Mx9dBK8PgVZEuMhYEJ7qw+BiOd7mSLot6ffchbj+/BMWhRi2EEgG/+2IfSqjdkudXCUv/EhP1+LYYRAHJeFWHxyc1kmaKA9yWQv92PwtjgZXhZUUa2JCqrKsfB2N/Icqv8cvcyZv70Nfi1NWRLqoi0m2SJooD3IZC/3L2M2UfWo6aulmw163xKNFmSW0j871h4YpPEfVWKao13OpAHYs+1OhB8QTVZksveP0/D+9f/a9X3pihp3tlA7oo+Bd8zW7okEFuuH4X/ue1kmaLa7J0MZOC1o1h5Pogsd4qNET9iQ/iPZJmi2sU7F8j14cHYGNH5gWAYBivPByHw2lGyRVHt5p0JJMMw+Oq3Hdh6/RjZ6nB1QiGWnd2KXdGnyBZFtat3IpB1QiF8zgRiT8yvZKvD1QmFWHhiEw7EniNbFNXuFD6QDYE4FHeebLXIvLsxRlnaY1CvvmRLJjV1tZh9ZB1O/nWZbDVLV10LXk7TscdzDf47xRcOFtbkIhQlkUJPnaupq8WnRzbi9weynzNU5nDg5TQd/+M+D9xeH7D1rJI8rPl9Ny48iAEA2PW2wr21JxutKa6yho85Rzfgj7RbZKtZS5xnIHDacvTQ1herH0uMwNLTgagWiCYQMLvviPUpCoocyMoaPmYfWY+L6bFkS6rBxh/gxILNGGo2kGyx/EK34cebZ5sNZGUNH1MPrURU5l2yJZWWmgaOffYtZtmPJVus8ynRmHV4HYSMkAaSkkgh37I2BEKeME63dUPCqqPNhhEAdn+yBqMs7ckyq6yqHB7BPnKFUU9DG5F++5sNIwDMHOKOVR7zyTJFsRQukK0JxCLHqTi3eBt01LXIVhPKHA72eK6BEppefvWi/DU8gn2QmJNGtqTqoa2PP/1D4GhhQ7Yk2jTpS/TSNSDLFAUoWiBflL/GmGBfuQLh4+KJw/P+F8oc2X+VoWYDMd3WTaxWWPYCY4J9kZz/SKzenB7a+oj02w+73lZkSyoddS2sH7eILFMUoEj7kEW8EkzY54fUomyyJZWPiyf2zV7XqouNy6rK0U1TBwCQX1oM971LkV2STy4mVe9uRrjsuxc2Jv3IVotq6mqhpqxKlilKMQLZmkC0JYyNZZXkwWOvD/JLi8mWVL27GSHa/yD69+hDtiiqTWR/n9dBskry4LLLq01hrK0TkIvI5EFhFtz3LJUrjH30e9EwUh2mSwOZ9uwx3PcsRe7rZ2RLqhWunzbZMp5Ovia2jCzuFfyNMcG+KCh7Qbak6tfDDHErDzcJY3Gx7IEGgIKCArJEUUBXBrJh6yRPINaN+5foCCnxNvVYYgSqamW/vjH+6QO47fFGSUUp2ZKqXw8zRK84CDP9nmQLGRkZePjwIVmWiMfj4erVq2SZooCuCmRCTipG7V4iVyDWjfsXtkzzI8tA/dHZn29fIMsShaX+ibHBvjLd/6aBjUk/3PrqJ4lhbHDjxg28fPmSLIupra1FeHg4qqtlf/Gg/lk6PZBRmXcxYZ9sN4Rq0FwYG2wM/xF/F+eSZZZAWIdvLx3CzJ++lmtramPSD5F++2GsZ0i2xAgEAoSFheHNG8k3z6qtrUVERARKSkrIFkWxOjWQ1x4lYMrB/2n3MALAm+pKeAT7ICYrSaxeJxTifEo0hv+wAN9dDpHrDgPD+3AR6bdf5ls28ng8nDp1CqmpqexWUCAQIDMzEydPnkRurvQXDIpCZ5/2UFvlLNcRUVnDaL9tvtjtH4eYWmGIaX+U8csR/+SBXG+NGzhYWOOqbzB7rrI5MTExuHfvnlhNSUkJampqqKmpAfknVldXh4+Pj1iNotDZW0h5wrhh/CKZwihJSmEmTty9hPDUm60Ko6OFjcxhlIZhGFRXVzcJI0U1p1MDKavAacvx/dTlZLlTeFh9iEi//W0KI0W1lsIFMnDa8i6b6+lh9SEivHdCS02DbFFUp1CoQHZlGKdaj6ZhpLpcpx7UUfpqBFlitSWM5EEdeU2zGY3QxVtbPeFb0kGd5ijCQZ0bkZHQ0dFhL0JjGAZlPB4mjB9PLCmf/Px8ZGVnQ0tTk63VCgTQ0daGnZ2d2LLyys3NxZMnT6DZ6LEFdXVQVVHBiBHSn1vNKS8vR1x8PLp168b+LYQMg5rqari6uhJLdzyFCGRbwog2BrKtYcQ7GMjiFy/A4/HAKytDeno6AMDKygqWlpYoKyuDgYEBku/dg66O7PvRNTU1MDAwQBmPB2cnJxw7dgw1NaLblcycOROZWVlwdnJCXl4ecvPyoKqiQj6EVLUCAfqYmaGgsBDOTk44ceIE23N1dWXrrZGQmAhHBwdcuXIFL16IZo3Z29uDX12ND4cPJxfvcF0eyLaGEQCcgr5AQk4qWW7RdFs3nPkisE1hBIDExETEx8eTZam0tbWxZMkSstwqsXFxcj25GQBmZmYQCoXYvWsXduzYAQDw9vbG9u3bkZ+fj9KyMjg7OeHSpUuoqqoiH0KicePGIS09HcrKynAYMQL6+vooKxN9+NFff/0FQV0dHEaMwK3YWIxycUFmpuwvoFZWVrgVGws1NTU4jBghNnUyNDQUZn36gM/nQ11dHRw5r/55+eoVPpo0CSNHjmT/D7///ntMnToVtra25OIdrksD+ePsdVg2apZYrTVWng+S+56pC0dMweH58l3YLE12djYiIiLIslTm5uaYOXMmWZZbzJ9/wq0Vb6t+v3ABw4cPlxrIN+XlcBgxAubm5sjLyyNXlyg1NRUVlZUA0GwgE+/cgYa6ulxvX5OSklArEJ0ykxRIVTU12Fhbg8/nIycnp9GazVNVVcW4ceMAQGEC2fZnYyvta6cwAoDf6DlybeVWuH6Ko59tapcwoj5g6urqZFmqfv3kv6hZkoZ9KTMzM5lGwxOMnJz/rquuroa2jg4OHDiAyZMnyzzmzJlDPlSXa59npJz2zV4H33YKI+qvxNjysWyTCP47xVfiFSNtoaqqCmdnZ7IskZ6eHgYPHkyW26SgoECmUVRURK4qkVAoml64YcMGbNmyReIICAggV5MJwzDQ1NSEg4MDO8i/x+DBg+Hm5sYOHR0dmPfpA4Pusk1hfJd1eiDbO4wNVrrPx38mLwVHSfKvNKhXX0T67cc3ExaTrXZhZ2fX4lscNTU1TJ48GSpy7PPJS0tbG3p6euzQ0mr5xl+khkA6OTnB3d1d4hg5ciS5mkwqKipgZWWFhIQEdgQHB4sts337dkRHR7PjyZMnOHPmDC5evIg9e/aILYv6Lb5QKISrqytWrFjBjvnzxe/w5+TkhLVr17LD399frK8IOnUf8ufbF+DlNJ0st6v0Z09wKukKHj5/ijphHSwMTDBxkDMmDHKUGtb2lJGRgfj4+CZXfZibm8Pd3R3d2/FVPvHOnSb7VLGxsWJhuXr1GiZOnAAAMDQ0RElJCS6EhWHYsGFdsg8JAMnJyVDicPD82TNwuVyEhYVhxYoV7GOFhIRgpIsL4uLisMTLCwsXLsTx48fZfmOhoaEwNTVFRUUFDHv0YP8Wxr16obS0FFwul11227ZtWLZ8udgBpWo+H46Ojv/MfciODiPqb5a8ebIPzn6xBb95/YCdM1dhEte5U8IIAFwuF4sXL8b8+fMxZcoUzJgxA15eXpg5c2a7hlERVVVVyXR52dChQ2FvZwcOhwNTU1McPHhQrL9//34M5nLRrVs3sbo0yioqGDduHIba28Pezg72dnbIyc1tMo+Yw+EgOzubXcbezg5KUo4j2NraIv72bcTJcfS8PUj+aag2MzIyQv/+/WFhYQEdOc7nKao5c+bg+PHjUkfv3r3hMGIEXEePJldt4uGjR4iKjsbYsWMREBCA1FTxU1ZJSUnw8vLC7FmiXZvPP/8cu3fvZoeqassH8BiGaXLBeElJCQwNDFq8DK6kpASZmZnoYWgIuyFDyHaHooGkZGJhYYFhw4bBysoKxsbG0NXVBcMwePPmDYqKihAUFIRvvvkGhYWF5Kqsx48fIzomBro6Ovhw+HD4+Phgy5YtbF9ZWZn99+HDhzFy5Ejcv38fEyZMgL+/Pz7//HP4+/u3uA9eUVEBDQ0NZGRkiNWTk5NhbGzc4j2NgoKCMGDAAAwYMACRkZFku0PRQFIy+eGHH2BtbQ0nJyeMHz8eM2bMwMKFC7Fs2TKsXbsWmzdvxs6dO6U+2UtevgSPx8NIZ2dcvHgRXC4XISEhbN/Y2BiJiYmwsXl7B/j4+HgMGzYMc+fORVVVFbKysthec1IePID14MG4fv26WD0mJgY8Hg81tbVN3s4qChpIql3p6emRJQDA69evYWpqirNnz8Lb21ssuObm5rhx4wbs7OwQExODqVOnsj2hUAg9PT2oqakhhXhrK41AIEBJSQnCw8PF6nw+H/v27YPdkCFIvKOYH3ZEA0k10bD1mDt3LpYsWSI2fH19sWrVKnz77bcICgrCkSNHcOHCBdy6dQvZ2dkYNmwYAEBDQwOamprQ1NSEkpIS+vfrh6TkZMybNw++vr5A/emKefPmIScnB5paWvjj4kX8nZmJ8PBwnDlzBlwuF1wuF9u3b8fNW7cwaGDzH6QEAFeuXMHoUaOwceNGidP+AgMD8ezZM3TX10damuSPrFi/fj0YhgHDMJg2bRrZ7lgM9c5KSExkGFF62BEbGyu2zJUrV9meoaEhwzAM8/uFC0xuXh6zevVqtuft7c3weDwmPT2dycrKYpKSk8Uep63i4uOZyspK5kZkJFNdXc0EBAQwSUlJbP/+/fvM7YQE5tSvvzLhERHM05wctpfx8CGTlZ3N/r6amprszx0aGsrWr1y5wjAMwxw/flzsbzJx4kSGw+GwX1tZWTEFBQVMVnY289PhwwzDMIyzszPbDwgIYBiGYaKio5nYuDj25+gMnXoesq3uJiagrn5OozRa2tqwtbNHRU0VfE4HQpnz9kABqZeuASYMcsLYAaLzYwJhHW49bvmqjR7a+q36TI/2Juk85Pr169GvX3/267S0NOzatROQ4zwkl8vF69evcf3GDcyeNQuffvopzpw5wz6mvNLT09lzm8UvXiAjPR0WFhYwNjbG7du3cfv2bQCApaUlPD098VdSEkyMjfG8uBgcJSXo6+vD0tKS/X21tLTYrV9oaChMTE1RJxBg9OjRCAkJwfLly1FbWwsA6Nu3L5KSkrB3715s2rSJ/ZnMzMxw6NAhfPTRRwAxlzUgIABfentDWVkZpiYm7DqdoVMD6WDDFbuWrSWqamr44sul+GzRFwCAoQP74w2PRy4mhmttjfDrUSiteoPu68eQbYm+n7ocG8Yvknmd6bZu+H3JdgDA0G2f4XWV5Fs/SqKsxME0m9HY9clqsiU3SYFsjjyBRKPHb89ANkhNTYWuri7279+PrVu3AgAmTZqES5cusd+XJC2Qnp6eKC0thb+/v9gEAh0dHdy8eRMmpqboaWQEHx8fHDp0qNEjAkuXLsWBAwcUJpCdug/56uVLFOTnoyA/H8+KilD8vJj9umHweDwUFRaiID8fTx8/xpmTv7Drf/avRVj0pTcWfemNWXPnsfVZc+ex9Y8/kX9a3pbrRyEQ1kFdRQ1fuc1lh6fd23A2rk+zeXuu7XXVG+S8KmJH8ZtXYl/nvCrCy4oyFJa9QM6rIjx+WYDgm61/cnc1Y2NjTJo0qdkxtv4KiuYYGRmRpRbV1tSgrq4OlZWV7D6ep6cnUP+C0jiM+vr6uHjxIszMzJCSkoLIyEgcPHgQq1atYpfR0NDAggUL2K8VQfMndDqIsrIybsQlQL97d4xxdsCr+hO4rh5j8PMvpxD22zms9lsGABAK69j11mz8N/vv/Lw8hP4quuTKb9UamPWR/uE3LpZ2iPAWvW1D/b1a7+Sm46MDormMPH4F8kuL0dfARGzLFZ31F87dF52HkmWLFu4dhI+4LnDd8yXinqQAACwNeyN1w2n8XZwL+22iuZV19XNF26phzunu3bvJlkQaGqLbkzSs1xqurq44ffo0WW5C1q22JKoqKkhMTCTLUFVVRUVFhcQjuYcPH0ZJSQmioqIwaNAghIaGwqhnT6RnZGDc2LEoKyvD1WvXsGPHDri4uMDPzw9bt26FUysvbO4onbqFbKClrQ0zc3Po6Oqil7ExWx9iPxRKSkoYMGiQ2PJtpcJRhr6mLjsMtbvB0cJabBkNFTWxr1vDxqQ/lDkcWBmZszVrE0toqqrL9aGustLX18fNW7fg4eEh03B2dkZkVBR69+5NPpTM+Hw+nj8vbnb8/bfsFx83lpeXh5CQENy9exf379+XOE6fPo2QkBB2XLgg+giJtPR0hIeHY8eOHbhz5w5UVVXx5MkTuI4eDaX6/dAJ48fj2rVrcHZ2RmFhIRYsWIBDjc6FKoIuCaQ0HCnzCtvTgdhzGLJ1Hj74z9t5tZMHu7T4UQGt1ZFzaAcNHIjRo0bB1tZW5jHGwwNmZmbkQ8ksLCwMxsa9mh0DBw4gV5NJWloavL295RqBgYFA/SVoScnJ8PPzw527d6GiogJHBwfyW2D8+PF49eoVYmNjERUdjSGdPDWuJR33bFFQz3gv8aAwC2VV5QAAAy09HP3s7dE36t1kZmaGofb2SHnwAB7u7rC0tCQXYVlbW8PFxQUe7u4yzYvtTP+4QJIqa/lt2t95nzUcgLe3t29y4Eaeoa2t3WSqGofDgUAgwNixY7Fp06ZWDy8vL9HPKhRCp36O7LusU0979DcRfZybrp4ekh+J5iXOm/Ex7iSIzkP5r/4a/mu+RkZaKqaNEx3hbDiNAQCb1q9lD3dXVlTg8h+i+9iMcnODRv3plD59LPDNfzaLncJw6z8M0StEl/h8e+kQvrssvt/w74le2DzZB5U1fCw7KzoEj/qt6ZWHokPh023d2LqjhQ02jBfdmKvvdx8j55XoSvwnm8LQ18AEi375DscSRT9b41Mkje8pxOzuuqlb5eXlSM/IaHJqITU1Fb169WKPgL4uLUVKSkqr7tvTWH5BAfJyc5vcVSEqKgr63bu3+QWxrKwMdkOGQF9fn2y1KDUtDT2NjNCzp/hHDcbfvg17e3to1h8I6yxdHsj5n8xAYnwcIEMgW3sesqVAdtPUQd53f6BOWCf3ech3MZAA8PTpUzx//pwNg5BhYGhoCKv+bycVoP4gTlZ2Npg2HJnV794dfdqw39rR7qekgM/ni92X1cTYGBYWFsSSHU/h37JWVMj+0XWNKUEJ3TR10E1TBzrqzd/GoqyqHC8rRFe3t4f2unlWR+rbty8cHR3Z+9o4OTo2CSPqT5XYWFs3OTgkz1DkMAKA3ZAhcGx0jx8nR8cuCSM6ewtJUVTzFP+lnKL+QWggKUqB0EBSlAKhgaQoBUIDSVEKhAaSohQIDSRFKRAaSIpSIDSQFKVAaCApSoHQQFKUAvl/td3RdNk1+BIAAAAASUVORK5CYII=" alt="미림 로고">
     <div class="brand-copy">
       <b>미림테크놀러지</b>
-      <small>생산 자재관리 · v13.7.9</small>
+      <small>생산 자재관리 · v13.8.0</small>
     </div>
   </div>
   <div class="top-actions"><button id="topExcelExportBtn" class="admin-btn worker-admin-detail" type="button" onclick="goExcelExport()">📊 엑셀출력</button>
@@ -697,33 +723,29 @@ body.admin-view #topExcelExportBtn{display:inline-flex!important;align-items:cen
     <div><small>ERP 미등록</small><b id="adminUnregCount">0건</b></div>
   </div>
 
-  <div class="dashboard-section">
-    <div class="section-title"><span>📌</span><b id="quickSectionTitle">오늘의 주요업무</b></div>
+  <div class="dashboard-section today-task-box">
+    <div class="section-title today-task-title"><span>📌</span><b id="quickSectionTitle">오늘의 주요업무</b></div>
 
-    <div class="quick primary-quick">
-      <button data-mode="search"><span class="qicon q-green">🔎</span><span>품목검색</span></button>
-      <button data-mode="outbound"><span class="qicon q-orange">📤</span><span>빠른출고</span></button>
-      <button data-mode="location"><span class="qicon q-purple">📍</span><span>위치확인</span></button>
-      <button id="photoSearchBtn"><span class="qicon q-blue">📷</span><span>사진검색</span></button>
+    <div class="quick primary-quick today-task-grid">
+      <button class="task-out" data-mode="outbound">
+        <span class="qicon">📤</span><span>빠른출고</span><small>자재 출고 등록</small>
+      </button>
+      <button class="task-loc" data-mode="location">
+        <span class="qicon">📍</span><span>위치확인</span><small>창고 위치 확인</small>
+      </button>
+      <button class="task-photo" id="photoSearchBtn">
+        <span class="qicon">📷</span><span>사진검색</span><small>사진으로 품목 확인</small>
+      </button>
+      <button class="task-in" data-mode="inbound">
+        <span class="qicon">⬇️</span><span>빠른입고</span><small>입고 수량 등록</small>
+      </button>
+      <button class="task-return" data-mode="return">
+        <span class="qicon">↩️</span><span>자재반환</span><small>남은 자재 반환</small>
+      </button>
+      <button class="task-order" data-mode="order">
+        <span class="qicon">🛒</span><span>카톡 주문하기</span><small>필요 자재 요청</small>
+      </button>
     </div>
-  </div>
-
-  <div class="feature-row">
-    <button class="feature-card inbound-card" data-mode="inbound">
-      <span class="feature-big">⬇</span>
-      <span><b>빠른입고</b><small>간편하게 입고 등록하기</small></span>
-      <strong>›</strong>
-    </button>
-    <button class="feature-card kakao-card" data-mode="order">
-      <span class="kakao-bubble">TALK</span>
-      <span><b>카톡으로 주문하기</b><small>필요한 자재를 요청하세요</small></span>
-      <strong>›</strong>
-    </button>
-    <button class="feature-card return-card" data-mode="return">
-      <span class="feature-big return-big">↩</span>
-      <span><b>자재 반환</b><small>남은 자재를 반환 등록</small></span>
-      <strong>›</strong>
-    </button>
   </div>
 
   
@@ -3837,66 +3859,5 @@ document.addEventListener('DOMContentLoaded',()=>{
  const b=$('unregSaveBtn'); if(b)b.onclick=saveErpUnregisteredItem;
  fillUnregisteredWorker();
 });
-
-function redesignTodayTasks(){
-  const all=[...document.querySelectorAll('button,a,div')];
-
-  // Find the "오늘의 주요업무" heading.
-  const heading=[...document.querySelectorAll('h1,h2,h3,div')].find(el=>{
-    const t=(el.textContent||'').replace(/\s+/g,' ').trim();
-    return t==='📌 오늘의 주요업무'||t==='오늘의 주요업무';
-  });
-  if(heading){
-    heading.classList.add('today-task-heading-strong');
-    const sec=heading.closest('section,.card')||heading.parentElement;
-    if(sec) sec.classList.add('today-task-section-strong');
-  }
-
-  // Hide only the upper "품목검색" tile in today's tasks.
-  const searchEls=[...document.querySelectorAll('button,a')].filter(el=>(el.textContent||'').replace(/\s+/g,' ').trim()==='품목검색');
-  searchEls.forEach(el=>{
-    const headingEl=el.closest('section,.card')?.querySelector('h1,h2,h3');
-    if(headingEl && (headingEl.textContent||'').includes('오늘의 주요업무')) el.style.display='none';
-  });
-
-  // Find the large lower quick-action cards and move them directly under the task heading.
-  if(heading){
-    const sec=heading.closest('section,.card')||heading.parentElement;
-    const labels=['빠른입고','카톡으로 주문하기','자재 반환'];
-    const cards=[];
-    labels.forEach(label=>{
-      const el=[...document.querySelectorAll('button,a,div')].find(x=>{
-        const t=(x.textContent||'').replace(/\s+/g,' ').trim();
-        return t.startsWith(label) && t.length<80 && x.querySelector && (x.querySelector('span,strong,b')||x.tagName==='BUTTON'||x.tagName==='A');
-      });
-      if(el){
-        let card=el.closest('button,a,.quick-card,.action-card');
-        if(!card){
-          card=el;
-          while(card.parentElement && card.parentElement!==document.body){
-            const txt=(card.textContent||'').replace(/\s+/g,' ').trim();
-            if(txt.length<120 && (card.onclick || card.tagName==='A' || getComputedStyle(card).cursor==='pointer')) break;
-            card=card.parentElement;
-          }
-        }
-        if(card && !cards.includes(card)) cards.push(card);
-      }
-    });
-
-    if(cards.length){
-      let grid=document.getElementById('todayMovedQuickGrid');
-      if(!grid){
-        grid=document.createElement('div');
-        grid.id='todayMovedQuickGrid';
-        grid.className='today-moved-quick-grid';
-        heading.insertAdjacentElement('afterend',grid);
-      }
-      cards.forEach(c=>{c.classList.add('today-moved-card');grid.appendChild(c);});
-    }
-  }
-}
-setTimeout(redesignTodayTasks,200);
-setTimeout(redesignTodayTasks,1000);
-
 </script>
 </body></html>
