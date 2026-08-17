@@ -779,8 +779,46 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
+<style id="vip-bom-v1400">
+.vip-btn{border-color:#d6c184!important;background:linear-gradient(135deg,#fff8d8,#e9d17b)!important;color:#4c3a00!important}
+.vip-modal-card{width:min(420px,100%)}
+.vip-login-title{font-size:24px;font-weight:1000;margin-bottom:8px;color:#443500}
+.vip-login-error{margin-top:8px;color:#b42318;font-weight:900}
+#vipBomPanel{margin:16px auto;max-width:1180px}
+.vip-bom-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px;border-radius:18px;background:linear-gradient(135deg,#263c31,#0b6b3e);color:#fff}
+.vip-bom-head h2{margin:0;font-size:26px}.vip-bom-head p{margin:5px 0 0;color:#dff4e8;font-weight:800}
+.vip-bom-actions{display:flex;gap:8px;flex-wrap:wrap}.vip-bom-actions button{min-height:42px;border:0;border-radius:10px;padding:0 14px;font-weight:900}
+.vip-bom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.vip-bom-card{padding:16px;border:1px solid #d9e5de;border-radius:15px;background:#fff}
+.vip-bom-card h3{margin:0 0 10px}.vip-bom-card label{display:block;font-weight:900;margin-top:8px}
+.vip-bom-card input,.vip-bom-card select{display:block;width:100%;min-height:46px;margin-top:5px;border:1px solid #cbd8d0;border-radius:10px;padding:8px 11px;background:#fff}
+.vip-bom-row{display:grid;grid-template-columns:1fr 180px auto;gap:8px;align-items:end}
+.vip-bom-row button{min-height:46px}
+.vip-bom-status{margin-top:10px;padding:10px 12px;border-radius:10px;background:#edf8f2;color:#075f35;font-weight:900}
+.vip-bom-table-wrap{overflow:auto;margin-top:12px;max-height:520px;border:1px solid #dfe7e2;border-radius:12px}
+.vip-bom-table{width:100%;border-collapse:collapse;font-size:13px}.vip-bom-table th,.vip-bom-table td{padding:9px;border-bottom:1px solid #e8eeea;text-align:left;white-space:nowrap}
+.vip-bom-table th{position:sticky;top:0;background:#edf6f0;color:#164f34;z-index:1}.vip-bom-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.vip-bom-empty{padding:28px;text-align:center;color:#6b786f;font-weight:900}
+@media(max-width:760px){.vip-bom-grid{grid-template-columns:1fr}.vip-bom-row{grid-template-columns:1fr}.vip-bom-head h2{font-size:22px}}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 </head>
 <body>
+<div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
+  <div class="order-modal-card vip-modal-card" role="dialog" aria-modal="true">
+    <div class="order-modal-head">
+      <div><div class="vip-login-title">👑 VIP 로그인</div><div>BOM 관리 전용 화면입니다.</div></div>
+      <button type="button" class="order-modal-close" onclick="closeVipLogin()">✕</button>
+    </div>
+    <label class="order-note-label">VIP PIN
+      <input id="vipPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="VIP PIN 입력">
+    </label>
+    <div id="vipLoginError" class="vip-login-error hidden"></div>
+    <button type="button" class="primary" style="width:100%;min-height:50px;margin-top:12px" onclick="submitVipLogin()">VIP BOM 관리 열기</button>
+  </div>
+</div>
 <div id="standaloneOrderModal" class="order-modal-backdrop hidden" aria-hidden="true">
   <div class="order-modal-card" role="dialog" aria-modal="true" aria-labelledby="standaloneOrderTitle">
     <div class="order-modal-head">
@@ -867,7 +905,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       <small>생산 자재관리 · v13.8.5</small>
     </div>
   </div>
-  <div class="top-actions"><button id="topExcelExportBtn" class="admin-btn worker-admin-detail" type="button" onclick="goExcelExport()">📊 엑셀출력</button>
+  <div class="top-actions"><button id="vipLoginBtn" class="admin-btn vip-btn" type="button" onclick="openVipLogin()">👑 VIP BOM</button><button id="topExcelExportBtn" class="admin-btn worker-admin-detail" type="button" onclick="goExcelExport()">📊 엑셀출력</button>
     <div class="worker-auth">
       <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
       <button id="workerLoginBtn" class="admin-btn">작업자 로그인</button>
@@ -879,6 +917,44 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
   </div>
 </header>
 <main>
+
+<section id="vipBomPanel" class="hidden">
+  <div class="vip-bom-head">
+    <div><h2>👑 VIP BOM 관리</h2><p>완제품별 자재 검색 · 생산수량별 필요수량 계산 · 엑셀 업로드/출력</p></div>
+    <div class="vip-bom-actions">
+      <button type="button" onclick="downloadBomTemplate()">📥 BOM 양식받기</button>
+      <button type="button" onclick="document.getElementById('bomExcelInput').click()">📤 BOM 엑셀 업로드</button>
+      <button type="button" onclick="exportBomCalculation()">📊 계산결과 엑셀출력</button>
+      <button type="button" onclick="closeVipBom()">🏠 메인으로</button>
+      <button type="button" onclick="vipLogout()">로그아웃</button>
+    </div>
+    <input id="bomExcelInput" class="hidden" type="file" accept=".xlsx,.xls,.csv" onchange="importBomExcel(event)">
+  </div>
+
+  <div class="vip-bom-grid">
+    <div class="vip-bom-card">
+      <h3>🔎 완제품 BOM 검색</h3>
+      <label>완제품 품번 또는 품명
+        <input id="bomFinishedSearch" autocomplete="off" placeholder="완제품 품번·품명 입력" oninput="renderBomFinishedOptions()">
+      </label>
+      <select id="bomFinishedSelect" size="5" onchange="selectBomFinishedProduct()"></select>
+    </div>
+    <div class="vip-bom-card">
+      <h3>🧮 생산 필요수량 계산</h3>
+      <div class="vip-bom-row">
+        <label>선택 완제품<input id="bomSelectedFinished" readonly placeholder="왼쪽에서 완제품 선택"></label>
+        <label>생산수량<input id="bomProductionQty" type="number" min="1" inputmode="numeric" placeholder="예: 100"></label>
+        <button type="button" class="primary" onclick="calculateBomRequirements()">필요수량 계산</button>
+      </div>
+      <div id="bomStatus" class="vip-bom-status">BOM 엑셀을 업로드하거나 양식을 내려받아 작성해 주세요.</div>
+    </div>
+  </div>
+
+  <div class="vip-bom-card" style="margin-top:12px">
+    <h3 id="bomResultTitle">📋 BOM 자재 목록</h3>
+    <div class="vip-bom-table-wrap"><div id="bomResultTable" class="vip-bom-empty">완제품을 선택하면 구성 자재가 표시됩니다.</div></div>
+  </div>
+</section>
 
 <section id="excelExportPanel" class="card worker-admin-detail" style="margin-bottom:12px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -4628,6 +4704,146 @@ document.addEventListener('DOMContentLoaded',()=>{
    setTimeout(fillUnregisteredWorker,250);
    setTimeout(fillUnregisteredWorker,1000);
  }
+});
+
+// VIP BOM 관리
+const VIP_PIN_HASH='76e685a70c02544b3fd01c0f03515ac859831ff260d09be12a866bb2b85c3922';
+const BOM_STORAGE_KEY='mirim_vip_bom_rows_v1';
+let bomRows=[];
+let bomSelectedPart='';
+let bomCalculatedRows=[];
+
+async function sha256Text(text){
+ const bytes=new TextEncoder().encode(String(text));
+ const digest=await crypto.subtle.digest('SHA-256',bytes);
+ return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function openVipLogin(){
+ if(sessionStorage.getItem('mirim_vip_ok')==='1'){openVipBom();return;}
+ $('vipPinInput').value='';$('vipLoginError').textContent='';$('vipLoginError').classList.add('hidden');
+ $('vipLoginModal').classList.remove('hidden');$('vipLoginModal').setAttribute('aria-hidden','false');
+ setTimeout(()=>$('vipPinInput')?.focus(),60);
+}
+function closeVipLogin(){$('vipLoginModal').classList.add('hidden');$('vipLoginModal').setAttribute('aria-hidden','true');}
+async function submitVipLogin(){
+ const pin=($('vipPinInput')?.value||'').trim();
+ if(!pin)return;
+ if(await sha256Text(pin)!==VIP_PIN_HASH){
+   $('vipLoginError').textContent='VIP PIN이 올바르지 않습니다.';$('vipLoginError').classList.remove('hidden');return;
+ }
+ sessionStorage.setItem('mirim_vip_ok','1');closeVipLogin();openVipBom();
+}
+
+function loadBomRows(){
+ try{bomRows=JSON.parse(localStorage.getItem(BOM_STORAGE_KEY)||'[]');if(!Array.isArray(bomRows))bomRows=[];}catch(e){bomRows=[];}
+}
+function openVipBom(){
+ loadBomRows();
+ ['home','work','photoSearchPanel','notifPanel','workerLoginPanel','loginLogPanel','excelExportPanel'].forEach(id=>$(id)?.classList.add('hidden'));
+ $('vipBomPanel').classList.remove('hidden');
+ $('bomFinishedSearch').value='';bomSelectedPart='';bomCalculatedRows=[];
+ $('bomSelectedFinished').value='';$('bomProductionQty').value='';
+ renderBomFinishedOptions();renderBomTable([]);
+ $('bomStatus').textContent=bomRows.length?`저장된 BOM ${bomRows.length.toLocaleString()}행을 불러왔습니다.`:'BOM 엑셀을 업로드하거나 양식을 내려받아 작성해 주세요.';
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function closeVipBom(){
+ $('vipBomPanel').classList.add('hidden');$('home').classList.remove('hidden');
+ if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
+}
+function vipLogout(){sessionStorage.removeItem('mirim_vip_ok');closeVipBom();}
+
+function bomProducts(){
+ const map=new Map();
+ bomRows.forEach(r=>{const p=String(r.finished_part||'').trim();if(p&&!map.has(p))map.set(p,{part:p,name:r.finished_name||''});});
+ return [...map.values()].sort((a,b)=>a.part.localeCompare(b.part,'ko'));
+}
+function renderBomFinishedOptions(){
+ const q=norm($('bomFinishedSearch')?.value||'');
+ const rows=bomProducts().filter(x=>!q||norm(x.part).includes(q)||norm(x.name).includes(q));
+ const sel=$('bomFinishedSelect');
+ sel.innerHTML=rows.length?rows.slice(0,200).map(x=>`<option value="${esc(x.part)}">${esc(x.part)} · ${esc(x.name||'품명 없음')}</option>`).join(''):'<option value="">검색 결과 없음</option>';
+}
+function selectBomFinishedProduct(){
+ bomSelectedPart=$('bomFinishedSelect')?.value||'';
+ const p=bomProducts().find(x=>x.part===bomSelectedPart);
+ $('bomSelectedFinished').value=p?`${p.part} · ${p.name}`:'';
+ bomCalculatedRows=[];renderBomTable(bomRows.filter(r=>r.finished_part===bomSelectedPart));
+}
+function calculateBomRequirements(){
+ if(!bomSelectedPart)return alert('완제품을 먼저 선택해 주세요.');
+ const prodQty=Number($('bomProductionQty')?.value||0);
+ if(!prodQty||prodQty<=0)return alert('생산수량을 1 이상 입력해 주세요.');
+ const src=bomRows.filter(r=>r.finished_part===bomSelectedPart);
+ const map=new Map();
+ src.forEach(r=>{
+   const key=[r.component_part,r.spec,r.unit].join('|');
+   const qtyPer=Number(r.qty_per||0),loss=Number(r.loss_rate||0);
+   const need=qtyPer*prodQty*(1+loss/100);
+   const old=map.get(key)||{...r,qty_per:0,required_qty:0};
+   old.qty_per+=qtyPer;old.required_qty+=need;map.set(key,old);
+ });
+ bomCalculatedRows=[...map.values()];
+ renderBomTable(bomCalculatedRows,true,prodQty);
+ $('bomStatus').textContent=`${bomSelectedPart} 생산 ${prodQty.toLocaleString()}대 · 필요 자재 ${bomCalculatedRows.length.toLocaleString()}종 계산 완료`;
+}
+function renderBomTable(rows,calculated=false,prodQty=0){
+ const box=$('bomResultTable');
+ if(!rows.length){box.className='vip-bom-empty';box.innerHTML='완제품을 선택하면 구성 자재가 표시됩니다.';return;}
+ box.className='';
+ $('bomResultTitle').textContent=calculated?`📋 생산 ${prodQty.toLocaleString()}대 필요 자재`:'📋 BOM 자재 목록';
+ box.innerHTML=`<table class="vip-bom-table"><thead><tr><th>자재 품번</th><th>자재명</th><th>규격</th><th>단위</th><th>1대당 수량</th><th>LOSS율</th>${calculated?'<th>필요수량</th>':''}<th>비고</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.component_part)}</td><td>${esc(r.component_name)}</td><td>${esc(r.spec)}</td><td>${esc(r.unit)}</td><td class="num">${Number(r.qty_per||0).toLocaleString()}</td><td class="num">${Number(r.loss_rate||0).toLocaleString()}%</td>${calculated?`<td class="num"><b>${Math.ceil(Number(r.required_qty||0)).toLocaleString()}</b></td>`:''}<td>${esc(r.note)}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function normalizeBomRow(row){
+ const pick=(...keys)=>{for(const k of keys){if(row[k]!==undefined&&row[k]!==null)return row[k];}return '';};
+ return {
+   finished_part:String(pick('완제품 품번','완제품품번','finished_part','Finished Part')||'').trim(),
+   finished_name:String(pick('완제품명','finished_name','Finished Name')||'').trim(),
+   component_part:String(pick('자재 품번','자재품번','component_part','Component Part')||'').trim(),
+   component_name:String(pick('자재명','component_name','Component Name')||'').trim(),
+   spec:String(pick('규격','spec','Spec')||'').trim(),
+   unit:String(pick('단위','unit','Unit')||'EA').trim(),
+   qty_per:Number(pick('1대당 수량','소요량','qty_per','Qty Per')||0),
+   loss_rate:Number(pick('LOSS율','LOSS율(%)','loss_rate','Loss Rate')||0),
+   note:String(pick('비고','note','Note')||'').trim()
+ };
+}
+async function importBomExcel(event){
+ const file=event.target.files?.[0];if(!file)return;
+ try{
+   if(!window.XLSX)throw new Error('엑셀 처리 기능을 불러오지 못했습니다. 인터넷 연결 후 다시 시도해 주세요.');
+   const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+   const ws=wb.Sheets[wb.SheetNames[0]];
+   const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+   const rows=raw.map(normalizeBomRow).filter(r=>r.finished_part&&r.component_part&&r.qty_per>0);
+   if(!rows.length)throw new Error('유효한 BOM 행이 없습니다. 완제품 품번·자재 품번·1대당 수량을 확인해 주세요.');
+   bomRows=rows;localStorage.setItem(BOM_STORAGE_KEY,JSON.stringify(bomRows));
+   bomSelectedPart='';bomCalculatedRows=[];renderBomFinishedOptions();renderBomTable([]);
+   $('bomStatus').textContent=`☑ BOM ${rows.length.toLocaleString()}행 업로드 완료 · 이 기기에 저장됨`;
+ }catch(e){alert('BOM 엑셀 업로드 실패: '+(e.message||e));}
+ finally{event.target.value='';}
+}
+function bomSheetRows(rows){
+ return rows.map(r=>({'완제품 품번':r.finished_part,'완제품명':r.finished_name,'자재 품번':r.component_part,'자재명':r.component_name,'규격':r.spec,'단위':r.unit,'1대당 수량':r.qty_per,'LOSS율(%)':r.loss_rate,'비고':r.note}));
+}
+function saveXlsx(rows,sheetName,fileName){
+ if(!window.XLSX)return alert('엑셀 처리 기능을 불러오지 못했습니다. 인터넷 연결 후 다시 시도해 주세요.');
+ const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheetName);XLSX.writeFile(wb,fileName);
+}
+function downloadBomTemplate(){
+ saveXlsx([{'완제품 품번':'FG-001','완제품명':'완제품 예시','자재 품번':'MAT-001','자재명':'자재 예시','규격':'규격 입력','단위':'EA','1대당 수량':2,'LOSS율(%)':3,'비고':'필요 시 입력'}],'BOM입력','미림_BOM_업로드양식.xlsx');
+}
+function exportBomCalculation(){
+ if(!bomCalculatedRows.length)return alert('완제품과 생산수량을 선택해 필요수량을 먼저 계산해 주세요.');
+ const prodQty=Number($('bomProductionQty')?.value||0);
+ const rows=bomCalculatedRows.map(r=>({'완제품 품번':r.finished_part,'완제품명':r.finished_name,'생산수량':prodQty,'자재 품번':r.component_part,'자재명':r.component_name,'규격':r.spec,'단위':r.unit,'1대당 수량':r.qty_per,'LOSS율(%)':r.loss_rate,'필요수량':Math.ceil(r.required_qty),'비고':r.note}));
+ saveXlsx(rows,'필요수량계산',`미림_BOM_${bomSelectedPart}_${prodQty}대_필요수량.xlsx`);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+ $('vipPinInput')?.addEventListener('keyup',e=>{if(e.key==='Enter')submitVipLogin();});
 });
 </script>
 </body></html>
