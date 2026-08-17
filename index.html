@@ -4755,6 +4755,7 @@ function loadBomRows(){
  try{bomReviewedPos=JSON.parse(localStorage.getItem(BOM_PO_STORAGE_KEY)||'[]');if(!Array.isArray(bomReviewedPos))bomReviewedPos=[];}catch(e){bomReviewedPos=[];}
 }
 function openVipBom(){
+ sessionStorage.setItem('mirim_vip_view','1');
  loadBomRows();
  ['home','work','photoSearchPanel','notifPanel','workerLoginPanel','loginLogPanel','excelExportPanel'].forEach(id=>$(id)?.classList.add('hidden'));
  $('vipBomPanel').classList.remove('hidden');
@@ -4766,10 +4767,11 @@ function openVipBom(){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function closeVipBom(){
+ sessionStorage.removeItem('mirim_vip_view');
  $('vipBomPanel').classList.add('hidden');$('home').classList.remove('hidden');
  if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
 }
-function vipLogout(){sessionStorage.removeItem('mirim_vip_ok');closeVipBom();}
+function vipLogout(){sessionStorage.removeItem('mirim_vip_ok');sessionStorage.removeItem('mirim_vip_view');closeVipBom();}
 
 function bomProducts(){
  const map=new Map();
@@ -4927,6 +4929,9 @@ function exportBomCalculation(){
 
 document.addEventListener('DOMContentLoaded',()=>{
  $('vipPinInput')?.addEventListener('keyup',e=>{if(e.key==='Enter')submitVipLogin();});
+ if(sessionStorage.getItem('mirim_vip_ok')==='1'&&sessionStorage.getItem('mirim_vip_view')==='1'){
+   setTimeout(openVipBom,120);
+ }
 });
 </script>
 </body></html>
