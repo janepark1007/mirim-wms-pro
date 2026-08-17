@@ -589,7 +589,8 @@ body.admin-view #topExcelExportBtn{display:inline-flex!important;align-items:cen
 .today-task-grid .task-photo{background:#eef5ff!important;border-color:#c9ddff!important}
 .today-task-grid .task-in{background:#eaf9ef!important;border-color:#bde8cc!important}
 .today-task-grid .task-return{background:#eef2ff!important;border-color:#cbd5ff!important}
-.today-task-grid .task-order{background:#fff5c9!important;border-color:#ffe37a!important}
+.today-task-grid .task-order{background:#fee500!important;border-color:#d7bf00!important;color:#191919!important;box-shadow:0 5px 14px rgba(215,191,0,.28)!important}
+.today-task-grid .task-order small{color:#3b3300!important}
 
 @media(max-width:760px){
   .today-task-box{padding:11px!important}
@@ -1025,6 +1026,9 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       </button>
       <button class="task-loc" data-mode="location">
         <span class="qicon">📍</span><span>위치확인</span><small>창고 위치 확인</small>
+      </button>
+      <button class="task-photo" id="photoSearchBtn">
+        <span class="qicon">📷</span><span>사진으로 검색하기</span><small>사진으로 품목 확인</small>
       </button>
       <button class="task-in" data-mode="inbound">
         <span class="qicon">⬇️</span><span>빠른입고</span><small>입고 수량 등록</small>
