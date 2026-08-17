@@ -799,12 +799,16 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 .vip-bom-table{width:100%;border-collapse:collapse;font-size:13px}.vip-bom-table th,.vip-bom-table td{padding:9px;border-bottom:1px solid #e8eeea;text-align:left;white-space:nowrap}
 .vip-bom-table th{position:sticky;top:0;background:#edf6f0;color:#164f34;z-index:1}.vip-bom-table td.num{text-align:right;font-variant-numeric:tabular-nums}
 .vip-bom-empty{padding:28px;text-align:center;color:#6b786f;font-weight:900}
+.bom-photo-preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.bom-photo-preview img{width:100%;height:220px;object-fit:contain;border:1px solid #d8e2dc;border-radius:10px;background:#f7faf8}
+.bom-ocr-progress{margin-top:8px;height:10px;border-radius:10px;background:#e5ece8;overflow:hidden}.bom-ocr-progress span{display:block;height:100%;background:#087a43;width:0;transition:width .2s}
 .vip-po-save{background:#6b4f00!important;color:#fff!important}
 .vip-shortage{color:#b42318;font-weight:1000}.vip-ok-stock{color:#087a43;font-weight:900}
-@media(max-width:760px){.vip-bom-grid{grid-template-columns:1fr}.vip-bom-row{grid-template-columns:1fr}.vip-bom-head h2{font-size:22px}}
+@media(max-width:760px){.vip-bom-grid{grid-template-columns:1fr}.vip-bom-row{grid-template-columns:1fr}.vip-bom-head h2{font-size:22px}.bom-photo-preview{grid-template-columns:1fr}.bom-photo-preview img{height:260px}}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 </head>
 <body>
@@ -922,10 +926,8 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 
 <section id="vipBomPanel" class="hidden">
   <div class="vip-bom-head">
-    <div><h2>👑 VIP BOM 관리</h2><p>완제품별 자재 검색 · 생산수량별 필요수량 계산 · 엑셀 업로드/출력</p></div>
+    <div><h2>👑 VIP BOM 사진 계산</h2><p>BOM 사진 첨부 → 생산수량 입력 → 자재위치·소요량 자동확인</p></div>
     <div class="vip-bom-actions">
-      <button type="button" onclick="downloadBomTemplate()">📥 BOM 양식받기</button>
-      <button type="button" onclick="document.getElementById('bomExcelInput').click()">📤 BOM 엑셀 업로드</button>
       <button type="button" onclick="exportBomCalculation()">📊 계산결과 엑셀출력</button>
       <button type="button" onclick="closeVipBom()">🏠 메인으로</button>
       <button type="button" onclick="vipLogout()">로그아웃</button>
@@ -935,28 +937,28 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 
   <div class="vip-bom-grid">
     <div class="vip-bom-card">
-      <h3>🔎 완제품 BOM 검색</h3>
-      <label>완제품 품번 또는 품명
-        <input id="bomFinishedSearch" autocomplete="off" placeholder="완제품 품번·품명 입력" oninput="renderBomFinishedOptions()">
+      <h3>1️⃣ BOM 사진 촬영·첨부</h3>
+      <label>BOM 사진
+        <input id="bomPhotoInput" type="file" accept="image/*" capture="environment" multiple onchange="previewBomPhotos(event)">
       </label>
-      <select id="bomFinishedSelect" size="5" onchange="selectBomFinishedProduct()"></select>
+      <div id="bomPhotoPreview" class="bom-photo-preview"><div class="vip-bom-empty">BOM 용지를 정면에서 선명하게 촬영해 주세요.</div></div>
     </div>
     <div class="vip-bom-card">
-      <h3>🧮 생산 필요수량 계산</h3>
-      <div class="vip-bom-row">
-        <label>선택 완제품<input id="bomSelectedFinished" readonly placeholder="왼쪽에서 완제품 선택"></label>
-        <label>BOM PO번호<input id="bomPoNumber" autocomplete="off" placeholder="PO번호 입력"></label>
-        <label>생산수량<input id="bomProductionQty" type="number" min="1" inputmode="numeric" placeholder="예: 100"></label>
-        <button type="button" class="primary" onclick="calculateBomRequirements()">필요수량 계산</button>
+      <h3>2️⃣ 생산수량 입력·사진 계산</h3>
+      <input id="bomSelectedFinished" type="hidden">
+      <div class="order-required-grid">
+        <label>BOM PO번호 <b class="req">(필수)</b><input id="bomPoNumber" autocomplete="off" placeholder="PO번호 입력"></label>
+        <label>생산수량 <b class="req">(필수)</b><input id="bomProductionQty" type="number" min="1" inputmode="numeric" placeholder="예: 10"></label>
       </div>
-      <button type="button" class="primary vip-po-save" style="width:100%;min-height:46px;margin-top:10px" onclick="saveReviewedBomPo()">☑ 검토완료 BOM PO 저장</button>
-      <div id="bomStatus" class="vip-bom-status">BOM 엑셀을 업로드하거나 양식을 내려받아 작성해 주세요.</div>
+      <button id="bomPhotoAnalyzeBtn" type="button" class="primary" style="width:100%;min-height:54px;margin-top:12px" onclick="analyzeBomPhotos()">📷 사진 분석 후 자재위치·소요량 계산</button>
+      <button type="button" class="primary vip-po-save" style="width:100%;min-height:46px;margin-top:10px" onclick="saveReviewedBomPo()">☑ 결과 검토완료·BOM PO 저장</button>
+      <div id="bomStatus" class="vip-bom-status">BOM 사진을 첨부하고 생산수량을 입력해 주세요.</div>
     </div>
   </div>
 
   <div class="vip-bom-card" style="margin-top:12px">
-    <h3 id="bomResultTitle">📋 BOM 자재 목록</h3>
-    <div class="vip-bom-table-wrap"><div id="bomResultTable" class="vip-bom-empty">완제품을 선택하면 구성 자재가 표시됩니다.</div></div>
+    <h3 id="bomResultTitle">📋 사진 분석 결과 · 자재위치·소요량</h3>
+    <div class="vip-bom-table-wrap"><div id="bomResultTable" class="vip-bom-empty">사진을 분석하면 자재 품번·창고위치·소요량이 표시됩니다.</div></div>
   </div>
 
   <div class="vip-bom-card" style="margin-top:12px">
@@ -4727,6 +4729,8 @@ let bomRows=[];
 let bomSelectedPart='';
 let bomCalculatedRows=[];
 let bomReviewedPos=[];
+let bomPhotoFiles=[];
+let bomLastOcrText='';
 
 async function sha256Text(text){
  const bytes=new TextEncoder().encode(String(text));
@@ -4759,11 +4763,12 @@ function openVipBom(){
  loadBomRows();
  ['home','work','photoSearchPanel','notifPanel','workerLoginPanel','loginLogPanel','excelExportPanel'].forEach(id=>$(id)?.classList.add('hidden'));
  $('vipBomPanel').classList.remove('hidden');
- $('bomFinishedSearch').value='';bomSelectedPart='';bomCalculatedRows=[];
+ bomSelectedPart='';bomCalculatedRows=[];bomPhotoFiles=[];bomLastOcrText='';
  $('bomSelectedFinished').value='';$('bomPoNumber').value='';$('bomProductionQty').value='';
- renderBomFinishedOptions();renderBomTable([]);
+ $('bomPhotoInput').value='';$('bomPhotoPreview').innerHTML='<div class="vip-bom-empty">BOM 용지를 정면에서 선명하게 촬영해 주세요.</div>';
+ renderBomTable([]);
  renderReviewedBomPos();
- $('bomStatus').textContent=bomRows.length?`저장된 BOM ${bomRows.length.toLocaleString()}행을 불러왔습니다.`:'BOM 엑셀을 업로드하거나 양식을 내려받아 작성해 주세요.';
+ $('bomStatus').textContent='BOM 사진을 첨부하고 생산수량을 입력해 주세요.';
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function closeVipBom(){
@@ -4772,6 +4777,123 @@ function closeVipBom(){
  if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
 }
 function vipLogout(){sessionStorage.removeItem('mirim_vip_ok');sessionStorage.removeItem('mirim_vip_view');closeVipBom();}
+
+function previewBomPhotos(event){
+ bomPhotoFiles=[...(event.target.files||[])];
+ const box=$('bomPhotoPreview');
+ if(!bomPhotoFiles.length){box.innerHTML='<div class="vip-bom-empty">BOM 용지를 정면에서 선명하게 촬영해 주세요.</div>';return;}
+ box.innerHTML=bomPhotoFiles.map((f,i)=>`<div><img src="${URL.createObjectURL(f)}" alt="BOM 사진 ${i+1}"><small>사진 ${i+1} · ${esc(f.name)}</small></div>`).join('');
+ $('bomStatus').textContent=`BOM 사진 ${bomPhotoFiles.length}장 첨부 완료 · PO번호와 생산수량을 입력하세요.`;
+}
+
+function prepareBomPhoto(file){
+ return new Promise((resolve,reject)=>{
+   const img=new Image();
+   img.onload=()=>{
+     const rotate=img.height>img.width;
+     const maxSide=2400;
+     const rawW=rotate?img.height:img.width,rawH=rotate?img.width:img.height;
+     const scale=Math.min(1,maxSide/rawW);
+     const canvas=document.createElement('canvas');canvas.width=Math.round(rawW*scale);canvas.height=Math.round(rawH*scale);
+     const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(scale,scale);
+     if(rotate){ctx.translate(0,img.width);ctx.rotate(-Math.PI/2);}
+     ctx.filter='grayscale(1) contrast(1.35)';ctx.drawImage(img,0,0);
+     resolve({dataUrl:canvas.toDataURL('image/jpeg',0.92),width:canvas.width,height:canvas.height});
+   };
+   img.onerror=()=>reject(new Error('사진을 읽지 못했습니다.'));
+   img.src=URL.createObjectURL(file);
+ });
+}
+
+function parseBomOcrText(text){
+ const lines=String(text||'').split(/\r?\n/).map(s=>s.replace(/[|]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
+ const grouped=[];
+ lines.forEach(line=>{
+   const m=line.match(/^([A-Z0-9][A-Z0-9-]{4,})\s+(.+)$/i);
+   if(m&&!/^(품목코드|품목명|소요량|재고수량|TOTAL|합계)$/i.test(m[1]))grouped.push({part:m[1],body:m[2]});
+   else if(grouped.length&&!/품목코드|품목명|규격|소요량|재고수량|거래처명/.test(line))grouped[grouped.length-1].body+=' '+line;
+ });
+ const rows=[];
+ grouped.forEach(g=>{
+   const nums=[...g.body.matchAll(/-?[\d,]+(?:\.\d+)?/g)];
+   if(!nums.length)return;
+   let qtyMatch=null;
+   const tail=g.body.match(/\s(-?[\d,]+(?:\.\d+)?)\s+(-?[\d,]+(?:\.\d+)?)\s*$/);
+   if(tail)qtyMatch=tail[1];else qtyMatch=nums[nums.length-1][0];
+   const qty=Number(String(qtyMatch).replace(/,/g,''));
+   if(!Number.isFinite(qty)||qty<=0)return;
+   const cut=g.body.lastIndexOf(qtyMatch);
+   const desc=(cut>0?g.body.slice(0,cut):g.body).trim();
+   rows.push({component_part:g.part,component_name:desc,spec:'',unit:'EA',qty_per:qty,loss_rate:0,note:'사진 OCR 확인'});
+ });
+ return rows;
+}
+
+function parseBomOcrWords(data,imageWidth){
+ const words=(data?.words||[]).filter(w=>w.text&&w.bbox);
+ if(!words.length)return [];
+ const codeWords=words.filter(w=>{
+   const t=String(w.text).replace(/[^A-Za-z0-9-]/g,'');
+   return w.bbox.x0<imageWidth*.24&&/^[A-Z0-9][A-Z0-9-]{4,}$/i.test(t)&&!/TOTAL|CODE|ITEM/i.test(t);
+ }).map(w=>({part:String(w.text).replace(/[^A-Za-z0-9-]/g,''),y:(w.bbox.y0+w.bbox.y1)/2})).sort((a,b)=>a.y-b.y);
+ const unique=[];codeWords.forEach(c=>{if(!unique.length||Math.abs(c.y-unique[unique.length-1].y)>12)unique.push(c);});
+ return unique.map((c,i)=>{
+   const top=i===0?c.y-30:(unique[i-1].y+c.y)/2;
+   const bottom=i===unique.length-1?c.y+35:(c.y+unique[i+1].y)/2;
+   const rowWords=words.filter(w=>{const y=(w.bbox.y0+w.bbox.y1)/2;return y>=top&&y<bottom;});
+   const name=rowWords.filter(w=>w.bbox.x0>=imageWidth*.17&&w.bbox.x0<imageWidth*.55).sort((a,b)=>a.bbox.x0-b.bbox.x0).map(w=>w.text).join(' ').trim();
+   const qtyCandidates=rowWords.filter(w=>w.bbox.x0>=imageWidth*.68&&w.bbox.x0<imageWidth*.77).map(w=>String(w.text).replace(/[^0-9.,-]/g,'')).filter(t=>/^-?[\d,]+(?:\.\d+)?$/.test(t));
+   const qty=qtyCandidates.length?Number(qtyCandidates[0].replace(/,/g,'')):0;
+   return {component_part:c.part,component_name:name,spec:'',unit:'EA',qty_per:qty,loss_rate:0,note:'사진 OCR 확인'};
+ }).filter(r=>r.qty_per>0);
+}
+
+async function analyzeBomPhotos(){
+ const po=($('bomPoNumber')?.value||'').trim();
+ const prodQty=Number($('bomProductionQty')?.value||0);
+ if(!bomPhotoFiles.length)return alert('BOM 사진을 촬영하거나 첨부해 주세요.');
+ if(!po)return alert('BOM PO번호를 입력해 주세요.');
+ if(!prodQty||prodQty<=0)return alert('생산수량을 1 이상 입력해 주세요.');
+ if(!window.Tesseract)return alert('사진 분석 기능을 불러오지 못했습니다. 인터넷 연결 후 다시 시도해 주세요.');
+ const btn=$('bomPhotoAnalyzeBtn');btn.disabled=true;btn.textContent='사진 분석 준비 중...';
+ try{
+   let allText='',allParsed=[];
+   for(let i=0;i<bomPhotoFiles.length;i++){
+     const image=await prepareBomPhoto(bomPhotoFiles[i]);
+     const result=await Tesseract.recognize(image.dataUrl,'kor+eng',{logger:m=>{
+       if(m.status==='recognizing text'){
+         const pct=Math.round(Number(m.progress||0)*100);
+         btn.textContent=`사진 ${i+1}/${bomPhotoFiles.length} 분석 ${pct}%`;
+         $('bomStatus').textContent=`사진 글자를 읽는 중입니다. ${pct}% · 잠시만 기다려 주세요.`;
+       }
+     }});
+     allText+='\n'+(result.data?.text||'');
+     allParsed.push(...parseBomOcrWords(result.data,image.width));
+   }
+   bomLastOcrText=allText;
+   const parsed=allParsed.length?allParsed:parseBomOcrText(allText);
+   if(!parsed.length)throw new Error('자재 품번과 소요량을 읽지 못했습니다. 사진을 정면에서 더 가까이 촬영해 주세요.');
+   bomSelectedPart='PHOTO-'+po;
+   $('bomSelectedFinished').value='사진 BOM · '+po;
+   const map=new Map();
+   parsed.forEach(r=>{
+     const key=norm(r.component_part);
+     const old=map.get(key)||{...r,qty_per:0};old.qty_per+=Number(r.qty_per||0);map.set(key,old);
+   });
+   bomCalculatedRows=[...map.values()].map(r=>{
+     const item=(ITEMS||[]).find(x=>norm(x.part)===norm(r.component_part));
+     const current=item?getCurrentStock(item):null;
+     const erpQty=item?Number(item.erpQty||0):null;
+     const required=Math.ceil(Number(r.qty_per||0)*prodQty);
+     const baseStock=current===null?erpQty:current;
+     return {...r,finished_part:bomSelectedPart,finished_name:'사진 BOM '+po,required_qty:required,erp_match:!!item,erp_name:item?.name||'',erp_qty:erpQty,current_stock:current,location:item?(allLocationText(item.part)||item.location||'위치 확인 필요'):'ERP 품번 미연결',shortage:baseStock===null?null:Math.max(0,required-Number(baseStock||0))};
+   });
+   renderBomTable(bomCalculatedRows,true,prodQty);
+   const linked=bomCalculatedRows.filter(r=>r.erp_match).length;
+   $('bomStatus').textContent=`☑ 자재 ${bomCalculatedRows.length}종 분석 · ERP 위치 연결 ${linked}종 · 결과를 확인한 뒤 검토완료 저장을 누르세요.`;
+ }catch(e){console.error(e);$('bomStatus').textContent='⚠️ 사진 분석 실패: '+(e.message||e);alert('BOM 사진 분석 실패: '+(e.message||e));}
+ finally{btn.disabled=false;btn.textContent='📷 사진 분석 후 자재위치·소요량 계산';}
+}
 
 function bomProducts(){
  const map=new Map();
@@ -4817,10 +4939,10 @@ function calculateBomRequirements(){
 }
 function renderBomTable(rows,calculated=false,prodQty=0){
  const box=$('bomResultTable');
- if(!rows.length){box.className='vip-bom-empty';box.innerHTML='완제품을 선택하면 구성 자재가 표시됩니다.';return;}
+ if(!rows.length){box.className='vip-bom-empty';box.innerHTML='사진을 분석하면 자재 품번·창고위치·소요량이 표시됩니다.';return;}
  box.className='';
- $('bomResultTitle').textContent=calculated?`📋 생산 ${prodQty.toLocaleString()}대 필요 자재`:'📋 BOM 자재 목록';
- box.innerHTML=`<table class="vip-bom-table"><thead><tr><th>자재 품번</th><th>자재명</th><th>규격</th><th>단위</th><th>1대당 수량</th><th>LOSS율</th>${calculated?'<th>필요수량</th><th>ERP연결</th><th>창고위치</th><th>ERP수량</th><th>현창고</th><th>부족수량</th>':''}<th>비고</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.component_part)}</td><td>${esc(r.component_name)}</td><td>${esc(r.spec)}</td><td>${esc(r.unit)}</td><td class="num">${Number(r.qty_per||0).toLocaleString()}</td><td class="num">${Number(r.loss_rate||0).toLocaleString()}%</td>${calculated?`<td class="num"><b>${Math.ceil(Number(r.required_qty||0)).toLocaleString()}</b></td><td>${r.erp_match?'☑ 연결':'⚠️ 미연결'}</td><td>${esc(r.location||'')}</td><td class="num">${r.erp_qty===null?'확인 필요':Number(r.erp_qty).toLocaleString()}</td><td class="num">${r.current_stock===null?'미입력':Number(r.current_stock).toLocaleString()}</td><td class="num ${Number(r.shortage||0)>0?'vip-shortage':'vip-ok-stock'}">${r.shortage===null?'확인 필요':Number(r.shortage).toLocaleString()}</td>`:''}<td>${esc(r.note)}</td></tr>`).join('')}</tbody></table>`;
+ $('bomResultTitle').textContent=`📋 생산 ${prodQty.toLocaleString()}대 · 자재위치·소요량 결과`;
+ box.innerHTML=`<table class="vip-bom-table"><thead><tr><th>자재 품번</th><th>창고위치</th><th>소요량</th><th>ERP수량</th><th>현창고</th><th>부족수량</th><th>ERP연결</th><th>자재명·규격</th><th>사진 기준량</th><th>비고</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r.component_part)}</b></td><td>${esc(r.location||'')}</td><td class="num"><b>${Math.ceil(Number(r.required_qty||0)).toLocaleString()}</b></td><td class="num">${r.erp_qty===null?'확인 필요':Number(r.erp_qty).toLocaleString()}</td><td class="num">${r.current_stock===null?'미입력':Number(r.current_stock).toLocaleString()}</td><td class="num ${Number(r.shortage||0)>0?'vip-shortage':'vip-ok-stock'}">${r.shortage===null?'확인 필요':Number(r.shortage).toLocaleString()}</td><td>${r.erp_match?'☑ 연결':'⚠️ 미연결'}</td><td>${esc(r.erp_name||r.component_name||'')}</td><td class="num">${Number(r.qty_per||0).toLocaleString()}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function saveReviewedBomPo(){
@@ -4830,7 +4952,7 @@ function saveReviewedBomPo(){
  if(!bomSelectedPart)return alert('완제품을 선택해 주세요.');
  if(!prodQty||prodQty<=0)return alert('생산수량을 입력해 주세요.');
  if(!bomCalculatedRows.length)return alert('필요수량 계산을 먼저 눌러 주세요.');
- const product=bomProducts().find(x=>x.part===bomSelectedPart)||{part:bomSelectedPart,name:''};
+ const product=bomProducts().find(x=>x.part===bomSelectedPart)||{part:bomSelectedPart,name:'사진 BOM'};
  const now=new Date();
  const record={
    id:'PO_'+now.getTime(),po_number:po,finished_part:product.part,finished_name:product.name,
