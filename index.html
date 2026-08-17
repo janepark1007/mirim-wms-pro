@@ -945,28 +945,28 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
   </div>
 
   <div class="vip-bom-card vip-po-search-card" style="margin-top:12px">
-    <h3>🔎 저장된 BOM PO 검색·현 오더 비교</h3>
-    <p class="vip-po-search-guide">저장된 PO번호와 이번 생산수량을 입력하면 자재위치, 소요량, 현재 ERP 재고와 차이수량을 한눈에 확인합니다.</p>
+    <h3>1️⃣ 저장된 BOM PO 먼저 검색</h3>
+    <p class="vip-po-search-guide"><b>기존에 등록한 PO는 사진을 다시 찍을 필요가 없습니다.</b> PO번호와 이번 생산수량만 입력하면 저장 데이터로 자재위치·소요량·ERP 재고 차이를 바로 계산합니다.</p>
     <div class="vip-po-search-grid">
-      <label>저장된 PO번호 <b class="req">(필수)</b><input id="bomPoNumber" list="bomSavedPoOptions" autocomplete="off" placeholder="저장된 PO번호 입력 또는 선택"></label>
+      <label>저장된 PO번호 <b class="req">(필수)</b><input id="bomPoNumber" list="bomSavedPoOptions" autocomplete="off" placeholder="저장된 PO번호 입력 또는 선택" onkeydown="if(event.key==='Enter'){event.preventDefault();calculateSavedBomPo()}"></label>
       <datalist id="bomSavedPoOptions"></datalist>
       <label>현 오더 생산수량 <b class="req">(필수)</b><input id="bomProductionQty" type="number" min="1" inputmode="numeric" placeholder="예: 100"></label>
-      <button type="button" class="primary vip-po-search-btn" onclick="calculateSavedBomPo()">🔎 PO 검색·수량 비교</button>
+      <button type="button" class="primary vip-po-search-btn" onclick="calculateSavedBomPo()">🔎 저장 데이터로 바로 계산</button>
     </div>
   </div>
 
   <div class="vip-bom-grid">
     <div class="vip-bom-card">
-      <h3>1️⃣ BOM 사진 촬영·첨부</h3>
+      <h3>2️⃣ 신규 PO만 BOM 사진 첨부</h3>
       <label>BOM 사진
         <input id="bomPhotoInput" type="file" accept="image/*" capture="environment" multiple onchange="previewBomPhotos(event)">
       </label>
       <div id="bomPhotoPreview" class="bom-photo-preview"><div class="vip-bom-empty">BOM 용지를 정면에서 선명하게 촬영해 주세요.</div></div>
     </div>
     <div class="vip-bom-card">
-      <h3>2️⃣ 생산수량 입력·사진 계산</h3>
+      <h3>3️⃣ 신규 PO 사진 분석·저장</h3>
       <input id="bomSelectedFinished" type="hidden">
-      <div class="vip-bom-status">위 검색 영역에 신규 PO번호와 생산수량을 입력한 뒤 사진을 분석하세요.</div>
+      <div class="vip-bom-status">검색되지 않는 신규 PO일 때만 위에 PO번호·생산수량을 입력하고 사진을 분석하세요.</div>
       <button id="bomPhotoAnalyzeBtn" type="button" class="primary" style="width:100%;min-height:54px;margin-top:12px" onclick="analyzeBomPhotos()">📷 사진 분석 후 자재위치·소요량 계산</button>
       <button type="button" class="primary vip-po-save" style="width:100%;min-height:46px;margin-top:10px" onclick="saveReviewedBomPo()">☑ 결과 검토완료·BOM PO 저장</button>
       <div id="bomStatus" class="vip-bom-status">BOM 사진을 첨부하고 생산수량을 입력해 주세요.</div>
@@ -5041,6 +5041,7 @@ function calculateSavedBomPo(){
  });
  renderBomTable(bomCalculatedRows,true,prodQty);
  $('bomStatus').textContent=`☑ 저장 PO ${po} · 완제품 1개 기준 BOM × 생산 ${prodQty.toLocaleString()}대 계산 완료 · 위치와 재고는 현재 ERP 기준입니다.`;
+ $('bomResultTitle')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderReviewedBomPos(){
