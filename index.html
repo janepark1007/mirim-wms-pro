@@ -239,6 +239,15 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;bord
   font-weight:900;
 }
 .order-share small{display:block;color:#786d53;margin-top:7px;line-height:1.45}
+.unregistered-order-card{padding:16px;border:2px solid #f0d7a6;background:#fffaf0}
+.unregistered-order-head{font-size:20px;font-weight:1000;color:#9a5800;margin-bottom:6px}
+.unregistered-order-guide{padding:10px 12px;border-radius:10px;background:#fff1c9;color:#6d5100;font-weight:800;margin-bottom:12px}
+.unregistered-order-card label{display:block;font-weight:900;margin-top:10px}
+.unregistered-order-card input{display:block;width:100%;min-height:46px;margin-top:6px;border:1px solid #d7d0bd;border-radius:10px;padding:9px 11px;background:#fff}
+.unregistered-order-photo{margin-top:10px;padding:10px;border:1px solid #d7d0bd;border-radius:10px;background:#fff}
+.unregistered-order-photo img{display:block;width:180px;height:180px;object-fit:contain;border:1px solid #e2e6e3;border-radius:9px}
+.unregistered-order-photo small{display:block;margin-top:6px;color:#087a43;font-weight:900}
+.unregistered-order-send{width:100%;margin-top:14px}
 .low-stock-badge{
   display:inline-block;
   margin-top:8px;
@@ -1447,7 +1456,6 @@ async function submitStandaloneOrder(){
 
 function openMode(m){
  if(!currentWorker){showWorkerLogin();alert('작업자 로그인 후 사용할 수 있습니다.');return;}
- if(m==='order'){openStandaloneOrder();return;}
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
  const m=b.dataset.mode;
@@ -2731,6 +2739,91 @@ function orderRequestHtml(x,i){
  </div>`;
 }
 
+function unregisteredOrderHtml(searchText){
+ const workerName=currentWorker?.name||'';
+ return `<div class="result unregistered-order-card">
+   <div class="unregistered-order-head">⚠️ ERP에 없는 제품 주문</div>
+   <div class="unregistered-order-guide">검색 결과가 없는 제품입니다. 품명과 수량을 확인하고 제품 사진을 찍어 카톡으로 보내세요.</div>
+   <div class="item-admin-grid">
+     <label>품명 <b class="req">(필수)</b>
+       <input id="unreg_order_name" value="${esc(searchText||'')}" placeholder="제품명을 입력하세요">
+     </label>
+     <label>요청자
+       <input id="unreg_order_worker" value="${esc(workerName)}" ${workerName?'readonly':''} placeholder="이름 입력">
+     </label>
+   </div>
+   <label>요청수량 <b class="req">(필수)</b>
+     <input id="unreg_order_qty" type="number" min="1" inputmode="numeric" placeholder="요청수량">
+   </label>
+   <label>제품 사진 <b class="req">(필수)</b>
+     <input id="unreg_order_photo" type="file" accept="image/*" capture="environment" onchange="previewUnregisteredOrderPhoto()">
+   </label>
+   <div id="unreg_order_photo_preview" class="unregistered-order-photo hidden"></div>
+   <label>추가 요청내용 (선택)
+     <input id="unreg_order_note" placeholder="규격, 제조사, 사용처 등">
+   </label>
+   <button type="button" class="kakao-share-btn unregistered-order-send" onclick="shareUnregisteredOrder()">카톡 주문 보내기</button>
+ </div>`;
+}
+
+function previewUnregisteredOrderPhoto(){
+ const file=$('unreg_order_photo')?.files?.[0];
+ const box=$('unreg_order_photo_preview');
+ if(!box)return;
+ if(!file){box.innerHTML='';box.classList.add('hidden');return;}
+ const url=URL.createObjectURL(file);
+ box.classList.remove('hidden');
+ box.innerHTML=`<img src="${url}" alt="제품 사진 미리보기"><small>사진이 함께 전송됩니다.</small>`;
+}
+
+async function shareUnregisteredOrder(){
+ const name=($('unreg_order_name')?.value||'').trim();
+ const worker=($('unreg_order_worker')?.value||'').trim();
+ const qty=Number($('unreg_order_qty')?.value||0);
+ const note=($('unreg_order_note')?.value||'').trim();
+ const photoFile=$('unreg_order_photo')?.files?.[0]||null;
+ if(!name){alert('제품명을 입력해 주세요.');$('unreg_order_name')?.focus();return;}
+ if(!worker){alert('요청자 이름을 입력해 주세요.');$('unreg_order_worker')?.focus();return;}
+ if(!qty||qty<=0){alert('요청수량을 입력해 주세요.');$('unreg_order_qty')?.focus();return;}
+ if(!photoFile){alert('ERP 미등록 제품은 확인할 수 있도록 제품 사진을 찍어 주세요.');return;}
+
+ try{
+   await saveDailyOrderRequest({part:'ERP미등록',name:name,spec:''},qty,worker,note);
+ }catch(e){
+   console.error('ERP 미등록 주문 저장 실패',e);
+   alert('주문요청 저장 실패: '+(e.message||e));
+   return;
+ }
+
+ const lines=[
+   '🛒 미림 자재 주문요청','',
+   '⚠️ 구분 : ERP 미등록 제품',
+   '🔹 품번 : 확인 필요',
+   '🔹 품명 : '+name,
+   '🔹 요청수량 : '+qty.toLocaleString()+'개',
+   '📷 제품 사진 : 첨부','',
+   '👤 요청자 : '+worker,
+   '🕒 요청일시 : '+new Date().toLocaleString('ko-KR')
+ ];
+ if(note)lines.push('','📝 추가내용 : '+note);
+ const msg=lines.join('\n');
+
+ if(navigator.share){
+   try{
+     const data={title:'ERP 미등록 제품 주문',text:msg};
+     if(navigator.canShare&&navigator.canShare({files:[photoFile]}))data.files=[photoFile];
+     await navigator.share(data);
+     return;
+   }catch(e){
+     if(e&&e.name==='AbortError')return;
+     console.warn('ERP 미등록 제품 공유 실패',e);
+   }
+ }
+ try{await navigator.clipboard.writeText(msg)}catch(e){}
+ window.open(MIRIM_KAKAO_OPEN_URL,'_blank','noopener');
+ alert('주문내용을 복사했습니다. PC에서는 카톡에 붙여넣고 제품 사진을 직접 첨부해 주세요.');
+}
+
 
 
 let order5Rows=[];
@@ -3199,7 +3292,8 @@ function search(){
  if(!currentWorker){showWorkerLogin();alert('작업자 로그인 후 사용할 수 있습니다.');return;}
  try{
 
- const q=norm($('q').value);
+ const rawQ=($('q').value||'').trim();
+ const q=norm(rawQ);
  if(!q){
    $('count').textContent='검색어를 입력하세요.';
    $('results').innerHTML='';
@@ -3210,6 +3304,10 @@ function search(){
  const rows=(exact.length?exact:ITEMS.filter(x=>norm(x.part).includes(q)||norm(x.name).includes(q))).slice(0,30).map(applyLocEdit);
  $('count').textContent='검색결과 '+rows.length+'개';
  renderDailyHistories(rows.map(x=>x.part));
+ if(!rows.length && mode==='order'){
+   $('results').innerHTML=unregisteredOrderHtml(rawQ);
+   return;
+ }
  if(currentWorker){
    rows.forEach((x,i)=>{
      const w=$('w_'+i);
