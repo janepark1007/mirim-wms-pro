@@ -2100,6 +2100,15 @@ function syncBar(msg,ok=false){
 let currentWorker=null;
 try{ currentWorker=JSON.parse(sessionStorage.getItem('mirim_worker_session')||'null'); }catch(e){currentWorker=null;}
 
+function updatePrivilegedAccessUI(){
+ const workerOnly=!!currentWorker&&!isAdmin;
+ const vipOpen=sessionStorage.getItem('mirim_vip_view')==='1';
+ const adminBtn=$('adminLoginBtn'),vipBtn=$('vipLoginBtn'),workerBtn=$('workerLoginBtn');
+ if(adminBtn)adminBtn.style.display=workerOnly?'none':'';
+ if(vipBtn)vipBtn.style.display=workerOnly?'none':'';
+ if(workerBtn)workerBtn.style.display=(isAdmin||vipOpen)?'none':'';
+}
+
 function updateWorkerUI(){
  const badge=$('workerBadge'), btn=$('workerLoginBtn');
  if(badge) badge.textContent=currentWorker ? `작업자: ${currentWorker.name}` : '작업자 미로그인';
@@ -2125,6 +2134,7 @@ function updateWorkerUI(){
  if(ws) ws.textContent=isAdmin ? '오늘도 효율적인 자재·창고 관리를 시작합니다.' : '오늘도 안전하고 정확한 자재 업무를 함께해요.';
 
  try{fillUnregisteredWorker();}catch(e){}
+ updatePrivilegedAccessUI();
 }
 
 function showWorkerLogin(){
@@ -2194,6 +2204,9 @@ async function workerLogin(){
 
    currentWorker={id:row.worker_id,name:row.worker_name};
    sessionStorage.setItem('mirim_worker_session',JSON.stringify(currentWorker));
+   sessionStorage.removeItem('mirim_vip_ok');
+   sessionStorage.removeItem('mirim_vip_view');
+   $('vipBomPanel')?.classList.add('hidden');
    try{
      const {error:notifErr}=await sharedDb.from('wms_admin_notifications').insert({
        type:'WORKER_LOGIN',
@@ -2276,6 +2289,7 @@ async function loadWorkerLoginLogs(){
  }
 }
 let isAdmin=sessionStorage.getItem('mirim_prod_admin')==='1';
+if(currentWorker&&isAdmin){isAdmin=false;sessionStorage.removeItem('mirim_prod_admin');}
 
 function updateAdminUI(){
  try{
@@ -2322,6 +2336,7 @@ function updateAdminUI(){
  if(wt) wt.textContent=isAdmin ? '안녕하세요, 관리자님!' : (currentWorker?`안녕하세요, ${currentWorker.name}님!`:'안녕하세요!');
  const ws=$('welcomeSub'); if(ws)ws.textContent=isAdmin?'오늘도 효율적인 자재·창고 관리를 시작합니다.':'오늘도 안전하고 정확한 자재 업무를 함께해요.';
  try{syncDashboardStats();}catch(e){}
+ updatePrivilegedAccessUI();
 
  try{renderErpUnregisteredItems();fillUnregisteredWorker();}catch(e){}
 
@@ -2332,6 +2347,7 @@ function updateAdminUI(){
  }
 }
 function adminLogin(){
+ if(currentWorker&&!isAdmin){alert('일반 작업자 로그인 상태에서는 관리자 모드에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
  if(isAdmin){
    isAdmin=false;
    sessionStorage.removeItem('mirim_prod_admin');
@@ -4739,6 +4755,7 @@ async function sha256Text(text){
 }
 
 function openVipLogin(){
+ if(currentWorker){alert('일반 작업자 로그인 상태에서는 VIP BOM에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
  if(sessionStorage.getItem('mirim_vip_ok')==='1'){openVipBom();return;}
  $('vipPinInput').value='';$('vipLoginError').textContent='';$('vipLoginError').classList.add('hidden');
  $('vipLoginModal').classList.remove('hidden');$('vipLoginModal').setAttribute('aria-hidden','false');
@@ -4760,6 +4777,7 @@ function loadBomRows(){
 }
 function openVipBom(){
  sessionStorage.setItem('mirim_vip_view','1');
+ updatePrivilegedAccessUI();
  loadBomRows();
  ['home','work','photoSearchPanel','notifPanel','workerLoginPanel','loginLogPanel','excelExportPanel'].forEach(id=>$(id)?.classList.add('hidden'));
  $('vipBomPanel').classList.remove('hidden');
@@ -4773,6 +4791,7 @@ function openVipBom(){
 }
 function closeVipBom(){
  sessionStorage.removeItem('mirim_vip_view');
+ updatePrivilegedAccessUI();
  $('vipBomPanel').classList.add('hidden');$('home').classList.remove('hidden');
  if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
 }
