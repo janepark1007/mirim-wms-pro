@@ -684,6 +684,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
   background:#fff;border-radius:20px;
   padding:18px;border:2px solid #f2d54b;
   box-shadow:0 18px 55px rgba(0,0,0,.24);
+  max-height:calc(100vh - 24px);overflow-y:auto;
 }
 .order-modal-head{
   display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
@@ -703,6 +704,21 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 .order-modal-card textarea{resize:vertical;min-height:100px}
 .order-note-label{margin-top:10px}
+.standalone-order-search-list{
+  margin-top:6px;border:1px solid #cfd8d2;border-radius:11px;
+  max-height:210px;overflow-y:auto;background:#fff;
+}
+.standalone-order-search-item{
+  display:grid;grid-template-columns:120px 1fr;gap:3px 10px;
+  width:100%;padding:10px 12px;border:0;border-bottom:1px solid #edf0ee;
+  background:#fff;text-align:left;color:#26322b;cursor:pointer;
+}
+.standalone-order-search-item:last-child{border-bottom:0}
+.standalone-order-search-item:hover{background:#f4faf6}
+.standalone-order-search-item b{grid-row:1/3;color:#087a43}
+.standalone-order-search-item span{font-weight:900}
+.standalone-order-search-item small{color:#6d7972}
+.standalone-order-search-empty{padding:12px;color:#6d7972;font-weight:800}
 .req{color:#d92d20;font-size:12px}
 .order-modal-guide{
   margin-top:12px;padding:10px 12px;border-radius:10px;
@@ -716,6 +732,8 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 .kakao-order-send:disabled{opacity:.55}
 @media(max-width:560px){
  .order-required-grid{grid-template-columns:1fr}
+ .standalone-order-search-item{grid-template-columns:1fr}
+ .standalone-order-search-item b{grid-row:auto}
  .order-modal-card{padding:14px}
  .order-modal-head h2{font-size:21px}
 }
@@ -756,6 +774,13 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       </div>
       <button type="button" class="order-modal-close" onclick="closeStandaloneOrder()">✕</button>
     </div>
+
+    <label class="order-note-label">ERP 품목 검색
+      <input id="standaloneOrderSearch" autocomplete="off" placeholder="품번 또는 품명으로 검색하세요" oninput="renderStandaloneOrderSearch()">
+    </label>
+    <div id="standaloneOrderSearchList" class="standalone-order-search-list hidden"></div>
+    <input id="standaloneOrderPart" type="hidden">
+    <input id="standaloneOrderSpec" type="hidden">
 
     <div class="order-required-grid">
       <label>품명 <b class="req">(필수)</b>
@@ -1282,18 +1307,51 @@ setTimeout(()=>{applyExportPeriod();updateExportFilterGuide();},0);
 
 
 const MIRIM_KAKAO_OPEN_URL='https://open.kakao.com/o/gWZ1pbJi';
+let standaloneOrderSearchRows=[];
+
+function renderStandaloneOrderSearch(){
+ const q=norm(($('standaloneOrderSearch')?.value||'').trim());
+ const box=$('standaloneOrderSearchList');
+ if(!box)return;
+ if(!q){box.innerHTML='';box.classList.add('hidden');return;}
+ standaloneOrderSearchRows=ITEMS.filter(x=>String(x.part||'')!=='합계')
+   .filter(x=>norm(x.part).includes(q)||norm(x.name).includes(q)).slice(0,15);
+ box.classList.remove('hidden');
+ if(!standaloneOrderSearchRows.length){
+   box.innerHTML='<div class="standalone-order-search-empty">검색 결과가 없습니다. 아래 품명 칸에 직접 입력하세요.</div>';
+   return;
+ }
+ box.innerHTML=standaloneOrderSearchRows.map((x,i)=>`<button type="button" class="standalone-order-search-item" onclick="selectStandaloneOrderItem(${i})"><b>${esc(x.part||'')}</b><span>${esc(x.name||'')}</span><small>규격: ${esc(x.spec||'-')}</small></button>`).join('');
+}
+
+function selectStandaloneOrderItem(i){
+ const x=standaloneOrderSearchRows[i];
+ if(!x)return;
+ $('standaloneOrderPart').value=x.part||'';
+ $('standaloneOrderSpec').value=x.spec||'';
+ $('standaloneOrderName').value=x.name||'';
+ $('standaloneOrderSearch').value=(x.part||'')+' · '+(x.name||'');
+ $('standaloneOrderSearchList').innerHTML='';
+ $('standaloneOrderSearchList').classList.add('hidden');
+ $('standaloneOrderQty')?.focus();
+}
 
 function openStandaloneOrder(){
  if(!currentWorker){showWorkerLogin();alert('작업자 로그인 후 사용할 수 있습니다.');return;}
  const m=$('standaloneOrderModal');
  if(!m)return;
+ $('standaloneOrderSearch').value='';
+ $('standaloneOrderSearchList').innerHTML='';
+ $('standaloneOrderSearchList').classList.add('hidden');
+ $('standaloneOrderPart').value='';
+ $('standaloneOrderSpec').value='';
  $('standaloneOrderName').value='';
  $('standaloneOrderQty').value='';
  $('standaloneOrderNote').value='';
  $('standaloneOrderWorker').value=currentWorker?.name||'';
  m.classList.remove('hidden');
  m.setAttribute('aria-hidden','false');
- setTimeout(()=>$('standaloneOrderName')?.focus(),80);
+ setTimeout(()=>$('standaloneOrderSearch')?.focus(),80);
 }
 function closeStandaloneOrder(){
  const m=$('standaloneOrderModal');
@@ -1302,6 +1360,8 @@ function closeStandaloneOrder(){
  m.setAttribute('aria-hidden','true');
 }
 async function submitStandaloneOrder(){
+ const part=($('standaloneOrderPart')?.value||'').trim();
+ const spec=($('standaloneOrderSpec')?.value||'').trim();
  const name=($('standaloneOrderName')?.value||'').trim();
  const qtyRaw=($('standaloneOrderQty')?.value||'').trim();
  const note=($('standaloneOrderNote')?.value||'').trim();
@@ -1337,7 +1397,7 @@ async function submitStandaloneOrder(){
  try{
    // 카톡 전송 전에 웹 주문기록을 먼저 저장하여 관리자/엑셀 출력에 남김
    await saveDailyOrderRequest(
-     {part:'',name:name,spec:''},
+     {part:part,name:name,spec:spec},
      Number(qtyRaw),
      worker,
      note
@@ -1346,7 +1406,9 @@ async function submitStandaloneOrder(){
    const lines=[
      '🛒 미림 자재 주문요청',
      '',
+     '🔹 품번 : '+(part||'ERP 미등록'),
      '🔹 품명 : '+name,
+     '🔹 규격 : '+(spec||'-'),
      '🔹 요청수량 : '+Number(qtyRaw).toLocaleString(),
      '📝 추가주문내용 : '+note,
      '',
@@ -1385,6 +1447,7 @@ async function submitStandaloneOrder(){
 
 function openMode(m){
  if(!currentWorker){showWorkerLogin();alert('작업자 로그인 후 사용할 수 있습니다.');return;}
+ if(m==='order'){openStandaloneOrder();return;}
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
  const m=b.dataset.mode;
