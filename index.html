@@ -706,7 +706,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 .order-required-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .order-modal-card label{display:block;font-weight:900;color:#2d342f}
-.order-modal-card input,.order-modal-card textarea{
+.order-modal-card input,.order-modal-card textarea,.order-modal-card select{
   display:block;width:100%;margin-top:6px;
   border:1px solid #cfd8d2;border-radius:11px;
   padding:11px 12px;background:#fff;font:inherit
@@ -813,6 +813,19 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
     </section>
 
     <section id="otherOrderPanel" class="order-type-panel hidden">
+      <label>품목분류 <b class="req">(필수)</b>
+        <select id="otherOrderCategory">
+          <option value="">선택하세요</option>
+          <option value="하우징">하우징</option>
+          <option value="러그">러그</option>
+          <option value="단자">단자</option>
+          <option value="페놀">페놀</option>
+          <option value="튜브">튜브</option>
+          <option value="슬리브">슬리브</option>
+          <option value="코아">코아</option>
+          <option value="기타">기타</option>
+        </select>
+      </label>
       <label>제품 사진 <b class="req">(필수)</b>
         <input id="otherOrderPhoto" type="file" accept="image/*" capture="environment" onchange="previewOtherOrderPhoto()">
       </label>
@@ -1412,6 +1425,7 @@ function openStandaloneOrder(){
  $('standaloneOrderQty').value='';
  $('standaloneOrderNote').value='';
  $('otherOrderPhoto').value='';
+ $('otherOrderCategory').value='';
  $('otherOrderPhotoPreview').innerHTML='';
  $('otherOrderPhotoPreview').classList.add('hidden');
  $('otherOrderPart').value='';
@@ -1430,10 +1444,12 @@ function closeStandaloneOrder(){
 }
 
 async function submitOtherStandaloneOrder(worker){
+ const category=($('otherOrderCategory')?.value||'').trim();
  const part=($('otherOrderPart')?.value||'').trim();
  const qtyRaw=($('otherOrderQty')?.value||'').trim();
  const note=($('otherOrderNote')?.value||'').trim();
  const photoFile=$('otherOrderPhoto')?.files?.[0]||null;
+ if(!category){alert('품목분류를 선택해 주세요.');$('otherOrderCategory')?.focus();return;}
  if(qtyRaw&&Number(qtyRaw)<=0){alert('요청수량은 1개 이상으로 입력해 주세요.');return;}
  if(!note){alert('비고를 입력해 주세요.');$('otherOrderNote')?.focus();return;}
  if(!photoFile){alert('기타 주문은 제품 사진을 넣어 주세요.');return;}
@@ -1441,8 +1457,9 @@ async function submitOtherStandaloneOrder(worker){
  const btn=$('standaloneOrderSendBtn');
  if(btn){btn.disabled=true;btn.textContent='저장 중...';}
  try{
-   await saveDailyOrderRequest({part:part||'기타주문',name:'사진 확인',spec:''},qtyRaw?Number(qtyRaw):0,worker,note);
+   await saveDailyOrderRequest({part:part||'기타주문',name:category+' · 사진 확인',spec:''},qtyRaw?Number(qtyRaw):0,worker,note);
    const lines=['🛒 미림 기타 자재 주문','',
+     '🔸 품목분류 : '+category,
      '🔹 품번 : '+(part||'확인 필요'),
      '📷 제품 사진 : 첨부'];
    if(qtyRaw)lines.push('🔹 요청수량 : '+Number(qtyRaw).toLocaleString()+'개');
