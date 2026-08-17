@@ -784,7 +784,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 .vip-modal-card{width:min(420px,100%)}
 .vip-login-title{font-size:24px;font-weight:1000;margin-bottom:8px;color:#443500}
 .vip-login-error{margin-top:8px;color:#b42318;font-weight:900}
-#vipBomPanel{margin:16px auto;max-width:1180px}
+#vipBomPanel{margin:16px auto;width:96vw;max-width:1600px}
 .vip-bom-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px;border-radius:18px;background:linear-gradient(135deg,#263c31,#0b6b3e);color:#fff}
 .vip-bom-head h2{margin:0;font-size:26px}.vip-bom-head p{margin:5px 0 0;color:#dff4e8;font-weight:800}
 .vip-bom-actions{display:flex;gap:8px;flex-wrap:wrap}.vip-bom-actions button{min-height:42px;border:0;border-radius:10px;padding:0 14px;font-weight:900}
@@ -795,7 +795,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 .vip-bom-row{display:grid;grid-template-columns:1fr 160px 160px auto;gap:8px;align-items:end}
 .vip-bom-row button{min-height:46px}
 .vip-bom-status{margin-top:10px;padding:10px 12px;border-radius:10px;background:#edf8f2;color:#075f35;font-weight:900}
-.vip-bom-table-wrap{overflow:auto;margin-top:12px;max-height:520px;border:1px solid #dfe7e2;border-radius:12px}
+.vip-bom-table-wrap{overflow:auto;margin-top:12px;max-height:68vh;border:1px solid #dfe7e2;border-radius:12px}
 .vip-bom-table{width:100%;border-collapse:collapse;font-size:13px}.vip-bom-table th,.vip-bom-table td{padding:9px;border-bottom:1px solid #e8eeea;text-align:left;white-space:nowrap}
 .vip-bom-table th{position:sticky;top:0;background:#edf6f0;color:#164f34;z-index:1}.vip-bom-table td.num{text-align:right;font-variant-numeric:tabular-nums}
 .vip-bom-empty{padding:28px;text-align:center;color:#6b786f;font-weight:900}
@@ -804,6 +804,8 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 .bom-ocr-progress{margin-top:8px;height:10px;border-radius:10px;background:#e5ece8;overflow:hidden}.bom-ocr-progress span{display:block;height:100%;background:#087a43;width:0;transition:width .2s}
 .vip-po-save{background:#6b4f00!important;color:#fff!important}
 .vip-shortage{color:#b42318;font-weight:1000}.vip-ok-stock{color:#087a43;font-weight:900}
+#bomResultTable .vip-bom-table{min-width:1380px;font-size:14px}
+#bomResultTable .vip-bom-table th,#bomResultTable .vip-bom-table td{padding:11px 10px}
 @media(max-width:760px){.vip-bom-grid{grid-template-columns:1fr}.vip-bom-row{grid-template-columns:1fr}.vip-bom-head h2{font-size:22px}.bom-photo-preview{grid-template-columns:1fr}.bom-photo-preview img{height:260px}}
 </style>
 
@@ -951,6 +953,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
         <label>생산수량 <b class="req">(필수)</b><input id="bomProductionQty" type="number" min="1" inputmode="numeric" placeholder="예: 10"></label>
       </div>
       <button id="bomPhotoAnalyzeBtn" type="button" class="primary" style="width:100%;min-height:54px;margin-top:12px" onclick="analyzeBomPhotos()">📷 사진 분석 후 자재위치·소요량 계산</button>
+      <button type="button" class="primary" style="width:100%;min-height:48px;margin-top:8px;background:#245d93" onclick="calculateSavedBomPo()">🔎 저장된 PO번호 검색·새 생산수량 계산</button>
       <button type="button" class="primary vip-po-save" style="width:100%;min-height:46px;margin-top:10px" onclick="saveReviewedBomPo()">☑ 결과 검토완료·BOM PO 저장</button>
       <div id="bomStatus" class="vip-bom-status">BOM 사진을 첨부하고 생산수량을 입력해 주세요.</div>
     </div>
@@ -2104,7 +2107,7 @@ function updatePrivilegedAccessUI(){
  const workerOnly=!!currentWorker&&!isAdmin;
  const vipOpen=sessionStorage.getItem('mirim_vip_view')==='1';
  const adminBtn=$('adminLoginBtn'),vipBtn=$('vipLoginBtn'),workerBtn=$('workerLoginBtn');
- if(adminBtn)adminBtn.style.display=workerOnly?'none':'';
+ if(adminBtn)adminBtn.style.display=(workerOnly||vipOpen)?'none':'';
  if(vipBtn)vipBtn.style.display=workerOnly?'none':'';
  if(workerBtn)workerBtn.style.display=(isAdmin||vipOpen)?'none':'';
 }
@@ -4768,7 +4771,9 @@ async function submitVipLogin(){
  if(await sha256Text(pin)!==VIP_PIN_HASH){
    $('vipLoginError').textContent='VIP PIN이 올바르지 않습니다.';$('vipLoginError').classList.remove('hidden');return;
  }
- sessionStorage.setItem('mirim_vip_ok','1');closeVipLogin();openVipBom();
+ sessionStorage.setItem('mirim_vip_ok','1');
+ isAdmin=true;sessionStorage.setItem('mirim_prod_admin','1');updateAdminUI();
+ closeVipLogin();openVipBom();
 }
 
 function loadBomRows(){
@@ -4795,7 +4800,10 @@ function closeVipBom(){
  $('vipBomPanel').classList.add('hidden');$('home').classList.remove('hidden');
  if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
 }
-function vipLogout(){sessionStorage.removeItem('mirim_vip_ok');sessionStorage.removeItem('mirim_vip_view');closeVipBom();}
+function vipLogout(){
+ sessionStorage.removeItem('mirim_vip_ok');sessionStorage.removeItem('mirim_vip_view');
+ isAdmin=false;sessionStorage.removeItem('mirim_prod_admin');updateAdminUI();closeVipBom();
+}
 
 function previewBomPhotos(event){
  bomPhotoFiles=[...(event.target.files||[])];
@@ -4973,16 +4981,51 @@ function saveReviewedBomPo(){
  if(!bomCalculatedRows.length)return alert('필요수량 계산을 먼저 눌러 주세요.');
  const product=bomProducts().find(x=>x.part===bomSelectedPart)||{part:bomSelectedPart,name:'사진 BOM'};
  const now=new Date();
+ const unitItems=bomCalculatedRows.map(r=>{
+   const unitQty=Number(r.required_qty||0)/prodQty;
+   return {...r,qty_per:unitQty,required_qty:unitQty,shortage:null,note:(r.note||'')+' · 완제품 1개 기준 저장'};
+ });
  const record={
    id:'PO_'+now.getTime(),po_number:po,finished_part:product.part,finished_name:product.name,
-   production_qty:prodQty,reviewed_at:now.toISOString(),reviewer:currentWorker?.name||(isAdmin?'관리자':'VIP'),
-   items:bomCalculatedRows.map(r=>({...r}))
+   production_qty:1,source_production_qty:prodQty,reviewed_at:now.toISOString(),reviewer:'VIP',
+   items:unitItems
  };
+ const oldIndex=bomReviewedPos.findIndex(r=>norm(r.po_number)===norm(po));
+ if(oldIndex>=0){
+   if(!confirm(`${po} PO가 이미 저장되어 있습니다. 완제품 1개 기준 BOM으로 교체할까요?`))return;
+   bomReviewedPos.splice(oldIndex,1);
+ }
  bomReviewedPos.unshift(record);
  localStorage.setItem(BOM_PO_STORAGE_KEY,JSON.stringify(bomReviewedPos));
  renderReviewedBomPos();
- $('bomStatus').textContent=`☑ ${po} · ${product.part} · 생산 ${prodQty.toLocaleString()}대 검토완료 저장`;
+ $('bomStatus').textContent=`☑ ${po} · 완제품 1개 기준 BOM으로 저장 완료 · 다음에는 생산수량만 바꿔 계산할 수 있습니다.`;
  $('bomPoNumber').value='';
+}
+
+function calculateSavedBomPo(){
+ const po=($('bomPoNumber')?.value||'').trim();
+ const prodQty=Number($('bomProductionQty')?.value||0);
+ if(!po)return alert('검색할 BOM PO번호를 입력해 주세요.');
+ if(!prodQty||prodQty<=0)return alert('새로 계산할 생산수량을 입력해 주세요.');
+ const record=bomReviewedPos.find(r=>norm(r.po_number)===norm(po));
+ if(!record){
+   const near=bomReviewedPos.filter(r=>norm(r.po_number).includes(norm(po))).slice(0,5).map(r=>r.po_number);
+   return alert(near.length?`정확한 PO번호를 확인해 주세요.\n비슷한 PO: ${near.join(', ')}`:'저장된 BOM PO를 찾지 못했습니다.');
+ }
+ const savedBase=Number(record.production_qty||1);
+ bomSelectedPart=record.finished_part;
+ $('bomSelectedFinished').value=`${record.finished_part} · ${record.finished_name||'사진 BOM'}`;
+ bomCalculatedRows=(record.items||[]).map(r=>{
+   const unitQty=savedBase===1?Number(r.qty_per||r.required_qty||0):Number(r.required_qty||0)/savedBase;
+   const item=(ITEMS||[]).find(x=>norm(x.part)===norm(r.component_part));
+   const current=item?getCurrentStock(item):null;
+   const erpQty=item?Number(item.erpQty||0):null;
+   const required=Math.ceil(unitQty*prodQty);
+   const baseStock=current===null?erpQty:current;
+   return {...r,qty_per:unitQty,required_qty:required,erp_match:!!item,erp_name:item?.name||r.erp_name||'',erp_qty:erpQty,current_stock:current,location:item?(allLocationText(item.part)||item.location||'위치 확인 필요'):'ERP 품번 미연결',shortage:baseStock===null?null:Math.max(0,required-Number(baseStock||0))};
+ });
+ renderBomTable(bomCalculatedRows,true,prodQty);
+ $('bomStatus').textContent=`☑ 저장 PO ${po} · 완제품 1개 기준 BOM × 생산 ${prodQty.toLocaleString()}대 계산 완료 · 위치와 재고는 현재 ERP 기준입니다.`;
 }
 
 function renderReviewedBomPos(){
@@ -4992,7 +5035,7 @@ function renderReviewedBomPos(){
  const todayCount=bomReviewedPos.filter(r=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date(r.reviewed_at))===today).length;
  summary.textContent=`전체 ${bomReviewedPos.length.toLocaleString()}건 · 오늘 검토완료 ${todayCount.toLocaleString()}건`;
  box.className='';
- box.innerHTML=`<table class="vip-bom-table"><thead><tr><th>검토일시</th><th>PO번호</th><th>완제품 품번</th><th>완제품명</th><th>생산수량</th><th>자재종수</th><th>검토자</th><th>보기</th></tr></thead><tbody>${bomReviewedPos.map((r,i)=>`<tr><td>${new Date(r.reviewed_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}</td><td><b>${esc(r.po_number)}</b></td><td>${esc(r.finished_part)}</td><td>${esc(r.finished_name)}</td><td class="num">${Number(r.production_qty||0).toLocaleString()}</td><td class="num">${(r.items||[]).length.toLocaleString()}</td><td>${esc(r.reviewer)}</td><td><button type="button" onclick="viewReviewedBomPo(${i})">상세보기</button></td></tr>`).join('')}</tbody></table>`;
+ box.innerHTML=`<table class="vip-bom-table"><thead><tr><th>검토일시</th><th>PO번호</th><th>완제품 품번</th><th>완제품명</th><th>저장기준</th><th>자재종수</th><th>검토자</th><th>불러오기</th></tr></thead><tbody>${bomReviewedPos.map((r,i)=>`<tr><td>${new Date(r.reviewed_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}</td><td><b>${esc(r.po_number)}</b></td><td>${esc(r.finished_part)}</td><td>${esc(r.finished_name)}</td><td><b>완제품 1개</b></td><td class="num">${(r.items||[]).length.toLocaleString()}</td><td>${esc(r.reviewer)}</td><td><button type="button" onclick="viewReviewedBomPo(${i})">불러오기</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 function viewReviewedBomPo(i){
@@ -5000,10 +5043,9 @@ function viewReviewedBomPo(i){
  bomSelectedPart=r.finished_part;
  $('bomSelectedFinished').value=`${r.finished_part} · ${r.finished_name||''}`;
  $('bomPoNumber').value=r.po_number;
- $('bomProductionQty').value=r.production_qty;
- bomCalculatedRows=(r.items||[]).map(x=>({...x}));
- renderBomTable(bomCalculatedRows,true,Number(r.production_qty||0));
- $('bomStatus').textContent=`저장 PO 상세보기 · ${r.po_number} · ${new Date(r.reviewed_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}`;
+ $('bomProductionQty').value=1;
+ calculateSavedBomPo();
+ $('bomStatus').textContent=`저장 PO 불러오기 완료 · ${r.po_number} · 완제품 1개 기준입니다. 원하는 생산수량을 입력해 다시 계산하세요.`;
  $('vipBomPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -5012,9 +5054,9 @@ function exportReviewedBomPos(){
  const rows=[];
  bomReviewedPos.forEach(po=>(po.items||[]).forEach(r=>rows.push({
    '검토일시':new Date(po.reviewed_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}),'PO번호':po.po_number,
-   '완제품 품번':po.finished_part,'완제품명':po.finished_name,'생산수량':po.production_qty,'검토자':po.reviewer,
+   '완제품 품번':po.finished_part,'완제품명':po.finished_name,'저장기준 생산수량':1,'최초 검토시 생산수량':po.source_production_qty||'','검토자':po.reviewer,
    '자재 품번':r.component_part,'자재명':r.component_name,'규격':r.spec,'단위':r.unit,'1대당 수량':r.qty_per,
-   'LOSS율(%)':r.loss_rate,'필요수량':Math.ceil(Number(r.required_qty||0)),'ERP연결':r.erp_match?'연결':'미연결',
+   'LOSS율(%)':r.loss_rate,'완제품 1개 기준 소요량':Number(r.qty_per||r.required_qty||0),'ERP연결':r.erp_match?'연결':'미연결',
    '창고위치':r.location||'','ERP수량':r.erp_qty===null?'':r.erp_qty,'현창고수량':r.current_stock===null?'':r.current_stock,
    '부족수량':r.shortage===null?'':r.shortage,'비고':r.note||''
  })));
