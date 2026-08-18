@@ -835,6 +835,8 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 .vip-po-movement-summary{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
 .vip-po-movement-summary span{padding:7px 10px;border-radius:9px;background:#edf8f2;border:1px solid #cfe4d7;font-weight:900}
 #bomPoMovementTable .vip-bom-table{min-width:1050px;font-size:14px}
+.order-inquiry-photo{width:76px;height:64px;object-fit:contain;border:1px solid #d9e4de;border-radius:8px;background:#fff;display:block}
+.order-no-photo{color:#8a9690;font-size:12px;font-weight:800}
 @media(max-width:760px){.vip-bom-grid,.vip-po-search-grid{grid-template-columns:1fr}.vip-bom-row{grid-template-columns:1fr}.vip-bom-head h2{font-size:22px}.bom-photo-preview{grid-template-columns:1fr}.bom-photo-preview img{height:260px}}
 @media(min-width:900px){
  main{width:calc(100% - 32px);max-width:1760px;padding-left:0;padding-right:0}
@@ -952,7 +954,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
     <img class="brand-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAABVCAYAAABZwUhdAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABbsSURBVHhe7d15VBNn2wbwi7CvIogCIlgUNQKCWllEWdzrUrWoVVt9rVgERfq51K0vn+3r+xW1iht1o3U5Wq2KtQJ1l6UKCFpQZNECKrsiKkSWACHz/REYyUMCCWu0z++c5xy575mwmCuTmXlmosQwDAOKohQChyxQFNV1aCApSoHQQFKUAqGBpCgFQgNJUQqEBpKiFAgNJEUpEBpIilIgNJAUpUBoIClKgdBAUpQCoYGkKAVCA0lRCoQGkqIUCA0kRSkQpff1esik/If47lIIrj1KQLWgFtYmlljpPh+LHKZCSUmJXLzdCIR1OHHnEn5NuorkgkeorOGjX4/emD98Evxd50JDVY1chaJY710gqwU1+Pcf+xEUdRJCRki28YXjNPw8L6BDQpnx/AlmH16PtGePyRYAYLDxBwj33glLw95ki6KA9y2Q2SX58Dy8FvcLMsmWmOBZa7F89Gyy3CY3s5Mx9dBK8PgVZEuMhYEJ7qw+BiOd7mSLot6ffchbj+/BMWhRi2EEgG/+2IfSqjdkudXCUv/EhP1+LYYRAHJeFWHxyc1kmaKA9yWQv92PwtjgZXhZUUa2JCqrKsfB2N/Icqv8cvcyZv70Nfi1NWRLqoi0m2SJooD3IZC/3L2M2UfWo6aulmw163xKNFmSW0j871h4YpPEfVWKao13OpAHYs+1OhB8QTVZksveP0/D+9f/a9X3pihp3tlA7oo+Bd8zW7okEFuuH4X/ue1kmaLa7J0MZOC1o1h5Pogsd4qNET9iQ/iPZJmi2sU7F8j14cHYGNH5gWAYBivPByHw2lGyRVHt5p0JJMMw+Oq3Hdh6/RjZ6nB1QiGWnd2KXdGnyBZFtat3IpB1QiF8zgRiT8yvZKvD1QmFWHhiEw7EniNbFNXuFD6QDYE4FHeebLXIvLsxRlnaY1CvvmRLJjV1tZh9ZB1O/nWZbDVLV10LXk7TscdzDf47xRcOFtbkIhQlkUJPnaupq8WnRzbi9weynzNU5nDg5TQd/+M+D9xeH7D1rJI8rPl9Ny48iAEA2PW2wr21JxutKa6yho85Rzfgj7RbZKtZS5xnIHDacvTQ1herH0uMwNLTgagWiCYQMLvviPUpCoocyMoaPmYfWY+L6bFkS6rBxh/gxILNGGo2kGyx/EK34cebZ5sNZGUNH1MPrURU5l2yJZWWmgaOffYtZtmPJVus8ynRmHV4HYSMkAaSkkgh37I2BEKeME63dUPCqqPNhhEAdn+yBqMs7ckyq6yqHB7BPnKFUU9DG5F++5sNIwDMHOKOVR7zyTJFsRQukK0JxCLHqTi3eBt01LXIVhPKHA72eK6BEppefvWi/DU8gn2QmJNGtqTqoa2PP/1D4GhhQ7Yk2jTpS/TSNSDLFAUoWiBflL/GmGBfuQLh4+KJw/P+F8oc2X+VoWYDMd3WTaxWWPYCY4J9kZz/SKzenB7a+oj02w+73lZkSyoddS2sH7eILFMUoEj7kEW8EkzY54fUomyyJZWPiyf2zV7XqouNy6rK0U1TBwCQX1oM971LkV2STy4mVe9uRrjsuxc2Jv3IVotq6mqhpqxKlilKMQLZmkC0JYyNZZXkwWOvD/JLi8mWVL27GSHa/yD69+hDtiiqTWR/n9dBskry4LLLq01hrK0TkIvI5EFhFtz3LJUrjH30e9EwUh2mSwOZ9uwx3PcsRe7rZ2RLqhWunzbZMp5Ovia2jCzuFfyNMcG+KCh7Qbak6tfDDHErDzcJY3Gx7IEGgIKCArJEUUBXBrJh6yRPINaN+5foCCnxNvVYYgSqamW/vjH+6QO47fFGSUUp2ZKqXw8zRK84CDP9nmQLGRkZePjwIVmWiMfj4erVq2SZooCuCmRCTipG7V4iVyDWjfsXtkzzI8tA/dHZn29fIMsShaX+ibHBvjLd/6aBjUk/3PrqJ4lhbHDjxg28fPmSLIupra1FeHg4qqtlf/Gg/lk6PZBRmXcxYZ9sN4Rq0FwYG2wM/xF/F+eSZZZAWIdvLx3CzJ++lmtramPSD5F++2GsZ0i2xAgEAoSFheHNG8k3z6qtrUVERARKSkrIFkWxOjWQ1x4lYMrB/2n3MALAm+pKeAT7ICYrSaxeJxTifEo0hv+wAN9dDpHrDgPD+3AR6bdf5ls28ng8nDp1CqmpqexWUCAQIDMzEydPnkRurvQXDIpCZ5/2UFvlLNcRUVnDaL9tvtjtH4eYWmGIaX+U8csR/+SBXG+NGzhYWOOqbzB7rrI5MTExuHfvnlhNSUkJampqqKmpAfknVldXh4+Pj1iNotDZW0h5wrhh/CKZwihJSmEmTty9hPDUm60Ko6OFjcxhlIZhGFRXVzcJI0U1p1MDKavAacvx/dTlZLlTeFh9iEi//W0KI0W1lsIFMnDa8i6b6+lh9SEivHdCS02DbFFUp1CoQHZlGKdaj6ZhpLpcpx7UUfpqBFlitSWM5EEdeU2zGY3QxVtbPeFb0kGd5ijCQZ0bkZHQ0dFhL0JjGAZlPB4mjB9PLCmf/Px8ZGVnQ0tTk63VCgTQ0daGnZ2d2LLyys3NxZMnT6DZ6LEFdXVQVVHBiBHSn1vNKS8vR1x8PLp168b+LYQMg5rqari6uhJLdzyFCGRbwog2BrKtYcQ7GMjiFy/A4/HAKytDeno6AMDKygqWlpYoKyuDgYEBku/dg66O7PvRNTU1MDAwQBmPB2cnJxw7dgw1NaLblcycOROZWVlwdnJCXl4ecvPyoKqiQj6EVLUCAfqYmaGgsBDOTk44ceIE23N1dWXrrZGQmAhHBwdcuXIFL16IZo3Z29uDX12ND4cPJxfvcF0eyLaGEQCcgr5AQk4qWW7RdFs3nPkisE1hBIDExETEx8eTZam0tbWxZMkSstwqsXFxcj25GQBmZmYQCoXYvWsXduzYAQDw9vbG9u3bkZ+fj9KyMjg7OeHSpUuoqqoiH0KicePGIS09HcrKynAYMQL6+vooKxN9+NFff/0FQV0dHEaMwK3YWIxycUFmpuwvoFZWVrgVGws1NTU4jBghNnUyNDQUZn36gM/nQ11dHRw5r/55+eoVPpo0CSNHjmT/D7///ntMnToVtra25OIdrksD+ePsdVg2apZYrTVWng+S+56pC0dMweH58l3YLE12djYiIiLIslTm5uaYOXMmWZZbzJ9/wq0Vb6t+v3ABw4cPlxrIN+XlcBgxAubm5sjLyyNXlyg1NRUVlZUA0GwgE+/cgYa6ulxvX5OSklArEJ0ykxRIVTU12Fhbg8/nIycnp9GazVNVVcW4ceMAQGEC2fZnYyvta6cwAoDf6DlybeVWuH6Ko59tapcwoj5g6urqZFmqfv3kv6hZkoZ9KTMzM5lGwxOMnJz/rquuroa2jg4OHDiAyZMnyzzmzJlDPlSXa59npJz2zV4H33YKI+qvxNjysWyTCP47xVfiFSNtoaqqCmdnZ7IskZ6eHgYPHkyW26SgoECmUVRURK4qkVAoml64YcMGbNmyReIICAggV5MJwzDQ1NSEg4MDO8i/x+DBg+Hm5sYOHR0dmPfpA4Pusk1hfJd1eiDbO4wNVrrPx38mLwVHSfKvNKhXX0T67cc3ExaTrXZhZ2fX4lscNTU1TJ48GSpy7PPJS0tbG3p6euzQ0mr5xl+khkA6OTnB3d1d4hg5ciS5mkwqKipgZWWFhIQEdgQHB4sts337dkRHR7PjyZMnOHPmDC5evIg9e/aILYv6Lb5QKISrqytWrFjBjvnzxe/w5+TkhLVr17LD399frK8IOnUf8ufbF+DlNJ0st6v0Z09wKukKHj5/ijphHSwMTDBxkDMmDHKUGtb2lJGRgfj4+CZXfZibm8Pd3R3d2/FVPvHOnSb7VLGxsWJhuXr1GiZOnAAAMDQ0RElJCS6EhWHYsGFdsg8JAMnJyVDicPD82TNwuVyEhYVhxYoV7GOFhIRgpIsL4uLisMTLCwsXLsTx48fZfmOhoaEwNTVFRUUFDHv0YP8Wxr16obS0FFwul11227ZtWLZ8udgBpWo+H46Ojv/MfciODiPqb5a8ebIPzn6xBb95/YCdM1dhEte5U8IIAFwuF4sXL8b8+fMxZcoUzJgxA15eXpg5c2a7hlERVVVVyXR52dChQ2FvZwcOhwNTU1McPHhQrL9//34M5nLRrVs3sbo0yioqGDduHIba28Pezg72dnbIyc1tMo+Yw+EgOzubXcbezg5KUo4j2NraIv72bcTJcfS8PUj+aag2MzIyQv/+/WFhYQEdOc7nKao5c+bg+PHjUkfv3r3hMGIEXEePJldt4uGjR4iKjsbYsWMREBCA1FTxU1ZJSUnw8vLC7FmiXZvPP/8cu3fvZoeqassH8BiGaXLBeElJCQwNDFq8DK6kpASZmZnoYWgIuyFDyHaHooGkZGJhYYFhw4bBysoKxsbG0NXVBcMwePPmDYqKihAUFIRvvvkGhYWF5Kqsx48fIzomBro6Ovhw+HD4+Phgy5YtbF9ZWZn99+HDhzFy5Ejcv38fEyZMgL+/Pz7//HP4+/u3uA9eUVEBDQ0NZGRkiNWTk5NhbGzc4j2NgoKCMGDAAAwYMACRkZFku0PRQFIy+eGHH2BtbQ0nJyeMHz8eM2bMwMKFC7Fs2TKsXbsWmzdvxs6dO6U+2UtevgSPx8NIZ2dcvHgRXC4XISEhbN/Y2BiJiYmwsXl7B/j4+HgMGzYMc+fORVVVFbKysthec1IePID14MG4fv26WD0mJgY8Hg81tbVN3s4qChpIql3p6emRJQDA69evYWpqirNnz8Lb21ssuObm5rhx4wbs7OwQExODqVOnsj2hUAg9PT2oqakhhXhrK41AIEBJSQnCw8PF6nw+H/v27YPdkCFIvKOYH3ZEA0k10bD1mDt3LpYsWSI2fH19sWrVKnz77bcICgrCkSNHcOHCBdy6dQvZ2dkYNmwYAEBDQwOamprQ1NSEkpIS+vfrh6TkZMybNw++vr5A/emKefPmIScnB5paWvjj4kX8nZmJ8PBwnDlzBlwuF1wuF9u3b8fNW7cwaGDzH6QEAFeuXMHoUaOwceNGidP+AgMD8ezZM3TX10damuSPrFi/fj0YhgHDMJg2bRrZ7lgM9c5KSExkGFF62BEbGyu2zJUrV9meoaEhwzAM8/uFC0xuXh6zevVqtuft7c3weDwmPT2dycrKYpKSk8Uep63i4uOZyspK5kZkJFNdXc0EBAQwSUlJbP/+/fvM7YQE5tSvvzLhERHM05wctpfx8CGTlZ3N/r6amprszx0aGsrWr1y5wjAMwxw/flzsbzJx4kSGw+GwX1tZWTEFBQVMVnY289PhwwzDMIyzszPbDwgIYBiGYaKio5nYuDj25+gMnXoesq3uJiagrn5OozRa2tqwtbNHRU0VfE4HQpnz9kABqZeuASYMcsLYAaLzYwJhHW49bvmqjR7a+q36TI/2Juk85Pr169GvX3/267S0NOzatROQ4zwkl8vF69evcf3GDcyeNQuffvopzpw5wz6mvNLT09lzm8UvXiAjPR0WFhYwNjbG7du3cfv2bQCApaUlPD098VdSEkyMjfG8uBgcJSXo6+vD0tKS/X21tLTYrV9oaChMTE1RJxBg9OjRCAkJwfLly1FbWwsA6Nu3L5KSkrB3715s2rSJ/ZnMzMxw6NAhfPTRRwAxlzUgIABfentDWVkZpiYm7DqdoVMD6WDDFbuWrSWqamr44sul+GzRFwCAoQP74w2PRy4mhmttjfDrUSiteoPu68eQbYm+n7ocG8Yvknmd6bZu+H3JdgDA0G2f4XWV5Fs/SqKsxME0m9HY9clqsiU3SYFsjjyBRKPHb89ANkhNTYWuri7279+PrVu3AgAmTZqES5cusd+XJC2Qnp6eKC0thb+/v9gEAh0dHdy8eRMmpqboaWQEHx8fHDp0qNEjAkuXLsWBAwcUJpCdug/56uVLFOTnoyA/H8+KilD8vJj9umHweDwUFRaiID8fTx8/xpmTv7Drf/avRVj0pTcWfemNWXPnsfVZc+ex9Y8/kX9a3pbrRyEQ1kFdRQ1fuc1lh6fd23A2rk+zeXuu7XXVG+S8KmJH8ZtXYl/nvCrCy4oyFJa9QM6rIjx+WYDgm61/cnc1Y2NjTJo0qdkxtv4KiuYYGRmRpRbV1tSgrq4OlZWV7D6ep6cnUP+C0jiM+vr6uHjxIszMzJCSkoLIyEgcPHgQq1atYpfR0NDAggUL2K8VQfMndDqIsrIybsQlQL97d4xxdsCr+hO4rh5j8PMvpxD22zms9lsGABAK69j11mz8N/vv/Lw8hP4quuTKb9UamPWR/uE3LpZ2iPAWvW1D/b1a7+Sm46MDormMPH4F8kuL0dfARGzLFZ31F87dF52HkmWLFu4dhI+4LnDd8yXinqQAACwNeyN1w2n8XZwL+22iuZV19XNF26phzunu3bvJlkQaGqLbkzSs1xqurq44ffo0WW5C1q22JKoqKkhMTCTLUFVVRUVFhcQjuYcPH0ZJSQmioqIwaNAghIaGwqhnT6RnZGDc2LEoKyvD1WvXsGPHDri4uMDPzw9bt26FUysvbO4onbqFbKClrQ0zc3Po6Oqil7ExWx9iPxRKSkoYMGiQ2PJtpcJRhr6mLjsMtbvB0cJabBkNFTWxr1vDxqQ/lDkcWBmZszVrE0toqqrL9aGustLX18fNW7fg4eEh03B2dkZkVBR69+5NPpTM+Hw+nj8vbnb8/bfsFx83lpeXh5CQENy9exf379+XOE6fPo2QkBB2XLgg+giJtPR0hIeHY8eOHbhz5w5UVVXx5MkTuI4eDaX6/dAJ48fj2rVrcHZ2RmFhIRYsWIBDjc6FKoIuCaQ0HCnzCtvTgdhzGLJ1Hj74z9t5tZMHu7T4UQGt1ZFzaAcNHIjRo0bB1tZW5jHGwwNmZmbkQ8ksLCwMxsa9mh0DBw4gV5NJWloavL295RqBgYFA/SVoScnJ8PPzw527d6GiogJHBwfyW2D8+PF49eoVYmNjERUdjSGdPDWuJR33bFFQz3gv8aAwC2VV5QAAAy09HP3s7dE36t1kZmaGofb2SHnwAB7u7rC0tCQXYVlbW8PFxQUe7u4yzYvtTP+4QJIqa/lt2t95nzUcgLe3t29y4Eaeoa2t3WSqGofDgUAgwNixY7Fp06ZWDy8vL9HPKhRCp36O7LusU0979DcRfZybrp4ekh+J5iXOm/Ex7iSIzkP5r/4a/mu+RkZaKqaNEx3hbDiNAQCb1q9lD3dXVlTg8h+i+9iMcnODRv3plD59LPDNfzaLncJw6z8M0StEl/h8e+kQvrssvt/w74le2DzZB5U1fCw7KzoEj/qt6ZWHokPh023d2LqjhQ02jBfdmKvvdx8j55XoSvwnm8LQ18AEi375DscSRT9b41Mkje8pxOzuuqlb5eXlSM/IaHJqITU1Fb169WKPgL4uLUVKSkqr7tvTWH5BAfJyc5vcVSEqKgr63bu3+QWxrKwMdkOGQF9fn2y1KDUtDT2NjNCzp/hHDcbfvg17e3to1h8I6yxdHsj5n8xAYnwcIEMgW3sesqVAdtPUQd53f6BOWCf3ech3MZAA8PTpUzx//pwNg5BhYGhoCKv+bycVoP4gTlZ2Npg2HJnV794dfdqw39rR7qekgM/ni92X1cTYGBYWFsSSHU/h37JWVMj+0XWNKUEJ3TR10E1TBzrqzd/GoqyqHC8rRFe3t4f2unlWR+rbty8cHR3Z+9o4OTo2CSPqT5XYWFs3OTgkz1DkMAKA3ZAhcGx0jx8nR8cuCSM6ewtJUVTzFP+lnKL+QWggKUqB0EBSlAKhgaQoBUIDSVEKhAaSohQIDSRFKRAaSIpSIDSQFKVAaCApSoHQQFKUAvl/td3RdNk1+BIAAAAASUVORK5CYII=" alt="미림 로고">
     <div class="brand-copy">
       <b>미림테크놀러지</b>
-      <small>생산 자재관리 · v14.14.2</small>
+      <small>생산 자재관리 · v14.15.0</small>
     </div>
   </div>
   <div class="top-actions"><button id="vipLoginBtn" class="admin-btn vip-btn" type="button" onclick="openVipLogin()">👑 VIP BOM</button><button id="topExcelExportBtn" class="admin-btn worker-admin-detail" type="button" onclick="goExcelExport()">📊 엑셀출력</button>
@@ -1285,7 +1287,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
     <div id="pendingOrderAlert"></div>
     <div class="order-table-wrap">
       <table>
-        <thead><tr><th>요청일시</th><th>품번</th><th>품명</th><th>요청수량</th><th>요청자</th><th>상태</th><th>비고</th><th>본인확인</th><th class="worker-admin-detail">관리자 입고확인</th><th>카톡 재문의</th></tr></thead>
+        <thead><tr><th>요청일시</th><th>품번</th><th>품명</th><th>문의사진</th><th>요청수량</th><th>요청자</th><th>상태</th><th>비고</th><th>본인확인</th><th class="worker-admin-detail">관리자 입고확인</th><th>카톡 재문의</th></tr></thead>
         <tbody id="todayOrderBody"></tbody>
       </table>
     </div>
@@ -1743,7 +1745,8 @@ async function submitOtherStandaloneOrder(worker){
  const btn=$('standaloneOrderSendBtn');
  if(btn){btn.disabled=true;btn.textContent='저장 중...';}
  try{
-   await saveDailyOrderRequest({part:part||'기타주문',name:category+' · 사진 확인',spec:''},qtyRaw?Number(qtyRaw):0,worker,note);
+   const savedPhotoUrl=await sharedUploadOrderPhoto(photoFile);
+   await saveDailyOrderRequest({part:part||'기타주문',name:category+' · 사진 확인',spec:''},qtyRaw?Number(qtyRaw):0,worker,note,'자재 주문요청',savedPhotoUrl);
    const lines=['🛒 미림 기타 자재 주문','',
      '🔸 품목분류 : '+category,
      '🔹 품번 : '+(part||'확인 필요'),
@@ -1802,7 +1805,9 @@ async function submitStandaloneOrder(){
      {part:part,name:name,spec:spec},
      qtyRaw?Number(qtyRaw):0,
      worker,
-     note
+     note,
+     '자재 주문요청',
+     getPhoto(part)||''
    );
 
    const lines=[
@@ -3430,6 +3435,16 @@ async function sharedUploadPhoto(part,file){
  sharedCache.photo[String(part)]=url;
  return url;
 }
+async function sharedUploadOrderPhoto(file){
+ if(!sharedDb||!file)throw new Error('공용 동기화 연결 또는 사진이 없습니다.');
+ let ext='jpg';if(file.type==='image/png')ext='png';else if(file.type==='image/webp')ext='webp';else if(file.name&&file.name.includes('.'))ext=file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+ const path=`orders/${Date.now()}_${Math.random().toString(36).slice(2,9)}.${ext}`;
+ const bucket=sharedDb.storage.from('production-item-photos');
+ const {error}=await bucket.upload(path,file,{upsert:false,contentType:file.type||'image/jpeg',cacheControl:'0'});
+ if(error)throw new Error('문의사진 저장 실패: '+(error.message||error));
+ const {data}=bucket.getPublicUrl(path),base=data?.publicUrl||'';if(!base)throw new Error('문의사진 주소 생성에 실패했습니다.');
+ return base+'?v='+Date.now();
+}
 async function sharedDeletePhoto(part){
  if(!sharedDb)return;
  const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
@@ -3549,7 +3564,8 @@ async function shareUnregisteredOrder(){
  if(!photoFile){alert('ERP 미등록 제품은 확인할 수 있도록 제품 사진을 찍어 주세요.');return;}
 
  try{
-   await saveDailyOrderRequest({part:'ERP미등록',name:name||'사진 확인 필요',spec:''},qty,worker,note);
+   const savedPhotoUrl=await sharedUploadOrderPhoto(photoFile);
+   await saveDailyOrderRequest({part:'ERP미등록',name:name||'사진 확인 필요',spec:''},qty,worker,note,'자재 주문요청',savedPhotoUrl);
  }catch(e){
    console.error('ERP 미등록 주문 저장 실패',e);
    alert('주문요청 저장 실패: '+(e.message||e));
@@ -3781,10 +3797,10 @@ function fillUnregisteredWorker(){
 }
 let todayOrderRows=[];
 
-async function saveDailyOrderRequest(x,qty,worker,note,requestType='자재 주문요청'){
+async function saveDailyOrderRequest(x,qty,worker,note,requestType='자재 주문요청',photoUrl=''){
  if(!sharedReady||!sharedDb) throw new Error('공용 동기화 연결이 필요합니다.');
  const isOrder=requestType==='자재 주문요청';
- const savedNote=`[문의종류:${requestType}]${note?'\n'+note:''}`;
+ const savedNote=`[문의종류:${requestType}]${photoUrl?`[문의사진:${photoUrl}]`:''}${note?'\n'+note:''}`;
  const {error}=await sharedDb.from('production_order_requests').insert({
    part_no:String(x.part||''),
    item_name:x.name||'',
@@ -3822,12 +3838,14 @@ function cleanOrderNote(note){
  return String(note||'')
    .replace(/\[문의종류:[^\]]*\]\s*/g,'')
    .replace(/\[전송대상:[^\]]*\]\s*/g,'')
+   .replace(/\[문의사진:[^\]]*\]\s*/g,'')
    .replace(/\[재문의:([^\]]+)\]/g,'🔁 재문의: $1')
    .replace(/\[수령확인:[^\]]*\]\s*/g,'')
    .replace(/\[관리자입고확정:[^\]]*\]\s*/g,'')
    .trim();
 }
 function orderInquiryType(note){const m=String(note||'').match(/\[문의종류:([^\]]+)\]/);return m?m[1]:'자재 주문요청';}
+function orderInquiryPhoto(note){const m=String(note||'').match(/\[문의사진:([^\]]+)\]/);return m?m[1]:'';}
 function orderReceiptInfo(note){
  const m=String(note||'').match(/\[수령확인:([^\]]+)\]/);
  return m?m[1]:'';
@@ -3934,12 +3952,15 @@ async function adminKakaoOrderInquiry(id){
  if(!r)return alert('주문요청 정보를 찾지 못했습니다. 목록을 새로고침해 주세요.');
  const reinquiry=($('order_reinquiry_note_'+id)?.value||'').trim();
  if(!reinquiry)return alert('카톡으로 다시 문의할 내용을 입력해 주세요.');
+ let photoFile=$('order_reinquiry_photo_'+id)?.files?.[0]||null;
+ let photoUrl=orderInquiryPhoto(r.note)||getPhoto(r.part_no||'');
+ if(photoFile){try{photoUrl=await sharedUploadOrderPhoto(photoFile);}catch(e){return alert(e.message||e);}}
  const originalNote=cleanOrderNote(r.note),stamp=`[재문의:${reinquiry} / ${currentWorker?.name||(isAdmin?'관리자':'')} / ${new Date().toLocaleString('ko-KR')}]`;
- const savedNote=String(r.note||'').trim()+(r.note?'\n':'')+stamp;
+ const rawWithoutPhoto=String(r.note||'').replace(/\[문의사진:[^\]]*\]\s*/g,'').trim();
+ const savedNote=(photoUrl?`[문의사진:${photoUrl}]`:'')+rawWithoutPhoto+(rawWithoutPhoto?'\n':'')+stamp;
  const {error:reinquiryError}=await sharedDb.from('production_order_requests').update({note:savedNote}).eq('id',id);
  if(reinquiryError)return alert('재문의 내용 저장 실패: '+reinquiryError.message);
  r.note=savedNote;
- const photoUrl=getPhoto(r.part_no||'');
  const lines=[
    '💬 미림 주문제품 카톡 문의','',
    '🔹 품번 : '+(r.part_no||'확인 필요'),
@@ -3951,8 +3972,7 @@ async function adminKakaoOrderInquiry(id){
  lines.push('📝 기존 요청내용 : '+(originalNote||'주문제품 확인 부탁드립니다.'),'🔁 재문의내용 : '+reinquiry,'','👤 요청자 : '+(r.requester||'-'),'🕒 요청일시 : '+new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}));
  const msg=lines.join('\n');
  const kakaoWindow=!navigator.share?window.open('about:blank','_blank'):null;
- let photoFile=null;
- if(photoUrl){
+ if(photoUrl&&!photoFile){
    try{
      const res=await fetch(photoUrl);const blob=await res.blob();
      const ext=(blob.type&&blob.type.includes('png'))?'png':'jpg';
@@ -3985,7 +4005,7 @@ function renderTodayOrderRequests(){
  body.innerHTML=activeRows.length
    ? activeRows.slice(0,20).map(r=>{
        const st=workerOrderState(r.status);
-       const inquiryType=orderInquiryType(r.note),isInquiry=inquiryType!=='자재 주문요청';
+       const inquiryType=orderInquiryType(r.note),inquiryPhoto=orderInquiryPhoto(r.note)||getPhoto(r.part_no||''),isInquiry=inquiryType!=='자재 주문요청';
        const mine=currentWorker&&String(r.requester||'')===String(currentWorker.name||'');
 
        const workerAction =
@@ -4013,16 +4033,17 @@ function renderTodayOrderRequests(){
          <td>${isAdmin?recordDateTime(r.created_at):new Date(r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit'})}</td>
          <td>${esc(r.part_no||'')}</td>
          <td>${isInquiry?`<b>💬 ${esc(inquiryType)}</b><br>`:''}${esc(r.item_name||'')}</td>
+         <td>${inquiryPhoto?`<a href="${esc(inquiryPhoto)}" target="_blank" rel="noopener"><img class="order-inquiry-photo" src="${esc(inquiryPhoto)}" alt="문의사진"></a>`:'<span class="order-no-photo">사진 없음</span>'}</td>
          <td>${Number(r.request_qty||0).toLocaleString()}</td>
          <td>${esc(r.requester||'')}</td>
          <td><span class="worker-order-state ${st.cls}">${st.label}</span></td>
          <td class="${r.status==='미입고'?'worker-order-note-alert':''}">${esc(cleanOrderNote(r.note)||'-')}</td>
          <td>${workerAction}</td>
          <td class="worker-admin-detail">${adminAction}</td>
-         <td><div style="display:grid;grid-template-columns:minmax(190px,1fr) auto;gap:5px;min-width:360px"><input id="order_reinquiry_note_${r.id}" placeholder="재문의할 내용을 직접 입력"><button type="button" class="admin-kakao-inquiry-btn" onclick="adminKakaoOrderInquiry(${r.id})">TALK 재문의</button></div></td>
+         <td><div style="display:grid;grid-template-columns:minmax(190px,1fr) auto;gap:5px;min-width:390px"><input id="order_reinquiry_note_${r.id}" placeholder="재문의할 내용을 직접 입력"><button type="button" class="admin-kakao-inquiry-btn" onclick="adminKakaoOrderInquiry(${r.id})">TALK 재문의</button><input id="order_reinquiry_photo_${r.id}" type="file" accept="image/*" style="grid-column:1/-1"><small style="grid-column:1/-1;color:#617068">저장된 사진 자동첨부 · 없으면 여기서 사진 선택</small></div></td>
        </tr>`;
      }).join('')
-   : '<tr><td colspan="10">미완료 주문·문의가 없습니다. 본인 수령확인·완료 건은 기록조회·엑셀출력에 보관됩니다.</td></tr>';
+   : '<tr><td colspan="11">미완료 주문·문의가 없습니다. 본인 수령확인·완료 건은 기록조회·엑셀출력에 보관됩니다.</td></tr>';
 }
 async function shareOrderRequest(x,i){
  const type=$('inq_type_'+i)?.value||'기타 문의';
@@ -4065,7 +4086,7 @@ async function shareOrderRequest(x,i){
  const msg=lines.join('\n');
 
  try{
-   await saveDailyOrderRequest(x,qty?Number(qty):0,worker,note,type);
+   await saveDailyOrderRequest(x,qty?Number(qty):0,worker,note,type,photoUrl||'');
  }catch(e){
    console.error('주문·문의 저장 실패',e);
    alert('주문·문의 저장 실패: '+(e.message||e));
