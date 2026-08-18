@@ -848,6 +848,12 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 .order-note-base,.order-note-latest{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
 .order-note-base{-webkit-line-clamp:2}
 .order-note-latest{-webkit-line-clamp:2;margin-top:5px;padding:5px 7px;border-radius:7px;background:#eef6ff;color:#245d93;font-size:12px;font-weight:900}
+.worker-attendance-card{margin:12px 0;padding:15px;border:2px solid #cce3d5;border-radius:16px;background:linear-gradient(135deg,#fbfffc,#f1f8ff)}
+.attendance-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.attendance-head h2{margin:0;font-size:21px}.attendance-today{padding:7px 10px;border-radius:9px;background:#fff;border:1px solid #d4e3da;font-weight:900;color:#315c45}
+.attendance-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:11px 0}.attendance-actions button{min-height:48px;border:0;border-radius:11px;color:#fff;font-size:16px;font-weight:1000}.attendance-in{background:#078348}.attendance-overtime{background:#2868ba}.attendance-early{background:#dd7815}
+.attendance-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px}.attendance-summary span{padding:8px;text-align:center;border-radius:9px;background:#fff;border:1px solid #d9e6df;font-weight:900}.attendance-summary b{display:block;font-size:18px;color:#075f35}
+.attendance-month-head{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:7px}.attendance-month-head button{width:38px;height:36px;border:1px solid #cbdcd2;border-radius:9px;background:#fff;font-weight:1000}.attendance-month-head b{min-width:130px;text-align:center;font-size:17px}
+.attendance-week,.attendance-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.attendance-week span{text-align:center;font-size:12px;font-weight:900;color:#66736c;padding:4px}.attendance-day{min-height:72px;padding:6px;border:1px solid #dbe6df;border-radius:9px;background:#fff}.attendance-day.empty{background:transparent;border-color:transparent}.attendance-day.today{border:2px solid #078348;background:#f0fff7}.attendance-date{font-weight:1000;font-size:13px}.attendance-mark{display:block;margin-top:3px;padding:2px 4px;border-radius:5px;font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.attendance-mark.in{background:#dff5e9;color:#076738}.attendance-mark.overtime{background:#e4efff;color:#245d9c}.attendance-mark.early{background:#fff0df;color:#a54c00}.attendance-status{margin-top:8px;color:#617068;font-size:12px;font-weight:800}
 @media(max-width:760px){
  #todayOrderCard{padding:12px 8px}
  #todayOrderCard .order-card-head h2{font-size:20px;line-height:1.3}
@@ -863,6 +869,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
  #todayOrderCard .order-part-age{font-size:14px;padding:8px 10px}
  #todayOrderCard .worker-order-state{font-size:13px;padding:6px 9px}
  .order-age-legend{font-size:13px;gap:6px}.order-age-legend span{padding:6px 8px}
+ .worker-attendance-card{padding:12px 9px}.attendance-head h2{font-size:19px}.attendance-actions button{min-height:52px;font-size:16px}.attendance-day{min-height:68px;padding:4px 3px}.attendance-mark{font-size:10px}.attendance-summary span{font-size:13px}
 }
 @media(max-width:760px){.vip-bom-grid,.vip-po-search-grid{grid-template-columns:1fr}.vip-bom-row{grid-template-columns:1fr}.vip-bom-head h2{font-size:22px}.bom-photo-preview{grid-template-columns:1fr}.bom-photo-preview img{height:260px}}
 @media(min-width:900px){
@@ -981,7 +988,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
     <img class="brand-logo" src="data:image/png;base64,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" alt="미림 로고">
     <div class="brand-copy">
       <b>미림테크놀러지</b>
-      <small>생산 자재관리 · v14.15.7</small>
+      <small>생산 자재관리 · v14.16.0</small>
     </div>
   </div>
   <div class="top-actions"><button id="vipLoginBtn" class="admin-btn vip-btn" type="button" onclick="openVipLogin()">👑 VIP BOM</button><button id="topExcelExportBtn" class="admin-btn worker-admin-detail" type="button" onclick="goExcelExport()">📊 엑셀출력</button>
@@ -1248,6 +1255,20 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
   </div>
 
   <div id="roleNote" class="worker-note">일반 작업자: 품번·품명·창고위치 확인 / 입고·출고·반환은 관리자 승인 후 저장</div>
+
+  <div id="workerAttendanceCard" class="worker-attendance-card hidden">
+    <div class="attendance-head"><h2>📅 나의 근태관리</h2><span id="attendanceTodayStatus" class="attendance-today">오늘 기록 없음</span></div>
+    <div class="attendance-actions">
+      <button type="button" class="attendance-in" onclick="recordWorkerAttendance('출근')">✅ 출근</button>
+      <button type="button" class="attendance-overtime" onclick="recordWorkerAttendance('야근')">🌙 야근</button>
+      <button type="button" class="attendance-early" onclick="recordWorkerAttendance('조퇴')">🏃 조퇴</button>
+    </div>
+    <div id="attendanceSummary" class="attendance-summary"><span>출근<b>0회</b></span><span>야근<b>0회</b></span><span>조퇴<b>0회</b></span></div>
+    <div class="attendance-month-head"><button type="button" onclick="changeAttendanceMonth(-1)">‹</button><b id="attendanceMonthLabel"></b><button type="button" onclick="changeAttendanceMonth(1)">›</button></div>
+    <div class="attendance-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+    <div id="attendanceCalendar" class="attendance-calendar"></div>
+    <div id="attendanceSyncStatus" class="attendance-status">근태 기록을 불러오는 중입니다.</div>
+  </div>
 
   <div class="admin-stat-strip admin-only hidden-admin">
     <div><small>입고 (오늘)</small><b id="adminTodayIn">0건</b></div>
@@ -2632,6 +2653,77 @@ function workerPositiveMessage(name){
  return WORKER_POSITIVE_MESSAGES[hash%WORKER_POSITIVE_MESSAGES.length];
 }
 
+let workerAttendanceRows=[];
+let workerAttendanceMonth=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
+function attendancePayload(row){let p=row?.payload||{};if(typeof p==='string'){try{p=JSON.parse(p)}catch(e){p={}}}return p||{};}
+function attendanceSeoulDate(value){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(value?new Date(value):new Date());}
+function attendanceTime(value){return new Date(value).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit'});}
+function attendanceLocalKey(){return `mirim_worker_attendance_${currentWorker?.id||currentWorker?.name||'none'}`;}
+function readLocalAttendance(){try{const a=JSON.parse(localStorage.getItem(attendanceLocalKey())||'[]');return Array.isArray(a)?a:[]}catch(e){return [];}}
+function saveLocalAttendance(rows){localStorage.setItem(attendanceLocalKey(),JSON.stringify(rows.slice(0,1000)));}
+function attendanceRowDate(row){const p=attendancePayload(row);return p.event_date||attendanceSeoulDate(row.created_at);}
+function attendanceRowKind(row){return attendancePayload(row).attendance_type||'';}
+function attendanceBelongsToWorker(row){const p=attendancePayload(row);return String(p.worker_id||'')===String(currentWorker?.id||'')||String(p.worker_name||'')===String(currentWorker?.name||'');}
+function mergeAttendanceRows(rows){
+ const map=new Map();
+ rows.forEach(r=>{const p=attendancePayload(r),key=p.client_key||`${attendanceRowDate(r)}|${attendanceRowKind(r)}|${r.created_at||''}`;if(!map.has(key))map.set(key,r);});
+ return [...map.values()].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+}
+async function loadWorkerAttendance(){
+ const card=$('workerAttendanceCard');
+ if(!currentWorker||isAdmin){card?.classList.add('hidden');workerAttendanceRows=[];return;}
+ card?.classList.remove('hidden');
+ const localRows=readLocalAttendance();workerAttendanceRows=mergeAttendanceRows(localRows);renderWorkerAttendance();
+ if(!sharedReady||!sharedDb){$('attendanceSyncStatus').textContent='현재 이 기기에 저장된 근태기록을 표시합니다.';return;}
+ try{
+   const {data,error}=await sharedDb.from('wms_admin_notifications').select('id,type,title,message,payload,created_at').eq('type','WORKER_ATTENDANCE').order('created_at',{ascending:false}).limit(1000);
+   if(error)throw error;
+   const sharedRows=(data||[]).filter(attendanceBelongsToWorker);
+   workerAttendanceRows=mergeAttendanceRows([...sharedRows,...localRows]);renderWorkerAttendance();
+   $('attendanceSyncStatus').textContent='☑ 공용 저장 연결 · 휴대폰과 PC에서 같은 기록을 확인할 수 있습니다.';
+ }catch(e){console.warn('근태기록 불러오기 실패',e);$('attendanceSyncStatus').textContent='⚠️ 공용 기록을 불러오지 못해 이 기기 기록을 표시합니다.';}
+}
+async function recordWorkerAttendance(kind){
+ if(!currentWorker||isAdmin)return alert('작업자 로그인 후 근태를 기록할 수 있습니다.');
+ if(!['출근','야근','조퇴'].includes(kind))return;
+ const now=new Date(),date=attendanceSeoulDate(now);
+ if(workerAttendanceRows.some(r=>attendanceRowDate(r)===date&&attendanceRowKind(r)===kind))return alert(`오늘 ${kind} 기록이 이미 있습니다.`);
+ if(!confirm(`${currentWorker.name}님 · ${kind}\n현재 시간으로 기록할까요?`))return;
+ const created=now.toISOString(),clientKey=`${currentWorker.id||currentWorker.name}-${created}-${kind}`;
+ const payload={worker_id:currentWorker.id,worker_name:currentWorker.name,attendance_type:kind,event_date:date,recorded_at:created,client_key:clientKey};
+ const localRow={id:'local-'+clientKey,type:'WORKER_ATTENDANCE',title:`근태 · ${kind}`,message:`${currentWorker.name} · ${kind}`,payload,created_at:created};
+ const locals=readLocalAttendance();locals.unshift(localRow);saveLocalAttendance(locals);workerAttendanceRows=mergeAttendanceRows([localRow,...workerAttendanceRows]);renderWorkerAttendance();
+ if(sharedReady&&sharedDb){
+   try{
+     const {error}=await sharedDb.from('wms_admin_notifications').insert({type:'WORKER_ATTENDANCE',title:`📅 근태 · ${kind}`,message:`${currentWorker.name}님 ${kind} 기록`,payload,created_at:created});
+     if(error)throw error;
+     $('attendanceSyncStatus').textContent='☑ 공용 저장 완료 · '+kind+' '+attendanceTime(created);
+   }catch(e){console.warn('근태 공용저장 실패',e);$('attendanceSyncStatus').textContent='⚠️ '+kind+' 기록은 이 기기에 저장되었습니다. 공용 연결 후 다시 확인해 주세요.';}
+ }else $('attendanceSyncStatus').textContent='⚠️ '+kind+' 기록은 이 기기에 저장되었습니다.';
+ alert(`✅ ${currentWorker.name}님 ${kind} 기록 완료\n${date} ${attendanceTime(created)}`);
+}
+function changeAttendanceMonth(delta){
+ const d=new Date(workerAttendanceMonth+'-01T12:00:00+09:00');d.setMonth(d.getMonth()+Number(delta||0));
+ workerAttendanceMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;renderWorkerAttendance();
+}
+function renderWorkerAttendance(){
+ if(!currentWorker)return;
+ const month=workerAttendanceMonth,monthRows=workerAttendanceRows.filter(r=>attendanceRowDate(r).startsWith(month));
+ const counts={출근:0,야근:0,조퇴:0};monthRows.forEach(r=>{const k=attendanceRowKind(r);if(k in counts)counts[k]++;});
+ $('attendanceSummary').innerHTML=`<span>출근<b>${counts.출근}회</b></span><span>야근<b>${counts.야근}회</b></span><span>조퇴<b>${counts.조퇴}회</b></span>`;
+ const today=attendanceSeoulDate(),todayRows=workerAttendanceRows.filter(r=>attendanceRowDate(r)===today);
+ $('attendanceTodayStatus').textContent=todayRows.length?'오늘 · '+todayRows.slice().reverse().map(r=>`${attendanceRowKind(r)} ${attendanceTime(r.created_at)}`).join(' · '):'오늘 기록 없음';
+ const base=new Date(month+'-01T12:00:00+09:00'),year=base.getFullYear(),mon=base.getMonth(),first=base.getDay(),days=new Date(year,mon+1,0).getDate();
+ $('attendanceMonthLabel').textContent=`${year}년 ${mon+1}월`;
+ const cells=[];for(let i=0;i<first;i++)cells.push('<div class="attendance-day empty"></div>');
+ const cls={출근:'in',야근:'overtime',조퇴:'early'},icon={출근:'출근',야근:'야근',조퇴:'조퇴'};
+ for(let day=1;day<=days;day++){
+   const date=`${year}-${String(mon+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,events=monthRows.filter(r=>attendanceRowDate(r)===date).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+   cells.push(`<div class="attendance-day ${date===today?'today':''}"><div class="attendance-date">${day}</div>${events.map(r=>`<span class="attendance-mark ${cls[attendanceRowKind(r)]||''}">${icon[attendanceRowKind(r)]||attendanceRowKind(r)} ${attendanceTime(r.created_at)}</span>`).join('')}</div>`);
+ }
+ $('attendanceCalendar').innerHTML=cells.join('');
+}
+
 function updatePrivilegedAccessUI(){
  const workerOnly=!!currentWorker&&!isAdmin;
  const vipOpen=sessionStorage.getItem('mirim_vip_view')==='1';
@@ -2666,6 +2758,7 @@ function updateWorkerUI(){
  if(ws) ws.textContent=isAdmin ? '오늘도 효율적인 자재·창고 관리를 시작합니다.' : (currentWorker?workerPositiveMessage(currentWorker.name):'오늘도 안전하고 정확한 자재 업무를 함께해요.');
 
  try{fillUnregisteredWorker();}catch(e){}
+ if(currentWorker&&!isAdmin){loadWorkerAttendance();setTimeout(()=>{if(currentWorker&&!isAdmin)loadWorkerAttendance();},1200);}else $('workerAttendanceCard')?.classList.add('hidden');
  updatePrivilegedAccessUI();
 }
 
@@ -2876,6 +2969,7 @@ function updateAdminUI(){
  const wt=$('welcomeTitle');
  if(wt) wt.textContent=isAdmin ? '안녕하세요, 관리자님!' : (currentWorker?`안녕하세요, ${currentWorker.name}님!`:'안녕하세요!');
  const ws=$('welcomeSub'); if(ws)ws.textContent=isAdmin?'오늘도 효율적인 자재·창고 관리를 시작합니다.':(currentWorker?workerPositiveMessage(currentWorker.name):'오늘도 안전하고 정확한 자재 업무를 함께해요.');
+ const attendanceCard=$('workerAttendanceCard');if(attendanceCard)attendanceCard.classList.toggle('hidden',isAdmin||!currentWorker);
  try{syncDashboardStats();}catch(e){}
  updatePrivilegedAccessUI();
 
@@ -4577,7 +4671,7 @@ async function loadAdminNotifications(){
      .order('created_at',{ascending:false})
      .limit(100);
    if(error)throw error;
-   adminNotifRows=data||[];
+   adminNotifRows=(data||[]).filter(r=>r.type!=='WORKER_ATTENDANCE');
    renderAdminNotifications();
  }catch(e){console.warn('알림 목록 불러오기 실패',e);}
 }
@@ -4607,6 +4701,7 @@ async function startAdminRealtimeNotifications(){
        table:'wms_admin_notifications'
      },payload=>{
        const row=payload.new;
+       if(row.type==='WORKER_ATTENDANCE')return;
        adminNotifRows.unshift(row);
        renderAdminNotifications();
 
