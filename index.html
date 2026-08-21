@@ -4485,7 +4485,84 @@ async function shareOrderRequest(x,i){
    if(w){
      const safeMsg=msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
      w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>미림 자재 문의</title>
-     <style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.55}img{max-width:100%;max-height:480px;object-fit:contain;border:1px solid #ddd;border-radius:12px}pre{white-space:pre-wrap;background:#f5f7f6;padding:14px;border-radius:10px}</style></head>
+     <style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.55}img{max-width:100%;max-height:480px;object-fit:contain;border:1px solid #ddd;border-radius:12px}pre{white-space:pre-wrap;background:#f5f7f6;padding:14px;border-radius:10px}</style>
+<style id="mobile-layout-stability-vFINAL">
+@media(max-width:760px){
+  html,body{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important}
+  body{position:relative!important}
+  *,*::before,*::after{box-sizing:border-box}
+
+  .mirim-topbar,main,.dashboard-home,#home,#work,#photoSearchPanel,#vipBomPanel{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    margin-left:0!important;margin-right:0!important;left:auto!important;transform:none!important;
+  }
+  main{padding:8px!important;padding-bottom:84px!important}
+  .dashboard-home{padding:0!important}
+
+  .mirim-topbar{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;overflow:visible!important}
+  .brand-wrap,.brand-copy,.top-actions,.worker-auth{min-width:0!important;max-width:100%!important}
+  .brand-wrap{width:100%!important}
+  .brand-copy b,.brand-copy small{white-space:normal!important;overflow-wrap:anywhere!important}
+  .top-actions{width:100%!important;display:flex!important;flex-wrap:wrap!important;justify-content:flex-start!important}
+  .top-actions>*{min-width:0!important;max-width:100%!important}
+  .top-actions .worker-auth{width:100%!important;justify-content:flex-start!important}
+
+  .welcome-row{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:start!important}
+  .welcome-left,.welcome-right{min-width:0!important;width:100%!important}
+  .welcome-right{text-align:left!important;justify-items:start!important}
+  .welcome-left h2,.welcome-left p{overflow-wrap:anywhere!important}
+
+  .primary-quick,.today-task-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .feature-row,.home-summary,.admin-stat-strip,.admin-shortcuts,.unreg-grid,.record-filter-grid,.loc-grid,.item-admin-grid,.order-required-grid,.order-type-buttons,.vip-bom-grid,.vip-po-search-grid,.vip-bom-row{grid-template-columns:minmax(0,1fr)!important}
+  .primary-quick button,.today-task-grid button,.feature-card,.admin-shortcuts button{min-width:0!important;width:100%!important}
+
+  .card,#recentInboundCard,#recentOutboundCard,#todayOrderCard,.worker-task-card,.worker-attendance-card,.vip-bom-card,.order-modal-card{
+    width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important
+  }
+
+  input,select,textarea,button{max-width:100%!important;min-width:0!important}
+  input,select,textarea{font-size:16px!important}
+
+  .order-modal-backdrop{padding:8px!important;align-items:flex-start!important;overflow-y:auto!important}
+  .order-modal-card{margin:8px auto!important;max-height:none!important;overflow:visible!important}
+  .other-order-item-row{grid-template-columns:minmax(0,1fr)!important}
+  .other-order-item-row .other-order-item-note,.other-order-photo-field{grid-column:auto!important}
+  .other-order-photo-field{grid-template-columns:56px minmax(0,1fr)!important}
+  .other-order-row-preview{width:52px!important;height:48px!important}
+
+  .result-card-main,.photo-wrap,.photo-match{grid-template-columns:minmax(0,1fr)!important}
+  .result-photo-box,.result-photo-box img,.result-photo-empty,.item-photo,.no-photo,.photo-btn{width:100%!important;max-width:100%!important}
+  .result-photo-box img,.result-photo-empty{height:auto!important;min-height:180px!important;max-height:260px!important}
+
+  .table-wrap,.order-table-wrap,.admin-history-table-wrap,.record-table-wrap,.vip-bom-table-wrap,.item-history-scroll,#locationOrganizerList{
+    width:100%!important;max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important
+  }
+  #todayOrderCard{overflow:hidden!important}
+  #todayOrderCard .order-table-wrap{overflow-x:auto!important}
+  #todayOrderCard table{width:1120px!important;min-width:1120px!important;table-layout:auto!important}
+  #recentInboundCard table,#recentOutboundCard table{width:700px!important;min-width:700px!important}
+  .location-organizer-table{min-width:1500px!important;width:1500px!important}
+  #bomResultTable .vip-bom-table{min-width:1180px!important;width:1180px!important}
+  #bomPoMovementTable .vip-bom-table{min-width:900px!important;width:900px!important}
+
+  .admin-order-confirm-wrap,.order-reinquiry-grid{min-width:0!important;width:100%!important;grid-template-columns:minmax(0,1fr)!important}
+  .admin-order-confirm-wrap{flex-direction:column!important;align-items:stretch!important}
+  .admin-order-confirm-wrap input{width:100%!important}
+
+  .bottom-nav{left:0!important;right:0!important;transform:none!important;width:100%!important;max-width:100%!important;border-radius:0!important}
+  .bottom-nav button{min-width:0!important;padding:4px 2px!important;font-size:19px!important}
+  .bottom-nav button span{font-size:10px!important;white-space:normal!important}
+}
+
+@media(max-width:430px){
+  .primary-quick,.today-task-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .brand-logo{width:58px!important}
+  .brand-copy b{font-size:16px!important}
+  .top-actions .admin-btn,.compact-home-btn{font-size:11px!important;padding:5px 7px!important}
+  .today-task-grid button,.primary-quick button{min-height:88px!important;padding:9px 5px!important}
+}
+</style>
+</head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
      w.document.close();
