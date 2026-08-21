@@ -945,6 +945,26 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
+
+<style id="order-age-receive-final-v2">
+/* 주문 경과일 색상은 created_at 기준으로 매 렌더링 시 유지 */
+#todayOrderCard tbody tr.order-age-row-3>td{background:#fff9d9!important}
+#todayOrderCard tbody tr.order-age-row-7>td{background:#fff0ee!important}
+#todayOrderCard tbody tr.order-age-row-3 td:nth-child(2) .order-part-age-3{background:#f2c400!important;color:#241d00!important;border:2px solid #c69f00!important}
+#todayOrderCard tbody tr.order-age-row-7 td:nth-child(2) .order-part-age-7{background:#c91919!important;color:#fff!important;border:2px solid #8f0707!important}
+.worker-receive-check{display:grid;grid-template-columns:minmax(84px,110px) auto;gap:6px;align-items:center;min-width:210px}
+.worker-receive-check input{width:100%!important;min-width:0!important;min-height:38px!important;padding:6px 8px!important;border:1px solid #cbd8d0!important;border-radius:8px!important;background:#fff!important}
+.worker-receive-check .self-receive-btn{min-height:38px!important;padding:0 10px!important}
+.worker-receive-wait{display:inline-block;padding:6px 8px;border-radius:8px;background:#f1f3f2;color:#67736c;font-weight:900;white-space:nowrap}
+.worker-receive-done{display:inline-block;padding:6px 8px;border-radius:8px;background:#eee6ff;color:#6533a5;font-weight:900;line-height:1.35}
+@media(max-width:760px){
+ #todayOrderCard tbody tr.order-age-row-3>td{background:#fff9d9!important}
+ #todayOrderCard tbody tr.order-age-row-7>td{background:#fff0ee!important}
+ .worker-receive-check{grid-template-columns:96px auto;min-width:205px}
+ .worker-receive-check input,.worker-receive-check .self-receive-btn{min-height:44px!important;font-size:14px!important}
+}
+</style>
+
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -4197,18 +4217,21 @@ async function workerConfirmOrderReceived(id){
  if(!currentWorker)return alert('작업자 로그인 후 사용할 수 있습니다.');
  if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
 
+ const receivedQty=Number($('worker_received_qty_'+id)?.value||0);
+ if(!receivedQty||receivedQty<=0)return alert('실제로 받은 수량을 입력한 후 본인확인을 눌러 주세요.');
+
  const {data:r,error:readErr}=await sharedDb.from('production_order_requests').select('*').eq('id',id).single();
  if(readErr||!r)return alert('주문기록을 불러오지 못했습니다.');
  if(String(r.requester||'')!==String(currentWorker.name||''))return alert('본인이 요청한 주문만 확인할 수 있습니다.');
  if(r.status==='입고완료')return alert('이미 관리자가 입고확정한 주문입니다.');
 
- const stamp=`[수령확인:${currentWorker.name} / ${new Date().toLocaleString('ko-KR')}]`;
+ const stamp=`[수령확인:${currentWorker.name} / ${new Date().toLocaleString('ko-KR')} / 받은수량:${receivedQty}]`;
  const base=String(r.note||'').replace(/\[수령확인:[^\]]*\]\s*/g,'').trim();
  const {error}=await sharedDb.from('production_order_requests')
    .update({status:'수령확인',note:(base?base+'\n':'')+stamp}).eq('id',id);
  if(error)return alert('본인 수령확인 저장 실패: '+error.message);
 
- alert('✅ 본인 수령확인 완료\n관리자 입고확정을 기다립니다.');
+ alert('✅ 본인 수령확인 완료\n받은 수량 '+receivedQty.toLocaleString()+'개를 확인했습니다.\n관리자 입고확정을 기다립니다.');
  await loadTodayOrderRequests();
  if(typeof loadFiveDayOrders==='function')await loadFiveDayOrders();
 }
@@ -4373,13 +4396,13 @@ function renderTodayOrderRequests(){
        const mine=currentWorker&&String(r.requester||'')===String(currentWorker.name||'');
 
        const workerAction =
-         (r.status==='요청' && mine)
-           ? `<button class="self-receive-btn" onclick="workerConfirmOrderReceived(${r.id})">☑ 본인 수령확인</button>`
-           : (r.status==='수령확인' && mine)
-             ? `<small>☑ ${esc(orderReceiptInfo(r.note)||'수령확인 완료')}</small>`
-             : (r.status==='입고완료' && mine)
+         (['요청','미입고'].includes(r.status) && mine && !isInquiry)
+           ? `<div class="worker-receive-check"><input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" placeholder="받은 수량"><button class="self-receive-btn" onclick="workerConfirmOrderReceived(${r.id})">☑ 본인확인</button></div>`
+           : (r.status==='수령확인')
+             ? `<small class="worker-receive-done">☑ ${esc(orderReceiptInfo(r.note)||'수령확인 완료')}</small>`
+             : (r.status==='입고완료')
                ? `<small>✅ 관리자 입고확정</small>`
-               : '';
+               : (!isInquiry ? `<small class="worker-receive-wait">본인확인 대기</small>` : '');
 
        const adminAction=isAdmin
          ? (isInquiry
@@ -4393,7 +4416,8 @@ function renderTodayOrderRequests(){
                </div>`))
          : '';
 
-       return `<tr>
+       const ageRowClass=requestAgeDays>=7?'order-age-row-7':requestAgeDays>=3?'order-age-row-3':'';
+       return `<tr class="${ageRowClass}">
          <td>${isAdmin?recordDateTime(r.created_at):new Date(r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit'})}</td>
          <td><span class="${partAgeClass}" title="${esc(partAgeTitle)}">${esc(r.part_no||'')}</span></td>
          <td>${isInquiry?`<b>💬 ${esc(inquiryType)}</b><br>`:''}${esc(r.item_name||'')}</td>
