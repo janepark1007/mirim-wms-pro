@@ -6826,4 +6826,95 @@ window.addEventListener('load',()=>{
 setInterval(()=>{ if(document.visibilityState==='visible')loadOrderInboundMatchDashboard(); },60000);
 </script>
 
+
+<style id="later-check-v7">
+.later-check-btn{border:1px solid #d9b300;background:#fff6c9;color:#6b5600;border-radius:9px;padding:7px 10px;font-weight:1000;cursor:pointer}
+#laterCheckCard{border:2px solid #ead47c;background:#fffdf3}
+.later-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.later-head h2{margin:0}.later-count{display:inline-block;background:#ffdf55;color:#463700;border-radius:999px;padding:5px 10px;font-weight:1000}
+.later-table-wrap{overflow:auto;margin-top:10px}
+.later-table{width:100%;border-collapse:collapse;min-width:850px;font-size:13px}
+.later-table th,.later-table td{padding:8px;border-bottom:1px solid #eee3b8;text-align:left;vertical-align:middle}
+.later-table th{background:#fff7d4;white-space:nowrap}
+.later-reason{font-weight:1000;color:#775d00}.later-done{opacity:.6}
+.later-actions{display:flex;gap:5px;flex-wrap:wrap}.later-actions button{min-height:34px;border-radius:8px;border:1px solid #ccd8d0;background:#fff;font-weight:900}
+@media(max-width:760px){.later-table{min-width:720px}#laterCheckCard{padding:11px 8px!important}}
+</style>
+<script>
+const LATER_CHECK_KEY='mirim_later_checks_v7';
+function getLaterChecks(){try{return JSON.parse(localStorage.getItem(LATER_CHECK_KEY)||'[]')}catch(e){return []}}
+function setLaterChecks(a){localStorage.setItem(LATER_CHECK_KEY,JSON.stringify(a||[]))}
+function addLaterCheck(part,name,location){
+ const reasons=['위치 미확인','ERP 미등록','작업자 문의','수량 확인','기타'];
+ const input=prompt('📌 나중에 확인할 이유를 입력하세요.\\n\\n'+reasons.join(' / '),'위치 미확인');
+ if(input===null)return;
+ const reason=String(input||'기타').trim()||'기타';
+ const memo=prompt('메모가 있으면 입력하세요. (없으면 확인)','')||'';
+ const writer=currentWorker?.name||(isAdmin?'관리자':'사용자');
+ const a=getLaterChecks();
+ const same=a.find(x=>!x.done && String(x.part||'')===String(part||'') && String(x.reason||'')===reason);
+ if(same){
+   same.memo=memo||same.memo;same.updated_at=new Date().toISOString();same.writer=writer;
+ }else{
+   a.unshift({id:Date.now()+Math.random(),part:String(part||''),name:String(name||''),location:String(location||''),reason,memo,writer,created_at:new Date().toISOString(),done:false});
+ }
+ setLaterChecks(a);renderLaterChecks();alert('📌 확인할 일에 저장했습니다.');
+}
+function finishLaterCheck(id){
+ const a=getLaterChecks(),x=a.find(v=>String(v.id)===String(id));if(!x)return;
+ x.done=true;x.done_at=new Date().toISOString();x.done_by=currentWorker?.name||(isAdmin?'관리자':'사용자');
+ setLaterChecks(a);renderLaterChecks();
+}
+function reopenLaterCheck(id){
+ const a=getLaterChecks(),x=a.find(v=>String(v.id)===String(id));if(!x)return;
+ x.done=false;delete x.done_at;delete x.done_by;setLaterChecks(a);renderLaterChecks();
+}
+function ensureLaterCheckCard(){
+ if(document.getElementById('laterCheckCard'))return;
+ const target=document.getElementById('orderInboundMatchCard')||document.getElementById('todayOrderCard');
+ if(!target)return;
+ const s=document.createElement('section');s.id='laterCheckCard';s.className='card';
+ s.innerHTML=`<div class="later-head"><div><h2>📌 나중에 확인</h2><div class="notice">작업자·관리자 공통 확인 목록 · 바쁠 때 체크해 두고 나중에 처리하세요.</div></div><span id="laterCheckCount" class="later-count">0건</span></div>
+ <div class="later-table-wrap"><table class="later-table"><thead><tr><th>상태</th><th>품번</th><th>품명</th><th>위치</th><th>확인사유</th><th>메모</th><th>등록자</th><th>등록시간</th><th>처리</th></tr></thead><tbody id="laterCheckBody"></tbody></table></div>`;
+ target.insertAdjacentElement('afterend',s);renderLaterChecks();
+}
+function renderLaterChecks(){
+ ensureLaterCheckCard();
+ const a=getLaterChecks(),open=a.filter(x=>!x.done),body=document.getElementById('laterCheckBody'),cnt=document.getElementById('laterCheckCount');
+ if(cnt)cnt.textContent=open.length+'건';
+ if(!body)return;
+ const rows=[...open,...a.filter(x=>x.done).slice(0,10)];
+ body.innerHTML=rows.length?rows.map(x=>`<tr class="${x.done?'later-done':''}">
+ <td>${x.done?'✅ 완료':'📌 확인필요'}</td><td><b>${esc(x.part||'-')}</b></td><td>${esc(x.name||'-')}</td><td>${esc(x.location||'-')}</td>
+ <td class="later-reason">${esc(x.reason||'')}</td><td>${esc(x.memo||'-')}</td><td>${esc(x.writer||'-')}</td>
+ <td>${new Date(x.created_at).toLocaleString('ko-KR')}</td><td class="later-actions">${x.done?`<button onclick="reopenLaterCheck('${x.id}')">다시 확인</button>`:`<button onclick="finishLaterCheck('${x.id}')">☑ 확인완료</button>`}</td></tr>`).join(''):'<tr><td colspan="9">현재 확인할 일이 없습니다.</td></tr>';
+}
+
+/* 검색 결과에 공통 '나중에 확인' 버튼 자동 부착 */
+function attachLaterButtons(){
+ document.querySelectorAll('#results .result-card,#results .item-card,#results tr,#searchResults .result-card,#searchResults tr').forEach((el)=>{
+   if(el.querySelector('.later-check-btn'))return;
+   const partEl=el.querySelector('[data-part],.part-no,.part,.item-part');
+   const nameEl=el.querySelector('[data-name],.item-name,.name');
+   let part=partEl?.dataset?.part||partEl?.textContent?.trim()||'';
+   let name=nameEl?.dataset?.name||nameEl?.textContent?.trim()||'';
+   if(!part){
+     const txt=el.innerText||'',m=txt.match(/품번\\s*[:：]?\\s*([A-Za-z0-9._-]+)/);part=m?m[1]:'';
+   }
+   if(!name){
+     const txt=el.innerText||'',m=txt.match(/품명\\s*[:：]?\\s*([^\\n]+)/);name=m?m[1].trim():'';
+   }
+   if(!part&&!name)return;
+   const locEl=el.querySelector('[data-location],.location');
+   const location=locEl?.dataset?.location||locEl?.textContent?.trim()||'';
+   const b=document.createElement('button');b.type='button';b.className='later-check-btn';b.textContent='📌 나중에 확인';
+   b.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();addLaterCheck(part,name,location)};
+   el.appendChild(b);
+ });
+}
+window.addEventListener('load',()=>{setTimeout(()=>{ensureLaterCheckCard();attachLaterButtons()},1400)});
+const laterObserver=new MutationObserver(()=>attachLaterButtons());
+window.addEventListener('load',()=>{const root=document.getElementById('results')||document.getElementById('searchResults');if(root)laterObserver.observe(root,{childList:true,subtree:true})});
+</script>
+
 </body></html>
