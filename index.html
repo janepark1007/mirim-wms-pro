@@ -13417,4 +13417,70 @@ setInterval(()=>{
 },5000);
 </script>
 
+
+<style id="admin-worker-confirm-top-fixed-v38">
+/* 주문·문의 통합관리 화면 맨 위에 작업자 본인확인 완료 영역 강제 표시 */
+body.admin-view #adminTaskFocusContent #adminWorkerConfirmLogV37{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 12px!important;
+  position:relative!important;
+  z-index:5!important;
+}
+</style>
+
+<script id="admin-worker-confirm-top-fixed-v38-js">
+(function(){
+  async function forceWorkerConfirmTopV38(){
+    if(!isAdmin)return;
+
+    const panel=document.getElementById('adminTaskFocusPanel');
+    const content=document.getElementById('adminTaskFocusContent');
+    const today=document.getElementById('todayOrderCard');
+
+    if(!panel || !content || !today)return;
+
+    /* 주문통합관리 화면일 때만 */
+    const title=(document.getElementById('adminTaskFocusTitle')?.textContent||'');
+    if(!/주문.*문의.*통합관리/.test(title))return;
+
+    try{
+      if(typeof ensureAdminWorkerConfirmLogV37==='function'){
+        ensureAdminWorkerConfirmLogV37();
+      }
+      if(typeof loadAdminWorkerConfirmLogV37==='function'){
+        await loadAdminWorkerConfirmLogV37();
+      }
+    }catch(e){console.warn(e);}
+
+    const card=document.getElementById('adminWorkerConfirmLogV37');
+    if(!card)return;
+
+    /* 무조건 todayOrderCard 바로 위로 이동 */
+    if(card.parentNode!==content || card.nextElementSibling!==today){
+      content.insertBefore(card,today);
+    }
+
+    card.style.setProperty('display','block','important');
+    card.style.setProperty('visibility','visible','important');
+    card.style.setProperty('opacity','1','important');
+  }
+
+  window.addEventListener('load',()=>setTimeout(forceWorkerConfirmTopV38,700));
+
+  document.addEventListener('click',()=>{
+    setTimeout(forceWorkerConfirmTopV38,120);
+  },true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__confirmTopV38);
+    window.__confirmTopV38=setTimeout(forceWorkerConfirmTopV38,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
