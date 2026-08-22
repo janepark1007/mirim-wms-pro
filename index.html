@@ -10411,4 +10411,148 @@ window.addEventListener('load',()=>{
 })();
 </script>
 
+
+<style id="admin-main-deduplicate-final-v46">
+/* =========================================================
+   관리자 메인 최종 정리
+   - 관리자 메인에서는 adminReferenceHome 한 개만 표시
+   - VIP BOM / 기존 홈 / 위치정리 / 기록정리 / 중복 현황판 전부 숨김
+   - 각 기능 버튼을 클릭해 상세 화면으로 들어갈 때는 기존 기능 그대로 사용
+   ========================================================= */
+
+/* 관리자 메인 상태에서는 main 안의 새 관리자 메인 외 모두 강제 숨김 */
+body.admin-view.admin-reference-home main > *:not(#adminReferenceHome){
+  display:none!important;
+}
+
+/* 새 관리자 메인은 단 하나만 화면에 표시 */
+body.admin-view.admin-reference-home main > #adminReferenceHome{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:min(1760px,calc(100% - 20px))!important;
+  max-width:1760px!important;
+  margin:0 auto!important;
+}
+
+/* 과거 관리자 UI가 중첩되어 들어온 경우 추가 차단 */
+body.admin-view.admin-reference-home #home,
+body.admin-view.admin-reference-home #work,
+body.admin-view.admin-reference-home #photoSearchPanel,
+body.admin-view.admin-reference-home #workerLoginPanel,
+body.admin-view.admin-reference-home #notifPanel,
+body.admin-view.admin-reference-home #loginLogPanel,
+body.admin-view.admin-reference-home #recentInboundCard,
+body.admin-view.admin-reference-home #recentOutboundCard,
+body.admin-view.admin-reference-home #locationOrganizerCard,
+body.admin-view.admin-reference-home #recordLookupAdminCard,
+body.admin-view.admin-reference-home #nasExcelAdminCard,
+body.admin-view.admin-reference-home #unregisteredItemCard,
+body.admin-view.admin-reference-home #todayOrderCard,
+body.admin-view.admin-reference-home #orderInboundMatchCard,
+body.admin-view.admin-reference-home #laterCheckCard,
+body.admin-view.admin-reference-home #adminTaskFocusPanel,
+body.admin-view.admin-reference-home #adminShortcutFocusPanel{
+  display:none!important;
+}
+
+/* VIP/BOM 관련 별도 패널도 관리자 기본 메인에서는 노출 금지 */
+body.admin-view.admin-reference-home [id*="vip" i],
+body.admin-view.admin-reference-home [class*="vip" i],
+body.admin-view.admin-reference-home [id*="bom" i]:not(#adminMainOrderMatchCard),
+body.admin-view.admin-reference-home [class*="bom" i]:not(.admin-main-match-table){
+  display:none!important;
+}
+
+/* 메인에서 유지해야 하는 것 */
+body.admin-view.admin-reference-home #adminReferenceHome .ar-greeting,
+body.admin-view.admin-reference-home #adminReferenceHome .ar-stats,
+body.admin-view.admin-reference-home #adminReferenceHome .ar-shortcuts,
+body.admin-view.admin-reference-home #adminReferenceHome #adminMainOrderMatchCard,
+body.admin-view.admin-reference-home #adminReferenceHome .ar-footer{
+  display:block!important;
+}
+
+/* 통계판/바로가기 그리드는 원래 레이아웃 복원 */
+body.admin-view.admin-reference-home #adminReferenceHome .ar-stats{
+  display:grid!important;
+}
+body.admin-view.admin-reference-home #adminReferenceHome .ar-grid{
+  display:grid!important;
+}
+body.admin-view.admin-reference-home #adminReferenceHome .ar-greeting{
+  display:flex!important;
+}
+
+/* 최근 주문내역은 요청대로 강제 제거 유지 */
+body.admin-view.admin-reference-home #adminReferenceHome .ar-orders{
+  display:none!important;
+}
+
+/* 불필요한 큰 공백 제거 */
+body.admin-view.admin-reference-home #adminReferenceHome{
+  padding-bottom:18px!important;
+}
+body.admin-view.admin-reference-home #adminReferenceHome .ar-footer{
+  margin-top:10px!important;
+  padding-top:8px!important;
+}
+
+/* 모바일에서도 중복 없이 새 관리자 메인만 */
+@media(max-width:760px){
+  body.admin-view.admin-reference-home main > *:not(#adminReferenceHome){
+    display:none!important;
+  }
+  body.admin-view.admin-reference-home main > #adminReferenceHome{
+    width:100%!important;
+    max-width:100%!important;
+    padding:6px 8px 20px!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+<script id="admin-main-deduplicate-final-js-v46">
+(function(){
+  function cleanAdminMainV46(){
+    if(!window.isAdmin && typeof isAdmin!=='undefined' && !isAdmin) return;
+    if(!document.body.classList.contains('admin-reference-home')) return;
+
+    const main=document.querySelector('main');
+    const ref=document.getElementById('adminReferenceHome');
+    if(!main || !ref) return;
+
+    /* 혹시 같은 관리자 메인이 복제되었다면 첫 번째 하나만 유지 */
+    const refs=[...document.querySelectorAll('#adminReferenceHome')];
+    refs.slice(1).forEach(el=>el.remove());
+
+    /* 최근 주문 내역은 DOM에서도 제거 */
+    ref.querySelectorAll('.ar-orders').forEach(el=>el.remove());
+
+    /* 메인 자동대조 카드가 새 관리자 메인 밖에 생성되었다면 안으로 이동 */
+    const match=document.getElementById('adminMainOrderMatchCard');
+    const shortcuts=ref.querySelector('.ar-shortcuts');
+    if(match && !ref.contains(match)){
+      if(shortcuts) shortcuts.insertAdjacentElement('afterend',match);
+      else ref.appendChild(match);
+    }
+
+    /* 관리자 기본 메인에서는 나머지 main 직계 요소를 확실히 숨김 */
+    [...main.children].forEach(el=>{
+      if(el!==ref) el.style.setProperty('display','none','important');
+    });
+    ref.style.setProperty('display','block','important');
+  }
+
+  window.addEventListener('load',()=>setTimeout(cleanAdminMainV46,700));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(cleanAdminMainV46,700));
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__cleanAdminMainV46);
+    window.__cleanAdminMainV46=setTimeout(cleanAdminMainV46,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
