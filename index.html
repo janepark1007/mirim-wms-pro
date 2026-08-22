@@ -13066,4 +13066,99 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 }
 </style>
 
+
+<style id="admin-shortcuts-click-fix-v28">
+/* 관리자 바로가기 클릭 영역만 복구 */
+body.admin-view #adminReferenceHome,
+body.admin-view #adminReferenceHome .ar-shortcuts,
+body.admin-view #adminReferenceHome .ar-grid,
+body.admin-view #adminReferenceHome .ar-btn{
+  pointer-events:auto!important;
+  user-select:auto!important;
+}
+
+body.admin-view #adminReferenceHome .ar-btn{
+  cursor:pointer!important;
+  position:relative!important;
+  z-index:2!important;
+}
+</style>
+
+<script id="admin-shortcuts-click-fix-v28-js">
+(function(){
+  function wireAdminReferenceShortcutsV28(){
+    if(!isAdmin)return;
+    const root=document.getElementById('adminReferenceHome');
+    if(!root)return;
+
+    /* 로그인 모달이 혹시 남아 있으면 완전히 닫기 */
+    const adminModal=document.getElementById('adminPasswordModal');
+    if(adminModal){
+      adminModal.classList.add('hidden');
+      adminModal.setAttribute('aria-hidden','true');
+      adminModal.style.removeProperty('display');
+    }
+
+    document.body.classList.remove('worker-locked');
+
+    const actions=[
+      ['기록 불러오기',()=>openExistingAdminSection('records')],
+      ['기존 위치 정리·수정',()=>openExistingAdminSection('location')],
+      ['NAS 엑셀 연동',()=>openExistingAdminSection('nas')],
+      ['사용자 관리',()=>openExistingAdminSection('users')],
+      ['알림 확인',()=>openExistingAdminSection('alerts')],
+      ['입고 등록',()=>openMode('inbound')],
+      ['출고 등록',()=>openMode('outbound')],
+      ['주문·문의 통합관리',()=>openAdminTaskView('orders')],
+      ['주문·입고 자동대조',()=>openAdminTaskView('match')],
+      ['나중에 확인',()=>openAdminTaskView('later')],
+      ['최근 입출고 기록',()=>openAdminTaskView('history')],
+      ['ERP 미등록 자재',()=>openAdminTaskView('unreg')]
+    ];
+
+    root.querySelectorAll('.ar-btn').forEach(btn=>{
+      const label=(btn.innerText||'').replace(/\s+/g,' ').trim();
+      const found=actions.find(([name])=>label.includes(name));
+      if(!found)return;
+
+      btn.onclick=(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(!isAdmin){
+          alert('관리자 모드에서만 사용할 수 있습니다.');
+          return;
+        }
+
+        try{
+          found[1]();
+        }catch(err){
+          console.error('관리자 바로가기 실행 오류',err);
+          alert('관리 화면을 열지 못했습니다.');
+        }
+      };
+
+      btn.style.setProperty('pointer-events','auto','important');
+      btn.style.setProperty('cursor','pointer','important');
+    });
+  }
+
+  window.wireAdminReferenceShortcutsV28=wireAdminReferenceShortcutsV28;
+
+  window.addEventListener('load',()=>setTimeout(wireAdminReferenceShortcutsV28,900));
+
+  document.addEventListener('click',e=>{
+    if(e.target.closest('#adminReferenceHome'))setTimeout(wireAdminReferenceShortcutsV28,30);
+  },true);
+
+  /* 관리자 메인이 다시 그려질 때 버튼 연결 복구 */
+  const obs=new MutationObserver(()=>{
+    if(!isAdmin)return;
+    clearTimeout(window.__adminShortcutWireV28);
+    window.__adminShortcutWireV28=setTimeout(wireAdminReferenceShortcutsV28,60);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
