@@ -8677,4 +8677,293 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+
+<style id="order-table-fit-v32">
+/* ===== 최근 주문 내역: 글씨 크기 통일 + 전체 화면 맞춤 ===== */
+@media(min-width:1101px){
+  #adminReferenceHome .ar-table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    font-size:11px!important;
+  }
+
+  #adminReferenceHome .ar-table th,
+  #adminReferenceHome .ar-table td{
+    font-size:11px!important;
+    line-height:1.25!important;
+    padding:6px 5px!important;
+    font-weight:500!important;
+    vertical-align:middle!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+  }
+
+  #adminReferenceHome .ar-table th{
+    font-weight:900!important;
+    white-space:nowrap!important;
+  }
+
+  #adminReferenceHome .ar-table td.name{
+    font-size:11px!important;
+    font-weight:700!important;
+    line-height:1.25!important;
+    text-align:left!important;
+  }
+
+  #adminReferenceHome .ar-table td b{
+    font-size:11px!important;
+    font-weight:800!important;
+  }
+
+  #adminReferenceHome .ar-table th:nth-child(1){width:13%!important}
+  #adminReferenceHome .ar-table th:nth-child(2){width:9%!important}
+  #adminReferenceHome .ar-table th:nth-child(3){width:28%!important}
+  #adminReferenceHome .ar-table th:nth-child(4){width:7%!important}
+  #adminReferenceHome .ar-table th:nth-child(5){width:7%!important}
+  #adminReferenceHome .ar-table th:nth-child(6){width:8%!important}
+  #adminReferenceHome .ar-table th:nth-child(7){width:20%!important}
+  #adminReferenceHome .ar-table th:nth-child(8){width:8%!important}
+
+  #adminReferenceHome .ar-status{
+    font-size:10px!important;
+    padding:3px 7px!important;
+  }
+
+  #adminReferenceHome .ar-view{
+    min-height:28px!important;
+    padding:0 9px!important;
+    font-size:10px!important;
+  }
+
+  /* 최근 주문 카드 자체도 좌우 여백 최소화 */
+  #adminReferenceHome{
+    width:calc(100% - 12px)!important;
+    max-width:none!important;
+  }
+  #adminReferenceHome .ar-orders{
+    padding:10px 12px!important;
+  }
+}
+
+/* ===== 전체 주문요청 & 문의건 통합관리도 한 화면 맞춤 ===== */
+@media(min-width:1101px){
+  body.admin-view #todayOrderCard{
+    width:100%!important;
+    max-width:none!important;
+    overflow:hidden!important;
+    padding:10px 8px!important;
+    box-sizing:border-box!important;
+  }
+
+  body.admin-view #todayOrderCard .order-table-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  body.admin-view #todayOrderCard table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    font-size:10px!important;
+  }
+
+  body.admin-view #todayOrderCard th,
+  body.admin-view #todayOrderCard td{
+    min-width:0!important;
+    padding:5px 4px!important;
+    font-size:10px!important;
+    line-height:1.2!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    vertical-align:middle!important;
+  }
+
+  body.admin-view #todayOrderCard th{
+    font-weight:900!important;
+    white-space:nowrap!important;
+  }
+
+  /* 11개 컬럼 폭 균형 */
+  body.admin-view #todayOrderCard th:nth-child(1),
+  body.admin-view #todayOrderCard td:nth-child(1){width:7%!important}
+  body.admin-view #todayOrderCard th:nth-child(2),
+  body.admin-view #todayOrderCard td:nth-child(2){width:8%!important}
+  body.admin-view #todayOrderCard th:nth-child(3),
+  body.admin-view #todayOrderCard td:nth-child(3){width:15%!important}
+  body.admin-view #todayOrderCard th:nth-child(4),
+  body.admin-view #todayOrderCard td:nth-child(4){width:6%!important}
+  body.admin-view #todayOrderCard th:nth-child(5),
+  body.admin-view #todayOrderCard td:nth-child(5){width:5%!important}
+  body.admin-view #todayOrderCard th:nth-child(6),
+  body.admin-view #todayOrderCard td:nth-child(6){width:6%!important}
+  body.admin-view #todayOrderCard th:nth-child(7),
+  body.admin-view #todayOrderCard td:nth-child(7){width:6%!important}
+  body.admin-view #todayOrderCard th:nth-child(8),
+  body.admin-view #todayOrderCard td:nth-child(8){width:12%!important}
+  body.admin-view #todayOrderCard th:nth-child(9),
+  body.admin-view #todayOrderCard td:nth-child(9){width:12%!important}
+  body.admin-view #todayOrderCard th:nth-child(10),
+  body.admin-view #todayOrderCard td:nth-child(10){width:10%!important}
+  body.admin-view #todayOrderCard th:nth-child(11),
+  body.admin-view #todayOrderCard td:nth-child(11){width:13%!important}
+
+  body.admin-view #todayOrderCard .order-inquiry-photo{
+    width:48px!important;
+    height:44px!important;
+    object-fit:contain!important;
+  }
+
+  body.admin-view #todayOrderCard input,
+  body.admin-view #todayOrderCard button{
+    min-width:0!important;
+    max-width:100%!important;
+    font-size:10px!important;
+  }
+
+  body.admin-view #todayOrderCard .worker-receive-check,
+  body.admin-view #todayOrderCard .admin-order-confirm-wrap,
+  body.admin-view #todayOrderCard .order-reinquiry-grid{
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  body.admin-view #todayOrderCard .order-note-compact{
+    width:100%!important;
+    max-width:none!important;
+    font-size:10px!important;
+    line-height:1.2!important;
+  }
+
+  body.admin-view #adminTaskFocusPanel{
+    max-width:none!important;
+    width:calc(100% - 12px)!important;
+    padding-left:6px!important;
+    padding-right:6px!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+
+<style id="remove-admin-recent-orders-v33">
+/* 관리자 메인에서 최근 주문 내역 제거 */
+#adminReferenceHome .ar-orders{display:none!important;}
+#adminReferenceHome .ar-footer{margin-top:8px!important;}
+</style>
+
+
+<style id="recent-order-status-priority-v35">
+/* 최근 주문 상태를 단계별로 확실히 구분 */
+#adminReferenceHome .ar-status.req{
+  background:#dcecff!important;
+  color:#185b9d!important;
+  border:1px solid #b9d8fb!important;
+}
+#adminReferenceHome .ar-status.received{
+  background:#fff0b8!important;
+  color:#7a5900!important;
+  border:1px solid #ead06c!important;
+}
+#adminReferenceHome .ar-status.done{
+  background:#dff4e5!important;
+  color:#17622a!important;
+  border:1px solid #b9dfc4!important;
+}
+#adminReferenceHome .ar-status.wait{
+  background:#ffe2dc!important;
+  color:#9a2f1c!important;
+  border:1px solid #efb9ae!important;
+}
+#adminReferenceHome .ar-status.part{
+  background:#fff6d8!important;
+  color:#755900!important;
+  border:1px solid #e6d08a!important;
+}
+
+/* 요청 행은 상단에서 더 눈에 띄게 */
+#adminReferenceHome .ar-table tbody tr.priority-request{
+  background:#f5f9ff!important;
+}
+#adminReferenceHome .ar-table tbody tr.priority-request td:first-child{
+  border-left:4px solid #4a8fd8!important;
+}
+#adminReferenceHome .ar-table tbody tr.priority-received{
+  background:#fffdf4!important;
+}
+</style>
+
+<script>
+function arStatusClassV35(status){
+  const s=String(status||'요청');
+  if(s==='입고완료' || s==='문의완료' || s==='입고대조완료')return 'done';
+  if(s==='수령확인')return 'received';
+  if(s==='부분입고')return 'part';
+  if(s==='미입고' || s==='수령승인대기')return 'wait';
+  return 'req';
+}
+
+function arStatusPriorityV35(status){
+  const s=String(status||'요청');
+  if(s==='요청' || s==='문의중')return 0;
+  if(s==='수령승인대기' || s==='미입고' || s==='부분입고')return 1;
+  if(s==='수령확인')return 2;
+  if(s==='입고완료' || s==='입고대조완료' || s==='문의완료')return 3;
+  return 1;
+}
+
+async function loadAdminReferenceOrders(){
+  ensureAdminReferenceHome();
+  const body=document.getElementById('arOrdersBody'); if(!body)return;
+  if(!isAdmin){
+    body.innerHTML='<tr><td colspan="8" class="ar-empty">관리자 모드에서만 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+  if(!sharedReady||!sharedDb){
+    body.innerHTML='<tr><td colspan="8" class="ar-empty">공용 동기화 연결 후 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+
+  try{
+    const {data,error}=await sharedDb.from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(100);
+    if(error)throw error;
+
+    const rows=(data||[])
+      .sort((a,b)=>{
+        const pa=arStatusPriorityV35(a.status);
+        const pb=arStatusPriorityV35(b.status);
+        if(pa!==pb)return pa-pb;
+        return new Date(b.created_at||0)-new Date(a.created_at||0);
+      })
+      .slice(0,10);
+
+    body.innerHTML=rows.length?rows.map(r=>{
+      const dt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'';
+      const status=String(r.status||'요청');
+      const raw=(typeof cleanOrderNote==='function'?cleanOrderNote(r.note):String(r.note||'')).replace(/\n/g,' ');
+      const note=raw.length>55?raw.slice(0,55)+'…':raw;
+      const rowCls=(status==='요청'||status==='문의중')?'priority-request':(status==='수령확인'?'priority-received':'');
+      return `<tr class="${rowCls}">
+        <td>${esc(dt)}</td>
+        <td><b>${esc(r.part_no||'기타')}</b></td>
+        <td class="name">${esc(r.item_name||'')}</td>
+        <td>${Number(r.request_qty||0).toLocaleString()}</td>
+        <td>${esc(r.requester||'')}</td>
+        <td><span class="ar-status ${arStatusClassV35(status)}">${esc(status)}</span></td>
+        <td>${esc(note||'-')}</td>
+        <td><button class="ar-view" onclick="openAdminTaskView('orders')">보기</button></td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="8" class="ar-empty">최근 주문 내역이 없습니다.</td></tr>';
+  }catch(e){
+    console.warn('최근 주문내역 조회 실패',e);
+    body.innerHTML='<tr><td colspan="8" class="ar-empty">최근 주문 내역을 불러오지 못했습니다.</td></tr>';
+  }
+}
+</script>
+
 </body></html>
