@@ -4480,24 +4480,32 @@ function renderTodayOrderRequests(){
        const mine=currentWorker&&String(r.requester||'')===String(currentWorker.name||'');
 
        const confirmedQty=orderReceivedQty(r.note),approvalReq=orderReceiptApprovalRequest(r.note);
+       const inboundMatchedQty=(typeof orderInboundMatchedQty==='function')?Number(orderInboundMatchedQty(r.note)||0):0;
+       const canWorkerConfirmInbound = !isInquiry && !isAdmin && mine && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
        const workerAction = isInquiry ? '' :
          (isAdmin
            ? `<div class="worker-receive-check admin-worker-receive">
                 <input id="admin_worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric"
-                       value="${confirmedQty||Number(r.request_qty||0)||''}" placeholder="받은 수량">
+                       value="${confirmedQty||inboundMatchedQty||Number(r.request_qty||0)||''}" placeholder="받은 수량">
                 <button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>
                 ${approvalReq?`<button class="approval-receive-btn" onclick="adminApproveWorkerReceipt(${r.id})">🔐 ${esc(approvalReq.worker)} ${Number(approvalReq.qty||0).toLocaleString()}개 승인</button>`:''}
               </div>`
            : (r.status==='수령승인대기'
               ? `<div class="worker-receive-check">
-                   <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${approvalReq?.qty||confirmedQty||''}" placeholder="받은 수량">
+                   <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${approvalReq?.qty||confirmedQty||inboundMatchedQty||''}" placeholder="받은 수량">
                    <button class="self-receive-btn" disabled>🔐 관리자 승인대기</button>
                  </div>`
-              : `<div class="worker-receive-check">
-                   <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${confirmedQty||''}" placeholder="받은 수량">
-                   <button class="self-receive-btn" onclick="workerConfirmOrderReceived(${r.id})">${confirmedQty?(mine?'✏️ 수정 승인요청':'🔐 대리확인 요청'):(mine?'☑ 본인확인':'🔐 대리확인 요청')}</button>
-                   ${confirmedQty?`<small class="worker-receive-done">현재 확인수량 ${Number(confirmedQty).toLocaleString()}개</small>`:''}
-                 </div>`));
+              : canWorkerConfirmInbound
+                ? `<div class="worker-receive-check worker-inbound-confirm-ready">
+                     <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${inboundMatchedQty}" readonly>
+                     <button class="self-receive-btn inbound-confirm-btn" onclick="workerConfirmInboundMatchedOrder(${r.id})">✅ 작업자 확인</button>
+                     <small class="worker-receive-done">입고대조 ${Number(inboundMatchedQty).toLocaleString()}개 · 실제 자재 확인 후 눌러주세요</small>
+                   </div>`
+                : `<div class="worker-receive-check">
+                     <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${confirmedQty||''}" placeholder="받은 수량">
+                     <button class="self-receive-btn" onclick="workerConfirmOrderReceived(${r.id})">${confirmedQty?(mine?'✏️ 수정 승인요청':'🔐 대리확인 요청'):(mine?'☑ 본인확인':'🔐 대리확인 요청')}</button>
+                     ${confirmedQty?`<small class="worker-receive-done">현재 확인수량 ${Number(confirmedQty).toLocaleString()}개</small>`:''}
+                   </div>`));
 
        const adminAction=isAdmin
          ? (isInquiry
@@ -11993,6 +12001,103 @@ body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input[type="file"]{
     },300);
   });
 })();
+</script>
+
+
+<style id="worker-confirm-inbound-v10">
+body:not(.admin-view) #todayOrderCard .worker-inbound-confirm-ready{
+  display:grid!important;
+  grid-template-columns:minmax(90px,110px) auto!important;
+  gap:6px!important;
+  align-items:center!important;
+  min-width:220px!important;
+}
+body:not(.admin-view) #todayOrderCard .worker-inbound-confirm-ready input{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  min-height:36px!important;
+  text-align:center!important;
+  background:#f3f7f5!important;
+}
+body:not(.admin-view) #todayOrderCard .inbound-confirm-btn{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:36px!important;
+  padding:0 10px!important;
+  background:#0b7a45!important;
+  color:#fff!important;
+  border:0!important;
+  border-radius:8px!important;
+  font-weight:1000!important;
+}
+body:not(.admin-view) #todayOrderCard .worker-inbound-confirm-ready small{
+  grid-column:1/-1!important;
+  display:block!important;
+  color:#4f665a!important;
+  font-size:9px!important;
+  font-weight:800!important;
+}
+</style>
+
+<script id="worker-confirm-inbound-v10-js">
+async function workerConfirmInboundMatchedOrder(id){
+  if(!currentWorker)return alert('작업자 로그인 후 사용할 수 있습니다.');
+  if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
+
+  const {data:r,error:readErr}=await sharedDb
+    .from('production_order_requests')
+    .select('*')
+    .eq('id',id)
+    .single();
+
+  if(readErr||!r)return alert('주문기록을 불러오지 못했습니다.');
+
+  if(String(r.requester||'')!==String(currentWorker.name||'')){
+    return alert('본인이 주문한 건만 작업자 확인할 수 있습니다.');
+  }
+
+  const matched=(typeof orderInboundMatchedQty==='function')
+    ? Number(orderInboundMatchedQty(r.note)||0)
+    : 0;
+
+  if(!matched||matched<=0){
+    return alert('입고대조 수량이 아직 없습니다.');
+  }
+
+  if(!confirm(
+    `입고대조 ${matched.toLocaleString()}개를 실제로 확인하셨나요?\n\n`+
+    `확인하면 이 주문은 작업자 메인 미완료 목록에서 사라집니다.`
+  ))return;
+
+  const stamp=`[수령확인:${currentWorker.name} / ${new Date().toLocaleString('ko-KR')} / 받은수량:${matched} / 입고대조확인]`;
+  const base=String(r.note||'')
+    .replace(/\[수령확인:[^\]]*\]\s*/g,'')
+    .replace(/\[수령승인요청:[^\]]*\]\s*/g,'')
+    .trim();
+
+  const {error}=await sharedDb
+    .from('production_order_requests')
+    .update({
+      status:'수령확인',
+      completed_at:new Date().toISOString(),
+      note:(base?base+'\n':'')+stamp
+    })
+    .eq('id',id);
+
+  if(error)return alert('작업자 확인 저장 실패: '+error.message);
+
+  await loadTodayOrderRequests();
+  if(typeof loadFiveDayOrders==='function')await loadFiveDayOrders();
+  if(typeof refreshAllSharedDevicesV1==='function')refreshAllSharedDevicesV1('worker-inbound-confirm');
+
+  alert(`✅ 작업자 확인 완료\n입고대조 ${matched.toLocaleString()}개 확인 처리되었습니다.`);
+}
 </script>
 
 </body></html>
