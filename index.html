@@ -4535,12 +4535,12 @@ function renderTodayOrderRequests(){
        const canWorkerConfirmInbound = !isInquiry && !isAdmin && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
        const workerAction = isInquiry ? '' :
          (isAdmin
-           ? `<div class="worker-receive-check admin-worker-receive">
+           ? ((confirmedQty||approvalReq) ? `<div class="worker-receive-check admin-worker-receive">
                 <input id="admin_worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric"
-                       value="${confirmedQty||inboundMatchedQty||Number(r.request_qty||0)||''}" placeholder="받은 수량">
-                <button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>
+                       value="${confirmedQty||approvalReq?.qty||''}" placeholder="받은 수량">
+                ${confirmedQty?`<button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>`:''}
                 ${approvalReq?`<button class="approval-receive-btn" onclick="adminApproveWorkerReceipt(${r.id})">🔐 ${esc(approvalReq.worker)} ${Number(approvalReq.qty||0).toLocaleString()}개 승인</button>`:''}
-              </div>`
+              </div>` : '')
            : (r.status==='수령승인대기'
               ? `<div class="worker-receive-check">
                    <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${approvalReq?.qty||confirmedQty||inboundMatchedQty||''}" placeholder="받은 수량">
