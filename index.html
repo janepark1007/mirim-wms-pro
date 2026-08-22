@@ -12895,14 +12895,15 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 </script>
 
 
-<style id="mobile-hide-inout-only-v24">
-/* 모바일 작업자 메인에서만 입고/출고등록 숨김 */
-@media (max-width: 760px){
+<style id="mobile-only-hide-inout-v25">
+/* 터치 모바일에서만 작업자 핵심 메뉴의 입고/출고 숨김
+   PC는 창 폭과 상관없이 영향 없음 */
+@media (max-width:760px) and (hover:none) and (pointer:coarse){
   body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*="openMode('outbound')"],
   body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*='openMode("outbound")'],
   body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*="openMode('inbound')"],
   body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*='openMode("inbound")']{
-    display:none !important;
+    display:none!important;
   }
 }
 </style>
