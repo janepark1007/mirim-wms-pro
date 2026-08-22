@@ -13141,4 +13141,92 @@ body.admin-view #adminReferenceHome #arOrdersBody{
 })();
 </script>
 
+
+<style id="admin-remove-two-light-colors-v36">
+/* 관리자 바로가기에서 기록 불러오기 / 주문·입고 자동대조 강제 숨김 */
+.admin-view #adminReferenceHome .ar-btn[onclick*="openExistingAdminSection('records')"],
+.admin-view #adminReferenceHome .ar-btn.match,
+.admin-view #adminReferenceHome .ar-btn[onclick*="openAdminTaskView('match')"]{
+  display:none!important;
+}
+
+/* 관리자 바로가기 진한색상 → 연한색상으로 변경 */
+
+/* 입고 등록 - 연한 녹색 */
+.admin-view #adminReferenceHome .ar-btn.in{
+  background:#e4f6ea!important;
+  border-color:#b9dfc7!important;
+  color:#17633e!important;
+}
+
+/* 출고 등록 - 연한 적색 */
+.admin-view #adminReferenceHome .ar-btn.out{
+  background:#fde9e8!important;
+  border-color:#efc2bf!important;
+  color:#9f2722!important;
+}
+
+/* 주문·문의 통합관리 - 연한 핑크 */
+.admin-view #adminReferenceHome .ar-btn.order{
+  background:#fbe5ef!important;
+  border-color:#efbfd3!important;
+  color:#a42c61!important;
+}
+
+/* 나중에 확인 - 연한 파랑 */
+.admin-view #adminReferenceHome .ar-btn.later{
+  background:#e6f0fb!important;
+  border-color:#bed3eb!important;
+  color:#245d93!important;
+}
+
+/* 최근 입출고 기록 - 연한 민트 */
+.admin-view #adminReferenceHome .ar-btn[onclick*="openAdminTaskView('history')"]{
+  background:#e1f7ef!important;
+  border-color:#b8e7d6!important;
+  color:#176d55!important;
+}
+
+/* ERP 미등록 자재 - 연한 자주색 */
+.admin-view #adminReferenceHome .ar-btn.unreg{
+  background:#f0e5ee!important;
+  border-color:#d9bfd2!important;
+  color:#7a3d66!important;
+}
+
+/* 위 버튼들의 아이콘도 글자색과 맞춤 */
+.admin-view #adminReferenceHome .ar-btn.in .ico,
+.admin-view #adminReferenceHome .ar-btn.out .ico,
+.admin-view #adminReferenceHome .ar-btn.order .ico,
+.admin-view #adminReferenceHome .ar-btn.later .ico,
+.admin-view #adminReferenceHome .ar-btn.unreg .ico{
+  color:inherit!important;
+}
+</style>
+
+<script id="admin-remove-two-v36-js">
+(function(){
+  function removeTwoAdminButtonsV36(){
+    if(!isAdmin)return;
+    const root=document.getElementById('adminReferenceHome');
+    if(!root)return;
+
+    root.querySelectorAll(
+      '.ar-btn[onclick*="openExistingAdminSection(\\'records\\')"],' +
+      '.ar-btn.match,' +
+      '.ar-btn[onclick*="openAdminTaskView(\\'match\\')"]'
+    ).forEach(btn=>btn.remove());
+  }
+
+  window.addEventListener('load',()=>setTimeout(removeTwoAdminButtonsV36,500));
+
+  const obs=new MutationObserver(()=>{
+    if(!isAdmin)return;
+    clearTimeout(window.__removeTwoAdminV36);
+    window.__removeTwoAdminV36=setTimeout(removeTwoAdminButtonsV36,50);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
