@@ -12973,4 +12973,192 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 })();
 </script>
 
+
+<style id="worker-menu-truly-unified-v22">
+/* PC와 모바일 모두 같은 작업자 핵심 메뉴 */
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+  display:none!important;
+}
+body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2{
+  display:block!important;
+  width:calc(100% - 20px)!important;
+  max-width:1180px!important;
+  margin:12px auto 16px!important;
+  padding:14px!important;
+  box-sizing:border-box!important;
+}
+body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-title{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:10px!important;
+  font-size:24px!important;
+  font-weight:1000!important;
+  margin-bottom:12px!important;
+}
+body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-btn{
+  min-width:0!important;
+  min-height:82px!important;
+  padding:12px 10px!important;
+  border-radius:13px!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  line-height:1.25!important;
+  white-space:normal!important;
+  word-break:keep-all!important;
+  text-align:center!important;
+  box-sizing:border-box!important;
+}
+body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-btn .ico{
+  display:block!important;
+  font-size:28px!important;
+  margin-bottom:4px!important;
+}
+body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-btn small{
+  display:block!important;
+  margin-top:3px!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+
+/* 통일 색상 */
+body:not(.admin-view) #mobileWorkerCoreV2 [data-core="location"]{
+  background:#eee7fb!important;
+  color:#5e3aa8!important;
+  border:1px solid #d6c7f2!important;
+}
+body:not(.admin-view) #mobileWorkerCoreV2 [data-core="outbound"]{
+  background:#fde8e8!important;
+  color:#9f1d1d!important;
+  border:1px solid #f2bcbc!important;
+}
+body:not(.admin-view) #mobileWorkerCoreV2 [data-core="inbound"]{
+  background:#dff7ee!important;
+  color:#0b6b52!important;
+  border:1px solid #b6e8d8!important;
+}
+body:not(.admin-view) #mobileWorkerCoreV2 [data-core="kakao"]{
+  background:#fee500!important;
+  color:#2b2200!important;
+  border:1px solid #d7bd00!important;
+}
+
+@media(max-width:760px){
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2{
+    width:calc(100% - 10px)!important;
+    max-width:100%!important;
+    margin:8px auto 12px!important;
+    padding:10px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-title{
+    font-size:21px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-btn{
+    min-height:76px!important;
+    font-size:18px!important;
+    padding:10px 6px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-btn .ico{
+    font-size:25px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 .mw-btn small{
+    font-size:10px!important;
+  }
+}
+</style>
+
+<script id="worker-menu-truly-unified-v22-js">
+(function(){
+  function createUnifiedWorkerCoreV22(){
+    const home=document.getElementById('home');
+    if(!home) return null;
+
+    let core=document.getElementById('mobileWorkerCoreV2');
+    if(!core){
+      core=document.createElement('section');
+      core.id='mobileWorkerCoreV2';
+      core.className='card';
+      const firstCard=home.querySelector('.card');
+      if(firstCard) firstCard.insertAdjacentElement('afterend',core);
+      else home.prepend(core);
+    }
+
+    core.innerHTML=`
+      <div class="mw-title">
+        <span>📌 작업자 핵심 메뉴</span>
+        <span class="mw-live">모바일·PC 공용 실시간</span>
+      </div>
+      <div class="mw-grid">
+        <button type="button" class="mw-btn" data-core="location">
+          <span class="ico">📍</span>자재위치확인
+          <small>창고 위치 확인</small>
+        </button>
+        <button type="button" class="mw-btn" data-core="outbound">
+          <span class="ico">⬆️</span>출고등록
+          <small>자재 출고 등록</small>
+        </button>
+        <button type="button" class="mw-btn" data-core="inbound">
+          <span class="ico">⬇️</span>입고등록
+          <small>입고 수량 등록</small>
+        </button>
+        <button type="button" class="mw-btn" data-core="orders">
+          <span class="ico">📋</span>주문·문의 통합관리
+          <small>주문 및 문의 확인</small>
+        </button>
+        <button type="button" class="mw-btn" data-core="myorders">
+          <span class="ico">👤</span>내 주문내역
+          <small>내 주문만 확인</small>
+        </button>
+        <button type="button" class="mw-btn" data-core="kakao">
+          <span class="ico">💬</span>카톡 주문하기
+          <small>카카오톡으로 주문</small>
+        </button>
+      </div>
+    `;
+
+    core.querySelector('[data-core="location"]').onclick=()=>openMode('location');
+    core.querySelector('[data-core="outbound"]').onclick=()=>openMode('outbound');
+    core.querySelector('[data-core="inbound"]').onclick=()=>openMode('inbound');
+    core.querySelector('[data-core="orders"]').onclick=()=>{
+      if(typeof openWorkerOrdersV43==='function') openWorkerOrdersV43();
+    };
+    core.querySelector('[data-core="myorders"]').onclick=()=>{
+      if(typeof openMyOrdersV2==='function') openMyOrdersV2();
+    };
+    core.querySelector('[data-core="kakao"]').onclick=()=>{
+      if(typeof openStandaloneOrder==='function') openStandaloneOrder();
+    };
+
+    const old=document.getElementById('workerMainShortcutCard');
+    if(old) old.style.setProperty('display','none','important');
+
+    return core;
+  }
+
+  function applyUnifiedWorkerCoreV22(){
+    if(isAdmin || !currentWorker) return;
+    createUnifiedWorkerCoreV22();
+  }
+
+  window.addEventListener('load',()=>setTimeout(applyUnifiedWorkerCoreV22,600));
+  window.addEventListener('resize',()=>setTimeout(applyUnifiedWorkerCoreV22,50));
+  document.addEventListener('click',()=>setTimeout(applyUnifiedWorkerCoreV22,50),true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__unifyWorkerV22);
+    window.__unifyWorkerV22=setTimeout(applyUnifiedWorkerCoreV22,60);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
 </body></html>
