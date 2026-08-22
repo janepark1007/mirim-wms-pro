@@ -13331,4 +13331,329 @@ window.addEventListener('load',()=>{
 }
 </style>
 
+
+<style id="mobile-dedicated-order-table-v58">
+/* 전용 모바일 주문표 - 기존 카드형 표와 완전히 분리 */
+#mobileOrderTableV58{display:none}
+
+@media(max-width:760px){
+  /* 기존 주문 표는 모바일에서 숨김 */
+  #todayOrderCard .order-table-wrap{
+    display:none!important;
+  }
+
+  #mobileOrderTableV58{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin-top:8px!important;
+    box-sizing:border-box!important;
+  }
+
+  #mobileOrderTableV58 .mobile-order-scroll-v58{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    border:1px solid #dce6e0!important;
+    border-radius:8px!important;
+    background:#fff!important;
+  }
+
+  #mobileOrderTableV58 table{
+    width:1420px!important;
+    min-width:1420px!important;
+    max-width:1420px!important;
+    table-layout:fixed!important;
+    border-collapse:collapse!important;
+    font-size:10px!important;
+  }
+
+  #mobileOrderTableV58 th,
+  #mobileOrderTableV58 td{
+    height:42px!important;
+    padding:4px 5px!important;
+    border-right:1px solid #edf1ef!important;
+    border-bottom:1px solid #dfe7e3!important;
+    vertical-align:middle!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    box-sizing:border-box!important;
+    font-size:10px!important;
+    line-height:1.15!important;
+  }
+
+  #mobileOrderTableV58 th{
+    height:32px!important;
+    background:#eef7f1!important;
+    color:#173b29!important;
+    font-weight:1000!important;
+    position:sticky!important;
+    top:0!important;
+    z-index:4!important;
+  }
+
+  #mobileOrderTableV58 th:nth-child(1),
+  #mobileOrderTableV58 td:nth-child(1){width:120px!important}
+
+  #mobileOrderTableV58 th:nth-child(2),
+  #mobileOrderTableV58 td:nth-child(2){width:80px!important;font-weight:800!important}
+
+  #mobileOrderTableV58 th:nth-child(3),
+  #mobileOrderTableV58 td:nth-child(3){width:105px!important;font-weight:900!important}
+
+  #mobileOrderTableV58 th:nth-child(4),
+  #mobileOrderTableV58 td:nth-child(4){width:250px!important;text-align:left!important}
+
+  #mobileOrderTableV58 th:nth-child(5),
+  #mobileOrderTableV58 td:nth-child(5){width:62px!important}
+
+  #mobileOrderTableV58 th:nth-child(6),
+  #mobileOrderTableV58 td:nth-child(6){width:70px!important}
+
+  #mobileOrderTableV58 th:nth-child(7),
+  #mobileOrderTableV58 td:nth-child(7){width:85px!important}
+
+  #mobileOrderTableV58 th:nth-child(8),
+  #mobileOrderTableV58 td:nth-child(8){width:180px!important;text-align:left!important}
+
+  #mobileOrderTableV58 th:nth-child(9),
+  #mobileOrderTableV58 td:nth-child(9){width:130px!important}
+
+  #mobileOrderTableV58 th:nth-child(10),
+  #mobileOrderTableV58 td:nth-child(10){width:338px!important}
+
+  #mobileOrderTableV58 .mobile-order-photo-v58{
+    width:32px!important;
+    height:32px!important;
+    object-fit:cover!important;
+    border-radius:4px!important;
+  }
+
+  #mobileOrderTableV58 .mobile-kakao-box-v58{
+    display:grid!important;
+    grid-template-columns:1fr 58px!important;
+    gap:3px!important;
+    align-items:center!important;
+    width:100%!important;
+  }
+
+  #mobileOrderTableV58 .mobile-kakao-box-v58 input{
+    width:100%!important;
+    min-width:0!important;
+    height:28px!important;
+    min-height:28px!important;
+    padding:2px 5px!important;
+    font-size:9px!important;
+    border:1px solid #ccd7d1!important;
+    border-radius:4px!important;
+    box-sizing:border-box!important;
+  }
+
+  #mobileOrderTableV58 .mobile-kakao-box-v58 button{
+    width:58px!important;
+    min-width:58px!important;
+    height:28px!important;
+    min-height:28px!important;
+    padding:0!important;
+    font-size:8px!important;
+    font-weight:1000!important;
+    background:#fee500!important;
+    color:#191919!important;
+    border:1px solid #d4ba00!important;
+    border-radius:4px!important;
+  }
+
+  #mobileOrderTableV58 .mobile-status-v58{
+    display:inline-block!important;
+    padding:3px 6px!important;
+    border-radius:999px!important;
+    background:#fff0b8!important;
+    color:#725600!important;
+    font-weight:900!important;
+    font-size:9px!important;
+  }
+
+  #mobileOrderTableV58 .mobile-confirm-v58{
+    font-weight:900!important;
+    font-size:9px!important;
+  }
+
+  #mobileOrderTableV58 .scroll-note-v58{
+    padding:5px 7px!important;
+    background:#f7fbf8!important;
+    color:#5e7167!important;
+    font-size:9px!important;
+    font-weight:900!important;
+    text-align:center!important;
+    border-bottom:1px solid #e3eae6!important;
+  }
+}
+</style>
+
+<script id="mobile-dedicated-order-table-v58-js">
+(function(){
+  function escV58(v){
+    if(typeof esc==='function')return esc(v);
+    return String(v??'').replace(/[&<>"']/g,m=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[m]));
+  }
+
+  function dateV58(v){
+    if(!v)return '';
+    try{
+      return new Date(v).toLocaleString('ko-KR',{
+        timeZone:'Asia/Seoul',
+        month:'2-digit',
+        day:'2-digit',
+        hour:'2-digit',
+        minute:'2-digit'
+      });
+    }catch(e){return String(v)}
+  }
+
+  function ensureMobileOrderTableV58(){
+    let root=document.getElementById('mobileOrderTableV58');
+    if(root)return root;
+
+    const card=document.getElementById('todayOrderCard');
+    if(!card)return null;
+
+    root=document.createElement('div');
+    root.id='mobileOrderTableV58';
+    root.innerHTML=`
+      <div class="mobile-order-scroll-v58">
+        <div class="scroll-note-v58">← 좌우로 밀어서 전체 항목 확인 →</div>
+        <table>
+          <thead>
+            <tr>
+              <th>요청일시</th>
+              <th>요청자</th>
+              <th>품번</th>
+              <th>품명</th>
+              <th>사진</th>
+              <th>수량</th>
+              <th>상태</th>
+              <th>비고</th>
+              <th>본인확인</th>
+              <th>카톡 재문의</th>
+            </tr>
+          </thead>
+          <tbody id="mobileOrderBodyV58"></tbody>
+        </table>
+      </div>`;
+    card.appendChild(root);
+    return root;
+  }
+
+  function receiptTextV58(r){
+    try{
+      if(typeof orderReceiptInfo==='function'){
+        const info=orderReceiptInfo(r.note);
+        if(info)return '확인완료';
+      }
+      if(String(r.status||'')==='수령확인')return '확인완료';
+      if(String(r.status||'')==='수령승인대기')return '승인대기';
+    }catch(e){}
+    return '미확인';
+  }
+
+  function photoV58(r){
+    try{
+      const url=(typeof orderInquiryPhoto==='function' ? orderInquiryPhoto(r.note) : '') ||
+                (typeof getPhoto==='function' ? getPhoto(r.part_no||'') : '');
+      if(url)return `<img class="mobile-order-photo-v58" src="${escV58(url)}" alt="문의사진">`;
+    }catch(e){}
+    return '—';
+  }
+
+  function noteV58(r){
+    try{
+      return typeof cleanOrderNote==='function' ? cleanOrderNote(r.note) : String(r.note||'');
+    }catch(e){return String(r.note||'')}
+  }
+
+  function renderMobileOrderTableV58(){
+    if(window.innerWidth>760)return;
+    const root=ensureMobileOrderTableV58();
+    const body=document.getElementById('mobileOrderBodyV58');
+    if(!root||!body)return;
+
+    const rows=(typeof todayOrderRows!=='undefined' && Array.isArray(todayOrderRows))
+      ? todayOrderRows
+      : [];
+
+    body.innerHTML=rows.length ? rows.map(r=>`
+      <tr>
+        <td>${escV58(dateV58(r.created_at))}</td>
+        <td>${escV58(r.requester||'')}</td>
+        <td><b>${escV58(r.part_no||'기타')}</b></td>
+        <td title="${escV58(r.item_name||'')}">${escV58(r.item_name||'')}</td>
+        <td>${photoV58(r)}</td>
+        <td>${Number(r.request_qty||0).toLocaleString()}</td>
+        <td><span class="mobile-status-v58">${escV58(r.status||'요청')}</span></td>
+        <td title="${escV58(noteV58(r))}">${escV58(noteV58(r)||'-')}</td>
+        <td><span class="mobile-confirm-v58">${escV58(receiptTextV58(r))}</span></td>
+        <td>
+          <div class="mobile-kakao-box-v58">
+            <input id="mobile_reinquiry_v58_${r.id}" placeholder="재문의 내용">
+            <button type="button" data-v58-kakao="${r.id}">TALK</button>
+          </div>
+        </td>
+      </tr>
+    `).join('') : `<tr><td colspan="10">미완료 주문·문의가 없습니다.</td></tr>`;
+
+    root.querySelectorAll('[data-v58-kakao]').forEach(btn=>{
+      btn.onclick=async ()=>{
+        const id=btn.getAttribute('data-v58-kakao');
+        const mobileInput=document.getElementById('mobile_reinquiry_v58_'+id);
+        const msg=(mobileInput?.value||'').trim();
+        if(!msg)return alert('재문의 내용을 입력해 주세요.');
+
+        /* 기존 함수가 읽는 원본 input에 값을 넣고 기존 카톡 전송 로직 그대로 사용 */
+        let original=document.getElementById('order_reinquiry_note_'+id);
+        if(!original){
+          original=document.createElement('input');
+          original.id='order_reinquiry_note_'+id;
+          original.type='hidden';
+          document.body.appendChild(original);
+        }
+        original.value=msg;
+
+        if(typeof adminKakaoOrderInquiry==='function'){
+          await adminKakaoOrderInquiry(id);
+        }else{
+          alert('카톡 재문의 기능을 찾지 못했습니다.');
+        }
+      };
+    });
+  }
+
+  /* 기존 주문 렌더 후 모바일 전용 표도 바로 갱신 */
+  if(typeof renderTodayOrderRequests==='function'){
+    const originalRenderV58=renderTodayOrderRequests;
+    renderTodayOrderRequests=function(){
+      const r=originalRenderV58.apply(this,arguments);
+      setTimeout(renderMobileOrderTableV58,0);
+      return r;
+    };
+  }
+
+  window.addEventListener('load',()=>setTimeout(renderMobileOrderTableV58,1000));
+  window.addEventListener('resize',()=>setTimeout(renderMobileOrderTableV58,80));
+
+  const obs=new MutationObserver(()=>{
+    if(window.innerWidth<=760){
+      clearTimeout(window.__mobileDedicatedV58);
+      window.__mobileDedicatedV58=setTimeout(renderMobileOrderTableV58,80);
+    }
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
