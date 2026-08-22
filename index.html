@@ -4541,12 +4541,11 @@ function renderTodayOrderRequests(){
        const canWorkerConfirmInbound = !isInquiry && !isAdmin && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
        const workerAction = isInquiry ? '' :
          (isAdmin
-           ? ((exactSelfConfirmed||exactApprovalPending) ? `<div class="worker-receive-check admin-worker-receive">
-                <input id="admin_worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric"
-                       value="${exactSelfConfirmed?confirmedQty:(approvalReq?.qty||'')}" placeholder="받은 수량">
-                ${exactSelfConfirmed?`<button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>`:''}
-                ${exactApprovalPending?`<button class="approval-receive-btn" onclick="adminApproveWorkerReceipt(${r.id})">🔐 ${esc(approvalReq.worker)} ${Number(approvalReq.qty||0).toLocaleString()}개 승인</button>`:''}
-              </div>` : '')
+           ? (exactSelfConfirmed
+              ? `<div class="admin-selfconfirm-v30"><span>✅ 작업자 본인확인</span><b>${Number(confirmedQty||0).toLocaleString()}개</b><small>${esc(receiptInfo||'')}</small></div>`
+              : (exactApprovalPending
+                 ? `<div class="admin-selfconfirm-v30 approval"><span>🔐 확인수량 승인대기</span><b>${Number(approvalReq?.qty||0).toLocaleString()}개</b><small>${esc(approvalReq?.worker||'')}</small></div>`
+                 : ''))
            : (r.status==='수령승인대기'
               ? `<div class="worker-receive-check">
                    <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${approvalReq?.qty||confirmedQty||inboundMatchedQty||''}" placeholder="받은 수량">
@@ -4564,16 +4563,22 @@ function renderTodayOrderRequests(){
                      ${confirmedQty?`<small class="worker-receive-done">현재 확인수량 ${Number(confirmedQty).toLocaleString()}개</small>`:''}
                    </div>`));
 
+       /* 관리자 입고확인은 작업자의 실제 본인확인(또는 승인대기)이 있는 해당 건에만 표시 */
        const adminAction=isAdmin
          ? (isInquiry
             ? `<button type="button" class="primary" onclick="completeOrderInquiry(${r.id})">☑ 문의완료</button>`
-            : (r.status==='입고완료'
-            ? `<small>✅ ${esc(orderAdminConfirmInfo(r.note)||'입고확정 완료')}</small>`
-            : `<div class="admin-order-confirm-wrap">
-                 <input id="admin_order_qty_${r.id}" type="number" min="1" inputmode="numeric"
-                        value="${Number(r.request_qty||0)}" placeholder="입고확인수량">
-                 <button onclick="adminConfirmOrderReceivedQty(${r.id})">입고수량 추가·확정</button>
-               </div>`))
+            : (exactSelfConfirmed
+               ? `<div class="admin-order-confirm-wrap admin-final-confirm-v30">
+                    <input id="admin_order_qty_${r.id}" type="number" min="1" inputmode="numeric"
+                           value="${Number(confirmedQty||0)}" placeholder="입고확인수량">
+                    <button onclick="adminConfirmOrderReceivedQty(${r.id})">✅ 관리자 확인 · 입고확정</button>
+                  </div>`
+               : (exactApprovalPending
+                  ? `<div class="admin-order-confirm-wrap admin-final-confirm-v30">
+                       <input type="number" value="${Number(approvalReq?.qty||0)}" readonly>
+                       <button onclick="adminApproveWorkerReceipt(${r.id})">🔐 확인수량 승인</button>
+                     </div>`
+                  : '')))
          : '';
 
        const ageRowClass=requestAgeDays>=7?'order-age-row-7':requestAgeDays>=3?'order-age-row-3':'';
@@ -7401,8 +7406,10 @@ async function openAdminTaskView(type){
  const confirmTopV39=document.getElementById('adminWorkerConfirmTopV39');
  if(confirmTopV39)confirmTopV39.classList.add('hidden');
  let titleText='관리 작업';
+ document.body.classList.remove('admin-orders-focus');
 
  if(type==='orders'){
+   document.body.classList.add('admin-orders-focus');
    titleText='🛒 주문요청 & 문의건 통합관리';
 
    /* 본인확인 완료 영역을 주문통합관리 내용 맨 위에 직접 생성 */
@@ -7469,7 +7476,7 @@ async function openAdminTaskView(type){
 
 function closeAdminTaskView(){
  restoreAdminTaskElements();
- document.body.classList.remove('admin-task-focus');
+ document.body.classList.remove('admin-task-focus','admin-orders-focus');
  try{collapseAdminHomeDetails();}catch(e){}
  const panel=document.getElementById('adminTaskFocusPanel');
  if(panel)panel.classList.add('hidden');
@@ -14181,4 +14188,116 @@ body.admin-view.admin-reference-home #adminWorkerOrdersV2{
 </script>
 
 <!-- step26: admin confirm exact relevant only -->
+
+<!-- step28: 관리자 주문·문의 통합관리 전용 화면 - 다른 관리자 메인 영역 숨김 -->
+<style id="admin-task-focus-only-step28">
+body.admin-view.admin-task-focus main > :not(#adminTaskFocusPanel){
+  display:none!important;
+}
+body.admin-view.admin-task-focus #adminTaskFocusPanel{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+}
+</style>
+
+
+<!-- step29 exact: 주문·문의 통합관리에서는 하단 3개 영역 표시 금지 -->
+<style id="admin-orders-focus-exact-step29">
+body.admin-view.admin-orders-focus #excelExportPanel,
+body.admin-view.admin-orders-focus #syncBar,
+body.admin-view.admin-orders-focus #home{
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+body.admin-view.admin-orders-focus #adminTaskFocusPanel{
+  display:block!important;
+}
+</style>
+
+
+<!-- step30: 관리자 주문·문의 본인확인 → 입고확정 흐름 정리 -->
+<style id="order-admin-selfconfirm-flow-v30">
+/* 위/별도에 중복으로 뜨던 '작업자 본인확인 완료' 묶음은 관리자 주문통합관리에서는 숨김 */
+body.admin-view.admin-task-focus #adminWorkerConfirmTopV39,
+body.admin-view.admin-task-focus #adminWorkerConfirmDirectV40,
+body.admin-view.admin-task-focus #adminWorkerConfirmLogV37,
+body.admin-view.admin-task-focus #todayOrderCard #workerConfirmDoneBoxV42{display:none!important}
+.admin-selfconfirm-v30{display:grid;gap:3px;min-width:150px;padding:8px 10px;border-radius:10px;background:#e2f6e9;border:1px solid #bfe3cb;color:#087a43}
+.admin-selfconfirm-v30 span{font-weight:1000;white-space:nowrap}.admin-selfconfirm-v30 b{font-size:15px}.admin-selfconfirm-v30 small{color:#597067;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-selfconfirm-v30.approval{background:#fff4d6;border-color:#efd99d;color:#7b5b00}
+.admin-final-confirm-v30{min-width:275px!important}.admin-final-confirm-v30 input{width:105px!important}.admin-final-confirm-v30 button{background:#087a43!important;color:#fff!important}
+#adminConfirmedRecentV30{margin-top:14px;border:1px solid #cfe2d7;border-radius:13px;background:#f8fcf9;overflow:hidden}
+#adminConfirmedRecentV30 .acr30-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 13px;background:#eaf7ef;color:#075f35;font-weight:1000}
+#adminConfirmedRecentV30 .acr30-head small{font-weight:800;color:#557166}
+#adminConfirmedRecentV30 .acr30-wrap{overflow:auto;max-height:360px}
+#adminConfirmedRecentV30 table{width:100%;min-width:760px;border-collapse:collapse;font-size:12px}
+#adminConfirmedRecentV30 th,#adminConfirmedRecentV30 td{padding:8px 9px;border-bottom:1px solid #e4ebe7;text-align:left;white-space:nowrap}
+#adminConfirmedRecentV30 th{background:#f2f8f4;color:#365b47;position:sticky;top:0}
+#adminConfirmedRecentV30 .saved{display:inline-block;padding:4px 8px;border-radius:999px;background:#dff3e6;color:#087a43;font-weight:1000}
+@media(max-width:760px){.admin-final-confirm-v30{min-width:210px!important}.admin-selfconfirm-v30{min-width:125px}}
+</style>
+<script id="order-admin-selfconfirm-flow-v30-js">
+(function(){
+  function ensureAdminConfirmedRecentV30(){
+    if(document.getElementById('adminConfirmedRecentV30'))return document.getElementById('adminConfirmedRecentV30');
+    const card=document.getElementById('todayOrderCard');
+    const wrap=card?.querySelector('.order-table-wrap');
+    if(!card||!wrap)return null;
+    const sec=document.createElement('section');
+    sec.id='adminConfirmedRecentV30';
+    sec.innerHTML=`<div class="acr30-head"><span>✅ 관리자 확인 완료 · 최근 20건</span><small>20건을 넘은 기록은 화면에서 빠지고 기록·엑셀에는 계속 저장됩니다.</small></div>
+      <div class="acr30-wrap"><table><thead><tr><th>확정시간</th><th>작업자</th><th>품번</th><th>품명</th><th>확정수량</th><th>상태</th></tr></thead><tbody id="adminConfirmedRecentBodyV30"><tr><td colspan="6">불러오는 중...</td></tr></tbody></table></div>`;
+    wrap.insertAdjacentElement('afterend',sec);
+    return sec;
+  }
+  function adminConfirmStampV30(note){
+    const raw=String(note||'');
+    const m=[...raw.matchAll(/\[관리자입고확정:([^\]]+)\]/g)];
+    if(!m.length)return null;
+    const inner=String(m[m.length-1][1]||'');
+    const parts=inner.split('/').map(x=>x.trim());
+    const qtym=inner.match(/수량:([0-9.]+)/);
+    return {admin:parts[0]||'관리자',time:parts[1]||'',qty:qtym?Number(qtym[1]||0):0};
+  }
+  function workerConfirmStampV30(note){
+    const raw=String(note||'');
+    const m=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
+    if(!m.length)return null;
+    const inner=String(m[m.length-1][1]||'');
+    if(/관리자직접확인/.test(inner))return null;
+    return {worker:(inner.split('/')[0]||'').trim()};
+  }
+  async function loadAdminConfirmedRecentV30(){
+    if(!isAdmin||!sharedReady||!sharedDb)return;
+    const sec=ensureAdminConfirmedRecentV30(),body=document.getElementById('adminConfirmedRecentBodyV30');
+    if(!sec||!body)return;
+    try{
+      const {data,error}=await sharedDb.from('production_order_requests').select('*').eq('status','입고완료').order('completed_at',{ascending:false}).limit(100);
+      if(error)throw error;
+      const rows=(data||[]).map(r=>({r,a:adminConfirmStampV30(r.note),w:workerConfirmStampV30(r.note)})).filter(x=>x.a&&x.w).slice(0,20);
+      body.innerHTML=rows.length?rows.map(({r,a,w})=>`<tr><td>${esc(a.time||recordDateTime(r.completed_at||r.created_at))}</td><td>${esc(w.worker||r.requester||'-')}</td><td><b>${esc(r.part_no||'-')}</b></td><td>${esc(r.item_name||'-')}</td><td><b>${Number(a.qty||0).toLocaleString()}</b></td><td><span class="saved">저장됨</span></td></tr>`).join(''):'<tr><td colspan="6">관리자 확인 완료 기록이 없습니다.</td></tr>';
+    }catch(e){console.warn('최근 관리자 확인 완료 조회 실패',e);body.innerHTML='<tr><td colspan="6">완료 기록을 불러오지 못했습니다.</td></tr>';}
+  }
+  window.loadAdminConfirmedRecentV30=loadAdminConfirmedRecentV30;
+  const oldLoad=window.loadTodayOrderRequests;
+  if(typeof oldLoad==='function'){
+    window.loadTodayOrderRequests=async function(){const v=await oldLoad.apply(this,arguments);try{if(isAdmin)await loadAdminConfirmedRecentV30();}catch(e){}return v;};
+  }
+  const oldOpen=window.openAdminTaskView;
+  if(typeof oldOpen==='function'){
+    window.openAdminTaskView=async function(type){const v=await oldOpen.apply(this,arguments);if(type==='orders'&&isAdmin){ensureAdminConfirmedRecentV30();await loadAdminConfirmedRecentV30();}return v;};
+  }
+  const oldConfirm=window.adminConfirmOrderReceivedQty;
+  if(typeof oldConfirm==='function'){
+    window.adminConfirmOrderReceivedQty=async function(id){const v=await oldConfirm.apply(this,arguments);try{await loadAdminConfirmedRecentV30();}catch(e){}return v;};
+  }
+})();
+</script>
 </body></html>
