@@ -11709,4 +11709,448 @@ setInterval(()=>{
 },60000);
 </script>
 
+
+<style id="mobile-orders-horizontal-table-v52">
+@media(max-width:760px){
+  /* 모바일 주문요청&문의건: 카드형 해제 → 가로 셀 표 */
+  #todayOrderCard{
+    width:100%!important;
+    max-width:100%!important;
+    padding:8px 5px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #todayOrderCard .order-table-wrap,
+  #todayOrderCard .table-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    border:1px solid #e1e8e4!important;
+    border-radius:9px!important;
+  }
+
+  #todayOrderCard table{
+    display:table!important;
+    width:100%!important;
+    min-width:980px!important;
+    border-collapse:collapse!important;
+    table-layout:fixed!important;
+    font-size:9px!important;
+  }
+
+  #todayOrderCard thead{
+    display:table-header-group!important;
+  }
+
+  #todayOrderCard tbody{
+    display:table-row-group!important;
+  }
+
+  #todayOrderCard tr{
+    display:table-row!important;
+    width:auto!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    background:#fff!important;
+  }
+
+  #todayOrderCard th,
+  #todayOrderCard td{
+    display:table-cell!important;
+    width:auto!important;
+    min-width:0!important;
+    padding:4px 4px!important;
+    border-bottom:1px solid #e5ebe7!important;
+    border-right:1px solid #edf1ef!important;
+    font-size:9px!important;
+    line-height:1.15!important;
+    vertical-align:middle!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    box-sizing:border-box!important;
+  }
+
+  #todayOrderCard th{
+    position:sticky!important;
+    top:0!important;
+    z-index:4!important;
+    background:#eef7f1!important;
+    color:#173b29!important;
+    font-weight:1000!important;
+    height:30px!important;
+  }
+
+  #todayOrderCard td{
+    height:32px!important;
+    max-height:32px!important;
+  }
+
+  /* 모바일에서는 ::before 라벨 제거 */
+  #todayOrderCard td::before{
+    content:none!important;
+    display:none!important;
+  }
+
+  /* 열 폭 - 한 행을 최대한 압축 */
+  #todayOrderCard th:nth-child(1),
+  #todayOrderCard td:nth-child(1){width:74px!important}
+
+  #todayOrderCard th:nth-child(2),
+  #todayOrderCard td:nth-child(2){width:78px!important;font-weight:800!important}
+
+  #todayOrderCard th:nth-child(3),
+  #todayOrderCard td:nth-child(3){width:210px!important;text-align:left!important}
+
+  #todayOrderCard th:nth-child(4),
+  #todayOrderCard td:nth-child(4){width:46px!important}
+
+  #todayOrderCard th:nth-child(5),
+  #todayOrderCard td:nth-child(5){width:55px!important}
+
+  #todayOrderCard th:nth-child(6),
+  #todayOrderCard td:nth-child(6){width:62px!important}
+
+  #todayOrderCard th:nth-child(7),
+  #todayOrderCard td:nth-child(7){width:64px!important}
+
+  #todayOrderCard th:nth-child(8),
+  #todayOrderCard td:nth-child(8){width:145px!important;text-align:left!important}
+
+  #todayOrderCard th:nth-child(9),
+  #todayOrderCard td:nth-child(9){width:92px!important}
+
+  #todayOrderCard th:nth-child(10),
+  #todayOrderCard td:nth-child(10){width:120px!important}
+
+  #todayOrderCard th:nth-child(11),
+  #todayOrderCard td:nth-child(11){width:94px!important}
+
+  /* 사진은 작은 썸네일 */
+  #todayOrderCard td img,
+  #todayOrderCard .order-inquiry-photo{
+    width:26px!important;
+    height:26px!important;
+    max-width:26px!important;
+    max-height:26px!important;
+    object-fit:cover!important;
+    border-radius:4px!important;
+    display:inline-block!important;
+  }
+
+  /* 상태 뱃지 작게 */
+  #todayOrderCard .status,
+  #todayOrderCard .badge,
+  #todayOrderCard [class*="status"]{
+    font-size:8px!important;
+    padding:2px 5px!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+  }
+
+  /* 입력/재문의 버튼도 한 행 안에 작게 */
+  #todayOrderCard input,
+  #todayOrderCard textarea,
+  #todayOrderCard select,
+  #todayOrderCard button{
+    min-width:0!important;
+    max-width:100%!important;
+    font-size:8px!important;
+    box-sizing:border-box!important;
+  }
+
+  #todayOrderCard input,
+  #todayOrderCard textarea{
+    height:26px!important;
+    min-height:26px!important;
+    padding:3px 5px!important;
+  }
+
+  #todayOrderCard button{
+    min-height:26px!important;
+    height:26px!important;
+    padding:0 6px!important;
+    border-radius:5px!important;
+    white-space:nowrap!important;
+  }
+
+  /* 재문의는 셀 안에서 가로 2칸 */
+  #todayOrderCard .order-reinquiry-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:3px!important;
+    width:100%!important;
+  }
+
+  #todayOrderCard .order-reinquiry-grid input,
+  #todayOrderCard .order-reinquiry-grid textarea{
+    width:100%!important;
+  }
+
+  #todayOrderCard .kakao-reinquiry-btn,
+  #todayOrderCard button[onclick*="reinquiry"],
+  #todayOrderCard button[onclick*="Reinquiry"]{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    min-width:44px!important;
+    height:26px!important;
+    min-height:26px!important;
+    padding:0 5px!important;
+    font-size:8px!important;
+    background:#fee500!important;
+    color:#191919!important;
+    border:1px solid #d8bd00!important;
+  }
+
+  /* 이전 카드형 펼치기 버튼 제거 */
+  #todayOrderCard .mobile-order-more-v49{
+    display:none!important;
+  }
+
+  #todayOrderCard tbody tr.mobile-order-expanded td:nth-child(n+9),
+  #todayOrderCard tbody td:nth-child(n+9){
+    display:table-cell!important;
+  }
+
+  /* 파일첨부는 너무 커지지 않게 */
+  #todayOrderCard input[type="file"]{
+    width:88px!important;
+    height:24px!important;
+    padding:0!important;
+    font-size:7px!important;
+  }
+}
+</style>
+
+<script id="mobile-orders-horizontal-table-v52-js">
+(function(){
+  function applyMobileOrderTableV52(){
+    if(window.innerWidth>760)return;
+    const card=document.getElementById('todayOrderCard');
+    if(!card)return;
+
+    /* 카드형에서 남은 클래스를 제거 */
+    card.querySelectorAll('tbody tr').forEach(tr=>{
+      tr.classList.remove('mobile-order-expanded');
+      tr.querySelectorAll('.mobile-order-more-v49').forEach(b=>b.remove());
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(applyMobileOrderTableV52,1200));
+  window.addEventListener('resize',()=>setTimeout(applyMobileOrderTableV52,100));
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__mobileOrderTableV52);
+    window.__mobileOrderTableV52=setTimeout(applyMobileOrderTableV52,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<style id="worker-activity-realtime-24h-v53">
+#adminWorkerActivityAlertCard{
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+.admin-worker-alert-list{
+  max-height:420px!important;
+  overflow:auto!important;
+}
+.admin-worker-alert-item{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+.admin-worker-alert-time24{
+  font-size:10px;
+  color:#6e7a72;
+  white-space:nowrap;
+}
+.admin-worker-alert-live{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#e8f7ed;
+  color:#17623c;
+  font-size:10px;
+  font-weight:1000;
+}
+.admin-worker-alert-live::before{
+  content:"";
+  width:7px;height:7px;border-radius:50%;
+  background:#19a35a;
+  box-shadow:0 0 0 3px rgba(25,163,90,.12);
+}
+@media(max-width:760px){
+  .admin-worker-alert-item{
+    grid-template-columns:1fr!important;
+  }
+  .admin-worker-alert-time24{
+    white-space:normal;
+  }
+}
+</style>
+
+<script id="worker-activity-realtime-24h-v53-js">
+const WORKER_ACTIVITY_WINDOW_MS_V53 = 24*60*60*1000;
+const WORKER_ACTIVITY_CHANNEL_V53 = 'mirim-worker-activity-v53';
+let workerActivityChannelV53 = null;
+let adminActivitySoundUnlockedV53 = false;
+let adminActivityLastSoundV53 = Number(localStorage.getItem('mirim_admin_activity_sound_v53')||0);
+
+/* 같은 도메인에서 열린 다른 탭/창은 즉시 갱신 */
+try{
+  if('BroadcastChannel' in window){
+    workerActivityChannelV53 = new BroadcastChannel(WORKER_ACTIVITY_CHANNEL_V53);
+    workerActivityChannelV53.onmessage = (ev)=>{
+      if(ev?.data?.type==='worker-activity-updated' && isAdmin){
+        renderAdminWorkerActivityAlertsV53(true);
+      }
+    };
+  }
+}catch(e){}
+
+/* localStorage 변경도 즉시 반영 */
+window.addEventListener('storage',e=>{
+  if(e.key===WORKER_ACTIVITY_KEY_V50 && isAdmin){
+    renderAdminWorkerActivityAlertsV53(true);
+  }
+});
+
+function getWorkerActivity24hV53(){
+  const cutoff=Date.now()-WORKER_ACTIVITY_WINDOW_MS_V53;
+  let rows=[];
+  try{rows=JSON.parse(localStorage.getItem(WORKER_ACTIVITY_KEY_V50)||'[]')||[]}catch(e){}
+  rows=rows.filter(x=>Number(x.time||0)>=cutoff);
+  /* 24시간 지난 로그는 저장소에서도 정리 */
+  try{localStorage.setItem(WORKER_ACTIVITY_KEY_V50,JSON.stringify(rows.slice(0,500)))}catch(e){}
+  return rows.sort((a,b)=>Number(b.time||0)-Number(a.time||0));
+}
+
+function notifyWorkerActivityUpdateV53(){
+  try{
+    workerActivityChannelV53?.postMessage({type:'worker-activity-updated',time:Date.now()});
+  }catch(e){}
+}
+
+function playAdminActivityAlarmV53(){
+  if(!isAdmin || !adminActivitySoundUnlockedV53)return;
+  try{
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    if(!AudioCtx)return;
+    const ctx=new AudioCtx();
+
+    const tone=(delay,freq)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type='sine';
+      osc.frequency.setValueAtTime(freq,ctx.currentTime+delay);
+      gain.gain.setValueAtTime(.0001,ctx.currentTime+delay);
+      gain.gain.exponentialRampToValueAtTime(.13,ctx.currentTime+delay+.015);
+      gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+delay+.17);
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.start(ctx.currentTime+delay);
+      osc.stop(ctx.currentTime+delay+.19);
+    };
+
+    tone(0,880);
+    setTimeout(()=>ctx.close(),400);
+  }catch(e){}
+}
+
+function renderAdminWorkerActivityAlertsV53(withSound){
+  if(!isAdmin)return;
+  ensureAdminWorkerActivityAlertCardV50();
+
+  const card=document.getElementById('adminWorkerActivityAlertCard');
+  const list=document.getElementById('adminWorkerAlertListV50');
+  const count=document.getElementById('adminWorkerAlertCountV50');
+  if(!card||!list||!count)return;
+
+  /* 제목을 24시간 기준으로 명확히 */
+  const title=card.querySelector('.admin-worker-alert-title');
+  if(title)title.textContent='🔔 작업자 활동 알림 · 최근 24시간';
+
+  const sub=title?.parentElement?.querySelector('div[style*="font-size:11px"]');
+  if(sub)sub.textContent='최근 24시간의 작업자 주요 움직임을 실시간으로 표시합니다.';
+
+  let live=card.querySelector('.admin-worker-alert-live');
+  if(!live){
+    live=document.createElement('span');
+    live.className='admin-worker-alert-live';
+    live.textContent='실시간';
+    count.insertAdjacentElement('beforebegin',live);
+  }
+
+  const rows=getWorkerActivity24hV53();
+  const unread=rows.filter(x=>!x.read).length;
+  count.textContent=unread+'건';
+
+  list.innerHTML=rows.length?rows.map(x=>{
+    const dt=new Date(Number(x.time||0));
+    const timeText=dt.toLocaleString('ko-KR',{
+      month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'
+    });
+    return `<div class="admin-worker-alert-item ${x.read?'':'new'}">
+      <div>
+        <b>${esc(x.worker||'작업자')}</b> · ${esc(x.type||'작업')}
+        <div>${esc(x.detail||'')}</div>
+      </div>
+      <div class="admin-worker-alert-time24">${esc(timeText)}</div>
+    </div>`;
+  }).join(''):'<div class="admin-worker-alert-item">최근 24시간 작업자 활동이 없습니다.</div>';
+
+  const newest=Number(rows[0]?.time||0);
+  if(withSound && newest>adminActivityLastSoundV53){
+    playAdminActivityAlarmV53();
+    adminActivityLastSoundV53=newest;
+    localStorage.setItem('mirim_admin_activity_sound_v53',String(newest));
+  }
+}
+
+/* 기존 활동 저장 함수에 즉시 알림 연결 */
+if(typeof addWorkerActivityV50==='function'){
+  const _addWorkerActivityV50 = addWorkerActivityV50;
+  addWorkerActivityV50 = function(type,detail){
+    const r=_addWorkerActivityV50(type,detail);
+    notifyWorkerActivityUpdateV53();
+    return r;
+  };
+}
+
+/* 관리자 알람 소리 잠금 해제 */
+['click','touchstart','pointerdown'].forEach(evt=>{
+  window.addEventListener(evt,()=>{
+    if(isAdmin)adminActivitySoundUnlockedV53=true;
+  },{passive:true});
+});
+
+/* 관리자 화면에서는 2초마다 확인: 체감상 실시간 */
+setInterval(()=>{
+  if(isAdmin && document.visibilityState==='visible'){
+    renderAdminWorkerActivityAlertsV53(true);
+  }
+},2000);
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(isAdmin){
+      ensureAdminWorkerActivityAlertCardV50();
+      renderAdminWorkerActivityAlertsV53(false);
+    }
+  },1200);
+});
+</script>
+
 </body></html>
