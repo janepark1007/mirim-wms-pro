@@ -965,6 +965,29 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
+
+<style id="admin-stat-strip-horizontal-v33">
+/* STEP33: 관리자 현황 5개를 PC 모든 화면에서 가로 한 줄로 고정 */
+@media (min-width:761px){
+  .admin-stat-strip{
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    width:100%!important;
+    align-items:stretch!important;
+  }
+  .admin-stat-strip>div{
+    min-width:0!important;
+    border-right:1px solid rgba(255,255,255,.20)!important;
+  }
+  .admin-stat-strip>div:last-child{border-right:0!important;}
+}
+/* 모바일은 읽기 좋게 2열, 마지막 항목은 전체폭 */
+@media (max-width:760px){
+  .admin-stat-strip{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .admin-stat-strip>div:nth-child(2n){border-right:0!important;}
+  .admin-stat-strip>div:last-child{grid-column:1/-1!important;border-right:0!important;}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
