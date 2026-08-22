@@ -6917,4 +6917,14 @@ const laterObserver=new MutationObserver(()=>attachLaterButtons());
 window.addEventListener('load',()=>{const root=document.getElementById('results')||document.getElementById('searchResults');if(root)laterObserver.observe(root,{childList:true,subtree:true})});
 </script>
 
+
+<style id="order-match-admin-only-v8">
+body:not(.admin-view) #orderInboundMatchCard{
+  display:none!important;
+}
+body.admin-view #orderInboundMatchCard{
+  display:block!important;
+}
+</style>
+
 </body></html>
