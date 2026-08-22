@@ -7395,4 +7395,126 @@ function collapseAdminHomeDetails(){
 window.addEventListener('load',()=>setTimeout(()=>{ensureAdminHomeToggle();collapseAdminHomeDetails()},1000));
 </script>
 
+
+<style id="admin-shortcuts-in-welcome-v15">
+/* 관리자 모드: 기존 상단 관리자 바로가기는 숨기고,
+   로그인 인사/현황 영역 안에 관리자 메뉴를 모아 표시 */
+body.admin-view #home > .admin-shortcut-card,
+body.admin-view #home > .admin-shortcuts,
+body.admin-view #home > section:has(.admin-shortcut-grid){
+  display:none!important;
+}
+#adminWelcomeShortcutBox{
+  display:none;
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.08);
+}
+body.admin-view #adminWelcomeShortcutBox{display:block!important}
+.admin-welcome-shortcut-title{
+  font-weight:1000;
+  font-size:15px;
+  margin-bottom:9px;
+  color:#fff;
+}
+.admin-welcome-shortcut-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+.admin-welcome-shortcut-btn{
+  min-height:70px;
+  border:1px solid #d9e6de;
+  border-radius:12px;
+  background:#fff;
+  color:#16251d;
+  font-weight:1000;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+}
+.admin-welcome-shortcut-btn .ico{font-size:21px}
+.admin-welcome-shortcut-btn small{font-size:10px;color:#6a786f;font-weight:800}
+@media(max-width:900px){
+ .admin-welcome-shortcut-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:560px){
+ .admin-welcome-shortcut-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-welcome-shortcut-btn{min-height:64px;font-size:12px}
+}
+</style>
+
+<script>
+function openExistingAdminSection(kind){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  const candidates={
+    records:['recordsPanel','recordPanel','historyPanel','dailyHistoryPanel'],
+    location:['locationManager','locationPanel','locationEditPanel','locationManagePanel'],
+    nas:['nasPanel','nasExcelPanel','excelSyncPanel','erpSyncPanel'],
+    users:['userManager','userManagePanel','adminUserPanel','workerManagePanel'],
+    alerts:['notifPanel','notificationPanel','adminNotifPanel']
+  };
+  const ids=candidates[kind]||[];
+  let target=null;
+  for(const id of ids){target=document.getElementById(id);if(target)break;}
+  if(target){
+    document.querySelectorAll('main > section, main > div[id$="Panel"]').forEach(el=>{
+      if(el!==target && el.id!=='adminTaskFocusPanel')el.classList.add('hidden');
+    });
+    target.classList.remove('hidden');
+    target.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  /* 기존 버튼이 있으면 그 버튼을 그대로 실행 */
+  const words={
+    records:['기록 불러오기'],
+    location:['위치 정리'],
+    nas:['NAS 엑셀 연동'],
+    users:['사용자 관리'],
+    alerts:['알림 확인']
+  }[kind]||[];
+  const btn=[...document.querySelectorAll('button')].find(b=>words.some(w=>(b.innerText||'').includes(w)));
+  if(btn){btn.click();return;}
+  alert('해당 관리창을 찾지 못했습니다.');
+}
+
+function ensureAdminWelcomeShortcuts(){
+  if(document.getElementById('adminWelcomeShortcutBox'))return;
+  const home=document.getElementById('home');if(!home)return;
+
+  /* 두 번째 이미지의 진한 초록 현황판을 우선 찾음 */
+  const summary=[...home.querySelectorAll('section,div')].find(el=>{
+    const t=(el.innerText||'');
+    return t.includes('입고 (오늘)') && t.includes('출고 (오늘)') && t.includes('ERP 품목');
+  });
+  const host=summary || home.querySelector('.welcome-row') || home.firstElementChild;
+  if(!host)return;
+
+  const box=document.createElement('div');
+  box.id='adminWelcomeShortcutBox';
+  box.innerHTML=`
+    <div class="admin-welcome-shortcut-title">📌 관리자 바로가기</div>
+    <div class="admin-welcome-shortcut-grid">
+      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('location')"><span class="ico">🧹</span><span>위치 정리</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
+
+      <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문-입고 자동대조</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('history')"><span class="ico">📋</span><span>최근 입출고 기록</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('unreg')"><span class="ico">⚠️</span><span>ERP 미등록 자재</span></button>
+    </div>`;
+  host.appendChild(box);
+}
+window.addEventListener('load',()=>setTimeout(ensureAdminWelcomeShortcuts,1200));
+</script>
+
 </body></html>
