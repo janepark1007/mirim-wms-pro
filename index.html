@@ -7355,8 +7355,37 @@ async function openAdminTaskView(type){
 
  if(type==='orders'){
    titleText='🛒 주문요청 & 문의건 통합관리';
-   if(confirmTopV39)confirmTopV39.classList.remove('hidden');
-   try{await loadAdminWorkerConfirmTopV39();}catch(e){console.warn(e);}
+
+   /* 본인확인 완료 영역을 주문통합관리 내용 맨 위에 직접 생성 */
+   const confirmBox=document.createElement('section');
+   confirmBox.id='adminWorkerConfirmDirectV40';
+   confirmBox.className='admin-worker-confirm-direct-v40';
+   confirmBox.innerHTML=`
+     <div class="awc40-head">
+       <div class="awc40-title">✅ 작업자 본인확인 완료</div>
+       <span id="adminWorkerConfirmCountV40" class="awc40-count">0건</span>
+     </div>
+     <div class="awc40-table-wrap">
+       <table>
+         <thead>
+           <tr>
+             <th>확인시간</th>
+             <th>작업자</th>
+             <th>품번</th>
+             <th>품명</th>
+             <th>확인수량</th>
+             <th>상태</th>
+           </tr>
+         </thead>
+         <tbody id="adminWorkerConfirmBodyV40">
+           <tr><td colspan="6" class="awc40-empty">본인확인 기록을 불러오는 중...</td></tr>
+         </tbody>
+       </table>
+     </div>`;
+   content.appendChild(confirmBox);
+
+   try{await loadAdminWorkerConfirmDirectV40();}catch(e){console.warn(e);}
+
    const el=document.getElementById('todayOrderCard');
    moveAdminTaskElement(el,content);
    try{await loadTodayOrderRequests();}catch(e){}
@@ -13658,6 +13687,163 @@ setInterval(()=>{
   const box=document.getElementById('adminWorkerConfirmTopV39');
   if(!box || box.classList.contains('hidden'))return;
   loadAdminWorkerConfirmTopV39();
+},5000);
+</script>
+
+
+<style id="admin-worker-confirm-direct-v40-style">
+#adminTaskFocusContent #adminWorkerConfirmDirectV40{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 14px!important;
+  padding:14px!important;
+  border:2px solid #79bd98!important;
+  border-radius:14px!important;
+  background:#eef9f2!important;
+  box-sizing:border-box!important;
+}
+#adminWorkerConfirmDirectV40 .awc40-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+#adminWorkerConfirmDirectV40 .awc40-title{
+  font-size:20px;
+  font-weight:1000;
+  color:#075e36;
+}
+#adminWorkerConfirmDirectV40 .awc40-count{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:999px;
+  background:#087a43;
+  color:#fff;
+  font-size:13px;
+  font-weight:1000;
+}
+#adminWorkerConfirmDirectV40 .awc40-table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+#adminWorkerConfirmDirectV40 table{
+  width:100%;
+  min-width:760px;
+  border-collapse:collapse;
+  background:#fff;
+}
+#adminWorkerConfirmDirectV40 th,
+#adminWorkerConfirmDirectV40 td{
+  padding:9px 10px;
+  border-bottom:1px solid #e2ebe6;
+  text-align:left;
+  font-size:12px;
+  vertical-align:middle;
+}
+#adminWorkerConfirmDirectV40 th{
+  background:#dff2e6;
+  color:#24513a;
+  font-weight:1000;
+}
+#adminWorkerConfirmDirectV40 .awc40-ok{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:8px;
+  background:#d9f1e2;
+  color:#087a43;
+  font-weight:1000;
+  white-space:nowrap;
+}
+#adminWorkerConfirmDirectV40 .awc40-empty{
+  padding:18px!important;
+  text-align:center!important;
+  color:#63756b;
+  font-weight:900;
+}
+</style>
+
+<script id="admin-worker-confirm-direct-v40-js">
+function parseWorkerConfirmDirectV40(note){
+  const raw=String(note||'');
+  const matches=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
+  if(!matches.length)return null;
+
+  const inner=String(matches[matches.length-1][1]||'').trim();
+
+  /* 관리자 직접확인은 제외하고 작업자가 누른 본인확인만 표시 */
+  if(/관리자직접확인/.test(inner))return null;
+
+  const worker=(inner.split('/')[0]||'').trim();
+  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
+  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
+
+  let time='';
+  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
+  if(timeMatch)time=String(timeMatch[1]||'').trim();
+
+  return {worker,qty,time};
+}
+
+async function loadAdminWorkerConfirmDirectV40(){
+  if(!isAdmin)return;
+
+  const body=document.getElementById('adminWorkerConfirmBodyV40');
+  const count=document.getElementById('adminWorkerConfirmCountV40');
+  if(!body)return;
+
+  if(!sharedReady||!sharedDb){
+    if(count)count.textContent='0건';
+    body.innerHTML='<tr><td colspan="6" class="awc40-empty">공용 DB 연결을 확인해 주세요.</td></tr>';
+    return;
+  }
+
+  try{
+    const {data,error}=await sharedDb
+      .from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(500);
+
+    if(error)throw error;
+
+    const rows=(data||[])
+      .map(r=>({r,info:parseWorkerConfirmDirectV40(r.note)}))
+      .filter(x=>x.info)
+      .slice(0,30);
+
+    if(count)count.textContent=rows.length+'건';
+
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="6" class="awc40-empty">아직 작업자 본인확인 완료 기록이 없습니다.</td></tr>';
+      return;
+    }
+
+    body.innerHTML=rows.map(({r,info})=>`
+      <tr>
+        <td>${esc(info.time||'-')}</td>
+        <td><b>${esc(info.worker||r.requester||'-')}</b></td>
+        <td><b>${esc(r.part_no||'-')}</b></td>
+        <td>${esc(r.item_name||'-')}</td>
+        <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
+        <td><span class="awc40-ok">✅ 작업자 본인확인</span></td>
+      </tr>
+    `).join('');
+  }catch(e){
+    console.error('작업자 본인확인 완료 조회 실패',e);
+    if(count)count.textContent='오류';
+    body.innerHTML='<tr><td colspan="6" class="awc40-empty">본인확인 기록을 불러오지 못했습니다.</td></tr>';
+  }
+}
+
+/* 해당 화면이 열려 있을 때만 자동 갱신 */
+setInterval(()=>{
+  if(!isAdmin)return;
+  if(!document.getElementById('adminWorkerConfirmDirectV40'))return;
+  loadAdminWorkerConfirmDirectV40();
 },5000);
 </script>
 
