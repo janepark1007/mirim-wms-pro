@@ -8159,4 +8159,108 @@ setInterval(()=>{
 },60000);
 </script>
 
+
+<style id="admin-recent-orders-layout-fix-v24">
+/* 최근 주문 카드가 초록 현황판 안에서 찌그러지지 않도록 완전 분리 */
+body.admin-view #adminRecentOrdersCard{
+  width:min(1320px,calc(100% - 40px))!important;
+  max-width:1320px!important;
+  margin:16px auto 20px!important;
+  padding:14px 16px!important;
+  display:block!important;
+  grid-column:auto!important;
+  justify-self:auto!important;
+  align-self:auto!important;
+  height:auto!important;
+  min-height:0!important;
+  background:#fff!important;
+  color:#17231d!important;
+  border:1px solid #d8e5dd!important;
+  border-radius:15px!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-view #adminRecentOrdersCard .admin-recent-orders-head{
+  display:flex!important;
+  flex-direction:row!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  width:100%!important;
+}
+
+body.admin-view #adminRecentOrdersCard .admin-recent-orders-table-wrap{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+}
+
+body.admin-view #adminRecentOrdersCard .admin-recent-orders-table{
+  width:100%!important;
+  min-width:900px!important;
+  table-layout:auto!important;
+}
+
+body.admin-view #adminRecentOrdersCard th,
+body.admin-view #adminRecentOrdersCard td{
+  color:#17231d!important;
+  background:#fff!important;
+}
+
+body.admin-view #adminRecentOrdersCard th{
+  background:#f3f8f5!important;
+}
+
+@media(max-width:760px){
+  body.admin-view #adminRecentOrdersCard{
+    width:calc(100% - 16px)!important;
+    margin:10px auto 16px!important;
+    padding:10px 8px!important;
+  }
+}
+</style>
+
+<script>
+function fixAdminRecentOrdersPlacement(){
+  if(!isAdmin)return;
+  const card=document.getElementById('adminRecentOrdersCard');
+  if(!card)return;
+
+  /* 초록 현황판 찾기 */
+  const green=document.querySelector('.admin-compact-green-summary');
+  const shortcut=document.getElementById('adminWelcomeShortcutBox');
+
+  /*
+    관리자 바로가기와 최근 주문카드가 초록 현황판 안에 들어가 있다면
+    둘 다 현황판 바깥으로 빼서 순서:
+    현황판 → 관리자 바로가기 → 최근 주문내역
+  */
+  if(green && green.parentNode){
+    if(shortcut && green.contains(shortcut)){
+      green.insertAdjacentElement('afterend',shortcut);
+    }
+    if(card && green.contains(card)){
+      if(shortcut && shortcut.parentNode){
+        shortcut.insertAdjacentElement('afterend',card);
+      }else{
+        green.insertAdjacentElement('afterend',card);
+      }
+    }else if(shortcut && shortcut.parentNode && card.previousElementSibling!==shortcut){
+      shortcut.insertAdjacentElement('afterend',card);
+    }
+  }else if(shortcut && shortcut.parentNode){
+    shortcut.insertAdjacentElement('afterend',card);
+  }
+
+  card.style.setProperty('width','min(1320px, calc(100% - 40px))','important');
+  card.style.setProperty('margin','16px auto 20px','important');
+  card.style.setProperty('display','block','important');
+  card.style.setProperty('height','auto','important');
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(fixAdminRecentOrdersPlacement,2400);
+});
+window.addEventListener('resize',()=>setTimeout(fixAdminRecentOrdersPlacement,120));
+</script>
+
 </body></html>
