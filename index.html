@@ -4778,123 +4778,6 @@ body.admin-view.admin-task-focus main > #adminTaskFocusPanel{
 }
 </style>
 
-
-<style id="admin2-new-main-v41">
-/* 관리자모드2 전용 완전 신규 메인 디자인 - 관리자1과 시각적으로 분리 */
-body.admin2-view{background:#0c1220!important}
-body.admin2-view .mirim-topbar{background:#0f1728!important;border-bottom:1px solid rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:none!important}
-body.admin2-view .brand-copy b{color:#fff!important}
-body.admin2-view .brand-copy small{color:#9aa8bf!important}
-body.admin2-view #admin2LoginBtn{background:#fff!important;color:#111827!important;border-color:#fff!important}
-body.admin2-view #homeBtn{background:#1b2740!important;color:#fff!important;border-color:#33435f!important}
-body.admin2-view main{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;background:#0c1220!important;min-height:calc(100vh - 70px)!important}
-body.admin2-view #admin2CleanHome{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:28px clamp(16px,3vw,46px) 40px!important;background:
- radial-gradient(circle at 85% 10%,rgba(83,111,255,.22),transparent 32%),
- radial-gradient(circle at 10% 90%,rgba(0,210,170,.12),transparent 28%),#0c1220!important;min-height:calc(100vh - 70px)!important}
-
-.admin2-v41-shell{max-width:1500px;margin:0 auto}
-.admin2-v41-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}
-.admin2-v41-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;background:#18233a;border:1px solid #2c3b59;color:#a9b7cb;font-size:12px;font-weight:900;letter-spacing:.04em}
-.admin2-v41-title{margin:10px 0 5px;color:#fff;font-size:clamp(28px,3vw,44px);font-weight:1000;letter-spacing:-1.4px}
-.admin2-v41-sub{margin:0;color:#92a0b6;font-size:14px;font-weight:700}
-.admin2-v41-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.admin2-v41-status span{padding:8px 11px;border-radius:10px;background:#111b2e;border:1px solid #263653;color:#b8c4d5;font-size:12px;font-weight:900}
-
-.admin2-v41-grid{display:grid;grid-template-columns:1.22fr 1.22fr .85fr;grid-template-rows:220px 185px;gap:14px}
-.admin2-v41-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.11);border-radius:24px;padding:24px;color:#fff;box-shadow:0 16px 38px rgba(0,0,0,.18);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
-button.admin2-v41-card{width:100%;text-align:left;font:inherit;cursor:pointer}
-button.admin2-v41-card:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(0,0,0,.27);border-color:rgba(255,255,255,.25)}
-.admin2-v41-card .a2-icon{width:58px;height:58px;border-radius:17px;display:grid;place-items:center;background:rgba(255,255,255,.14);font-size:30px;margin-bottom:22px;backdrop-filter:blur(4px)}
-.admin2-v41-card h3{margin:0 0 6px;font-size:27px;font-weight:1000;letter-spacing:-.8px}
-.admin2-v41-card p{margin:0;color:rgba(255,255,255,.75);font-size:13px;font-weight:800}
-.admin2-v41-card .a2-go{position:absolute;right:20px;bottom:18px;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.13);font-size:20px}
-.admin2-v41-in{grid-column:1;grid-row:1;background:linear-gradient(145deg,#0c8f68,#075846)}
-.admin2-v41-out{grid-column:2;grid-row:1;background:linear-gradient(145deg,#e05757,#9a303b)}
-.admin2-v41-erp{grid-column:3;grid-row:1/3;background:linear-gradient(165deg,#17223b,#111827);display:flex;flex-direction:column;justify-content:space-between}
-.admin2-v41-erp .erp-label{color:#a9b7cb;font-weight:900;font-size:13px}
-.admin2-v41-erp .erp-num{font-size:clamp(44px,5vw,72px);line-height:1;font-weight:1000;letter-spacing:-3px;color:#fff;margin:8px 0}
-.admin2-v41-erp .erp-unit{font-size:17px;color:#8da0bd;font-weight:900;margin-left:5px;letter-spacing:0}
-.admin2-v41-erp .erp-bar{height:8px;border-radius:99px;background:#26334d;overflow:hidden;margin-top:18px}
-.admin2-v41-erp .erp-bar span{display:block;height:100%;width:72%;background:linear-gradient(90deg,#5f7cff,#8c66ff);border-radius:99px}
-.admin2-v41-loc{grid-column:1;grid-row:2;background:linear-gradient(145deg,#4f5dc9,#303a8e)}
-.admin2-v41-kakao{grid-column:2;grid-row:2;background:linear-gradient(145deg,#f0c800,#c79d00);color:#191919!important;border-color:rgba(255,225,0,.35)}
-.admin2-v41-kakao p{color:rgba(25,25,25,.68)!important}.admin2-v41-kakao .a2-icon,.admin2-v41-kakao .a2-go{background:rgba(255,255,255,.32)}
-.admin2-v41-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding:12px 15px;border:1px solid #1f2c45;border-radius:14px;background:#10192a;color:#7f90aa;font-size:12px;font-weight:800}
-.admin2-v41-foot b{color:#c2cddd}
-
-@media(max-width:980px){
- .admin2-v41-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
- .admin2-v41-in,.admin2-v41-out,.admin2-v41-loc,.admin2-v41-kakao,.admin2-v41-erp{grid-column:auto;grid-row:auto}
- .admin2-v41-erp{min-height:180px}
-}
-@media(max-width:640px){
- body.admin2-view #admin2CleanHome{padding:16px 10px 28px!important}
- .admin2-v41-top{align-items:flex-start;flex-direction:column;margin-bottom:14px}
- .admin2-v41-status{justify-content:flex-start}
- .admin2-v41-grid{grid-template-columns:1fr;gap:10px}
- .admin2-v41-card{min-height:150px;padding:18px;border-radius:18px}
- .admin2-v41-card .a2-icon{width:48px;height:48px;font-size:25px;margin-bottom:14px}
- .admin2-v41-card h3{font-size:22px}
- .admin2-v41-erp{min-height:170px}
- .admin2-v41-erp .erp-num{font-size:48px}
- .admin2-v41-foot{align-items:flex-start;flex-direction:column}
-}
-</style>
-<script id="admin2-new-main-v41-js">
-(function(){
-  function a2ErpTotalV41(){
-    try{return Array.isArray(ITEMS)?ITEMS.filter(x=>String(x?.part||'').trim()&&String(x?.part||'').trim()!=='합계').length:0}catch(e){return 0}
-  }
-  function bindA2V41(root){
-    const loc=root.querySelector('#admin2V41Location');
-    if(loc)loc.onclick=function(){
-      document.body.classList.remove('admin2-view');
-      try{openExistingAdminSection('location')}catch(e){try{openAdminShortcutListV41('location')}catch(_){alert('위치 정리 화면을 열지 못했습니다.')}}
-      document.body.classList.add('admin2-view');
-      const w=document.getElementById('work');if(w)w.classList.remove('hidden');
-    };
-    const kakao=root.querySelector('#admin2V41Kakao');
-    if(kakao)kakao.onclick=function(){try{if(typeof openStandaloneOrder==='function')openStandaloneOrder();else openMode('order')}catch(e){alert('카톡 문의 화면을 열지 못했습니다.')}};
-  }
-  window.ensureAdmin2CleanHome=function(){
-    let root=document.getElementById('admin2CleanHome');
-    if(!root){root=document.createElement('section');root.id='admin2CleanHome';document.querySelector('main')?.insertBefore(root,document.querySelector('main')?.firstChild||null)}
-    const total=a2ErpTotalV41();
-    root.innerHTML=`<div class="admin2-v41-shell">
-      <div class="admin2-v41-top">
-        <div>
-          <span class="admin2-v41-kicker">MIRIM · MATERIAL CONTROL</span>
-          <h1 class="admin2-v41-title">관리자 모드2</h1>
-          <p class="admin2-v41-sub">입고 · 출고 · 위치 · ERP · 카톡 문의 전용 작업 화면</p>
-        </div>
-        <div class="admin2-v41-status"><span>● 전용 관리화면</span><span>5개 핵심 기능</span></div>
-      </div>
-      <div class="admin2-v41-grid">
-        <button type="button" class="admin2-v41-card admin2-v41-in" onclick="openMode('inbound')"><span class="a2-icon">📥</span><h3>입고 등록</h3><p>입고된 자재의 수량을 빠르게 등록합니다.</p><span class="a2-go">→</span></button>
-        <button type="button" class="admin2-v41-card admin2-v41-out" onclick="openMode('outbound')"><span class="a2-icon">📤</span><h3>출고 등록</h3><p>출고 자재를 확인하고 수량을 기록합니다.</p><span class="a2-go">→</span></button>
-        <div class="admin2-v41-card admin2-v41-erp"><div><span class="a2-icon">🗄️</span><div class="erp-label">ERP TOTAL ITEMS</div><div class="erp-num" id="admin2ErpTotal">${total.toLocaleString()}<span class="erp-unit">개</span></div><p>현재 ERP 총 품목수</p></div><div><div class="erp-bar"><span></span></div><p style="margin-top:9px">ERP 품목 현황</p></div></div>
-        <button type="button" class="admin2-v41-card admin2-v41-loc" id="admin2V41Location"><span class="a2-icon">📍</span><h3>위치 정리</h3><p>자재 위치를 검색하고 등록·수정합니다.</p><span class="a2-go">→</span></button>
-        <button type="button" class="admin2-v41-card admin2-v41-kakao" id="admin2V41Kakao"><span class="a2-icon">💬</span><h3>카톡 문의</h3><p>자재 주문 및 문의 내용을 바로 전송합니다.</p><span class="a2-go">→</span></button>
-      </div>
-      <div class="admin2-v41-foot"><span><b>관리자 모드2 전용</b> · 관리자 모드1과 별도 화면</span><span>입고 · 출고 · 위치 · ERP · 카톡 문의</span></div>
-    </div>`;
-    bindA2V41(root);
-    return root;
-  };
-  const oldShow=window.showAdmin2CleanHome;
-  window.showAdmin2CleanHome=function(){
-    if(!window.isAdmin2&&!document.body.classList.contains('admin2-view'))return;
-    document.body.classList.add('admin2-view');
-    ensureAdmin2CleanHome();
-    document.getElementById('work')?.classList.add('hidden');
-    document.getElementById('photoSearchPanel')?.classList.add('hidden');
-  };
-  function refreshA2V41(){if(document.body.classList.contains('admin2-view'))ensureAdmin2CleanHome()}
-  window.addEventListener('load',()=>{if(sessionStorage.getItem('mirim_prod_admin2')==='1')setTimeout(window.showAdmin2CleanHome,80)});
-  document.addEventListener('click',e=>{if(document.body.classList.contains('admin2-view')&&e.target.closest('#homeBtn'))setTimeout(window.showAdmin2CleanHome,0)},true);
-})();
-</script>
-
 </body></html>`);
      w.document.close();
    }
@@ -14714,7 +14597,6 @@ body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
 </script>
 
 <style id="admin2-five-only-v40">
-/* 관리자모드2 전용: 입고등록 / 출고등록 / 위치정리 / ERP 품목 / 카톡문의만 유지 */
 #admin2CleanHome{display:none}
 body.admin2-view main > *{display:none!important}
 body.admin2-view #admin2CleanHome{display:block!important}
@@ -14722,19 +14604,18 @@ body.admin2-view #work:not(.hidden){display:block!important}
 body.admin2-view #standaloneOrderModal:not(.hidden){display:flex!important}
 body.admin2-view #workerLoginPanel{display:none!important}
 body.admin2-view .top-actions > *{display:none!important}
-body.admin2-view #admin2LoginBtn,
-body.admin2-view #homeBtn{display:inline-flex!important}
-#admin2CleanHome{width:100%;max-width:none;margin:0;padding:12px 16px 24px}
-.admin2-clean-head{border:1px solid #dce8e1;border-radius:18px;background:#fff;padding:18px 22px;box-shadow:0 6px 18px rgba(22,80,55,.06)}
-.admin2-clean-head h2{margin:0;font-size:27px;color:#174c37}.admin2-clean-head p{margin:5px 0 0;color:#6b7b73;font-weight:700}
-.admin2-five-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:14px}
-.admin2-clean-btn,.admin2-erp-card{min-height:145px;border:1px solid #dbe5e0;border-radius:18px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-weight:900;font-size:20px;box-shadow:0 5px 16px rgba(0,0,0,.04);text-align:center}
-.admin2-clean-btn{cursor:pointer}.admin2-clean-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.07)}
-.admin2-clean-btn .ico,.admin2-erp-card .ico{font-size:39px}.admin2-clean-btn small,.admin2-erp-card small{font-size:13px;color:#74827b}
-.admin2-clean-btn.in{background:#edf9f1;border-color:#bfe0cb}.admin2-clean-btn.out{background:#fff0f0;border-color:#efc5c5}.admin2-clean-btn.loc{background:#f4f7ff;border-color:#cdd8f0}.admin2-clean-btn.kakao{background:#fff8d9;border-color:#ecd775}
-.admin2-erp-card{background:#eaf7ef;border-color:#cde8d8}.admin2-erp-card b{font-size:31px;color:#147044}
-@media(max-width:1100px){.admin2-five-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:760px){#admin2CleanHome{padding:8px}.admin2-clean-head{padding:15px}.admin2-five-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.admin2-clean-btn,.admin2-erp-card{min-height:118px;font-size:17px}.admin2-clean-btn .ico,.admin2-erp-card .ico{font-size:32px}}
+body.admin2-view #admin2LoginBtn,body.admin2-view #homeBtn{display:inline-flex!important}
+#admin2CleanHome{width:100%;max-width:none;margin:0;padding:22px 26px 34px;background:#f3f6f8;min-height:calc(100vh - 80px)}
+.admin2-clean-head{background:linear-gradient(135deg,#17233a,#253a5c);border-radius:22px;padding:26px 30px;color:#fff;box-shadow:0 12px 28px rgba(20,35,60,.16)}
+.admin2-clean-head h2{margin:0;font-size:30px;color:#fff}.admin2-clean-head p{margin:7px 0 0;color:#d9e2f1;font-weight:700}
+.admin2-five-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:18px}
+.admin2-clean-btn,.admin2-erp-card{border:0;border-radius:20px;min-height:170px;padding:22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;box-shadow:0 8px 22px rgba(32,45,65,.10);font-weight:900;overflow:hidden}
+.admin2-clean-btn{cursor:pointer;color:#17233a;transition:.15s transform,.15s box-shadow}.admin2-clean-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(32,45,65,.15)}
+.admin2-clean-btn .ico,.admin2-erp-card .ico{font-size:38px;line-height:1}.admin2-clean-btn span:nth-child(2),.admin2-erp-card>span:nth-child(2){font-size:22px}.admin2-clean-btn small,.admin2-erp-card small{font-size:13px;opacity:.72}
+.admin2-clean-btn.in{grid-column:span 6;background:#dff5ea}.admin2-clean-btn.out{grid-column:span 6;background:#ffe8e5}.admin2-clean-btn.loc{grid-column:span 4;background:#e7efff}.admin2-erp-card{grid-column:span 4;background:#17233a;color:#fff}.admin2-clean-btn.kakao{grid-column:span 4;background:#fff1ad}
+.admin2-erp-card b{font-size:38px;color:#fff;letter-spacing:-1px}
+@media(max-width:900px){.admin2-clean-btn.in,.admin2-clean-btn.out{grid-column:span 6}.admin2-clean-btn.loc,.admin2-erp-card,.admin2-clean-btn.kakao{grid-column:span 12}.admin2-clean-btn,.admin2-erp-card{min-height:140px}}
+@media(max-width:620px){#admin2CleanHome{padding:12px}.admin2-clean-head{padding:20px}.admin2-clean-head h2{font-size:24px}.admin2-clean-btn.in,.admin2-clean-btn.out,.admin2-clean-btn.loc,.admin2-erp-card,.admin2-clean-btn.kakao{grid-column:span 12}.admin2-clean-btn,.admin2-erp-card{min-height:120px;padding:18px}}
 </style>
 <script id="admin2-five-only-v40-js">
 (function(){
@@ -14744,7 +14625,7 @@ body.admin2-view #homeBtn{display:inline-flex!important}
   window.ensureAdmin2CleanHome=function(){
     let root=document.getElementById('admin2CleanHome');
     if(!root){root=document.createElement('section');root.id='admin2CleanHome';document.querySelector('main')?.insertBefore(root,document.querySelector('main')?.firstChild||null)}
-    root.innerHTML=`<div class="admin2-clean-head"><h2>🛡️ 관리자 모드2</h2><p>필요한 5개 기능만 사용합니다.</p></div><div class="admin2-five-grid">
+    root.innerHTML=`<div class="admin2-clean-head"><h2>관리자 모드2 · 자재 업무</h2><p>입고·출고·위치·ERP·카톡 문의를 빠르게 처리합니다.</p></div><div class="admin2-five-grid">
       <button type="button" class="admin2-clean-btn in" onclick="openMode('inbound')"><span class="ico">📥</span><span>입고 등록</span><small>입고수량 등록</small></button>
       <button type="button" class="admin2-clean-btn out" onclick="openMode('outbound')"><span class="ico">📤</span><span>출고 등록</span><small>출고수량 등록</small></button>
       <button type="button" class="admin2-clean-btn loc" id="admin2LocationOrganizeBtn"><span class="ico">🧹</span><span>위치 정리</span><small>기존 위치 등록·수정</small></button>
@@ -14778,121 +14659,4 @@ body.admin2-view #homeBtn{display:inline-flex!important}
   new MutationObserver(()=>{clearTimeout(window.__a2v40);window.__a2v40=setTimeout(enforce,30)}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
-
-<style id="admin2-new-main-v41">
-/* 관리자모드2 전용 완전 신규 메인 디자인 - 관리자1과 시각적으로 분리 */
-body.admin2-view{background:#0c1220!important}
-body.admin2-view .mirim-topbar{background:#0f1728!important;border-bottom:1px solid rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:none!important}
-body.admin2-view .brand-copy b{color:#fff!important}
-body.admin2-view .brand-copy small{color:#9aa8bf!important}
-body.admin2-view #admin2LoginBtn{background:#fff!important;color:#111827!important;border-color:#fff!important}
-body.admin2-view #homeBtn{background:#1b2740!important;color:#fff!important;border-color:#33435f!important}
-body.admin2-view main{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;background:#0c1220!important;min-height:calc(100vh - 70px)!important}
-body.admin2-view #admin2CleanHome{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:28px clamp(16px,3vw,46px) 40px!important;background:
- radial-gradient(circle at 85% 10%,rgba(83,111,255,.22),transparent 32%),
- radial-gradient(circle at 10% 90%,rgba(0,210,170,.12),transparent 28%),#0c1220!important;min-height:calc(100vh - 70px)!important}
-
-.admin2-v41-shell{max-width:1500px;margin:0 auto}
-.admin2-v41-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}
-.admin2-v41-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;background:#18233a;border:1px solid #2c3b59;color:#a9b7cb;font-size:12px;font-weight:900;letter-spacing:.04em}
-.admin2-v41-title{margin:10px 0 5px;color:#fff;font-size:clamp(28px,3vw,44px);font-weight:1000;letter-spacing:-1.4px}
-.admin2-v41-sub{margin:0;color:#92a0b6;font-size:14px;font-weight:700}
-.admin2-v41-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.admin2-v41-status span{padding:8px 11px;border-radius:10px;background:#111b2e;border:1px solid #263653;color:#b8c4d5;font-size:12px;font-weight:900}
-
-.admin2-v41-grid{display:grid;grid-template-columns:1.22fr 1.22fr .85fr;grid-template-rows:220px 185px;gap:14px}
-.admin2-v41-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.11);border-radius:24px;padding:24px;color:#fff;box-shadow:0 16px 38px rgba(0,0,0,.18);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
-button.admin2-v41-card{width:100%;text-align:left;font:inherit;cursor:pointer}
-button.admin2-v41-card:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(0,0,0,.27);border-color:rgba(255,255,255,.25)}
-.admin2-v41-card .a2-icon{width:58px;height:58px;border-radius:17px;display:grid;place-items:center;background:rgba(255,255,255,.14);font-size:30px;margin-bottom:22px;backdrop-filter:blur(4px)}
-.admin2-v41-card h3{margin:0 0 6px;font-size:27px;font-weight:1000;letter-spacing:-.8px}
-.admin2-v41-card p{margin:0;color:rgba(255,255,255,.75);font-size:13px;font-weight:800}
-.admin2-v41-card .a2-go{position:absolute;right:20px;bottom:18px;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.13);font-size:20px}
-.admin2-v41-in{grid-column:1;grid-row:1;background:linear-gradient(145deg,#0c8f68,#075846)}
-.admin2-v41-out{grid-column:2;grid-row:1;background:linear-gradient(145deg,#e05757,#9a303b)}
-.admin2-v41-erp{grid-column:3;grid-row:1/3;background:linear-gradient(165deg,#17223b,#111827);display:flex;flex-direction:column;justify-content:space-between}
-.admin2-v41-erp .erp-label{color:#a9b7cb;font-weight:900;font-size:13px}
-.admin2-v41-erp .erp-num{font-size:clamp(44px,5vw,72px);line-height:1;font-weight:1000;letter-spacing:-3px;color:#fff;margin:8px 0}
-.admin2-v41-erp .erp-unit{font-size:17px;color:#8da0bd;font-weight:900;margin-left:5px;letter-spacing:0}
-.admin2-v41-erp .erp-bar{height:8px;border-radius:99px;background:#26334d;overflow:hidden;margin-top:18px}
-.admin2-v41-erp .erp-bar span{display:block;height:100%;width:72%;background:linear-gradient(90deg,#5f7cff,#8c66ff);border-radius:99px}
-.admin2-v41-loc{grid-column:1;grid-row:2;background:linear-gradient(145deg,#4f5dc9,#303a8e)}
-.admin2-v41-kakao{grid-column:2;grid-row:2;background:linear-gradient(145deg,#f0c800,#c79d00);color:#191919!important;border-color:rgba(255,225,0,.35)}
-.admin2-v41-kakao p{color:rgba(25,25,25,.68)!important}.admin2-v41-kakao .a2-icon,.admin2-v41-kakao .a2-go{background:rgba(255,255,255,.32)}
-.admin2-v41-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding:12px 15px;border:1px solid #1f2c45;border-radius:14px;background:#10192a;color:#7f90aa;font-size:12px;font-weight:800}
-.admin2-v41-foot b{color:#c2cddd}
-
-@media(max-width:980px){
- .admin2-v41-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
- .admin2-v41-in,.admin2-v41-out,.admin2-v41-loc,.admin2-v41-kakao,.admin2-v41-erp{grid-column:auto;grid-row:auto}
- .admin2-v41-erp{min-height:180px}
-}
-@media(max-width:640px){
- body.admin2-view #admin2CleanHome{padding:16px 10px 28px!important}
- .admin2-v41-top{align-items:flex-start;flex-direction:column;margin-bottom:14px}
- .admin2-v41-status{justify-content:flex-start}
- .admin2-v41-grid{grid-template-columns:1fr;gap:10px}
- .admin2-v41-card{min-height:150px;padding:18px;border-radius:18px}
- .admin2-v41-card .a2-icon{width:48px;height:48px;font-size:25px;margin-bottom:14px}
- .admin2-v41-card h3{font-size:22px}
- .admin2-v41-erp{min-height:170px}
- .admin2-v41-erp .erp-num{font-size:48px}
- .admin2-v41-foot{align-items:flex-start;flex-direction:column}
-}
-</style>
-<script id="admin2-new-main-v41-js">
-(function(){
-  function a2ErpTotalV41(){
-    try{return Array.isArray(ITEMS)?ITEMS.filter(x=>String(x?.part||'').trim()&&String(x?.part||'').trim()!=='합계').length:0}catch(e){return 0}
-  }
-  function bindA2V41(root){
-    const loc=root.querySelector('#admin2V41Location');
-    if(loc)loc.onclick=function(){
-      document.body.classList.remove('admin2-view');
-      try{openExistingAdminSection('location')}catch(e){try{openAdminShortcutListV41('location')}catch(_){alert('위치 정리 화면을 열지 못했습니다.')}}
-      document.body.classList.add('admin2-view');
-      const w=document.getElementById('work');if(w)w.classList.remove('hidden');
-    };
-    const kakao=root.querySelector('#admin2V41Kakao');
-    if(kakao)kakao.onclick=function(){try{if(typeof openStandaloneOrder==='function')openStandaloneOrder();else openMode('order')}catch(e){alert('카톡 문의 화면을 열지 못했습니다.')}};
-  }
-  window.ensureAdmin2CleanHome=function(){
-    let root=document.getElementById('admin2CleanHome');
-    if(!root){root=document.createElement('section');root.id='admin2CleanHome';document.querySelector('main')?.insertBefore(root,document.querySelector('main')?.firstChild||null)}
-    const total=a2ErpTotalV41();
-    root.innerHTML=`<div class="admin2-v41-shell">
-      <div class="admin2-v41-top">
-        <div>
-          <span class="admin2-v41-kicker">MIRIM · MATERIAL CONTROL</span>
-          <h1 class="admin2-v41-title">관리자 모드2</h1>
-          <p class="admin2-v41-sub">입고 · 출고 · 위치 · ERP · 카톡 문의 전용 작업 화면</p>
-        </div>
-        <div class="admin2-v41-status"><span>● 전용 관리화면</span><span>5개 핵심 기능</span></div>
-      </div>
-      <div class="admin2-v41-grid">
-        <button type="button" class="admin2-v41-card admin2-v41-in" onclick="openMode('inbound')"><span class="a2-icon">📥</span><h3>입고 등록</h3><p>입고된 자재의 수량을 빠르게 등록합니다.</p><span class="a2-go">→</span></button>
-        <button type="button" class="admin2-v41-card admin2-v41-out" onclick="openMode('outbound')"><span class="a2-icon">📤</span><h3>출고 등록</h3><p>출고 자재를 확인하고 수량을 기록합니다.</p><span class="a2-go">→</span></button>
-        <div class="admin2-v41-card admin2-v41-erp"><div><span class="a2-icon">🗄️</span><div class="erp-label">ERP TOTAL ITEMS</div><div class="erp-num" id="admin2ErpTotal">${total.toLocaleString()}<span class="erp-unit">개</span></div><p>현재 ERP 총 품목수</p></div><div><div class="erp-bar"><span></span></div><p style="margin-top:9px">ERP 품목 현황</p></div></div>
-        <button type="button" class="admin2-v41-card admin2-v41-loc" id="admin2V41Location"><span class="a2-icon">📍</span><h3>위치 정리</h3><p>자재 위치를 검색하고 등록·수정합니다.</p><span class="a2-go">→</span></button>
-        <button type="button" class="admin2-v41-card admin2-v41-kakao" id="admin2V41Kakao"><span class="a2-icon">💬</span><h3>카톡 문의</h3><p>자재 주문 및 문의 내용을 바로 전송합니다.</p><span class="a2-go">→</span></button>
-      </div>
-      <div class="admin2-v41-foot"><span><b>관리자 모드2 전용</b> · 관리자 모드1과 별도 화면</span><span>입고 · 출고 · 위치 · ERP · 카톡 문의</span></div>
-    </div>`;
-    bindA2V41(root);
-    return root;
-  };
-  const oldShow=window.showAdmin2CleanHome;
-  window.showAdmin2CleanHome=function(){
-    if(!window.isAdmin2&&!document.body.classList.contains('admin2-view'))return;
-    document.body.classList.add('admin2-view');
-    ensureAdmin2CleanHome();
-    document.getElementById('work')?.classList.add('hidden');
-    document.getElementById('photoSearchPanel')?.classList.add('hidden');
-  };
-  function refreshA2V41(){if(document.body.classList.contains('admin2-view'))ensureAdmin2CleanHome()}
-  window.addEventListener('load',()=>{if(sessionStorage.getItem('mirim_prod_admin2')==='1')setTimeout(window.showAdmin2CleanHome,80)});
-  document.addEventListener('click',e=>{if(document.body.classList.contains('admin2-view')&&e.target.closest('#homeBtn'))setTimeout(window.showAdmin2CleanHome,0)},true);
-})();
-</script>
-
 </body></html>
