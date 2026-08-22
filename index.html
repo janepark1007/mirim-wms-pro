@@ -12894,4 +12894,17 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 })();
 </script>
 
+
+<style id="mobile-hide-inout-only-v24">
+/* 모바일 작업자 메인에서만 입고/출고등록 숨김 */
+@media (max-width: 760px){
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*="openMode('outbound')"],
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*='openMode("outbound")'],
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*="openMode('inbound')"],
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*='openMode("inbound")']{
+    display:none !important;
+  }
+}
+</style>
+
 </body></html>
