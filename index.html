@@ -1349,6 +1349,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
     <div><small>입고 (오늘)</small><b id="adminTodayIn">0건</b></div>
     <div><small>출고 (오늘)</small><b id="adminTodayOut">0건</b></div>
     <div><small>ERP 품목</small><b id="adminErpCount">1,438개</b></div>
+    <div><small>입력항목수</small><b id="adminInputItemCount">0개</b></div>
     <div><small>미입고 주문</small><b id="adminPendingCount">0건</b></div>
     <div><small>ERP 미등록</small><b id="adminUnregCount">0건</b></div>
   </div>
@@ -14529,5 +14530,55 @@ body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
   });
   obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
+</script>
+
+<style id="admin-stat-strip-final-horizontal-v35">
+/* STEP35: 관리자 상단 현황을 PC에서 무조건 가로 6칸으로 고정 */
+body.admin-view .admin-stat-strip{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;
+  width:100%!important;
+  max-width:none!important;
+  height:auto!important;
+  min-height:0!important;
+  padding:8px!important;
+  margin:10px 0 15px!important;
+  box-sizing:border-box!important;
+}
+body.admin-view .admin-stat-strip>div{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:64px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:8px 10px!important;
+  border-right:1px solid rgba(255,255,255,.20)!important;
+  box-sizing:border-box!important;
+}
+body.admin-view .admin-stat-strip>div:last-child{border-right:0!important;}
+@media(max-width:760px){
+ body.admin-view .admin-stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+ body.admin-view .admin-stat-strip>div{min-height:58px!important;}
+ body.admin-view .admin-stat-strip>div:nth-child(2n){border-right:0!important;}
+}
+</style>
+<script id="admin-input-item-count-v35">
+function updateAdminInputItemCountV35(){
+  const el=document.getElementById('adminInputItemCount');
+  if(!el)return;
+  let count=0;
+  try{
+    if(typeof getActualEnteredItemCount==='function') count=getActualEnteredItemCount();
+    else if(window.sharedCache && sharedCache.stock) count=Object.keys(sharedCache.stock).filter(k=>sharedCache.stock[k]!==null&&sharedCache.stock[k]!==undefined&&sharedCache.stock[k]!=='').length;
+  }catch(e){}
+  el.textContent=Number(count||0).toLocaleString()+'개';
+}
+window.addEventListener('load',()=>setTimeout(updateAdminInputItemCountV35,1800));
+setInterval(()=>{if(window.isAdmin)updateAdminInputItemCountV35();},10000);
 </script>
 </body></html>
