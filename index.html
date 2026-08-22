@@ -4213,25 +4213,83 @@ function orderAdminConfirmInfo(note){
  return m?m[1]:'';
 }
 
+function orderReceivedQty(note){
+ const m=String(note||'').match(/\[수령확인:[^\]]*받은수량:([0-9.]+)/);
+ return m?Number(m[1]||0):0;
+}
+function orderReceiptApprovalRequest(note){
+ const m=String(note||'').match(/\[수령승인요청:([^\/\]]+)\/\s*수량:([0-9.]+)\s*\/\s*사유:([^\/\]]*)\/\s*([^\]]+)\]/);
+ return m?{worker:String(m[1]||'').trim(),qty:Number(m[2]||0),reason:String(m[3]||'').trim(),time:String(m[4]||'').trim()}:null;
+}
 async function workerConfirmOrderReceived(id){
  if(!currentWorker)return alert('작업자 로그인 후 사용할 수 있습니다.');
  if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
 
  const receivedQty=Number($('worker_received_qty_'+id)?.value||0);
- if(!receivedQty||receivedQty<=0)return alert('실제로 받은 수량을 입력한 후 본인확인을 눌러 주세요.');
+ if(!receivedQty||receivedQty<=0)return alert('실제로 받은 수량을 입력한 후 확인 버튼을 눌러 주세요.');
 
  const {data:r,error:readErr}=await sharedDb.from('production_order_requests').select('*').eq('id',id).single();
  if(readErr||!r)return alert('주문기록을 불러오지 못했습니다.');
- if(String(r.requester||'')!==String(currentWorker.name||''))return alert('본인이 요청한 주문만 확인할 수 있습니다.');
  if(r.status==='입고완료')return alert('이미 관리자가 입고확정한 주문입니다.');
 
- const stamp=`[수령확인:${currentWorker.name} / ${new Date().toLocaleString('ko-KR')} / 받은수량:${receivedQty}]`;
- const base=String(r.note||'').replace(/\[수령확인:[^\]]*\]\s*/g,'').trim();
+ const mine=String(r.requester||'')===String(currentWorker.name||'');
+ const oldQty=orderReceivedQty(r.note);
+ const firstOwnConfirm=mine && !oldQty && !['수령확인','수령승인대기'].includes(r.status);
+
+ if(firstOwnConfirm){
+   const stamp=`[수령확인:${currentWorker.name} / ${new Date().toLocaleString('ko-KR')} / 받은수량:${receivedQty}]`;
+   const base=String(r.note||'').replace(/\[수령확인:[^\]]*\]\s*/g,'').replace(/\[수령승인요청:[^\]]*\]\s*/g,'').trim();
+   const {error}=await sharedDb.from('production_order_requests')
+     .update({status:'수령확인',note:(base?base+'\n':'')+stamp}).eq('id',id);
+   if(error)return alert('본인 수량확인 저장 실패: '+error.message);
+   alert('✅ 본인 수량확인 완료\n받은 수량 '+receivedQty.toLocaleString()+'개가 저장되었습니다.\n수정이 필요하면 관리자 승인을 받아야 합니다.');
+ }else{
+   const reason=mine?'본인 확인수량 수정':'다른 작업자 대리확인';
+   const requestStamp=`[수령승인요청:${currentWorker.name} / 수량:${receivedQty} / 사유:${reason} / ${new Date().toLocaleString('ko-KR')}]`;
+   const base=String(r.note||'').replace(/\[수령승인요청:[^\]]*\]\s*/g,'').trim();
+   const {error}=await sharedDb.from('production_order_requests')
+     .update({status:'수령승인대기',note:(base?base+'\n':'')+requestStamp}).eq('id',id);
+   if(error)return alert('관리자 승인요청 저장 실패: '+error.message);
+   alert('🔐 관리자 승인요청 완료\n'+(mine?'수량 수정':'대리 확인')+'은 관리자가 승인해야 반영됩니다.');
+ }
+ await loadTodayOrderRequests();
+ if(typeof loadFiveDayOrders==='function')await loadFiveDayOrders();
+}
+
+async function adminApproveWorkerReceipt(id){
+ if(!isAdmin)return alert('관리자만 승인할 수 있습니다.');
+ if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
+ const {data:r,error:readErr}=await sharedDb.from('production_order_requests').select('*').eq('id',id).single();
+ if(readErr||!r)return alert('주문기록을 불러오지 못했습니다.');
+ const req=orderReceiptApprovalRequest(r.note);
+ if(!req||!req.qty)return alert('승인 대기 중인 수량확인 요청이 없습니다.');
+ if(!confirm(`${req.worker} 작업자의 수령수량 ${req.qty.toLocaleString()}개를 승인할까요?`))return;
+ const adminName=currentWorker?.name||'관리자';
+ const stamp=`[수령확인:${req.worker} / ${new Date().toLocaleString('ko-KR')} / 받은수량:${req.qty} / 관리자승인:${adminName}]`;
+ const base=String(r.note||'').replace(/\[수령확인:[^\]]*\]\s*/g,'').replace(/\[수령승인요청:[^\]]*\]\s*/g,'').trim();
  const {error}=await sharedDb.from('production_order_requests')
    .update({status:'수령확인',note:(base?base+'\n':'')+stamp}).eq('id',id);
- if(error)return alert('본인 수령확인 저장 실패: '+error.message);
+ if(error)return alert('관리자 승인 저장 실패: '+error.message);
+ alert('✅ 관리자 승인 완료\n수령수량 '+req.qty.toLocaleString()+'개가 반영되었습니다.');
+ await loadTodayOrderRequests();
+ if(typeof loadFiveDayOrders==='function')await loadFiveDayOrders();
+}
 
- alert('✅ 본인 수령확인 완료\n받은 수량 '+receivedQty.toLocaleString()+'개를 확인했습니다.\n관리자 입고확정을 기다립니다.');
+async function adminSetWorkerReceipt(id){
+ if(!isAdmin)return alert('관리자만 직접 확인할 수 있습니다.');
+ if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
+ const qty=Number($('admin_worker_received_qty_'+id)?.value||0);
+ if(!qty||qty<=0)return alert('관리자가 확인한 받은 수량을 입력해 주세요.');
+ const {data:r,error:readErr}=await sharedDb.from('production_order_requests').select('*').eq('id',id).single();
+ if(readErr||!r)return alert('주문기록을 불러오지 못했습니다.');
+ if(r.status==='입고완료')return alert('이미 관리자 입고확정이 완료된 주문입니다.');
+ const adminName=currentWorker?.name||'관리자';
+ const stamp=`[수령확인:${adminName} / ${new Date().toLocaleString('ko-KR')} / 받은수량:${qty} / 관리자직접확인]`;
+ const base=String(r.note||'').replace(/\[수령확인:[^\]]*\]\s*/g,'').replace(/\[수령승인요청:[^\]]*\]\s*/g,'').trim();
+ const {error}=await sharedDb.from('production_order_requests')
+   .update({status:'수령확인',note:(base?base+'\n':'')+stamp}).eq('id',id);
+ if(error)return alert('관리자 수량확인 저장 실패: '+error.message);
+ alert('✅ 관리자가 수령수량 '+qty.toLocaleString()+'개를 직접 확인했습니다.');
  await loadTodayOrderRequests();
  if(typeof loadFiveDayOrders==='function')await loadFiveDayOrders();
 }
@@ -4293,7 +4351,8 @@ function workerOrderState(status){
  if(s==='문의중')return {label:'문의중',cls:'worker-order-request'};
  if(s==='문의완료')return {label:'문의완료',cls:'worker-order-received'};
  if(s==='입고완료')return {label:'입고확정',cls:'worker-order-received'};
- if(s==='수령확인')return {label:'본인 수령확인',cls:'worker-order-selfreceived'};
+ if(s==='수령승인대기')return {label:'관리자 승인대기',cls:'worker-order-pending'};
+ if(s==='수령확인')return {label:'수량확인 완료',cls:'worker-order-selfreceived'};
  if(s==='미입고')return {label:'미입고',cls:'worker-order-pending'};
  return {label:'요청중',cls:'worker-order-request'};
 }
@@ -4380,7 +4439,7 @@ function renderTodayOrderRequests(){
  const body=$('todayOrderBody');
  const count=$('todayOrderCount');
  const rangeLabel=$('orderRangeLabel');
- const activeRows=todayOrderRows.filter(r=>!['입고완료','문의완료','수령확인'].includes(r.status));
+ const activeRows=todayOrderRows.filter(r=>!['입고완료','문의완료'].includes(r.status));
  if(rangeLabel)rangeLabel.textContent='(미완료 주문·문의 전체)';
  if(count)count.textContent=`${activeRows.length}건`;
  if(!body)return;
@@ -4395,14 +4454,25 @@ function renderTodayOrderRequests(){
        const baseOrderNote=cleanOrderNote(r.note)||'-',reinquiryHistory=orderReinquiryHistory(r.note),latestReinquiry=reinquiryHistory.length?reinquiryHistory[reinquiryHistory.length-1]:'',replyHistory=orderReplyHistory(r.note),latestReply=replyHistory.length?replyHistory[replyHistory.length-1]:'';
        const mine=currentWorker&&String(r.requester||'')===String(currentWorker.name||'');
 
-       const workerAction =
-         (['요청','미입고'].includes(r.status) && mine && !isInquiry)
-           ? `<div class="worker-receive-check"><input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" placeholder="받은 수량"><button class="self-receive-btn" onclick="workerConfirmOrderReceived(${r.id})">☑ 본인확인</button></div>`
-           : (r.status==='수령확인')
-             ? `<small class="worker-receive-done">☑ ${esc(orderReceiptInfo(r.note)||'수령확인 완료')}</small>`
-             : (r.status==='입고완료')
-               ? `<small>✅ 관리자 입고확정</small>`
-               : (!isInquiry ? `<small class="worker-receive-wait">본인확인 대기</small>` : '');
+       const confirmedQty=orderReceivedQty(r.note),approvalReq=orderReceiptApprovalRequest(r.note);
+       const workerAction = isInquiry ? '' :
+         (isAdmin
+           ? `<div class="worker-receive-check admin-worker-receive">
+                <input id="admin_worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric"
+                       value="${confirmedQty||Number(r.request_qty||0)||''}" placeholder="받은 수량">
+                <button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>
+                ${approvalReq?`<button class="approval-receive-btn" onclick="adminApproveWorkerReceipt(${r.id})">🔐 ${esc(approvalReq.worker)} ${Number(approvalReq.qty||0).toLocaleString()}개 승인</button>`:''}
+              </div>`
+           : (r.status==='수령승인대기'
+              ? `<div class="worker-receive-check">
+                   <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${approvalReq?.qty||confirmedQty||''}" placeholder="받은 수량">
+                   <button class="self-receive-btn" disabled>🔐 관리자 승인대기</button>
+                 </div>`
+              : `<div class="worker-receive-check">
+                   <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${confirmedQty||''}" placeholder="받은 수량">
+                   <button class="self-receive-btn" onclick="workerConfirmOrderReceived(${r.id})">${confirmedQty?(mine?'✏️ 수정 승인요청':'🔐 대리확인 요청'):(mine?'☑ 본인확인':'🔐 대리확인 요청')}</button>
+                   ${confirmedQty?`<small class="worker-receive-done">현재 확인수량 ${Number(confirmedQty).toLocaleString()}개</small>`:''}
+                 </div>`));
 
        const adminAction=isAdmin
          ? (isInquiry
@@ -6517,6 +6587,21 @@ document.addEventListener('DOMContentLoaded',()=>{
     padding:0 8px!important;
     font-size:11px!important;
   }
+}
+</style>
+
+
+<style id="receipt-approval-v5">
+.approval-receive-btn{
+ min-height:34px;border:1px solid #e2b400;background:#fff4c8;color:#6a5200;
+ border-radius:8px;padding:0 10px;font-weight:1000;white-space:normal
+}
+.admin-worker-receive{grid-template-columns:minmax(90px,1fr) auto!important}
+.admin-worker-receive .approval-receive-btn{grid-column:1/-1;width:100%}
+.worker-receive-done{grid-column:1/-1;color:#17622a;font-weight:900}
+@media(max-width:760px){
+ .worker-receive-check,.admin-worker-receive{grid-template-columns:1fr!important}
+ .worker-receive-check button,.admin-worker-receive button{width:100%!important}
 }
 </style>
 
