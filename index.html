@@ -4453,7 +4453,18 @@ function renderTodayOrderRequests(){
  const body=$('todayOrderBody');
  const count=$('todayOrderCount');
  const rangeLabel=$('orderRangeLabel');
- const activeRows=todayOrderRows.filter(r=>!['입고완료','문의완료'].includes(r.status));
+ const activeRows=todayOrderRows
+   .filter(r=>!['입고완료','문의완료'].includes(r.status))
+   .slice()
+   .sort((a,b)=>{
+     const ageA=Math.max(0,Math.floor((Date.now()-new Date(a.created_at).getTime())/86400000));
+     const ageB=Math.max(0,Math.floor((Date.now()-new Date(b.created_at).getTime())/86400000));
+     const bucketA=ageA>=7?0:(ageA>=3?1:2);
+     const bucketB=ageB>=7?0:(ageB>=3?1:2);
+     if(bucketA!==bucketB)return bucketA-bucketB;
+     if(bucketA<2)return ageB-ageA;
+     return new Date(b.created_at)-new Date(a.created_at);
+   });
  if(rangeLabel)rangeLabel.textContent='(미완료 주문·문의 전체)';
  if(count)count.textContent=`${activeRows.length}건`;
  if(!body)return;
@@ -11710,6 +11721,107 @@ body:not(.admin-view) #results button[onclick*="saveOut"]{
   },5000);
 
   window.loadWorkerAgedOrdersV4=loadWorkerAgedOrdersV4;
+})();
+</script>
+
+
+<style id="worker-reinquiry-visible-aged-top-v5">
+/* 작업자 주문·문의 통합관리에서 카톡 재문의는 반드시 보이게 */
+body:not(.admin-view) #todayOrderCard .order-reinquiry-grid{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  grid-template-columns:minmax(180px,1fr) auto!important;
+  gap:5px!important;
+  min-width:380px!important;
+}
+
+body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input[id^="order_reinquiry_note_"]{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  width:100%!important;
+  min-height:36px!important;
+}
+
+body:not(.admin-view) #todayOrderCard .admin-kakao-inquiry-btn,
+body:not(.admin-view) #todayOrderCard button[onclick*="adminKakaoOrderInquiry"]{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:92px!important;
+  min-height:36px!important;
+  padding:0 10px!important;
+  background:#fee500!important;
+  color:#191919!important;
+  border:1px solid #d3b900!important;
+  border-radius:8px!important;
+  font-weight:1000!important;
+}
+
+/* 재문의 사진첨부도 작업자에게 허용 */
+body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input[type="file"]{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+
+/* 7일/3일 경과 주문은 시각적으로 더 강하게 */
+#todayOrderCard tbody tr.order-age-row-7 > td{
+  background:#fff0ee!important;
+}
+#todayOrderCard tbody tr.order-age-row-3 > td{
+  background:#fff9d9!important;
+}
+#todayOrderCard tbody tr.order-age-row-7 td:nth-child(2) .order-part-age-7{
+  background:#c91919!important;
+  color:#fff!important;
+  border:2px solid #8f0707!important;
+  border-radius:7px!important;
+  padding:3px 6px!important;
+}
+#todayOrderCard tbody tr.order-age-row-3 td:nth-child(2) .order-part-age-3{
+  background:#f2c400!important;
+  color:#241d00!important;
+  border:2px solid #c69f00!important;
+  border-radius:7px!important;
+  padding:3px 6px!important;
+}
+</style>
+
+<script id="worker-reinquiry-visible-aged-top-v5-js">
+(function(){
+  function forceReinquiryVisibleV5(){
+    if(isAdmin)return;
+    const card=document.getElementById('todayOrderCard');
+    if(!card)return;
+
+    card.querySelectorAll('.admin-kakao-inquiry-btn, button[onclick*="adminKakaoOrderInquiry"]').forEach(btn=>{
+      btn.style.setProperty('display','inline-flex','important');
+      btn.style.setProperty('visibility','visible','important');
+      btn.style.setProperty('opacity','1','important');
+      btn.style.setProperty('pointer-events','auto','important');
+    });
+
+    card.querySelectorAll('.order-reinquiry-grid').forEach(el=>{
+      el.style.setProperty('display','grid','important');
+      el.style.setProperty('visibility','visible','important');
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(forceReinquiryVisibleV5,900));
+  document.addEventListener('click',()=>setTimeout(forceReinquiryVisibleV5,80),true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__reinquiryV5);
+    window.__reinquiryV5=setTimeout(forceReinquiryVisibleV5,60);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 
