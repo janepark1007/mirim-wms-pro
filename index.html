@@ -3193,7 +3193,7 @@ function adminLogin(){
  if(currentWorker&&!isAdmin){alert('일반 작업자 로그인 상태에서는 관리자 모드에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
  if(isAdmin){
    isAdmin=false;
-   sessionStorage.removeItem('mirim_prod_admin');
+   sessionStorage.removeItem('mirim_prod_admin');sessionStorage.removeItem('mirim_admin_last_activity_v11');
    updateAdminUI();
    if(!currentWorker) updateWorkerUI();
    return;
@@ -7050,6 +7050,100 @@ async function loadWorkerPersonalAlerts(showPopup){
  }catch(e){console.warn('작업자 개인 알림 조회 실패',e);count.textContent='오류';list.innerHTML='<div class="notice">내 주문 알림을 불러오지 못했습니다.</div>'}
 }
 window.addEventListener('load',()=>{setTimeout(()=>{ensureWorkerPersonalAlertCard();if(currentWorker&&!isAdmin)loadWorkerPersonalAlerts(false)},1400)});
+</script>
+
+
+<style id="admin-idle-timeout-v11">
+#adminIdleBadge{
+  display:none;
+  padding:6px 9px;
+  border-radius:9px;
+  background:#eef6f1;
+  color:#174c36;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+body.admin-view #adminIdleBadge{display:inline-flex;align-items:center}
+</style>
+<script>
+const ADMIN_IDLE_LIMIT_MS = 60 * 60 * 1000;
+const ADMIN_IDLE_KEY = 'mirim_admin_last_activity_v11';
+let adminIdleTimer = null;
+
+function adminIdleNow(){ return Date.now(); }
+
+function markAdminActivity(){
+  if(!isAdmin)return;
+  const now=adminIdleNow();
+  sessionStorage.setItem(ADMIN_IDLE_KEY,String(now));
+  scheduleAdminIdleLogout();
+  updateAdminIdleBadge();
+}
+
+function adminLogoutByIdle(){
+  if(!isAdmin)return;
+  isAdmin=false;
+  sessionStorage.removeItem('mirim_prod_admin');
+  sessionStorage.removeItem(ADMIN_IDLE_KEY);
+  if(adminIdleTimer){clearTimeout(adminIdleTimer);adminIdleTimer=null;}
+  try{updateAdminUI();}catch(e){}
+  try{updateWorkerUI();}catch(e){}
+  try{
+    document.body.classList.add('worker-locked');
+    $('home')?.classList.add('hidden');
+    $('work')?.classList.add('hidden');
+    $('photoSearchPanel')?.classList.add('hidden');
+    $('notifPanel')?.classList.add('hidden');
+    $('loginLogPanel')?.classList.add('hidden');
+    $('workerLoginPanel')?.classList.remove('hidden');
+  }catch(e){}
+  alert('🔒 관리자 모드가 1시간 동안 사용되지 않아 자동 로그아웃되었습니다.');
+}
+
+function scheduleAdminIdleLogout(){
+  if(adminIdleTimer){clearTimeout(adminIdleTimer);adminIdleTimer=null;}
+  if(!isAdmin)return;
+  const last=Number(sessionStorage.getItem(ADMIN_IDLE_KEY)||adminIdleNow());
+  const remain=Math.max(0,ADMIN_IDLE_LIMIT_MS-(adminIdleNow()-last));
+  adminIdleTimer=setTimeout(adminLogoutByIdle,remain);
+}
+
+function updateAdminIdleBadge(){
+  let badge=document.getElementById('adminIdleBadge');
+  if(!badge){
+    const actions=document.querySelector('.top-actions');
+    if(!actions)return;
+    badge=document.createElement('span');
+    badge.id='adminIdleBadge';
+    actions.appendChild(badge);
+  }
+  if(!isAdmin){badge.textContent='';return;}
+  const last=Number(sessionStorage.getItem(ADMIN_IDLE_KEY)||adminIdleNow());
+  const remain=Math.max(0,ADMIN_IDLE_LIMIT_MS-(adminIdleNow()-last));
+  const min=Math.ceil(remain/60000);
+  badge.textContent=`관리자 자동로그아웃 ${min}분`;
+}
+
+['click','keydown','input','change','touchstart','pointerdown','scroll'].forEach(evt=>{
+  window.addEventListener(evt,()=>{
+    if(isAdmin)markAdminActivity();
+  },{passive:true});
+});
+
+window.addEventListener('load',()=>{
+  if(isAdmin){
+    const last=Number(sessionStorage.getItem(ADMIN_IDLE_KEY)||0);
+    if(!last)sessionStorage.setItem(ADMIN_IDLE_KEY,String(adminIdleNow()));
+    if(last && adminIdleNow()-last>=ADMIN_IDLE_LIMIT_MS){
+      adminLogoutByIdle();
+      return;
+    }
+    scheduleAdminIdleLogout();
+    updateAdminIdleBadge();
+  }
+  setInterval(()=>{if(isAdmin)updateAdminIdleBadge();},60000);
+});
 </script>
 
 </body></html>
