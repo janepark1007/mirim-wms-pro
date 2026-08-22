@@ -1985,6 +1985,12 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
 });
 $('adminLoginBtn').onclick=adminLogin;
 $('homeBtn').onclick=async()=>{
+ if(isAdmin){
+   $('work').classList.add('hidden');
+   $('photoSearchPanel')?.classList.add('hidden');
+   try{showAdminReferenceHome();}catch(e){console.error(e);}
+   return;
+ }
  if(!currentWorker){showWorkerLogin();return;}
  $('work').classList.add('hidden');
  $('photoSearchPanel')?.classList.add('hidden');
@@ -8555,19 +8561,19 @@ function ensureAdminReferenceHome(){
     <section class="ar-card ar-shortcuts">
       <div class="ar-title">📌 관리자 바로가기</div>
       <div class="ar-grid">
+        <button class="ar-btn in" onclick="openMode('inbound')"><span class="ico">⬇️</span><span>입고 등록</span></button>
+        <button class="ar-btn unreg" onclick="openAdminTaskView('unreg')"><span class="ico">⚠️</span><span>ERP 미등록 자재</span></button>
+        <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
-        <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
-        <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
-        <button class="ar-btn in" onclick="openMode('inbound')"><span class="ico">⬇️</span><span>입고 등록</span></button>
 
         <button class="ar-btn out" onclick="openMode('outbound')"><span class="ico">⬆️</span><span>출고 등록</span></button>
         <button class="ar-btn order" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
+        <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn match" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문·입고 자동대조</span></button>
-        <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
         <button class="ar-btn" onclick="openAdminTaskView('history')"><span class="ico">📋</span><span>최근 입출고 기록</span></button>
-        <button class="ar-btn unreg" onclick="openAdminTaskView('unreg')"><span class="ico">⚠️</span><span>ERP 미등록 자재</span></button>
+        <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
       </div>
     </section>
 
@@ -8695,7 +8701,7 @@ function showAdminReferenceHome(){
   document.body.classList.add('admin-reference-home');
 
   const root=ensureAdminReferenceHome();
-  if(root)root.style.display='block';
+  if(root)root.style.removeProperty('display');
 
   ['home','work','photoSearchPanel','notifPanel','loginLogPanel','recentInboundCard','recentOutboundCard'].forEach(id=>{
     document.getElementById(id)?.classList.add('hidden');
@@ -8704,6 +8710,8 @@ function showAdminReferenceHome(){
 
   updateAdminReferenceStats();
   loadAdminReferenceOrders();
+  /* 관리자 로그인 후 생성된 바로가기 버튼도 항상 정확히 재연결 */
+  try{wireAdminShortcutButtonsV41();}catch(e){console.warn('관리자 바로가기 연결 실패',e);}
   window.scrollTo({top:0,behavior:'instant'});
 }
 
@@ -9922,14 +9930,16 @@ async function openAdminShortcutListV41(kind){
     try{if(typeof renderErpUnregisteredItems==='function')renderErpUnregisteredItems();}catch(e){}
   }
   else if(kind==='inbound'){
-    closeAdminShortcutFocusV41();
-    document.body.classList.remove('admin-reference-home');
+    restoreAdminShortcutFocusV41();
+    document.body.classList.remove('admin-shortcut-focus','admin-task-focus','admin-reference-home');
+    const p=document.getElementById('adminShortcutFocusPanel');if(p)p.style.display='none';
     openMode('inbound');
     return;
   }
   else if(kind==='outbound'){
-    closeAdminShortcutFocusV41();
-    document.body.classList.remove('admin-reference-home');
+    restoreAdminShortcutFocusV41();
+    document.body.classList.remove('admin-shortcut-focus','admin-task-focus','admin-reference-home');
+    const p=document.getElementById('adminShortcutFocusPanel');if(p)p.style.display='none';
     openMode('outbound');
     return;
   }
@@ -10594,11 +10604,12 @@ body.admin-view.admin-reference-home #adminReferenceHome .ar-footer{
       else ref.appendChild(match);
     }
 
-    /* 관리자 기본 메인에서는 나머지 main 직계 요소를 확실히 숨김 */
+    /* 표시/숨김은 admin-reference-home CSS 클래스만 사용.
+       요소 자체에 display:none!important를 남기면 상세화면이 먹통이 되므로 금지 */
     [...main.children].forEach(el=>{
-      if(el!==ref) el.style.setProperty('display','none','important');
+      if(el!==ref) el.style.removeProperty('display');
     });
-    ref.style.setProperty('display','block','important');
+    ref.style.removeProperty('display');
   }
 
   window.addEventListener('load',()=>setTimeout(cleanAdminMainV46,700));
