@@ -7517,4 +7517,57 @@ function ensureAdminWelcomeShortcuts(){
 window.addEventListener('load',()=>setTimeout(ensureAdminWelcomeShortcuts,1200));
 </script>
 
+
+<style id="admin-shortcut-visible-v16">
+/* 관리자 홈에서는 반드시 클릭할 '관리자 바로가기'가 보이게 유지 */
+body.admin-view:not(.admin-task-focus) #home{
+  display:block!important;
+}
+body.admin-view:not(.admin-task-focus) #home .today-task-grid{
+  display:grid!important;
+}
+body.admin-view:not(.admin-task-focus) #home .admin-home-toggle-wrap{
+  display:block!important;
+}
+
+/* V15에서 만든 통합 관리자 바로가기도 숨김 규칙보다 우선 표시 */
+body.admin-view:not(.admin-task-focus) #adminWelcomeShortcutBox{
+  display:block!important;
+}
+
+/* 두 번째 이미지의 인사/현황 영역은 항상 유지 */
+body.admin-view:not(.admin-task-focus) #home .welcome-row{
+  display:flex!important;
+}
+
+/* 관리 바로가기 자체가 들어있는 상위 영역은 숨기지 않음 */
+body.admin-view:not(.admin-task-focus) #home > *:has(.today-task-grid),
+body.admin-view:not(.admin-task-focus) #home > *:has(#adminWelcomeShortcutBox){
+  display:block!important;
+}
+
+/* 하단 상세 데이터만 접힌 상태 유지 */
+body.admin-view:not(.admin-task-focus) #home:not(.admin-home-expanded) #todayOrderCard,
+body.admin-view:not(.admin-task-focus) #home:not(.admin-home-expanded) #orderInboundMatchCard,
+body.admin-view:not(.admin-task-focus) #home:not(.admin-home-expanded) #laterCheckCard,
+body.admin-view:not(.admin-task-focus) #home:not(.admin-home-expanded) #unregisteredItemCard{
+  display:none!important;
+}
+</style>
+
+<script>
+function forceAdminShortcutVisible(){
+  if(!isAdmin)return;
+  try{addAdminManagementShortcuts();}catch(e){}
+  try{ensureAdminWelcomeShortcuts();}catch(e){}
+  const home=document.getElementById('home');
+  if(home)home.classList.remove('hidden');
+  const grid=home?.querySelector('.today-task-grid');
+  if(grid)grid.style.removeProperty('display');
+  const box=document.getElementById('adminWelcomeShortcutBox');
+  if(box)box.style.setProperty('display','block','important');
+}
+window.addEventListener('load',()=>setTimeout(forceAdminShortcutVisible,1500));
+</script>
+
 </body></html>
