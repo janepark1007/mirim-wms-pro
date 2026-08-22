@@ -9919,69 +9919,243 @@ window.addEventListener('load',()=>setTimeout(wireAdminShortcutButtonsV41,1700))
 </script>
 
 
-<style id="mobile-search-result-fix-v42">
+<style id="worker-main-shortcuts-v43">
+/* 작업자 메인 전용 바로가기 */
+#workerMainShortcutCard{display:none}
+
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  margin:10px 0 14px!important;
+  padding:12px!important;
+  background:#fff!important;
+  border:1px solid #dce7e1!important;
+  border-radius:15px!important;
+}
+
+.worker-main-shortcut-title{
+  margin:0 0 10px;
+  font-size:19px;
+  font-weight:1000;
+  color:#163f2c;
+}
+
+.worker-main-shortcut-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+
+.worker-main-shortcut-btn{
+  min-width:0;
+  min-height:94px;
+  border:1px solid #d8e5dd;
+  border-radius:14px;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:9px 7px;
+  font-size:14px;
+  font-weight:1000;
+  line-height:1.25;
+  text-align:center;
+  word-break:keep-all;
+  cursor:pointer;
+  box-sizing:border-box;
+}
+
+.worker-main-shortcut-btn .ico{
+  font-size:25px;
+  line-height:1;
+}
+
+.worker-main-shortcut-btn small{
+  display:block;
+  font-size:10px;
+  color:#68756e;
+  font-weight:800;
+}
+
+.worker-main-shortcut-btn.out{background:#fff1eb;border-color:#efc2b0}
+.worker-main-shortcut-btn.loc{background:#f5efff;border-color:#d9c7f4}
+.worker-main-shortcut-btn.photo{background:#eef5ff;border-color:#c7d9f1}
+.worker-main-shortcut-btn.in{background:#edf9f1;border-color:#b9dec6}
+.worker-main-shortcut-btn.return{background:#eef1ff;border-color:#c8d2f0}
+.worker-main-shortcut-btn.kakao{background:#fee500;border-color:#d9bd00;color:#191919}
+.worker-main-shortcut-btn.orders{background:#fff7e7;border-color:#ead09d}
+.worker-main-shortcut-btn.later{background:#fff8cf;border-color:#ead36e}
+
 @media(max-width:760px){
-  #work,#work>.card,#results,#results>.result,.result-card-main,.result-card-main>div{
-    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  #workerMainShortcutCard{
+    padding:10px 8px!important;
+    margin:8px 0 12px!important;
   }
-  #work>.card{padding:12px 10px!important;overflow:hidden!important}
-  .result{padding:12px!important;margin-top:10px!important;overflow:hidden!important}
-  .result-card-main{display:block!important}
+  .worker-main-shortcut-title{
+    font-size:17px;
+    margin-bottom:8px;
+  }
+  .worker-main-shortcut-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .worker-main-shortcut-btn{
+    min-height:104px!important;
+    padding:9px 5px!important;
+    font-size:15px!important;
+    border-radius:16px!important;
+  }
+  .worker-main-shortcut-btn .ico{
+    font-size:28px!important;
+  }
+  .worker-main-shortcut-btn small{
+    font-size:11px!important;
+  }
+}
 
-  .result-photo-box{
-    width:100%!important;display:grid!important;
-    grid-template-columns:88px minmax(0,1fr)!important;
-    gap:8px!important;align-items:center!important;margin-bottom:12px!important;
-  }
-  .result-photo-box img,.result-photo-empty{
-    width:88px!important;height:88px!important;min-width:88px!important;min-height:88px!important;
-    border-radius:10px!important;box-sizing:border-box!important;
-  }
-  .result-photo-box button{
-    width:100%!important;max-width:100%!important;min-width:0!important;min-height:42px!important;
-    margin:0!important;padding:7px 9px!important;font-size:13px!important;white-space:normal!important;
-  }
-  .result-photo-box button+button{margin-top:6px!important}
-
-  .result-part{
-    font-size:21px!important;line-height:1.25!important;
-    overflow-wrap:anywhere!important;word-break:break-word!important;
-  }
-  .result-name{
-    font-size:16px!important;line-height:1.4!important;margin-top:5px!important;
-    overflow-wrap:anywhere!important;word-break:break-word!important;
-  }
-
-  .result-location{
-    width:100%!important;max-width:100%!important;padding:11px!important;margin-top:10px!important;
-    box-sizing:border-box!important;
-  }
-  .result-location b,.all-location-line{
-    display:block!important;width:100%!important;max-width:100%!important;
-    font-size:16px!important;line-height:1.4!important;
-    overflow-wrap:anywhere!important;word-break:break-word!important;
-  }
-
-  .later-check-direct-wrap{
-    width:100%!important;max-width:100%!important;box-sizing:border-box!important;
-    padding:9px!important;margin-top:9px!important;display:block!important;overflow:hidden!important;
-  }
-  .later-check-direct{
-    width:100%!important;max-width:100%!important;min-width:0!important;
-    min-height:46px!important;font-size:14px!important;box-sizing:border-box!important;
-  }
-  .later-check-direct-wrap small{
-    display:block!important;width:100%!important;margin-top:6px!important;
-    font-size:11px!important;line-height:1.4!important;overflow-wrap:anywhere!important;
-  }
-
-  .outgrid{width:100%!important;grid-template-columns:1fr!important;gap:7px!important}
-  .outgrid input,.result input,.result select,.result button{
-    max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
-  }
-  .result input{min-height:46px!important;font-size:16px!important}
-  .result *,#results *{min-width:0}
+/* 작업자 메인에서 예전 중복 바로가기 그리드가 있으면 숨김 */
+body:not(.admin-view):not(.worker-locked) #home .today-task-grid{
+  display:none!important;
 }
 </style>
+
+<script>
+function ensureWorkerMainShortcutCardV43(){
+  const home=document.getElementById('home');
+  if(!home)return null;
+
+  let card=document.getElementById('workerMainShortcutCard');
+  if(card)return card;
+
+  card=document.createElement('section');
+  card.id='workerMainShortcutCard';
+  card.className='card';
+  card.innerHTML=`
+    <div class="worker-main-shortcut-title">📌 작업 바로가기</div>
+    <div class="worker-main-shortcut-grid">
+      <button type="button" class="worker-main-shortcut-btn out" data-worker-main="outbound">
+        <span class="ico">⬆️</span><span>빠른출고</span><small>자재 출고 등록</small>
+      </button>
+
+      <button type="button" class="worker-main-shortcut-btn loc" data-worker-main="location">
+        <span class="ico">📍</span><span>위치확인</span><small>창고 위치 확인</small>
+      </button>
+
+      <button type="button" class="worker-main-shortcut-btn photo" data-worker-main="photo">
+        <span class="ico">📷</span><span>사진으로 검색하기</span><small>사진으로 품목 확인</small>
+      </button>
+
+      <button type="button" class="worker-main-shortcut-btn in" data-worker-main="inbound">
+        <span class="ico">⬇️</span><span>빠른입고</span><small>입고 수량 등록</small>
+      </button>
+
+      <button type="button" class="worker-main-shortcut-btn return" data-worker-main="return">
+        <span class="ico">↩️</span><span>자재반환</span><small>남은 자재 반환</small>
+      </button>
+
+      <button type="button" class="worker-main-shortcut-btn kakao" data-worker-main="order">
+        <span class="ico">🛒</span><span>카톡 주문하기</span><small>필수내용 입력 후 카톡 전송</small>
+      </button>
+
+      <button type="button" class="worker-main-shortcut-btn orders" data-worker-main="orders">
+        <span class="ico">🛒</span><span>주문요청&문의건</span><small>통합관리</small>
+      </button>
+
+      <button type="button" class="worker-main-shortcut-btn later" data-worker-main="later">
+        <span class="ico">📌</span><span>나중에 확인</span><small>확인할 일</small>
+      </button>
+    </div>
+  `;
+
+  const welcome=home.querySelector('.welcome-row');
+  if(welcome) welcome.insertAdjacentElement('afterend',card);
+  else home.insertAdjacentElement('afterbegin',card);
+
+  wireWorkerMainShortcutV43();
+  return card;
+}
+
+function openWorkerOrdersV43(){
+  if(!currentWorker){
+    try{showWorkerLogin();}catch(e){}
+    alert('작업자 로그인 후 사용할 수 있습니다.');
+    return;
+  }
+  const home=document.getElementById('home');
+  const card=document.getElementById('todayOrderCard');
+  if(!card)return alert('주문요청 관리창을 찾지 못했습니다.');
+
+  home?.classList.remove('hidden');
+  card.style.setProperty('display','block','important');
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+  try{loadTodayOrderRequests();}catch(e){}
+}
+
+function openWorkerLaterV43(){
+  if(!currentWorker){
+    try{showWorkerLogin();}catch(e){}
+    alert('작업자 로그인 후 사용할 수 있습니다.');
+    return;
+  }
+  try{ensureLaterCheckCard();renderLaterChecks();}catch(e){}
+  const card=document.getElementById('laterCheckCard');
+  if(!card)return alert('나중에 확인 목록을 찾지 못했습니다.');
+  card.style.setProperty('display','block','important');
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function wireWorkerMainShortcutV43(){
+  const card=document.getElementById('workerMainShortcutCard');
+  if(!card)return;
+
+  card.querySelectorAll('[data-worker-main]').forEach(btn=>{
+    btn.onclick=(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+
+      const kind=btn.dataset.workerMain;
+
+      if(!currentWorker && !isAdmin){
+        try{showWorkerLogin();}catch(err){}
+        alert('작업자 로그인 후 사용할 수 있습니다.');
+        return;
+      }
+
+      if(kind==='photo'){
+        try{openPhotoSearch();}catch(err){alert('사진검색 화면을 열지 못했습니다.');}
+        return;
+      }
+      if(kind==='orders'){
+        openWorkerOrdersV43();
+        return;
+      }
+      if(kind==='later'){
+        openWorkerLaterV43();
+        return;
+      }
+
+      if(kind==='inbound'){
+        /* 기존 정책 유지: 빠른입고 권한 체크는 기존 openMode/버튼 정책을 따름 */
+        try{openMode('inbound');}catch(err){alert('입고 화면을 열지 못했습니다.');}
+        return;
+      }
+
+      try{openMode(kind);}catch(err){
+        alert('해당 작업 화면을 열지 못했습니다.');
+      }
+    };
+  });
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    ensureWorkerMainShortcutCardV43();
+  },1000);
+});
+</script>
 
 </body></html>
