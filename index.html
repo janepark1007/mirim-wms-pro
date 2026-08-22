@@ -7570,4 +7570,118 @@ function forceAdminShortcutVisible(){
 window.addEventListener('load',()=>setTimeout(forceAdminShortcutVisible,1500));
 </script>
 
+
+<style id="admin-summary-horizontal-v17">
+/* 관리자 상단 초록 현황판: 세로로 늘어지지 않고 한 줄 카드형 */
+body.admin-view #home .home-summary,
+body.admin-view #home .summary-bar,
+body.admin-view #home .summary-grid,
+body.admin-view #home .stats-grid{
+  width:100%!important;
+  min-height:0!important;
+  height:auto!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  align-items:stretch!important;
+  gap:0!important;
+  padding:8px 10px!important;
+}
+
+/* 실제 초록 현황판은 텍스트 내용으로도 보정 */
+body.admin-view #home div:has(> .summary-item),
+body.admin-view #home section:has(> .summary-item){
+  min-height:0!important;
+  height:auto!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  align-items:center!important;
+}
+
+body.admin-view #home .summary-item,
+body.admin-view #home .stat-item{
+  min-width:0!important;
+  min-height:72px!important;
+  height:auto!important;
+  padding:8px 12px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:center!important;
+  text-align:center!important;
+  border-right:1px solid rgba(255,255,255,.18)!important;
+}
+body.admin-view #home .summary-item:last-child,
+body.admin-view #home .stat-item:last-child{
+  border-right:0!important;
+}
+body.admin-view #home .summary-item b,
+body.admin-view #home .stat-item b{
+  font-size:20px!important;
+  line-height:1.15!important;
+  margin-top:4px!important;
+}
+body.admin-view #home .summary-item span,
+body.admin-view #home .stat-item span{
+  font-size:12px!important;
+  line-height:1.2!important;
+}
+
+/* 이전 규칙 때문에 자식들이 한 열로 내려가는 경우 강제 해제 */
+body.admin-view #home [style*="background"] > .summary-item{
+  width:auto!important;
+  margin:0!important;
+}
+
+@media(max-width:760px){
+ body.admin-view #home .home-summary,
+ body.admin-view #home .summary-bar,
+ body.admin-view #home .summary-grid,
+ body.admin-view #home .stats-grid,
+ body.admin-view #home div:has(> .summary-item),
+ body.admin-view #home section:has(> .summary-item){
+   grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+ body.admin-view #home .summary-item,
+ body.admin-view #home .stat-item{
+   min-height:62px!important;
+   padding:7px!important;
+ }
+}
+</style>
+
+<script>
+function compactAdminGreenSummary(){
+ if(!isAdmin)return;
+ const home=document.getElementById('home');if(!home)return;
+ const candidates=[...home.querySelectorAll('div,section')];
+ const box=candidates.find(el=>{
+   const t=(el.innerText||'').replace(/\s+/g,' ');
+   const cs=getComputedStyle(el);
+   return t.includes('입고 (오늘)') && t.includes('출고 (오늘)') &&
+          t.includes('ERP 품목') && t.includes('미입고 주문') &&
+          el.children.length>=4 && el.children.length<=8 &&
+          cs.display!=='none';
+ });
+ if(!box)return;
+ box.classList.add('admin-compact-green-summary');
+ box.style.setProperty('display','grid','important');
+ box.style.setProperty('grid-template-columns','repeat(5,minmax(0,1fr))','important');
+ box.style.setProperty('height','auto','important');
+ box.style.setProperty('min-height','0','important');
+ box.style.setProperty('padding','8px 10px','important');
+ [...box.children].forEach(ch=>{
+   ch.style.setProperty('min-height','72px','important');
+   ch.style.setProperty('height','auto','important');
+   ch.style.setProperty('display','flex','important');
+   ch.style.setProperty('flex-direction','column','important');
+   ch.style.setProperty('align-items','center','important');
+   ch.style.setProperty('justify-content','center','important');
+   ch.style.setProperty('padding','7px 10px','important');
+   ch.style.setProperty('margin','0','important');
+ });
+}
+window.addEventListener('load',()=>setTimeout(compactAdminGreenSummary,1700));
+window.addEventListener('resize',()=>{if(window.innerWidth>760)setTimeout(compactAdminGreenSummary,100)});
+</script>
+
 </body></html>
