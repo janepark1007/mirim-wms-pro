@@ -3214,6 +3214,7 @@ function adminLogin(){
    try{updateHomeSummary();}catch(e){}
    try{loadAdminNotifications();}catch(e){}
    updateAdminUI();
+   try{showAdminDashboardHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
    alert('관리자 로그인 완료');
  }else{
    alert('관리자 PIN이 맞지 않습니다.');
@@ -8887,5 +8888,83 @@ body.admin-view:not(.admin-task-focus) #adminRecentOrdersCard{
   window.addEventListener('resize',()=>setTimeout(polishAdminDashboard,120));
 })();
 </script><!-- admin-dashboard-polish-v26 -->
+
+
+<style id="admin-dashboard-show-fix-v27">
+/* 관리자 기본 화면에서는 새 대시보드만 보이게 한다.
+   위치정리/기록/입출고 상세는 버튼 클릭 때만 연다. */
+body.admin-view:not(.admin-task-focus) main > #home{
+  display:block!important;
+}
+body.admin-view:not(.admin-task-focus) main > #work,
+body.admin-view:not(.admin-task-focus) main > #photoSearchPanel,
+body.admin-view:not(.admin-task-focus) main > #recentInboundCard,
+body.admin-view:not(.admin-task-focus) main > #recentOutboundCard,
+body.admin-view:not(.admin-task-focus) main > #notifPanel,
+body.admin-view:not(.admin-task-focus) main > #loginLogPanel,
+body.admin-view:not(.admin-task-focus) main > #locationOrganizerCard,
+body.admin-view:not(.admin-task-focus) main > #recordLookupAdminCard,
+body.admin-view:not(.admin-task-focus) main > #nasExcelAdminCard,
+body.admin-view:not(.admin-task-focus) main > .worker-admin-detail{
+  display:none!important;
+}
+
+/* 새 관리자 메인은 반드시 표시 */
+body.admin-view:not(.admin-task-focus) #adminVisualHome{
+  display:block!important;
+}
+
+/* 이전에 이동되거나 열린 관리카드가 메인에 섞이지 않도록 */
+body.admin-view:not(.admin-task-focus) #home #locationOrganizerCard,
+body.admin-view:not(.admin-task-focus) #home #recordLookupAdminCard,
+body.admin-view:not(.admin-task-focus) #home #nasExcelAdminCard,
+body.admin-view:not(.admin-task-focus) #home #todayOrderCard,
+body.admin-view:not(.admin-task-focus) #home #orderInboundMatchCard,
+body.admin-view:not(.admin-task-focus) #home #laterCheckCard,
+body.admin-view:not(.admin-task-focus) #home #unregisteredItemCard{
+  display:none!important;
+}
+</style>
+
+<script>
+function showAdminDashboardHome(){
+  if(!isAdmin)return;
+
+  /* 상세 작업 상태 해제 */
+  try{restoreAdminTaskElements();}catch(e){}
+  document.body.classList.remove('admin-task-focus');
+
+  const focus=document.getElementById('adminTaskFocusPanel');
+  if(focus)focus.classList.add('hidden');
+
+  const home=document.getElementById('home');
+  const work=document.getElementById('work');
+  const photo=document.getElementById('photoSearchPanel');
+
+  if(home)home.classList.remove('hidden');
+  if(work)work.classList.add('hidden');
+  if(photo)photo.classList.add('hidden');
+
+  ['notifPanel','loginLogPanel','locationOrganizerCard','recordLookupAdminCard','nasExcelAdminCard'].forEach(id=>{
+    document.getElementById(id)?.classList.add('hidden');
+  });
+
+  try{ensureAdminVisualHome();}catch(e){}
+  const visual=document.getElementById('adminVisualHome');
+  if(visual)visual.style.setProperty('display','block','important');
+
+  try{updateAdminV25Stats();}catch(e){}
+  try{loadAdminV25RecentOrders();}catch(e){}
+
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* 관리자 세션이 살아있는 상태로 새로고침해도 대시보드부터 */
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(isAdmin)showAdminDashboardHome();
+  },1000);
+});
+</script>
 
 </body></html>
