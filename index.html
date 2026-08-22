@@ -4778,6 +4778,48 @@ body.admin-view.admin-task-focus main > #adminTaskFocusPanel{
 }
 </style>
 
+
+<style id="admin2-main-only-v43">
+/* 관리자모드2 메인: 전용 5개 카드 외 기존 메인 내용 강제 숨김 */
+body.admin2-view:not(.admin2-task-open) main > *{display:none!important}
+body.admin2-view:not(.admin2-task-open) main > #admin2CleanHome{display:block!important}
+body.admin2-view:not(.admin2-task-open) #work,
+body.admin2-view:not(.admin2-task-open) #photoSearchPanel,
+body.admin2-view:not(.admin2-task-open) #workerLoginPanel{display:none!important}
+body.admin2-view:not(.admin2-task-open) #admin2CleanHome{min-height:calc(100vh - 90px)!important}
+</style>
+<script id="admin2-main-only-v43-js">
+(function(){
+  function mainOnly(){
+    if(!document.body.classList.contains('admin2-view'))return;
+    if(document.body.classList.contains('admin2-task-open'))return;
+    if(typeof ensureAdmin2CleanHome==='function')ensureAdmin2CleanHome();
+    document.getElementById('work')?.classList.add('hidden');
+    document.getElementById('photoSearchPanel')?.classList.add('hidden');
+  }
+  function openTask(fn){
+    document.body.classList.add('admin2-task-open');
+    setTimeout(fn,0);
+  }
+  document.addEventListener('click',function(e){
+    if(!document.body.classList.contains('admin2-view'))return;
+    const btn=e.target.closest('#admin2CleanHome button');
+    if(btn){
+      if(btn.classList.contains('in')){e.preventDefault();e.stopImmediatePropagation();openTask(()=>openMode('inbound'));}
+      else if(btn.classList.contains('out')){e.preventDefault();e.stopImmediatePropagation();openTask(()=>openMode('outbound'));}
+      else if(btn.id==='admin2LocationOrganizeBtn'){document.body.classList.add('admin2-task-open');}
+      else if(btn.id==='admin2KakaoInquiryBtn'){document.body.classList.add('admin2-task-open');}
+    }
+    if(e.target.closest('#homeBtn')){
+      document.body.classList.remove('admin2-task-open');
+      setTimeout(()=>{if(typeof showAdmin2CleanHome==='function')showAdmin2CleanHome();mainOnly();},0);
+    }
+  },true);
+  window.addEventListener('load',()=>setTimeout(mainOnly,120));
+  new MutationObserver(()=>{clearTimeout(window.__a2main43);window.__a2main43=setTimeout(mainOnly,40)}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
 </body></html>`);
      w.document.close();
    }
@@ -14659,4 +14701,46 @@ body.admin2-view #admin2LoginBtn,body.admin2-view #homeBtn{display:inline-flex!i
   new MutationObserver(()=>{clearTimeout(window.__a2v40);window.__a2v40=setTimeout(enforce,30)}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+<style id="admin2-main-only-v43">
+/* 관리자모드2 메인: 전용 5개 카드 외 기존 메인 내용 강제 숨김 */
+body.admin2-view:not(.admin2-task-open) main > *{display:none!important}
+body.admin2-view:not(.admin2-task-open) main > #admin2CleanHome{display:block!important}
+body.admin2-view:not(.admin2-task-open) #work,
+body.admin2-view:not(.admin2-task-open) #photoSearchPanel,
+body.admin2-view:not(.admin2-task-open) #workerLoginPanel{display:none!important}
+body.admin2-view:not(.admin2-task-open) #admin2CleanHome{min-height:calc(100vh - 90px)!important}
+</style>
+<script id="admin2-main-only-v43-js">
+(function(){
+  function mainOnly(){
+    if(!document.body.classList.contains('admin2-view'))return;
+    if(document.body.classList.contains('admin2-task-open'))return;
+    if(typeof ensureAdmin2CleanHome==='function')ensureAdmin2CleanHome();
+    document.getElementById('work')?.classList.add('hidden');
+    document.getElementById('photoSearchPanel')?.classList.add('hidden');
+  }
+  function openTask(fn){
+    document.body.classList.add('admin2-task-open');
+    setTimeout(fn,0);
+  }
+  document.addEventListener('click',function(e){
+    if(!document.body.classList.contains('admin2-view'))return;
+    const btn=e.target.closest('#admin2CleanHome button');
+    if(btn){
+      if(btn.classList.contains('in')){e.preventDefault();e.stopImmediatePropagation();openTask(()=>openMode('inbound'));}
+      else if(btn.classList.contains('out')){e.preventDefault();e.stopImmediatePropagation();openTask(()=>openMode('outbound'));}
+      else if(btn.id==='admin2LocationOrganizeBtn'){document.body.classList.add('admin2-task-open');}
+      else if(btn.id==='admin2KakaoInquiryBtn'){document.body.classList.add('admin2-task-open');}
+    }
+    if(e.target.closest('#homeBtn')){
+      document.body.classList.remove('admin2-task-open');
+      setTimeout(()=>{if(typeof showAdmin2CleanHome==='function')showAdmin2CleanHome();mainOnly();},0);
+    }
+  },true);
+  window.addEventListener('load',()=>setTimeout(mainOnly,120));
+  new MutationObserver(()=>{clearTimeout(window.__a2main43);window.__a2main43=setTimeout(mainOnly,40)}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
 </body></html>
