@@ -10383,4 +10383,32 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+
+<script id="main-hide-confirmed-v45">
+(function(){
+  function confirmed(tr){
+    const t=(tr.innerText||'').replace(/\s+/g,' ').trim();
+    return t.includes('자재확인 완료') ||
+           t.includes('본인확인 완료') ||
+           t.includes('본인 확인완료') ||
+           t.includes('본인확인완료');
+  }
+  function apply(){
+    const card=document.getElementById('orderInboundMatchCard');
+    if(!card)return;
+    const onMain=document.body.classList.contains('admin-reference-home') ||
+                 (document.getElementById('adminReferenceHome')?.contains(card));
+    if(!onMain)return;
+    card.querySelectorAll('tbody tr').forEach(tr=>{
+      if(confirmed(tr)) tr.style.setProperty('display','none','important');
+      else tr.style.removeProperty('display');
+    });
+  }
+  window.addEventListener('load',()=>setTimeout(apply,1200));
+  new MutationObserver(()=>setTimeout(apply,50))
+    .observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  document.addEventListener('click',()=>setTimeout(apply,300));
+})();
+</script>
+
 </body></html>
