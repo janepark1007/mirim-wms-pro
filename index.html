@@ -4657,19 +4657,19 @@ function search(){
           <input id="in_worker_${i}" value="${esc(currentWorker?.name||(isAdmin?'관리자':''))}" readonly placeholder="등록자">
           <input id="in_qty_${i}" type="number" inputmode="numeric" placeholder="입고수량">
         </div>
-        <div class="approval-note">🔐 저장 시 관리자 승인이 필요합니다.</div>
+        <div class="approval-note worker-direct-save-note">✅ 작업자 직접 입고등록 · 공용 DB 자동반영</div>
         <button class="primary" style="width:100%;min-height:50px;margin-top:9px"
-          onclick='saveIn(${JSON.stringify(x)},${i})'>입고 승인 후 저장</button>`
+          onclick='saveIn(${JSON.stringify(x)},${i})'>📥 입고 저장</button>`
      : '';
 
    const outbound=mode==='outbound'
      ? `<div class="outgrid">
-          <input id="w_${i}" placeholder="작업자 이름">
+          <input id="w_${i}" value="${esc(currentWorker?.name||'')}" readonly placeholder="작업자">
           <input id="qty_${i}" type="number" inputmode="numeric" placeholder="출고수량">
         </div>
-        <div class="approval-note">🔐 저장 시 관리자 승인이 필요합니다.</div>
+        <div class="approval-note worker-direct-save-note">✅ 작업자 직접 출고등록 · 공용 DB 자동반영</div>
         <button class="primary" style="width:100%;min-height:50px;margin-top:9px"
-          onclick='saveOut(${JSON.stringify(x)},${i})'>출고 승인 후 저장</button>`
+          onclick='saveOut(${JSON.stringify(x)},${i})'>📤 출고 저장</button>`
      : '';
 
    const returned=mode==='return'
@@ -11395,6 +11395,46 @@ body.admin-view #adminWorkerOrdersV2{
   }
   window.addEventListener('load',()=>setTimeout(allowWorkerInOutV3,700));
   document.addEventListener('click',()=>setTimeout(allowWorkerInOutV3,50),true);
+})();
+</script>
+
+
+<style id="worker-inout-direct-final-v31">
+body:not(.admin-view) #results .worker-direct-save-note{
+  background:#eaf7ef!important;
+  color:#087a43!important;
+  border:1px solid #b9dfc6!important;
+  font-weight:900!important;
+}
+body:not(.admin-view) #results input[id^="in_qty_"],
+body:not(.admin-view) #results input[id^="qty_"],
+body:not(.admin-view) #results button[onclick*="saveIn"],
+body:not(.admin-view) #results button[onclick*="saveOut"]{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+</style>
+<script id="worker-inout-direct-final-v31-js">
+(function(){
+  function wireDirectInOutV31(){
+    if(!currentWorker || isAdmin)return;
+    document.querySelectorAll('[data-mode="inbound"]').forEach(btn=>{
+      btn.onclick=function(e){
+        e.preventDefault();e.stopPropagation();
+        openMode('inbound');
+      };
+    });
+    document.querySelectorAll('[data-mode="outbound"]').forEach(btn=>{
+      btn.onclick=function(e){
+        e.preventDefault();e.stopPropagation();
+        openMode('outbound');
+      };
+    });
+  }
+  window.addEventListener('load',()=>setTimeout(wireDirectInOutV31,900));
+  document.addEventListener('click',()=>setTimeout(wireDirectInOutV31,30),true);
 })();
 </script>
 
