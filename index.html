@@ -12672,4 +12672,110 @@ body:not(.admin-view) #results .later-check-btn:active{
 }
 </style>
 
+
+<style id="worker-core-menu-big-clear-v19">
+/* 작업자 핵심 메뉴만 확대 - 기존 기능/레이아웃 보호 */
+body:not(.admin-view) #mobileWorkerCoreV2{
+  width:calc(100% - 12px)!important;
+  max-width:760px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  padding:12px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+
+body:not(.admin-view) #mobileWorkerCoreV2 h2,
+body:not(.admin-view) #mobileWorkerCoreV2 h3,
+body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-title{
+  font-size:24px!important;
+  line-height:1.25!important;
+  font-weight:1000!important;
+  text-align:center!important;
+  margin:2px 0 12px!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:keep-all!important;
+}
+
+/* 핵심 메뉴 버튼 컨테이너 */
+body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-grid,
+body:not(.admin-view) #mobileWorkerCoreV2 .quick,
+body:not(.admin-view) #mobileWorkerCoreV2 > div{
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+
+/* 모든 핵심 메뉴 버튼을 크고 선명하게 */
+body:not(.admin-view) #mobileWorkerCoreV2 button{
+  min-width:0!important;
+  min-height:72px!important;
+  padding:12px 10px!important;
+  font-size:20px!important;
+  line-height:1.25!important;
+  font-weight:1000!important;
+  text-align:center!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:keep-all!important;
+  box-sizing:border-box!important;
+  border-radius:12px!important;
+}
+
+/* 버튼 안의 작은 보조글씨가 있으면 같이 확대 */
+body:not(.admin-view) #mobileWorkerCoreV2 button small,
+body:not(.admin-view) #mobileWorkerCoreV2 button span{
+  font-size:inherit!important;
+  line-height:inherit!important;
+  font-weight:inherit!important;
+  white-space:normal!important;
+}
+
+/* PC/태블릿: 두 칸 또는 세 칸 배치에서도 깨지지 않게 */
+@media(min-width:761px){
+  body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-grid{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+}
+
+/* 모바일: 2열 유지, 좁은 폰에서는 글자와 버튼 자동 축소 없이 안전하게 */
+@media(max-width:760px){
+  body:not(.admin-view) #mobileWorkerCoreV2{
+    width:calc(100% - 10px)!important;
+    padding:10px!important;
+  }
+
+  body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-grid,
+  body:not(.admin-view) #mobileWorkerCoreV2 .quick{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+
+  body:not(.admin-view) #mobileWorkerCoreV2 h2,
+  body:not(.admin-view) #mobileWorkerCoreV2 h3,
+  body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-title{
+    font-size:22px!important;
+  }
+
+  body:not(.admin-view) #mobileWorkerCoreV2 button{
+    min-height:76px!important;
+    padding:12px 7px!important;
+    font-size:19px!important;
+    line-height:1.28!important;
+  }
+}
+
+/* 아주 좁은 화면에서도 가로 잘림 방지 */
+@media(max-width:360px){
+  body:not(.admin-view) #mobileWorkerCoreV2 button{
+    font-size:17px!important;
+    min-height:72px!important;
+    padding:10px 5px!important;
+  }
+}
+</style>
+
 </body></html>
