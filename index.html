@@ -7968,4 +7968,195 @@ function setupAdminCollapsibleCards(){
 window.addEventListener('load',()=>setTimeout(setupAdminCollapsibleCards,1800));
 </script>
 
+
+<style id="admin-recent-orders-v23">
+#adminRecentOrdersCard{
+  display:none;
+  width:min(1320px,calc(100% - 40px));
+  margin:0 auto 18px;
+  padding:14px 16px;
+  border:1px solid #d8e5dd;
+  border-radius:15px;
+  background:#fff;
+  box-sizing:border-box;
+}
+body.admin-view:not(.admin-task-focus) #adminRecentOrdersCard{
+  display:block!important;
+}
+.admin-recent-orders-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.admin-recent-orders-head h3{
+  margin:0;
+  font-size:18px;
+}
+.admin-recent-orders-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.admin-recent-orders-actions button{
+  min-height:36px;
+  padding:0 11px;
+  border:1px solid #c7d9cf;
+  border-radius:9px;
+  background:#f7fbf8;
+  color:#155a38;
+  font-weight:900;
+}
+.admin-recent-orders-table-wrap{
+  width:100%;
+  overflow:auto;
+}
+.admin-recent-orders-table{
+  width:100%;
+  min-width:850px;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.admin-recent-orders-table th,
+.admin-recent-orders-table td{
+  padding:8px 7px;
+  border-bottom:1px solid #e7ede9;
+  text-align:left;
+  vertical-align:middle;
+}
+.admin-recent-orders-table th{
+  background:#f3f8f5;
+  white-space:nowrap;
+}
+.admin-recent-status{
+  display:inline-block;
+  padding:4px 7px;
+  border-radius:999px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.admin-recent-status.request{background:#e5efff;color:#245d93}
+.admin-recent-status.partial{background:#fff1bc;color:#755900}
+.admin-recent-status.done{background:#e1f4e7;color:#17622a}
+.admin-recent-status.wait{background:#ffe3dd;color:#9b321f}
+.admin-recent-order-empty{
+  padding:18px;
+  text-align:center;
+  color:#6f7d75;
+  font-weight:800;
+}
+@media(max-width:760px){
+ #adminRecentOrdersCard{
+   width:calc(100% - 16px);
+   padding:11px 8px;
+ }
+ .admin-recent-orders-head h3{font-size:16px}
+ .admin-recent-orders-table{min-width:760px;font-size:12px}
+}
+</style>
+
+<script>
+function ensureAdminRecentOrdersCard(){
+  if(document.getElementById('adminRecentOrdersCard'))return;
+  const shortcut=document.getElementById('adminWelcomeShortcutBox');
+  if(!shortcut)return;
+
+  const card=document.createElement('section');
+  card.id='adminRecentOrdersCard';
+  card.innerHTML=`
+    <div class="admin-recent-orders-head">
+      <div>
+        <h3>🛒 최근 주문 내역</h3>
+        <div style="font-size:12px;color:#6b786f;font-weight:800;margin-top:3px">최근 등록된 주문·문의 내역을 최신순으로 표시합니다.</div>
+      </div>
+      <div class="admin-recent-orders-actions">
+        <button type="button" onclick="loadAdminRecentOrders()">↻ 새로고침</button>
+        <button type="button" onclick="openAdminTaskView('orders')">전체 주문관리 열기</button>
+      </div>
+    </div>
+    <div class="admin-recent-orders-table-wrap">
+      <table class="admin-recent-orders-table">
+        <thead>
+          <tr>
+            <th>요청일시</th>
+            <th>품번</th>
+            <th>품명</th>
+            <th>수량</th>
+            <th>요청자</th>
+            <th>상태</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody id="adminRecentOrdersBody">
+          <tr><td colspan="7" class="admin-recent-order-empty">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+  shortcut.insertAdjacentElement('afterend',card);
+}
+
+function adminRecentOrderStatusClass(status){
+  const s=String(status||'요청');
+  if(['입고완료','문의완료','입고대조완료','수령확인'].includes(s))return 'done';
+  if(['부분입고'].includes(s))return 'partial';
+  if(['미입고','수령승인대기'].includes(s))return 'wait';
+  return 'request';
+}
+
+async function loadAdminRecentOrders(){
+  ensureAdminRecentOrdersCard();
+  const body=document.getElementById('adminRecentOrdersBody');
+  if(!body)return;
+
+  if(!isAdmin){
+    body.innerHTML='<tr><td colspan="7" class="admin-recent-order-empty">관리자 모드에서만 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+  if(!sharedReady||!sharedDb){
+    body.innerHTML='<tr><td colspan="7" class="admin-recent-order-empty">공용 동기화 연결 후 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+
+  try{
+    const {data,error}=await sharedDb.from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(10);
+    if(error)throw error;
+
+    const rows=data||[];
+    body.innerHTML=rows.length?rows.map(r=>{
+      const dt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'';
+      const status=String(r.status||'요청');
+      const note=(typeof cleanOrderNote==='function'?cleanOrderNote(r.note):String(r.note||'')).replace(/\n/g,' ');
+      const shortNote=note.length>70?note.slice(0,70)+'…':note;
+      return `<tr>
+        <td>${esc(dt)}</td>
+        <td><b>${esc(r.part_no||'기타')}</b></td>
+        <td>${esc(r.item_name||'')}</td>
+        <td>${Number(r.request_qty||0).toLocaleString()}</td>
+        <td>${esc(r.requester||'')}</td>
+        <td><span class="admin-recent-status ${adminRecentOrderStatusClass(status)}">${esc(status)}</span></td>
+        <td title="${esc(note)}">${esc(shortNote||'-')}</td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="7" class="admin-recent-order-empty">최근 주문 내역이 없습니다.</td></tr>';
+  }catch(e){
+    console.warn('최근 주문 내역 조회 실패',e);
+    body.innerHTML='<tr><td colspan="7" class="admin-recent-order-empty">최근 주문 내역을 불러오지 못했습니다.</td></tr>';
+  }
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    ensureAdminRecentOrdersCard();
+    if(isAdmin)loadAdminRecentOrders();
+  },2200);
+});
+setInterval(()=>{
+  if(isAdmin && document.visibilityState==='visible')loadAdminRecentOrders();
+},60000);
+</script>
+
 </body></html>
