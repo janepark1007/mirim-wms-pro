@@ -4266,7 +4266,11 @@ function orderReceivedQty(note){
 }
 function orderReceiptApprovalRequest(note){
  const m=String(note||'').match(/\[수령승인요청:([^\/\]]+)\/\s*수량:([0-9.]+)\s*\/\s*사유:([^\/\]]*)\/\s*([^\]]+)\]/);
- return m?{worker:String(m[1]||'').trim(),qty:Number(m[2]||0),reason:String(m[3]||'').trim(),time:String(m[4]||'').trim()}:null;
+ if(!m)return null;
+ const req={worker:String(m[1]||'').trim(),qty:Number(m[2]||0),reason:String(m[3]||'').trim(),time:String(m[4]||'').trim()};
+ /* 이유가 없는 승인요청은 관리자 주문확인 대상에 표시하지 않음 */
+ if(!req.reason)return null;
+ return req;
 }
 async function workerConfirmOrderReceived(id){
  if(!currentWorker)return alert('작업자 로그인 후 사용할 수 있습니다.');
@@ -6978,10 +6982,11 @@ function ensureLaterCheckCard(){
 }
 function renderLaterChecks(){
  ensureLaterCheckCard();
- const a=getLaterChecks(),open=a.filter(x=>!x.done),body=document.getElementById('laterCheckBody'),cnt=document.getElementById('laterCheckCount');
+ const a=getLaterChecks(),valid=a.filter(x=>String(x.reason||'').trim()),open=valid.filter(x=>!x.done),body=document.getElementById('laterCheckBody'),cnt=document.getElementById('laterCheckCount');
  if(cnt)cnt.textContent=open.length+'건';
  if(!body)return;
- const rows=[...open,...a.filter(x=>x.done).slice(0,10)];
+ /* 확인사유가 실제로 있는 건만 화면에 표시하고 기존 기록 자체는 삭제하지 않음 */
+ const rows=[...open,...valid.filter(x=>x.done).slice(0,10)];
  body.innerHTML=rows.length?rows.map(x=>`<tr class="${x.done?'later-done':''}">
  <td>${x.done?'✅ 완료':'📌 확인필요'}</td><td><b>${esc(x.part||'-')}</b></td><td>${esc(x.name||'-')}</td><td>${esc(x.location||'-')}</td>
  <td class="later-reason">${esc(x.reason||'')}</td><td>${esc(x.memo||'-')}</td><td>${esc(x.writer||'-')}</td>
