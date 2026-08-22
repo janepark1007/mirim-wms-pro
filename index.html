@@ -10555,4 +10555,182 @@ body.admin-view.admin-reference-home #adminReferenceHome .ar-footer{
 })();
 </script>
 
+
+<style id="full-width-location-and-hide-confirmed-v47">
+/* =========================================================
+   1) 기존 위치 정리·수정 화면: 전체 폭 사용
+   ========================================================= */
+body.admin-shortcut-focus #adminShortcutFocusPanel,
+body.admin-task-focus #adminTaskFocusPanel{
+  width:calc(100% - 12px)!important;
+  max-width:none!important;
+  margin:0 auto!important;
+  padding-left:6px!important;
+  padding-right:6px!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-shortcut-focus #adminShortcutFocusContent,
+body.admin-task-focus #adminTaskFocusContent{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-shortcut-focus #locationOrganizerCard,
+body.admin-task-focus #locationOrganizerCard{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  padding:12px 10px!important;
+}
+
+/* 위치관리 표/리스트는 카드 안에서 가로 스크롤 */
+body.admin-shortcut-focus #locationOrganizerCard .table-wrap,
+body.admin-shortcut-focus #locationOrganizerCard .location-table-wrap,
+body.admin-shortcut-focus #locationOrganizerCard > div,
+body.admin-task-focus #locationOrganizerCard .table-wrap,
+body.admin-task-focus #locationOrganizerCard .location-table-wrap{
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-shortcut-focus #locationOrganizerCard table,
+body.admin-task-focus #locationOrganizerCard table{
+  width:100%!important;
+  min-width:1680px!important;
+  table-layout:auto!important;
+}
+
+body.admin-shortcut-focus #locationOrganizerCard,
+body.admin-task-focus #locationOrganizerCard{
+  overflow-x:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+
+body.admin-shortcut-focus #locationOrganizerCard th,
+body.admin-shortcut-focus #locationOrganizerCard td,
+body.admin-task-focus #locationOrganizerCard th,
+body.admin-task-focus #locationOrganizerCard td{
+  font-size:11px!important;
+  line-height:1.25!important;
+  padding:6px 5px!important;
+  vertical-align:middle!important;
+}
+
+/* 검색/필터 상단도 한 화면에 최대한 맞춤 */
+body.admin-shortcut-focus #locationOrganizerCard select,
+body.admin-shortcut-focus #locationOrganizerCard input,
+body.admin-shortcut-focus #locationOrganizerCard button,
+body.admin-task-focus #locationOrganizerCard select,
+body.admin-task-focus #locationOrganizerCard input,
+body.admin-task-focus #locationOrganizerCard button{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* =========================================================
+   2) 주문요청-입고 자동대조: 확인완료 전부 강제 숨김
+   ========================================================= */
+#adminMainOrderMatchCard tbody tr.v47-confirmed-hidden,
+#orderInboundMatchCard tbody tr.v47-confirmed-hidden{
+  display:none!important;
+}
+
+@media(max-width:760px){
+  body.admin-shortcut-focus #adminShortcutFocusPanel,
+  body.admin-task-focus #adminTaskFocusPanel{
+    width:100%!important;
+    padding:6px 8px 80px!important;
+  }
+
+  body.admin-shortcut-focus #locationOrganizerCard,
+  body.admin-task-focus #locationOrganizerCard{
+    padding:10px 7px!important;
+  }
+
+  body.admin-shortcut-focus #locationOrganizerCard table,
+  body.admin-task-focus #locationOrganizerCard table{
+    min-width:1500px!important;
+  }
+}
+</style>
+
+<script id="force-hide-confirmed-v47">
+(function(){
+  function norm(v){
+    return String(v||'').replace(/\s+/g,' ').trim();
+  }
+
+  function rowIsConfirmed(tr){
+    const t=norm(tr?.innerText);
+
+    /* 화면에 찍히는 모든 완료 표현 */
+    if(
+      t.includes('자재확인 완료') ||
+      t.includes('본인확인 완료') ||
+      t.includes('본인 확인완료') ||
+      t.includes('본인확인완료') ||
+      t.includes('수령확인 완료')
+    ) return true;
+
+    /* 상태 셀 기준 보조 판정 */
+    const receiptCell=[...tr.querySelectorAll('td')].find(td=>{
+      const x=norm(td.innerText);
+      return x.includes('자재확인') || x.includes('본인확인') || x.includes('수령확인');
+    });
+    if(receiptCell){
+      const x=norm(receiptCell.innerText);
+      if(x.includes('완료') && !x.includes('미확인')) return true;
+    }
+
+    return false;
+  }
+
+  function hideConfirmedRowsV47(){
+    [
+      document.getElementById('adminMainOrderMatchCard'),
+      document.getElementById('orderInboundMatchCard')
+    ].filter(Boolean).forEach(card=>{
+      card.querySelectorAll('tbody tr').forEach(tr=>{
+        if(rowIsConfirmed(tr)){
+          tr.classList.add('v47-confirmed-hidden');
+        }else{
+          tr.classList.remove('v47-confirmed-hidden');
+        }
+      });
+    });
+  }
+
+  function hideConfirmedImmediatelyV47(){
+    hideConfirmedRowsV47();
+
+    /* 카운트/배지 중 '확인완료' 수가 있더라도 목록에서는 보이지 않음을 명확히 */
+    const card=document.getElementById('adminMainOrderMatchCard');
+    if(card){
+      const body=card.querySelector('tbody');
+      if(body){
+        const visible=[...body.querySelectorAll('tr')].filter(tr=>!tr.classList.contains('v47-confirmed-hidden'));
+        body.dataset.visibleRows=String(visible.length);
+      }
+    }
+  }
+
+  window.addEventListener('load',()=>setTimeout(hideConfirmedImmediatelyV47,800));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(hideConfirmedImmediatelyV47,800));
+
+  const observer=new MutationObserver(()=>{
+    clearTimeout(window.__v47hideTimer);
+    window.__v47hideTimer=setTimeout(hideConfirmedImmediatelyV47,40);
+  });
+  observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+
+  document.addEventListener('click',()=>setTimeout(hideConfirmedImmediatelyV47,250));
+})();
+</script>
+
 </body></html>
