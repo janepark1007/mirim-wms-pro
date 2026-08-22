@@ -988,6 +988,10 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
   .admin-stat-strip>div:last-child{grid-column:1/-1!important;border-right:0!important;}
 }
 </style>
+<style id="admin2-mode-style">
+#admin2LoginBtn{border-color:#6f5bd3;color:#4f3db0;background:#f4f1ff}
+body.admin2-view #admin2LoginBtn{background:#4f3db0;color:#fff;border-color:#4f3db0}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1075,6 +1079,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
     <button id="loginLogBtn" class="admin-btn hidden">👤 로그인 이력</button>
     <button id="notifBtn" class="admin-btn hidden">🔔 <span class="desktop-only">알림 </span><span id="notifCount">0</span></button>
     <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
+    <button id="admin2LoginBtn" class="admin-btn" type="button">관리자 모드2</button>
     <button id="homeBtn" class="primary compact-home-btn">홈</button>
   </div>
 </header>
@@ -3184,6 +3189,7 @@ async function loadWorkerLoginLogs(){
  }
 }
 let isAdmin=false;
+let isAdmin2=false;
 /* 관리자/VIP는 자동복원하지 않고 매번 비밀번호 입력 */
 sessionStorage.removeItem('mirim_prod_admin');
 sessionStorage.removeItem('mirim_vip_ok');
@@ -3288,6 +3294,65 @@ async function adminLogin(){
  try{showAdminReferenceHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
  alert('✅ 관리자 로그인 완료');
 }
+
+/* 관리자 모드2 로그인 - ID mirin / 비밀번호 1006 */
+const MIRIM_ADMIN2_ID='mirin';
+const MIRIM_ADMIN2_PASSWORD_HASH='478c4ffb1cbcea37956a748e6c19d8eadd0a47e86f5e308d26cad39453b5d1ab';
+
+async function admin2Login(){
+  if(isAdmin2){
+    isAdmin2=false;
+    isAdmin=false;
+    sessionStorage.removeItem('mirim_prod_admin2');
+    sessionStorage.removeItem('mirim_prod_admin');
+    document.body.classList.remove('admin2-view','admin-view','admin-reference-home','admin-task-focus','admin-shortcut-focus','admin-quick-io');
+    try{updateAdminUI();}catch(e){}
+    try{updateWorkerUI();}catch(e){}
+    alert('관리자 모드2에서 로그아웃했습니다.');
+    return;
+  }
+  const id=prompt('관리자 모드2 아이디를 입력하세요.');
+  if(id===null)return;
+  const pw=prompt('관리자 모드2 비밀번호를 입력하세요.');
+  if(pw===null)return;
+  if(String(id).trim()!==MIRIM_ADMIN2_ID || await sha256Text(String(pw).trim())!==MIRIM_ADMIN2_PASSWORD_HASH){
+    alert('관리자 모드2 아이디 또는 비밀번호가 맞지 않습니다.');
+    return;
+  }
+  isAdmin2=true;
+  isAdmin=true; // 기존 관리자 기능을 그대로 사용할 수 있게 연결
+  sessionStorage.setItem('mirim_prod_admin2','1');
+  sessionStorage.setItem('mirim_prod_admin','1');
+  currentWorker=null;
+  sessionStorage.removeItem('mirim_worker_session');
+  document.body.classList.remove('worker-locked','admin-task-focus','admin-shortcut-focus','admin-quick-io');
+  document.body.classList.add('admin2-view');
+  $('workerLoginPanel')?.classList.add('hidden');
+  try{updateAdminUI();}catch(e){}
+  try{updateHomeSummary();}catch(e){}
+  try{showAdminReferenceHome();}catch(e){console.warn(e);}
+  const rp=$('roleModePill'); if(rp)rp.textContent='관리자 모드2';
+  const wt=$('welcomeTitle'); if(wt)wt.textContent='안녕하세요, 관리자 모드2님!';
+  const b=$('admin2LoginBtn'); if(b)b.textContent='관리자2 로그아웃';
+  alert('✅ 관리자 모드2 로그인 완료');
+}
+
+(function initAdmin2(){
+  const btn=document.getElementById('admin2LoginBtn');
+  if(btn)btn.onclick=admin2Login;
+  if(sessionStorage.getItem('mirim_prod_admin2')==='1'){
+    isAdmin2=true;
+    isAdmin=true;
+    document.body.classList.add('admin2-view');
+    setTimeout(()=>{
+      try{updateAdminUI();showAdminReferenceHome();}catch(e){}
+      const rp=$('roleModePill'); if(rp)rp.textContent='관리자 모드2';
+      const wt=$('welcomeTitle'); if(wt)wt.textContent='안녕하세요, 관리자 모드2님!';
+      const b=$('admin2LoginBtn'); if(b)b.textContent='관리자2 로그아웃';
+    },0);
+  }
+})();
+
 // 관리자 상태 선언이 완료된 뒤 UI 초기화
 updateAdminUI();
 
