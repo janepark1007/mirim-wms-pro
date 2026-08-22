@@ -14659,4 +14659,84 @@ body.admin2-view #admin2LoginBtn,body.admin2-view #homeBtn{display:inline-flex!i
   new MutationObserver(()=>{clearTimeout(window.__a2v40);window.__a2v40=setTimeout(enforce,30)}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+<!-- STEP45: 관리자1 완전 제거 / 관리자2 새출발 - ERP 데이터 + 위치정리만 유지 -->
+<style id="step45-admin-reset">
+/* 관리자1 진입점 완전 제거 */
+#adminLoginBtn{display:none!important}
+/* 관리자2 메인은 전용 2개 기능만 */
+body.admin2-view main>*{display:none!important}
+body.admin2-view #admin2FreshHome{display:block!important}
+#admin2FreshHome{display:none;width:100%;max-width:none;margin:0;padding:24px;min-height:calc(100vh - 84px);background:#f6f8fb;box-sizing:border-box}
+.admin2fresh-head{padding:26px 28px;border-radius:20px;background:#17324d;color:#fff;box-shadow:0 10px 24px rgba(20,40,65,.12)}
+.admin2fresh-head h2{margin:0;font-size:30px;color:#fff}.admin2fresh-head p{margin:8px 0 0;color:#dce8f3;font-weight:700}
+.admin2fresh-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.admin2fresh-card{min-height:220px;border:0;border-radius:22px;padding:28px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 8px 22px rgba(30,50,75,.10);box-sizing:border-box}
+button.admin2fresh-card{cursor:pointer}.admin2fresh-card .ico{font-size:44px}.admin2fresh-card .title{font-size:25px;font-weight:900}.admin2fresh-card small{font-size:14px;font-weight:800;opacity:.72}
+.admin2fresh-card.erp{background:#17324d;color:#fff}.admin2fresh-card.erp b{font-size:44px;color:#fff}.admin2fresh-card.loc{background:#e6efff;color:#17324d}
+/* 위치정리 화면을 연 동안 관리자2 홈은 숨기고 해당 위치정리 카드만 허용 */
+body.admin2-location-mode #admin2FreshHome{display:none!important}
+body.admin2-location-mode main>*{display:none!important}
+body.admin2-location-mode #locationOrganizerCard{display:block!important}
+body.admin2-location-mode #work:not(.hidden){display:block!important}
+body.admin2-location-mode #admin2LocationBack{display:block!important}
+#admin2LocationBack{display:none;position:sticky;top:8px;z-index:9999;margin:10px 0;padding:12px 18px;border:0;border-radius:12px;background:#17324d;color:#fff;font-weight:900;cursor:pointer}
+@media(max-width:760px){#admin2FreshHome{padding:12px}.admin2fresh-grid{grid-template-columns:1fr}.admin2fresh-card{min-height:160px;padding:20px}.admin2fresh-head h2{font-size:24px}}
+</style>
+<script id="step45-admin-reset-js">
+(function(){
+  function erpTotal(){
+    try{return Array.isArray(window.ITEMS)?window.ITEMS.length:(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS)?ITEMS.length:0)}catch(e){return 0}
+  }
+  function hardRemoveAdmin1(){
+    const b=document.getElementById('adminLoginBtn'); if(b)b.remove();
+    /* 관리자1 세션/상태가 남아 있어도 관리자2 새 화면에는 끌고 오지 않음 */
+    if(document.body.classList.contains('admin2-view')){
+      document.body.classList.remove('admin-view','admin-reference-home','admin-task-focus','admin-shortcut-focus','admin-quick-io');
+    }
+  }
+  function ensureFreshHome(){
+    let root=document.getElementById('admin2FreshHome');
+    if(!root){
+      root=document.createElement('section');root.id='admin2FreshHome';
+      const main=document.querySelector('main'); if(main)main.insertBefore(root,main.firstChild||null);
+    }
+    root.innerHTML=`<div class="admin2fresh-head"><h2>관리자 모드2 · 새 자재관리</h2><p>ERP 등록자료와 위치 정리만 유지하고 새롭게 시작합니다.</p></div>
+      <div class="admin2fresh-grid">
+        <div class="admin2fresh-card erp"><span class="ico">🗄️</span><span class="title">ERP 품목</span><b id="admin2FreshErpCount">0개</b><small>기존 등록 ERP 품목 데이터 유지</small></div>
+        <button type="button" class="admin2fresh-card loc" id="admin2FreshLocationBtn"><span class="ico">🧹</span><span class="title">위치 정리</span><small>기존 위치 등록 · 수정 데이터 유지</small></button>
+      </div>`;
+    const c=root.querySelector('#admin2FreshErpCount');if(c)c.textContent=erpTotal().toLocaleString()+'개';
+    const btn=root.querySelector('#admin2FreshLocationBtn');if(btn)btn.onclick=openLocationOnly;
+    return root;
+  }
+  function showFreshHome(){
+    if(!document.body.classList.contains('admin2-view'))return;
+    document.body.classList.remove('admin2-location-mode');
+    hardRemoveAdmin1();ensureFreshHome();
+    const rp=document.getElementById('roleModePill');if(rp)rp.textContent='관리자 모드2';
+  }
+  function openLocationOnly(){
+    document.body.classList.add('admin2-location-mode');
+    try{
+      if(typeof openExistingAdminSection==='function')openExistingAdminSection('location');
+      else if(typeof openAdminShortcutListV41==='function')openAdminShortcutListV41('location');
+      else {const c=document.getElementById('locationOrganizerCard');if(c)c.classList.remove('hidden')}
+      if(typeof loadLocationOrganizer==='function')loadLocationOrganizer();
+    }catch(e){console.error(e);alert('위치 정리 화면을 열지 못했습니다.');document.body.classList.remove('admin2-location-mode');return}
+    let back=document.getElementById('admin2LocationBack');
+    if(!back){back=document.createElement('button');back.id='admin2LocationBack';back.type='button';back.textContent='← 관리자 모드2 메인';back.onclick=showFreshHome;const main=document.querySelector('main');if(main)main.insertBefore(back,main.firstChild||null)}
+  }
+  /* 관리자1 로그인 함수도 진입 차단 */
+  window.adminLogin=function(){alert('관리자 모드1은 삭제되었습니다. 관리자 모드2를 사용해 주세요.')};
+  window.showAdmin2FreshHome=showFreshHome;
+  document.addEventListener('click',function(e){
+    if(document.body.classList.contains('admin2-view') && e.target.closest('#homeBtn')){e.preventDefault();e.stopImmediatePropagation();showFreshHome()}
+  },true);
+  const obs=new MutationObserver(()=>{if(document.getElementById('adminLoginBtn'))hardRemoveAdmin1()});
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+  window.addEventListener('load',()=>{hardRemoveAdmin1();if(sessionStorage.getItem('mirim_prod_admin2')==='1')setTimeout(showFreshHome,80)});
+  setTimeout(()=>{hardRemoveAdmin1();if(document.body.classList.contains('admin2-view'))showFreshHome()},0);
+})();
+</script>
 </body></html>
