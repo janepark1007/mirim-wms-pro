@@ -4310,14 +4310,20 @@ async function adminConfirmOrderReceivedQty(id){
  };
 
  try{
-   // 입고 이력으로 기록
-   await sharedAddMovement('IN',item,qty,currentWorker?.name||'관리자');
+   // 오늘 입고에서 이미 이 주문에 배분된 수량은 다시 입고이력에 추가하지 않는다.
+   const alreadyMatched=orderInboundMatchedQty(r.note);
+   const addOnly=Math.max(0,qty-alreadyMatched);
 
-   // 관리자가 이미 확정한 실물수량이 있는 경우에만 확정재고에 가산
+   if(addOnly>0){
+     await sharedAddMovement('IN',item,addOnly,currentWorker?.name||'관리자');
+     // 이 주문 자체에 부족분을 바로 반영
+     r.note=setOrderInboundMatchedQty(r.note,alreadyMatched+addOnly);
+   }
+
    const vm=getVerifiedStockMap();
    const k=String(r.part_no||'');
-   if(vm[k]&&vm[k].confirmed){
-     vm[k].qty=Number(vm[k].qty||0)+qty;
+   if(addOnly>0 && vm[k]&&vm[k].confirmed){
+     vm[k].qty=Number(vm[k].qty||0)+addOnly;
      vm[k].confirmed_at=new Date().toISOString();
      vm[k].confirmed_by=currentWorker?.name||'관리자';
      localStorage.setItem(VERIFIED_STOCK_KEY,JSON.stringify(vm));
@@ -4337,9 +4343,14 @@ async function adminConfirmOrderReceivedQty(id){
    await refreshSharedHistories();
    await loadTodayOrderRequests();
    if(typeof loadFiveDayOrders==='function')await loadFiveDayOrders();
+   if(typeof loadOrderInboundMatchDashboard==='function')await loadOrderInboundMatchDashboard();
    updateHomeSummary();
 
-   alert('✅ 관리자 입고확정 완료\n입고확인수량 '+qty.toLocaleString()+'개가 입고 이력에 추가되었습니다.');
+   const duplicateSaved=alreadyMatched>0
+     ? `\n♻️ 오늘 입고에 이미 기록된 ${Math.min(qty,alreadyMatched).toLocaleString()}개는 중복 입고하지 않았습니다.`
+     : '';
+   const extraAdded=addOnly>0?`\n추가입고 이력 ${addOnly.toLocaleString()}개 기록`:'';
+   alert('✅ 관리자 입고확정 완료\n최종 확인수량 '+qty.toLocaleString()+'개'+duplicateSaved+extraAdded);
  }catch(e){
    console.error(e);
    alert('관리자 입고확정 실패: '+(e.message||e));
@@ -4353,6 +4364,8 @@ function workerOrderState(status){
  if(s==='입고완료')return {label:'입고확정',cls:'worker-order-received'};
  if(s==='수령승인대기')return {label:'관리자 승인대기',cls:'worker-order-pending'};
  if(s==='수령확인')return {label:'수량확인 완료',cls:'worker-order-selfreceived'};
+ if(s==='입고대조완료')return {label:'입고대조 완료',cls:'worker-order-received'};
+ if(s==='부분입고')return {label:'부분입고',cls:'worker-order-pending'};
  if(s==='미입고')return {label:'미입고',cls:'worker-order-pending'};
  return {label:'요청중',cls:'worker-order-request'};
 }
@@ -4717,6 +4730,81 @@ function returnKey(){return 'mirim_prod_return_'+new Date().toISOString().slice(
 function getReturnHist(){return JSON.parse(localStorage.getItem(returnKey())||'[]')}
 function setReturnHist(a){localStorage.setItem(returnKey(),JSON.stringify(a))}
 
+
+function orderInboundMatchedQty(note){
+ const m=String(note||'').match(/\[입고대조누계:([0-9.]+)\]/);
+ return m?Number(m[1]||0):0;
+}
+function setOrderInboundMatchedQty(note,qty){
+ const base=String(note||'').replace(/\[입고대조누계:[^\]]*\]\s*/g,'').trim();
+ const stamp=`[입고대조누계:${Number(qty||0)}]`;
+ return (base?base+'\n':'')+stamp;
+}
+function normalizeOrderMatchText(v){
+ return String(v||'').trim().toLowerCase().replace(/\s+/g,' ');
+}
+function orderMatchKeyFromData(part,name){
+ const p=normalizeOrderMatchText(part);
+ if(p && !['기타','기타주문','미등록','-'].includes(p))return 'P:'+p;
+ const n=normalizeOrderMatchText(name);
+ return n?'N:'+n:'';
+}
+function isRealMaterialOrderRow(r){
+ if(!r)return false;
+ if(['문의중','문의완료'].includes(String(r.status||'')))return false;
+ if(Number(r.request_qty||0)<=0)return false;
+ const t=(typeof orderInquiryType==='function')?orderInquiryType(r.note):'자재 주문요청';
+ return t==='자재 주문요청' || !String(r.note||'').includes('[문의종류:');
+}
+
+/* 오늘 입고 1건을 미완료 주문에 FIFO 배분.
+   품번 완전일치 우선, 품번이 없는 기타주문만 품명 완전일치 사용. */
+async function allocateInboundToOpenOrders(item,inQty,worker){
+ if(!sharedReady||!sharedDb||!inQty||inQty<=0)return {allocated:0,remaining:inQty,matches:[]};
+ const key=orderMatchKeyFromData(item?.part,item?.name);
+ if(!key)return {allocated:0,remaining:inQty,matches:[]};
+
+ const {data,error}=await sharedDb.from('production_order_requests')
+   .select('*')
+   .order('created_at',{ascending:true})
+   .limit(1500);
+ if(error)throw error;
+
+ const candidates=(data||[]).filter(r=>{
+   if(!isRealMaterialOrderRow(r))return false;
+   if(['입고완료','문의완료'].includes(String(r.status||'')))return false;
+   return orderMatchKeyFromData(r.part_no,r.item_name)===key;
+ });
+
+ let left=Number(inQty||0),allocated=0;
+ const matches=[];
+ for(const r of candidates){
+   if(left<=0)break;
+   const requested=Number(r.request_qty||0);
+   const already=orderInboundMatchedQty(r.note);
+   const need=Math.max(0,requested-already);
+   if(need<=0)continue;
+   const use=Math.min(need,left);
+   const newMatched=already+use;
+   const newStatus=newMatched>=requested?'입고대조완료':'부분입고';
+   const matchStamp=`[입고대조최근:${new Date().toLocaleString('ko-KR')} / ${worker||''} / +${use}]`;
+   let newNote=setOrderInboundMatchedQty(r.note,newMatched)
+      .replace(/\[입고대조최근:[^\]]*\]\s*/g,'').trim();
+   newNote+=(newNote?'\n':'')+matchStamp;
+   const {error:upErr}=await sharedDb.from('production_order_requests')
+     .update({status:newStatus,note:newNote}).eq('id',r.id);
+   if(upErr)throw upErr;
+   matches.push({
+     id:r.id,part:r.part_no||'',name:r.item_name||'',requester:r.requester||'',
+     requested,previous:already,added:use,matched:newMatched,
+     remain:Math.max(0,requested-newMatched),status:newStatus
+   });
+   allocated+=use; left-=use;
+ }
+ return {allocated,remaining:left,matches};
+}
+
+let lastInboundOrderMatchResult=null;
 async function saveIn(x,i){
  if(!currentWorker && !isAdmin){alert('입고 저장 전 작업자 로그인이 필요합니다.');return;}
  const worker=(currentWorker?.name)||$('in_worker_'+i)?.value.trim()||'관리자';
@@ -4727,7 +4815,10 @@ async function saveIn(x,i){
  try{
    if(sharedReady){
      await sharedAddMovement('IN',x,qty,worker);
+     lastInboundOrderMatchResult=await allocateInboundToOpenOrders(x,qty,worker);
      await refreshSharedHistories();
+     if(typeof loadTodayOrderRequests==='function')await loadTodayOrderRequests();
+     if(typeof loadOrderInboundMatchDashboard==='function')await loadOrderInboundMatchDashboard();
    }else{
      const a=getInHist();
      a.unshift({
@@ -4741,7 +4832,18 @@ async function saveIn(x,i){
    if(qtyEl) qtyEl.value='';
    updateHomeSummary();
    search();
-   alert(sharedReady?'✅ 관리자 승인 · 입고 입력 성공':'✅ 관리자 승인 · 이 기기에 입고 입력 성공');
+   if(sharedReady){
+     const mr=lastInboundOrderMatchResult||{allocated:0,remaining:qty,matches:[]};
+     const lines=['✅ 관리자 승인 · 입고 입력 성공'];
+     if(mr.matches.length){
+       lines.push('','🛒 주문요청 자동 대조');
+       mr.matches.forEach(m=>lines.push(`• ${m.part||m.name} · 요청 ${m.requested.toLocaleString()} / 누계입고 ${m.matched.toLocaleString()} / 남음 ${m.remain.toLocaleString()} · ${m.requester}`));
+       if(mr.remaining>0)lines.push(`• 주문요청에 배분되지 않은 입고수량 ${Number(mr.remaining).toLocaleString()}개`);
+     }else{
+       lines.push('','ℹ️ 일치하는 미완료 주문요청이 없습니다.');
+     }
+     alert(lines.join('\n'));
+   }else alert('✅ 관리자 승인 · 이 기기에 입고 입력 성공');
  }catch(err){
    console.error(err);
    alert('입고 저장 실패: '+(err.message||err));
@@ -6604,5 +6706,124 @@ document.addEventListener('DOMContentLoaded',()=>{
  .worker-receive-check button,.admin-worker-receive button{width:100%!important}
 }
 </style>
+
+
+<style id="order-inbound-match-dashboard-v6">
+.order-match-card{border:2px solid #b8dec7!important;background:#fbfffc!important}
+.order-match-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.order-match-head h2{margin:0;font-size:21px}
+.order-match-guide{margin-top:5px;color:#607068;font-weight:800;font-size:13px}
+.order-match-summary{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.order-match-chip{padding:8px 11px;border-radius:10px;font-weight:1000;border:1px solid #d9e5de;background:#fff}
+.order-match-chip.wait{background:#fff0ed;color:#9a2f1c;border-color:#efc8c0}
+.order-match-chip.partial{background:#fff7d6;color:#765900;border-color:#ead58b}
+.order-match-chip.done{background:#e9f8ee;color:#126338;border-color:#bfe2cb}
+.order-match-table-wrap{overflow:auto;width:100%;max-width:100%}
+.order-match-table{width:100%;border-collapse:collapse;min-width:900px;font-size:13px}
+.order-match-table th,.order-match-table td{padding:9px 8px;border-bottom:1px solid #e4ebe7;text-align:left;vertical-align:middle}
+.order-match-table th{background:#f1f8f4;white-space:nowrap}
+.match-status{display:inline-block;padding:5px 8px;border-radius:999px;font-weight:1000;white-space:nowrap}
+.match-zero{background:#ffe1dc;color:#9a2f1c}.match-partial{background:#fff0b8;color:#725600}.match-done{background:#dff4e5;color:#17622a}.match-over{background:#e8e5ff;color:#553d9a}
+.match-progress{height:8px;background:#e6ece8;border-radius:8px;overflow:hidden;margin-top:5px;min-width:100px}.match-progress span{display:block;height:100%;background:#159052}
+.order-match-refresh{min-height:38px;border:1px solid #bdd8c8;background:#fff;color:#17613a;border-radius:9px;padding:0 12px;font-weight:900}
+@media(max-width:760px){
+ .order-match-card{padding:12px 8px!important}
+ .order-match-head h2{font-size:19px}
+ .order-match-table{min-width:760px}
+ .order-match-table th,.order-match-table td{font-size:12px;padding:8px 6px}
+}
+</style>
+<script>
+let orderInboundDashboardRows=[];
+
+function ensureOrderInboundMatchCard(){
+ if(document.getElementById('orderInboundMatchCard'))return;
+ const host=document.getElementById('todayOrderCard');
+ if(!host)return;
+ const sec=document.createElement('section');
+ sec.id='orderInboundMatchCard';
+ sec.className='card order-match-card';
+ sec.innerHTML=`
+   <div class="order-match-head">
+     <div>
+       <h2>📦 주문요청 ↔ 입고 자동대조</h2>
+       <div class="order-match-guide">같은 품번은 오래된 주문부터 자동 배분 · 품번 없는 기타주문만 품명 완전일치 · 한 입고수량은 한 번만 배분됩니다.</div>
+     </div>
+     <button type="button" class="order-match-refresh" onclick="loadOrderInboundMatchDashboard()">↻ 새로고침</button>
+   </div>
+   <div id="orderInboundMatchSummary" class="order-match-summary"></div>
+   <div class="order-match-table-wrap">
+     <table class="order-match-table">
+       <thead><tr>
+         <th>상태</th><th>주문일</th><th>품번</th><th>품명</th><th>요청자</th>
+         <th>주문수량</th><th>입고대조 누계</th><th>남은수량</th><th>진행률</th>
+       </tr></thead>
+       <tbody id="orderInboundMatchBody"><tr><td colspan="9">불러오는 중...</td></tr></tbody>
+     </table>
+   </div>`;
+ host.insertAdjacentElement('afterend',sec);
+}
+
+async function loadOrderInboundMatchDashboard(){
+ ensureOrderInboundMatchCard();
+ const body=document.getElementById('orderInboundMatchBody');
+ const summary=document.getElementById('orderInboundMatchSummary');
+ if(!body||!summary)return;
+ if(!sharedReady||!sharedDb){
+   body.innerHTML='<tr><td colspan="9">공용 동기화 연결 후 주문·입고 대조가 표시됩니다.</td></tr>';
+   return;
+ }
+ try{
+   const {data,error}=await sharedDb.from('production_order_requests')
+      .select('*').order('created_at',{ascending:false}).limit(1000);
+   if(error)throw error;
+   const rows=(data||[]).filter(r=>{
+      if(!isRealMaterialOrderRow(r))return false;
+      return !['입고완료','문의완료'].includes(String(r.status||''));
+   }).map(r=>{
+      const req=Number(r.request_qty||0);
+      const matched=orderInboundMatchedQty(r.note);
+      const remain=Math.max(0,req-matched);
+      const pct=req>0?Math.min(100,Math.round(matched/req*100)):0;
+      const state=matched<=0?'미입고':matched<req?'부분입고':matched===req?'완전입고':'초과입고';
+      return {...r,_req:req,_matched:matched,_remain:remain,_pct:pct,_state:state};
+   });
+
+   orderInboundDashboardRows=rows;
+   const zero=rows.filter(x=>x._state==='미입고').length;
+   const partial=rows.filter(x=>x._state==='부분입고').length;
+   const done=rows.filter(x=>['완전입고','초과입고'].includes(x._state)).length;
+   summary.innerHTML=`
+      <span class="order-match-chip">미완료 주문 <b>${rows.length}</b>건</span>
+      <span class="order-match-chip wait">미입고 <b>${zero}</b>건</span>
+      <span class="order-match-chip partial">부분입고 <b>${partial}</b>건</span>
+      <span class="order-match-chip done">입고대조 완료 <b>${done}</b>건</span>`;
+
+   body.innerHTML=rows.length?rows.map(r=>{
+      const cls=r._state==='미입고'?'match-zero':r._state==='부분입고'?'match-partial':r._state==='초과입고'?'match-over':'match-done';
+      const date=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}):'';
+      return `<tr>
+        <td><span class="match-status ${cls}">${r._state}</span></td>
+        <td>${esc(date)}</td>
+        <td><b>${esc(r.part_no||'기타')}</b></td>
+        <td>${esc(r.item_name||'')}</td>
+        <td>${esc(r.requester||'')}</td>
+        <td><b>${r._req.toLocaleString()}</b></td>
+        <td><b>${r._matched.toLocaleString()}</b></td>
+        <td><b>${r._remain.toLocaleString()}</b></td>
+        <td>${r._pct}%<div class="match-progress"><span style="width:${r._pct}%"></span></div></td>
+      </tr>`;
+   }).join(''):'<tr><td colspan="9">현재 대조할 미완료 주문요청이 없습니다.</td></tr>';
+ }catch(e){
+   console.warn('주문입고 대조 실패',e);
+   body.innerHTML='<tr><td colspan="9">주문·입고 대조를 불러오지 못했습니다.</td></tr>';
+ }
+}
+
+window.addEventListener('load',()=>{
+ setTimeout(()=>{ensureOrderInboundMatchCard();loadOrderInboundMatchDashboard();},1200);
+});
+setInterval(()=>{ if(document.visibilityState==='visible')loadOrderInboundMatchDashboard(); },60000);
+</script>
 
 </body></html>
