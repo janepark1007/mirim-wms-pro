@@ -7684,4 +7684,104 @@ window.addEventListener('load',()=>setTimeout(compactAdminGreenSummary,1700));
 window.addEventListener('resize',()=>{if(window.innerWidth>760)setTimeout(compactAdminGreenSummary,100)});
 </script>
 
+
+<style id="admin-shortcut-center-v18">
+/* 관리자 바로가기 전체 박스 중앙정렬 */
+body.admin-view #adminWelcomeShortcutBox{
+  width:min(1180px,calc(100% - 40px))!important;
+  margin:16px auto 18px!important;
+  padding:14px 16px!important;
+  border-radius:16px!important;
+  box-sizing:border-box!important;
+  background:rgba(255,255,255,.10)!important;
+}
+
+/* 제목 중앙 */
+body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-title{
+  text-align:center!important;
+  font-size:18px!important;
+  margin-bottom:12px!important;
+}
+
+/* PC: 5개씩 2줄 */
+body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-grid{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:10px!important;
+  width:100%!important;
+}
+
+/* 버튼 균형 */
+body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-btn{
+  width:100%!important;
+  min-width:0!important;
+  min-height:84px!important;
+  padding:10px 8px!important;
+  border-radius:13px!important;
+  text-align:center!important;
+  white-space:normal!important;
+  word-break:keep-all!important;
+  line-height:1.25!important;
+}
+
+body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-btn .ico{
+  font-size:24px!important;
+  line-height:1!important;
+}
+
+body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-btn span:not(.ico){
+  font-size:14px!important;
+  font-weight:1000!important;
+}
+
+/* 초록 현황판 안에서 왼쪽으로 붙지 않도록 */
+body.admin-view .admin-compact-green-summary{
+  align-items:start!important;
+}
+body.admin-view .admin-compact-green-summary #adminWelcomeShortcutBox{
+  grid-column:1/-1!important;
+  justify-self:center!important;
+}
+
+/* 태블릿 */
+@media(max-width:1100px){
+  body.admin-view #adminWelcomeShortcutBox{
+    width:min(900px,calc(100% - 24px))!important;
+  }
+  body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+
+/* 모바일 */
+@media(max-width:650px){
+  body.admin-view #adminWelcomeShortcutBox{
+    width:calc(100% - 16px)!important;
+    margin:10px auto!important;
+    padding:10px!important;
+  }
+  body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-btn{
+    min-height:76px!important;
+    font-size:12px!important;
+  }
+}
+</style>
+
+<script>
+function recenterAdminShortcut(){
+  if(!isAdmin)return;
+  const box=document.getElementById('adminWelcomeShortcutBox');
+  if(!box)return;
+  box.style.setProperty('margin-left','auto','important');
+  box.style.setProperty('margin-right','auto','important');
+  box.style.setProperty('justify-self','center','important');
+}
+window.addEventListener('load',()=>setTimeout(recenterAdminShortcut,1800));
+window.addEventListener('resize',()=>setTimeout(recenterAdminShortcut,100));
+</script>
+
 </body></html>
