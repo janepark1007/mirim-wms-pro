@@ -4714,6 +4714,75 @@ body.admin-view.admin-task-focus main > #adminTaskFocusPanel{
 }
 </style>
 
+
+<style id="admin-stat-strip-force-flex-v36">
+/* STEP36: 관리자 현황 6개 항목을 실제로 한 줄 가로 고정 */
+body.admin-view .admin-stat-strip{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  height:auto!important;
+  padding:8px!important;
+  margin:10px 0 15px!important;
+  overflow-x:auto!important;
+  box-sizing:border-box!important;
+}
+body.admin-view .admin-stat-strip>div{
+  flex:1 1 0!important;
+  width:0!important;
+  min-width:120px!important;
+  max-width:none!important;
+  grid-column:auto!important;
+  grid-row:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:74px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:8px 10px!important;
+  border-right:1px solid rgba(255,255,255,.22)!important;
+  box-sizing:border-box!important;
+}
+body.admin-view .admin-stat-strip>div:last-child{border-right:0!important;}
+body.admin-view .admin-stat-strip>div small{white-space:nowrap!important;}
+body.admin-view .admin-stat-strip>div b{white-space:nowrap!important;}
+@media(max-width:760px){
+  body.admin-view .admin-stat-strip{overflow-x:auto!important;}
+  body.admin-view .admin-stat-strip>div{flex:0 0 130px!important;width:130px!important;min-width:130px!important;}
+}
+</style>
+<script id="admin-stat-strip-force-flex-v36-js">
+(function(){
+  function forceAdminStatsHorizontalV36(){
+    if(!(window.isAdmin || document.body.classList.contains('admin-view')))return;
+    const strip=document.querySelector('.admin-stat-strip');
+    if(!strip)return;
+    strip.style.setProperty('display','flex','important');
+    strip.style.setProperty('flex-direction','row','important');
+    strip.style.setProperty('flex-wrap','nowrap','important');
+    strip.querySelectorAll(':scope > div').forEach((cell)=>{
+      cell.style.setProperty('flex','1 1 0','important');
+      cell.style.setProperty('width','0','important');
+      cell.style.setProperty('grid-column','auto','important');
+      cell.style.setProperty('grid-row','auto','important');
+    });
+    try{if(typeof updateAdminInputItemCountV35==='function')updateAdminInputItemCountV35();}catch(e){}
+  }
+  window.addEventListener('load',()=>setTimeout(forceAdminStatsHorizontalV36,300));
+  document.addEventListener('click',()=>setTimeout(forceAdminStatsHorizontalV36,20),true);
+  new MutationObserver(()=>{
+    if(document.body.classList.contains('admin-view'))forceAdminStatsHorizontalV36();
+  }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+})();
+</script>
+
 </body></html>`);
      w.document.close();
    }
@@ -14581,4 +14650,73 @@ function updateAdminInputItemCountV35(){
 window.addEventListener('load',()=>setTimeout(updateAdminInputItemCountV35,1800));
 setInterval(()=>{if(window.isAdmin)updateAdminInputItemCountV35();},10000);
 </script>
+
+<style id="admin-stat-strip-force-flex-v36">
+/* STEP36: 관리자 현황 6개 항목을 실제로 한 줄 가로 고정 */
+body.admin-view .admin-stat-strip{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  height:auto!important;
+  padding:8px!important;
+  margin:10px 0 15px!important;
+  overflow-x:auto!important;
+  box-sizing:border-box!important;
+}
+body.admin-view .admin-stat-strip>div{
+  flex:1 1 0!important;
+  width:0!important;
+  min-width:120px!important;
+  max-width:none!important;
+  grid-column:auto!important;
+  grid-row:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:74px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:8px 10px!important;
+  border-right:1px solid rgba(255,255,255,.22)!important;
+  box-sizing:border-box!important;
+}
+body.admin-view .admin-stat-strip>div:last-child{border-right:0!important;}
+body.admin-view .admin-stat-strip>div small{white-space:nowrap!important;}
+body.admin-view .admin-stat-strip>div b{white-space:nowrap!important;}
+@media(max-width:760px){
+  body.admin-view .admin-stat-strip{overflow-x:auto!important;}
+  body.admin-view .admin-stat-strip>div{flex:0 0 130px!important;width:130px!important;min-width:130px!important;}
+}
+</style>
+<script id="admin-stat-strip-force-flex-v36-js">
+(function(){
+  function forceAdminStatsHorizontalV36(){
+    if(!(window.isAdmin || document.body.classList.contains('admin-view')))return;
+    const strip=document.querySelector('.admin-stat-strip');
+    if(!strip)return;
+    strip.style.setProperty('display','flex','important');
+    strip.style.setProperty('flex-direction','row','important');
+    strip.style.setProperty('flex-wrap','nowrap','important');
+    strip.querySelectorAll(':scope > div').forEach((cell)=>{
+      cell.style.setProperty('flex','1 1 0','important');
+      cell.style.setProperty('width','0','important');
+      cell.style.setProperty('grid-column','auto','important');
+      cell.style.setProperty('grid-row','auto','important');
+    });
+    try{if(typeof updateAdminInputItemCountV35==='function')updateAdminInputItemCountV35();}catch(e){}
+  }
+  window.addEventListener('load',()=>setTimeout(forceAdminStatsHorizontalV36,300));
+  document.addEventListener('click',()=>setTimeout(forceAdminStatsHorizontalV36,20),true);
+  new MutationObserver(()=>{
+    if(document.body.classList.contains('admin-view'))forceAdminStatsHorizontalV36();
+  }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+})();
+</script>
+
 </body></html>
