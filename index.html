@@ -1309,6 +1309,282 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
+
+<style id="mobile-orders-pcstyle-v56">
+@media(max-width:760px){
+  /* 모바일에서도 PC 표 모양 그대로 사용 */
+  #todayOrderCard{
+    width:100%!important;
+    max-width:100%!important;
+    padding:8px 6px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #todayOrderCard .order-table-wrap{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    border:1px solid #dfe7e2!important;
+    border-radius:8px!important;
+    background:#fff!important;
+  }
+
+  #todayOrderCard .order-table-wrap table{
+    display:table!important;
+    width:1720px!important;
+    min-width:1720px!important;
+    max-width:none!important;
+    table-layout:auto!important;
+    border-collapse:collapse!important;
+    margin:0!important;
+  }
+
+  #todayOrderCard thead{
+    display:table-header-group!important;
+  }
+
+  #todayOrderCard tbody{
+    display:table-row-group!important;
+  }
+
+  #todayOrderCard thead tr,
+  #todayOrderCard tbody tr,
+  #todayOrderCard tbody tr.mobile-order-expanded{
+    display:table-row!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    box-shadow:none!important;
+  }
+
+  #todayOrderCard th,
+  #todayOrderCard td,
+  #todayOrderCard tbody tr.mobile-order-expanded td{
+    display:table-cell!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:8px 7px!important;
+    border-right:0!important;
+    border-bottom:1px solid #e5ece8!important;
+    border-radius:0!important;
+    vertical-align:middle!important;
+    text-align:left!important;
+    font-size:12px!important;
+    line-height:1.3!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    word-break:keep-all!important;
+    box-sizing:border-box!important;
+  }
+
+  #todayOrderCard th{
+    position:sticky!important;
+    top:0!important;
+    z-index:5!important;
+    background:#fff!important;
+    font-weight:1000!important;
+    white-space:nowrap!important;
+    padding-top:7px!important;
+    padding-bottom:7px!important;
+  }
+
+  #todayOrderCard td::before{
+    content:none!important;
+    display:none!important;
+  }
+
+  /* PC 화면과 비슷한 열 폭 */
+  #todayOrderCard th:nth-child(1),
+  #todayOrderCard td:nth-child(1){
+    width:90px!important;
+    min-width:90px!important;
+    white-space:nowrap!important;
+  }
+
+  #todayOrderCard th:nth-child(2),
+  #todayOrderCard td:nth-child(2){
+    width:120px!important;
+    min-width:120px!important;
+    font-weight:800!important;
+  }
+
+  #todayOrderCard th:nth-child(3),
+  #todayOrderCard td:nth-child(3){
+    width:260px!important;
+    min-width:260px!important;
+  }
+
+  #todayOrderCard th:nth-child(4),
+  #todayOrderCard td:nth-child(4){
+    width:85px!important;
+    min-width:85px!important;
+    text-align:center!important;
+  }
+
+  #todayOrderCard th:nth-child(5),
+  #todayOrderCard td:nth-child(5){
+    width:85px!important;
+    min-width:85px!important;
+    text-align:center!important;
+  }
+
+  #todayOrderCard th:nth-child(6),
+  #todayOrderCard td:nth-child(6){
+    width:95px!important;
+    min-width:95px!important;
+  }
+
+  #todayOrderCard th:nth-child(7),
+  #todayOrderCard td:nth-child(7){
+    width:90px!important;
+    min-width:90px!important;
+  }
+
+  #todayOrderCard th:nth-child(8),
+  #todayOrderCard td:nth-child(8){
+    width:220px!important;
+    min-width:220px!important;
+  }
+
+  #todayOrderCard th:nth-child(9),
+  #todayOrderCard td:nth-child(9){
+    width:130px!important;
+    min-width:130px!important;
+  }
+
+  #todayOrderCard th:nth-child(10),
+  #todayOrderCard td:nth-child(10){
+    width:160px!important;
+    min-width:160px!important;
+  }
+
+  #todayOrderCard th:nth-child(11),
+  #todayOrderCard td:nth-child(11){
+    width:390px!important;
+    min-width:390px!important;
+  }
+
+  /* PC처럼 사진 크기 */
+  #todayOrderCard td img,
+  #todayOrderCard .order-inquiry-photo{
+    width:56px!important;
+    height:56px!important;
+    max-width:56px!important;
+    max-height:56px!important;
+    object-fit:contain!important;
+    border-radius:7px!important;
+    display:inline-block!important;
+  }
+
+  /* 상태뱃지 */
+  #todayOrderCard .order-status,
+  #todayOrderCard [class*="status"]{
+    font-size:11px!important;
+    padding:4px 8px!important;
+    border-radius:999px!important;
+    white-space:nowrap!important;
+  }
+
+  /* 본인확인 */
+  #todayOrderCard .worker-receive-check,
+  #todayOrderCard .admin-order-confirm-wrap{
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  /* 카톡 재문의 영역도 PC와 동일하게 세로 구성 */
+  #todayOrderCard .order-reinquiry-grid{
+    display:grid!important;
+    grid-template-columns:minmax(190px,1fr) auto!important;
+    gap:5px!important;
+    min-width:390px!important;
+    width:100%!important;
+    height:auto!important;
+    overflow:visible!important;
+  }
+
+  #todayOrderCard .order-reply-capture{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:4px!important;
+    grid-column:1/-1!important;
+  }
+
+  #todayOrderCard .order-reply-capture input{
+    display:block!important;
+    min-height:36px!important;
+    font-size:11px!important;
+  }
+
+  #todayOrderCard .order-reply-capture button{
+    display:block!important;
+    min-height:36px!important;
+    font-size:11px!important;
+  }
+
+  #todayOrderCard input[id^="order_reinquiry_note_"]{
+    display:block!important;
+    width:100%!important;
+    min-height:36px!important;
+    height:36px!important;
+    font-size:11px!important;
+  }
+
+  #todayOrderCard .admin-kakao-inquiry-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    min-width:88px!important;
+    min-height:36px!important;
+    height:36px!important;
+    padding:0 10px!important;
+    font-size:11px!important;
+  }
+
+  #todayOrderCard .order-reinquiry-grid input[type="file"],
+  #todayOrderCard .order-reinquiry-grid small{
+    display:block!important;
+    grid-column:1/-1!important;
+    width:100%!important;
+  }
+
+  #todayOrderCard .order-reinquiry-grid input[type="file"]{
+    height:auto!important;
+    min-height:32px!important;
+    font-size:10px!important;
+  }
+
+  #todayOrderCard .order-reinquiry-grid small{
+    font-size:10px!important;
+    color:#617068!important;
+  }
+
+  /* 카드형 잔재 제거 */
+  #todayOrderCard .mobile-order-more-v49{
+    display:none!important;
+  }
+
+  #todayOrderCard tbody td:nth-child(n+9){
+    display:table-cell!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
