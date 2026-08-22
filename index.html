@@ -965,6 +965,157 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
+
+<style id="mobile-orders-force-one-row-v54">
+@media (max-width:760px){
+  /* 주문요청: 주문 1건 = 가로 한 줄. 카드형 모바일 규칙을 강제로 해제 */
+  #todayOrderCard .order-table-wrap{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    border:1px solid #dce7e1!important;
+    border-radius:10px!important;
+  }
+  #todayOrderCard .order-table-wrap > table{
+    display:table!important;
+    width:1100px!important;
+    min-width:1100px!important;
+    max-width:none!important;
+    table-layout:fixed!important;
+    border-collapse:collapse!important;
+    margin:0!important;
+  }
+  #todayOrderCard .order-table-wrap > table > thead{
+    display:table-header-group!important;
+  }
+  #todayOrderCard .order-table-wrap > table > tbody{
+    display:table-row-group!important;
+  }
+  #todayOrderCard .order-table-wrap > table > thead > tr,
+  #todayOrderCard .order-table-wrap > table > tbody > tr,
+  #todayOrderCard .order-table-wrap > table > tbody > tr.mobile-order-expanded{
+    display:table-row!important;
+    grid-template-columns:none!important;
+    width:auto!important;
+    min-height:0!important;
+    height:38px!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+  }
+  #todayOrderCard .order-table-wrap > table > thead > tr > th,
+  #todayOrderCard .order-table-wrap > table > tbody > tr > td,
+  #todayOrderCard .order-table-wrap > table > tbody > tr.mobile-order-expanded > td{
+    display:table-cell!important;
+    position:static!important;
+    float:none!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:38px!important;
+    min-height:38px!important;
+    max-height:38px!important;
+    margin:0!important;
+    padding:4px 5px!important;
+    border:0!important;
+    border-right:1px solid #edf1ef!important;
+    border-bottom:1px solid #dfe7e3!important;
+    border-radius:0!important;
+    font-size:10px!important;
+    line-height:1.15!important;
+    vertical-align:middle!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    box-sizing:border-box!important;
+    text-align:center!important;
+  }
+  #todayOrderCard .order-table-wrap > table > thead > tr > th{
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    background:#eef7f1!important;
+    font-weight:900!important;
+  }
+  #todayOrderCard .order-table-wrap > table > tbody > tr > td::before{
+    content:none!important;
+    display:none!important;
+  }
+
+  /* 각 열 폭 */
+  #todayOrderCard .order-table-wrap th:nth-child(1),
+  #todayOrderCard .order-table-wrap td:nth-child(1){width:95px!important}
+  #todayOrderCard .order-table-wrap th:nth-child(2),
+  #todayOrderCard .order-table-wrap td:nth-child(2){width:90px!important;font-weight:800!important}
+  #todayOrderCard .order-table-wrap th:nth-child(3),
+  #todayOrderCard .order-table-wrap td:nth-child(3){width:190px!important;text-align:left!important}
+  #todayOrderCard .order-table-wrap th:nth-child(4),
+  #todayOrderCard .order-table-wrap td:nth-child(4){width:52px!important}
+  #todayOrderCard .order-table-wrap th:nth-child(5),
+  #todayOrderCard .order-table-wrap td:nth-child(5){width:58px!important}
+  #todayOrderCard .order-table-wrap th:nth-child(6),
+  #todayOrderCard .order-table-wrap td:nth-child(6){width:65px!important}
+  #todayOrderCard .order-table-wrap th:nth-child(7),
+  #todayOrderCard .order-table-wrap td:nth-child(7){width:70px!important}
+  #todayOrderCard .order-table-wrap th:nth-child(8),
+  #todayOrderCard .order-table-wrap td:nth-child(8){width:145px!important;text-align:left!important}
+  #todayOrderCard .order-table-wrap th:nth-child(9),
+  #todayOrderCard .order-table-wrap td:nth-child(9){width:95px!important}
+  #todayOrderCard .order-table-wrap th:nth-child(10),
+  #todayOrderCard .order-table-wrap td:nth-child(10){width:100px!important}
+  #todayOrderCard .order-table-wrap th:nth-child(11),
+  #todayOrderCard .order-table-wrap td:nth-child(11){width:140px!important}
+
+  #todayOrderCard .order-table-wrap td img,
+  #todayOrderCard .order-table-wrap .order-inquiry-photo{
+    width:28px!important;height:28px!important;
+    max-width:28px!important;max-height:28px!important;
+    object-fit:cover!important;margin:0 auto!important;
+  }
+
+  /* 한 줄을 깨뜨리는 상세 블록은 셀 안에서 축약 */
+  #todayOrderCard .order-table-wrap .order-reinquiry-grid{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    gap:3px!important;
+    min-width:0!important;
+    width:100%!important;
+    height:30px!important;
+    overflow:hidden!important;
+  }
+  #todayOrderCard .order-table-wrap .order-reply-capture{
+    display:none!important;
+  }
+  #todayOrderCard .order-table-wrap .order-reinquiry-grid input[type="file"],
+  #todayOrderCard .order-table-wrap .order-reinquiry-grid small{
+    display:none!important;
+  }
+  #todayOrderCard .order-table-wrap .order-reinquiry-grid input[id^="order_reinquiry_note_"]{
+    display:block!important;
+    width:82px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:2px 4px!important;
+    font-size:9px!important;
+  }
+  #todayOrderCard .order-table-wrap .admin-kakao-inquiry-btn{
+    display:inline-flex!important;
+    width:48px!important;
+    min-width:48px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:0 3px!important;
+    font-size:8px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
