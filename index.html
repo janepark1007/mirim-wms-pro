@@ -14300,4 +14300,67 @@ body.admin-view.admin-task-focus #todayOrderCard #workerConfirmDoneBoxV42{displa
   }
 })();
 </script>
+
+
+<!-- STEP31: 관리자 모드 주문·문의 통합관리 강제 제거 -->
+<style id="step31-remove-admin-order-management">
+body.admin-view #todayOrderCard,
+body.admin-view #adminWorkerOrdersV2,
+body.admin-view #adminRecentOrdersCard,
+body.admin-view #adminWorkerConfirmTopV39,
+body.admin-view #adminWorkerConfirmDirectV40,
+body.admin-view #workerConfirmDoneBoxV42,
+body.admin-view [data-admin-task="orders"],
+body.admin-view .admin-extra-shortcut.task-orders,
+body.admin-view .ar-btn.order,
+body.admin-view #adminReferenceHome .ar-orders,
+body.admin-view button[onclick*="openAdminTaskView('orders')"],
+body.admin-view button[onclick*='openAdminTaskView("orders")']{
+  display:none!important;
+  visibility:hidden!important;
+}
+</style>
+<script id="step31-remove-admin-order-management-js">
+(function(){
+  function removeAdminOrderEntryStep31(){
+    if(!window.isAdmin && !document.body.classList.contains('admin-view')) return;
+
+    /* 관리자 주문·문의 통합관리로 진입된 상태면 즉시 관리자 메인으로 복귀 */
+    if(document.body.classList.contains('admin-orders-focus') ||
+       ((document.getElementById('adminTaskFocusTitle')?.textContent||'').match(/주문.*문의.*통합관리/))){
+      try{
+        if(typeof closeAdminTaskView==='function') closeAdminTaskView();
+        else if(typeof showAdminReferenceHome==='function') showAdminReferenceHome();
+      }catch(e){}
+      document.body.classList.remove('admin-orders-focus','admin-task-focus');
+    }
+
+    /* 관리자 화면의 주문통합관리 진입 버튼 자체를 제거 */
+    document.querySelectorAll(
+      '[data-admin-task="orders"], .admin-extra-shortcut.task-orders, .ar-btn.order, #adminReferenceHome .ar-orders, button[onclick*="openAdminTaskView(\\'orders\\')"], button[onclick*=\'openAdminTaskView("orders")\']'
+    ).forEach(el=>{
+      if(el.closest('#workerMainShortcutCard') && !document.body.classList.contains('admin-view')) return;
+      el.remove();
+    });
+  }
+
+  const oldOpen=window.openAdminTaskView;
+  if(typeof oldOpen==='function'){
+    window.openAdminTaskView=function(type){
+      if(type==='orders' && (window.isAdmin || document.body.classList.contains('admin-view'))){
+        removeAdminOrderEntryStep31();
+        return;
+      }
+      return oldOpen.apply(this,arguments);
+    };
+  }
+
+  window.addEventListener('load',()=>setTimeout(removeAdminOrderEntryStep31,250));
+  document.addEventListener('click',()=>setTimeout(removeAdminOrderEntryStep31,30),true);
+  const obs=new MutationObserver(()=>{
+    if(document.body.classList.contains('admin-view')) removeAdminOrderEntryStep31();
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
 </body></html>
