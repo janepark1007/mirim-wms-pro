@@ -14102,4 +14102,59 @@ setInterval(()=>{
 },5000);
 </script>
 
+
+<style id="hide-admin-worker-orders-main-v43">
+/* 관리자 메인에서는 '작업자 주문·문의 전체' 카드를 어디서든 강제로 숨김 */
+body.admin-view #adminReferenceHome #adminWorkerOrdersV2,
+body.admin-view.admin-reference-home #adminWorkerOrdersV2{
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+</style>
+
+<script id="hide-admin-worker-orders-main-v43-js">
+(function(){
+  function hideAdminWorkerOrdersMainV43(){
+    if(!isAdmin)return;
+
+    const card=document.getElementById('adminWorkerOrdersV2');
+    if(!card)return;
+
+    const onAdminMain=document.body.classList.contains('admin-reference-home') ||
+      card.closest('#adminReferenceHome');
+
+    if(onAdminMain){
+      card.style.setProperty('display','none','important');
+      card.style.setProperty('visibility','hidden','important');
+      card.style.setProperty('height','0','important');
+      card.style.setProperty('margin','0','important');
+      card.style.setProperty('padding','0','important');
+      card.style.setProperty('border','0','important');
+      card.style.setProperty('overflow','hidden','important');
+    }
+  }
+
+  window.addEventListener('load',()=>setTimeout(hideAdminWorkerOrdersMainV43,500));
+
+  const obs=new MutationObserver(()=>{
+    if(!isAdmin)return;
+    clearTimeout(window.__hideAdminWorkerOrdersV43);
+    window.__hideAdminWorkerOrdersV43=setTimeout(hideAdminWorkerOrdersMainV43,50);
+  });
+  obs.observe(document.documentElement,{
+    childList:true,
+    subtree:true,
+    attributes:true,
+    attributeFilter:['class']
+  });
+})();
+</script>
+
 </body></html>
