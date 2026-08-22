@@ -8966,4 +8966,66 @@ async function loadAdminReferenceOrders(){
 }
 </script>
 
+
+<style id="restore-admin-recent-orders-v36">
+/* 과거 '최근 주문내역 숨김' 규칙을 최종적으로 무효화 */
+body.admin-view.admin-reference-home #adminReferenceHome .ar-orders{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+
+/* 관리자 메인에서는 상세 관리 카드가 섞여 나오지 않도록 확실히 숨김 */
+body.admin-view.admin-reference-home main > #home,
+body.admin-view.admin-reference-home main > #work,
+body.admin-view.admin-reference-home main > #photoSearchPanel,
+body.admin-view.admin-reference-home main > #recentInboundCard,
+body.admin-view.admin-reference-home main > #recentOutboundCard,
+body.admin-view.admin-reference-home main > #notifPanel,
+body.admin-view.admin-reference-home main > #loginLogPanel,
+body.admin-view.admin-reference-home main > #adminTaskFocusPanel,
+body.admin-view.admin-reference-home #locationOrganizerCard,
+body.admin-view.admin-reference-home #recordLookupAdminCard,
+body.admin-view.admin-reference-home #nasExcelAdminCard{
+  display:none!important;
+}
+
+/* 관리자 메인 자체는 반드시 표시 */
+body.admin-view.admin-reference-home #adminReferenceHome{
+  display:block!important;
+}
+</style>
+
+<script>
+function forceAdminRecentOrdersVisible(){
+  if(!isAdmin)return;
+  try{ensureAdminReferenceHome();}catch(e){}
+
+  document.body.classList.add('admin-reference-home');
+  document.body.classList.remove('admin-task-focus');
+
+  const root=document.getElementById('adminReferenceHome');
+  if(root)root.style.setProperty('display','block','important');
+
+  const orders=root?.querySelector('.ar-orders');
+  if(orders){
+    orders.style.setProperty('display','block','important');
+    orders.style.setProperty('visibility','visible','important');
+    orders.style.setProperty('opacity','1','important');
+  }
+
+  try{updateAdminReferenceStats();}catch(e){}
+  try{loadAdminReferenceOrders();}catch(e){console.warn(e);}
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(isAdmin)forceAdminRecentOrdersVisible();
+  },1500);
+});
+</script>
+
 </body></html>
