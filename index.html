@@ -1385,6 +1385,31 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       <span id="todayOrderCount" class="worker-badge">0건</span>
     </div>
     <div class="order-age-legend"><span class="age3">3일 이상 · 재확인</span><span class="age7">7일 이상 · 긴급 재확인</span><b>완료되지 않은 주문·문의 품번에 표시됩니다.</b></div>
+
+    <section id="workerConfirmDoneBoxV42" class="worker-confirm-done-box-v42">
+      <div class="wcd42-head">
+        <div class="wcd42-title">✅ 작업자 본인확인 완료</div>
+        <span id="workerConfirmDoneCountV42" class="wcd42-count">0건</span>
+      </div>
+      <div class="wcd42-table-wrap">
+        <table class="wcd42-table">
+          <thead>
+            <tr>
+              <th>확인시간</th>
+              <th>작업자</th>
+              <th>품번</th>
+              <th>품명</th>
+              <th>확인수량</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="workerConfirmDoneBodyV42">
+            <tr><td colspan="6" class="wcd42-empty">본인확인 기록을 확인하는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <datalist id="orderReplySuggestions"><option value="수량을 다시 확인해 달라는 답변을 받았습니다."><option value="현재 필요한 정확한 수량을 재확인 요청받았습니다."><option value="재고수량 확인 후 다시 알려 달라는 답변을 받았습니다."><option value="주문 가능 수량을 다시 알려 달라는 답변을 받았습니다."></datalist>
     <div id="pendingOrderAlert"></div>
     <div class="order-table-wrap">
@@ -4471,6 +4496,7 @@ async function adminKakaoOrderInquiry(id){
 }
 
 function renderTodayOrderRequests(){
+ if(isAdmin){try{loadWorkerConfirmDoneV42();}catch(e){console.warn(e);}}
  const body=$('todayOrderBody');
  const count=$('todayOrderCount');
  const rangeLabel=$('orderRangeLabel');
@@ -13906,6 +13932,174 @@ body.admin-view.admin-reference-home #locationOrganizerCard{
     attributeFilter:['class']
   });
 })();
+</script>
+
+
+<style id="worker-confirm-done-v42-style">
+/* 작업자 화면에서는 보이지 않고 관리자 주문통합관리에서만 보임 */
+#workerConfirmDoneBoxV42{
+  display:none;
+}
+body.admin-view #todayOrderCard #workerConfirmDoneBoxV42{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  margin:10px 0 14px!important;
+  padding:12px!important;
+  border:2px solid #82c79f!important;
+  border-radius:12px!important;
+  background:#eef9f2!important;
+  box-sizing:border-box!important;
+}
+#workerConfirmDoneBoxV42 .wcd42-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:9px;
+}
+#workerConfirmDoneBoxV42 .wcd42-title{
+  font-size:18px;
+  font-weight:1000;
+  color:#075e36;
+}
+#workerConfirmDoneBoxV42 .wcd42-count{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:999px;
+  background:#087a43;
+  color:#fff;
+  font-size:12px;
+  font-weight:1000;
+}
+#workerConfirmDoneBoxV42 .wcd42-table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+#workerConfirmDoneBoxV42 .wcd42-table{
+  width:100%!important;
+  min-width:760px!important;
+  table-layout:auto!important;
+  border-collapse:collapse!important;
+  background:#fff;
+}
+#workerConfirmDoneBoxV42 .wcd42-table th,
+#workerConfirmDoneBoxV42 .wcd42-table td{
+  width:auto!important;
+  min-width:0!important;
+  padding:8px 9px!important;
+  border-bottom:1px solid #e3ece7!important;
+  text-align:left!important;
+  font-size:12px!important;
+  line-height:1.3!important;
+}
+#workerConfirmDoneBoxV42 .wcd42-table th{
+  background:#dff2e6!important;
+  color:#24513a!important;
+  font-weight:1000!important;
+}
+#workerConfirmDoneBoxV42 .wcd42-ok{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:8px;
+  background:#d9f1e2;
+  color:#087a43;
+  font-weight:1000;
+  white-space:nowrap;
+}
+#workerConfirmDoneBoxV42 .wcd42-empty{
+  padding:16px!important;
+  text-align:center!important;
+  color:#64756c!important;
+  font-weight:900!important;
+}
+</style>
+
+<script id="worker-confirm-done-v42-js">
+function parseWorkerConfirmDoneV42(note){
+  const raw=String(note||'');
+  const matches=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
+  if(!matches.length)return null;
+
+  const inner=String(matches[matches.length-1][1]||'').trim();
+
+  /* 관리자 직접 확인은 작업자 본인확인 기록에서 제외 */
+  if(/관리자직접확인/.test(inner))return null;
+
+  const worker=(inner.split('/')[0]||'').trim();
+  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
+  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
+
+  let time='';
+  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
+  if(timeMatch)time=String(timeMatch[1]||'').trim();
+
+  return {worker,qty,time};
+}
+
+async function loadWorkerConfirmDoneV42(){
+  if(!isAdmin)return;
+
+  const box=document.getElementById('workerConfirmDoneBoxV42');
+  const body=document.getElementById('workerConfirmDoneBodyV42');
+  const count=document.getElementById('workerConfirmDoneCountV42');
+  if(!box||!body)return;
+
+  box.style.setProperty('display','block','important');
+
+  if(!sharedReady||!sharedDb){
+    if(count)count.textContent='0건';
+    body.innerHTML='<tr><td colspan="6" class="wcd42-empty">공용 DB 연결 후 본인확인 기록이 표시됩니다.</td></tr>';
+    return;
+  }
+
+  try{
+    const {data,error}=await sharedDb
+      .from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(500);
+
+    if(error)throw error;
+
+    const rows=(data||[])
+      .map(r=>({r,info:parseWorkerConfirmDoneV42(r.note)}))
+      .filter(x=>x.info)
+      .slice(0,30);
+
+    if(count)count.textContent=rows.length+'건';
+
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="6" class="wcd42-empty">아직 작업자 본인확인 완료 기록이 없습니다.</td></tr>';
+      return;
+    }
+
+    body.innerHTML=rows.map(({r,info})=>`
+      <tr>
+        <td>${esc(info.time||'-')}</td>
+        <td><b>${esc(info.worker||r.requester||'-')}</b></td>
+        <td><b>${esc(r.part_no||'-')}</b></td>
+        <td>${esc(r.item_name||'-')}</td>
+        <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
+        <td><span class="wcd42-ok">✅ 작업자 본인확인</span></td>
+      </tr>
+    `).join('');
+  }catch(e){
+    console.error('작업자 본인확인 기록 조회 실패',e);
+    if(count)count.textContent='오류';
+    body.innerHTML='<tr><td colspan="6" class="wcd42-empty">본인확인 기록을 불러오지 못했습니다.</td></tr>';
+  }
+}
+
+/* 관리자 주문통합관리 화면을 열어둔 동안 자동 갱신 */
+setInterval(()=>{
+  if(!isAdmin)return;
+  const box=document.getElementById('workerConfirmDoneBoxV42');
+  const card=document.getElementById('todayOrderCard');
+  if(!box||!card||card.offsetParent===null)return;
+  loadWorkerConfirmDoneV42();
+},5000);
 </script>
 
 </body></html>
