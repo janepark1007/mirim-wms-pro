@@ -7505,6 +7505,8 @@ function ensureAdminWelcomeShortcuts(){
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
+      <button class="admin-welcome-shortcut-btn admin-io-in" onclick="openMode('inbound')"><span class="ico">⬇️</span><span>입고 등록</span><small>관리자 입고수량 입력</small></button>
+      <button class="admin-welcome-shortcut-btn admin-io-out" onclick="openMode('outbound')"><span class="ico">⬆️</span><span>출고 등록</span><small>자재 출고수량 입력</small></button>
 
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문-입고 자동대조</span></button>
@@ -7783,5 +7785,24 @@ function recenterAdminShortcut(){
 window.addEventListener('load',()=>setTimeout(recenterAdminShortcut,1800));
 window.addEventListener('resize',()=>setTimeout(recenterAdminShortcut,100));
 </script>
+
+
+<style id="admin-io-shortcut-v19">
+body.admin-view #adminWelcomeShortcutBox .admin-io-in{
+ background:#eaf8ef!important;border-color:#a9d9ba!important;color:#155b37!important;
+}
+body.admin-view #adminWelcomeShortcutBox .admin-io-out{
+ background:#fff1ec!important;border-color:#efc0af!important;color:#8b3825!important;
+}
+/* 12개가 되어도 PC에서 균형있게 6개씩 2줄 */
+@media(min-width:1101px){
+ body.admin-view #adminWelcomeShortcutBox{
+   width:min(1320px,calc(100% - 40px))!important;
+ }
+ body.admin-view #adminWelcomeShortcutBox .admin-welcome-shortcut-grid{
+   grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ }
+}
+</style>
 
 </body></html>
