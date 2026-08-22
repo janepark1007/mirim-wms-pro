@@ -12166,4 +12166,106 @@ body:not(.admin-view) #todayOrderCard td button[onclick*="workerConfirmInboundMa
 })();
 </script>
 
+
+<style id="worker-self-confirm-visible-v12">
+/* 작업자 주문요청&문의건의 본인확인 영역은 읽기전용 규칙보다 우선해서 표시 */
+body:not(.admin-view) #todayOrderCard .worker-receive-check{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  grid-template-columns:minmax(90px,110px) auto!important;
+  gap:6px!important;
+  align-items:center!important;
+  min-width:215px!important;
+  height:auto!important;
+  overflow:visible!important;
+}
+
+body:not(.admin-view) #todayOrderCard .worker-receive-check input[type="number"],
+body:not(.admin-view) #todayOrderCard input[id^="worker_received_qty_"]{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  width:100%!important;
+  min-width:90px!important;
+  min-height:36px!important;
+  padding:6px 8px!important;
+  border:1px solid #cbd8d0!important;
+  border-radius:8px!important;
+  background:#fff!important;
+  text-align:center!important;
+  box-sizing:border-box!important;
+}
+
+body:not(.admin-view) #todayOrderCard .self-receive-btn,
+body:not(.admin-view) #todayOrderCard button[onclick*="workerConfirmOrderReceived"],
+body:not(.admin-view) #todayOrderCard button[onclick*="workerConfirmInboundMatchedOrder"]{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:96px!important;
+  min-height:36px!important;
+  padding:0 9px!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:#087a43!important;
+  color:#fff!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+
+body:not(.admin-view) #todayOrderCard .worker-receive-done{
+  display:block!important;
+  grid-column:1/-1!important;
+  font-size:9px!important;
+  color:#567064!important;
+  font-weight:800!important;
+}
+
+/* 승인대기 버튼은 상태표시용으로 보이되 비활성 유지 */
+body:not(.admin-view) #todayOrderCard .self-receive-btn:disabled{
+  display:inline-flex!important;
+  opacity:.65!important;
+  pointer-events:none!important;
+  background:#6f7c75!important;
+}
+</style>
+
+<script id="worker-self-confirm-visible-v12-js">
+(function(){
+  function forceWorkerConfirmVisibleV12(){
+    if(isAdmin)return;
+    const card=document.getElementById('todayOrderCard');
+    if(!card)return;
+
+    card.querySelectorAll('.worker-receive-check').forEach(box=>{
+      box.style.setProperty('display','grid','important');
+      box.style.setProperty('visibility','visible','important');
+      box.style.setProperty('opacity','1','important');
+    });
+
+    card.querySelectorAll(
+      'input[id^="worker_received_qty_"], .self-receive-btn, button[onclick*="workerConfirmOrderReceived"], button[onclick*="workerConfirmInboundMatchedOrder"]'
+    ).forEach(el=>{
+      el.style.setProperty('display', el.tagName==='INPUT'?'block':'inline-flex','important');
+      el.style.setProperty('visibility','visible','important');
+      el.style.setProperty('opacity','1','important');
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(forceWorkerConfirmVisibleV12,700));
+  document.addEventListener('click',()=>setTimeout(forceWorkerConfirmVisibleV12,60),true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__workerConfirmV12);
+    window.__workerConfirmV12=setTimeout(forceWorkerConfirmVisibleV12,50);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
