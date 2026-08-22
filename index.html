@@ -7302,6 +7302,7 @@ async function openAdminTaskView(type){
 function closeAdminTaskView(){
  restoreAdminTaskElements();
  document.body.classList.remove('admin-task-focus');
+ try{collapseAdminHomeDetails();}catch(e){}
  const panel=document.getElementById('adminTaskFocusPanel');
  if(panel)panel.classList.add('hidden');
  const home=document.getElementById('home');if(home)home.classList.remove('hidden');
@@ -7332,6 +7333,66 @@ function addAdminManagementShortcuts(){
 window.addEventListener('load',()=>{
  setTimeout(()=>{ensureAdminTaskFocusPanel();addAdminManagementShortcuts();},900);
 });
+</script>
+
+
+<style id="admin-home-collapse-v14">
+/* 관리자 홈: 관리 바로가기 외 하단 영역은 기본 숨김 */
+body.admin-view:not(.admin-task-focus) #home > *:not(.welcome-row):not(.today-task-grid):not(.admin-home-toggle-wrap){
+  display:none!important;
+}
+body.admin-view:not(.admin-task-focus) #home.admin-home-expanded > *{
+  display:block!important;
+}
+body.admin-view:not(.admin-task-focus) #home.admin-home-expanded > .today-task-grid,
+body.admin-view:not(.admin-task-focus) #home.admin-home-expanded > .welcome-row{
+  display:flex!important;
+}
+.admin-home-toggle-wrap{
+  display:none;
+  width:100%;
+  margin:10px 0 14px;
+}
+body.admin-view:not(.admin-task-focus) .admin-home-toggle-wrap{
+  display:block!important;
+}
+.admin-home-toggle-btn{
+  width:100%;
+  min-height:46px;
+  border:1px solid #b9d8c7;
+  border-radius:12px;
+  background:#f3faf6;
+  color:#155a38;
+  font-size:15px;
+  font-weight:1000;
+  cursor:pointer;
+}
+.admin-home-toggle-btn:hover{background:#e9f6ee}
+</style>
+
+<script>
+function ensureAdminHomeToggle(){
+ const home=document.getElementById('home');
+ if(!home||home.querySelector('.admin-home-toggle-wrap'))return;
+ const grid=home.querySelector('.today-task-grid');
+ if(!grid)return;
+ const wrap=document.createElement('div');
+ wrap.className='admin-home-toggle-wrap';
+ wrap.innerHTML=`<button type="button" id="adminHomeToggleBtn" class="admin-home-toggle-btn" onclick="toggleAdminHomeDetails()">＋ 하단 전체 항목 보기</button>`;
+ grid.insertAdjacentElement('afterend',wrap);
+}
+function toggleAdminHomeDetails(){
+ const home=document.getElementById('home'),btn=document.getElementById('adminHomeToggleBtn');
+ if(!home)return;
+ const open=home.classList.toggle('admin-home-expanded');
+ if(btn)btn.textContent=open?'－ 하단 전체 항목 숨기기':'＋ 하단 전체 항목 보기';
+}
+function collapseAdminHomeDetails(){
+ const home=document.getElementById('home'),btn=document.getElementById('adminHomeToggleBtn');
+ if(home)home.classList.remove('admin-home-expanded');
+ if(btn)btn.textContent='＋ 하단 전체 항목 보기';
+}
+window.addEventListener('load',()=>setTimeout(()=>{ensureAdminHomeToggle();collapseAdminHomeDetails()},1000));
 </script>
 
 </body></html>
