@@ -12908,4 +12908,60 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 }
 </style>
 
+
+<style id="admin-shortcut-colors-only-v26">
+/* 관리자 바로가기 - 사용자가 지정한 6개 버튼 색상만 변경 */
+
+/* 입고 등록 - 진한 녹색 */
+.admin-view #adminReferenceHome .ar-btn.in{
+  background:#087a43!important;
+  border-color:#056234!important;
+  color:#fff!important;
+}
+
+/* 출고 등록 - 진한 빨강 */
+.admin-view #adminReferenceHome .ar-btn.out{
+  background:#c62828!important;
+  border-color:#a61f1f!important;
+  color:#fff!important;
+}
+
+/* 주문·문의 통합관리 - 진한 핑크 */
+.admin-view #adminReferenceHome .ar-btn.order{
+  background:#d81b60!important;
+  border-color:#ad1457!important;
+  color:#fff!important;
+}
+
+/* 나중에 확인 - 진한 파랑 */
+.admin-view #adminReferenceHome .ar-btn.later{
+  background:#1565c0!important;
+  border-color:#0d47a1!important;
+  color:#fff!important;
+}
+
+/* 최근 입출고 기록 - 민트 */
+.admin-view #adminReferenceHome .ar-btn[onclick*="openAdminTaskView('history')"]{
+  background:#c9f3e5!important;
+  border-color:#8edfc5!important;
+  color:#075f49!important;
+}
+
+/* ERP 미등록 자재 - 진한 자주색 */
+.admin-view #adminReferenceHome .ar-btn.unreg{
+  background:#7b1e5a!important;
+  border-color:#5d1543!important;
+  color:#fff!important;
+}
+
+/* 위 6개 버튼 아이콘/글자 색상 유지 */
+.admin-view #adminReferenceHome .ar-btn.in .ico,
+.admin-view #adminReferenceHome .ar-btn.out .ico,
+.admin-view #adminReferenceHome .ar-btn.order .ico,
+.admin-view #adminReferenceHome .ar-btn.later .ico,
+.admin-view #adminReferenceHome .ar-btn.unreg .ico{
+  color:#fff!important;
+}
+</style>
+
 </body></html>
