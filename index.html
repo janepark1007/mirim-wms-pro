@@ -967,6 +967,24 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 
 </head>
 <body>
+
+<div id="adminPasswordModal" class="order-modal-backdrop hidden" aria-hidden="true">
+  <div class="order-modal-card vip-modal-card" role="dialog" aria-modal="true">
+    <div class="order-modal-head">
+      <div>
+        <div class="vip-login-title">🛡️ 관리자 로그인</div>
+        <div>작업자 로그인 후 관리자 비밀번호를 입력하세요.</div>
+      </div>
+      <button type="button" onclick="closeAdminPasswordLogin()">✕</button>
+    </div>
+    <label class="order-note-label">관리자 비밀번호
+      <input id="adminPasswordInput" type="password" maxlength="32" autocomplete="current-password" placeholder="관리자 비밀번호 입력">
+    </label>
+    <div id="adminPasswordError" class="vip-login-error hidden"></div>
+    <button type="button" class="primary" style="width:100%;min-height:50px;margin-top:12px" onclick="submitAdminPasswordLogin()">관리자 모드 열기</button>
+  </div>
+</div>
+
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
   <div class="order-modal-card vip-modal-card" role="dialog" aria-modal="true">
     <div class="order-modal-head">
@@ -974,7 +992,7 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
       <button type="button" class="order-modal-close" onclick="closeVipLogin()">✕</button>
     </div>
     <label class="order-note-label">VIP PIN
-      <input id="vipPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="VIP PIN 입력">
+      <input id="vipPinInput" type="password" maxlength="32" autocomplete="current-password" placeholder="VIP 비밀번호 입력">
     </label>
     <div id="vipLoginError" class="vip-login-error hidden"></div>
     <button type="button" class="primary" style="width:100%;min-height:50px;margin-top:12px" onclick="submitVipLogin()">VIP BOM 관리 열기</button>
@@ -2930,11 +2948,16 @@ function renderWorkerPersonalTasks(){
 }
 
 function updatePrivilegedAccessUI(){
- const workerOnly=!!currentWorker&&!isAdmin;
  const vipOpen=sessionStorage.getItem('mirim_vip_view')==='1';
  const adminBtn=$('adminLoginBtn'),vipBtn=$('vipLoginBtn'),workerBtn=$('workerLoginBtn');
- if(adminBtn)adminBtn.style.display=(workerOnly||vipOpen)?'none':'';
- if(vipBtn)vipBtn.style.display=workerOnly?'none':'';
+
+ /* 작업자 로그인 상태에서도 관리자 로그인 버튼 표시 */
+ if(adminBtn)adminBtn.style.display=(vipOpen||(!currentWorker&&!isAdmin))?'none':'';
+
+ /* VIP BOM은 관리자 로그인 후에만 표시 */
+ if(vipBtn)vipBtn.style.display=(isAdmin&&!vipOpen)?'':'none';
+
+ /* 관리자/VIP 상태에서는 작업자 로그인 버튼 숨김 */
  if(workerBtn)workerBtn.style.display=(isAdmin||vipOpen)?'none':'';
 }
 
@@ -3127,9 +3150,11 @@ async function loadWorkerLoginLogs(){
    alert('로그인 이력 불러오기 실패: '+(e.message||e));
  }
 }
-let isAdmin=sessionStorage.getItem('mirim_prod_admin')==='1';
-// 새로고침 시 저장된 관리자 모드를 우선 복원하고 남아 있는 작업자 세션만 정리
-if(currentWorker&&isAdmin){currentWorker=null;sessionStorage.removeItem('mirim_worker_session');}
+let isAdmin=false;
+/* 관리자/VIP는 새로고침 후 자동 복원하지 않음: 비밀번호를 반드시 다시 입력 */
+sessionStorage.removeItem('mirim_prod_admin');
+sessionStorage.removeItem('mirim_vip_ok');
+sessionStorage.removeItem('mirim_vip_view');
 
 function updateAdminUI(){
  try{
@@ -3188,36 +3213,76 @@ function updateAdminUI(){
    uc.style.display=isAdmin?'block':'none';
  }
 }
-function adminLogin(){
- if(currentWorker&&!isAdmin){alert('일반 작업자 로그인 상태에서는 관리자 모드에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
- if(isAdmin){
-   isAdmin=false;
-   sessionStorage.removeItem('mirim_prod_admin');sessionStorage.removeItem('mirim_admin_last_activity_v11');
-   updateAdminUI();
-   if(!currentWorker) updateWorkerUI();
+const PRIVILEGED_PASSWORD_HASH='55ba1fa16f5d68266980097522bdd5c76f0ded4ea528a15f6a07ca7d0a0965b3';
+
+function openAdminPasswordLogin(){
+ if(!currentWorker){
+   alert('먼저 작업자 로그인을 해주세요.');
+   try{showWorkerLogin();}catch(e){}
    return;
  }
- const cfg=window.MIRIM_CONFIG||{};
- const adminPin = String(cfg.adminPin || '2589');
- const pin=prompt('관리자 PIN을 입력하세요.');
- if(pin===null)return;
- if(String(pin)===adminPin){
-   isAdmin=true;
-   sessionStorage.setItem('mirim_prod_admin','1');
-   currentWorker=null;
-   sessionStorage.removeItem('mirim_worker_session');
-   document.body.classList.remove('worker-locked');
-   $('workerLoginPanel')?.classList.add('hidden');
-   $('home')?.classList.remove('hidden');
-   updateAdminUI();
-   try{updateHomeSummary();}catch(e){}
-   try{loadAdminNotifications();}catch(e){}
-   updateAdminUI();
-   try{showAdminReferenceHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
-   alert('관리자 로그인 완료');
- }else{
-   alert('관리자 PIN이 맞지 않습니다.');
+ const input=$('adminPasswordInput'),err=$('adminPasswordError'),modal=$('adminPasswordModal');
+ if(input)input.value='';
+ if(err){err.textContent='';err.classList.add('hidden');}
+ modal?.classList.remove('hidden');
+ modal?.setAttribute('aria-hidden','false');
+ setTimeout(()=>input?.focus(),60);
+}
+function closeAdminPasswordLogin(){
+ const modal=$('adminPasswordModal');
+ modal?.classList.add('hidden');
+ modal?.setAttribute('aria-hidden','true');
+ if($('adminPasswordInput'))$('adminPasswordInput').value='';
+}
+async function submitAdminPasswordLogin(){
+ if(!currentWorker){
+   closeAdminPasswordLogin();
+   alert('먼저 작업자 로그인을 해주세요.');
+   return;
  }
+ const pw=($('adminPasswordInput')?.value||'').trim();
+ const err=$('adminPasswordError');
+ if(!pw){
+   if(err){err.textContent='관리자 비밀번호를 입력하세요.';err.classList.remove('hidden');}
+   return;
+ }
+ if(await sha256Text(pw)!==PRIVILEGED_PASSWORD_HASH){
+   if(err){err.textContent='관리자 비밀번호가 올바르지 않습니다.';err.classList.remove('hidden');}
+   if($('adminPasswordInput')){$('adminPasswordInput').value='';$('adminPasswordInput').focus();}
+   return;
+ }
+
+ /* 작업자 세션은 그대로 유지하고 관리자 권한만 추가 */
+ isAdmin=true;
+ sessionStorage.setItem('mirim_prod_admin','1');
+ document.body.classList.remove('worker-locked');
+ closeAdminPasswordLogin();
+
+ updateAdminUI();
+ try{updateHomeSummary();}catch(e){}
+ try{loadAdminNotifications();}catch(e){}
+ try{showAdminReferenceHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
+ alert('✅ 관리자 로그인 완료');
+}
+
+function adminLogin(){
+ if(isAdmin){
+   /* 관리자 로그아웃 시 기존 작업자 로그인 상태로 복귀 */
+   isAdmin=false;
+   sessionStorage.removeItem('mirim_prod_admin');
+   sessionStorage.removeItem('mirim_admin_last_activity_v11');
+   sessionStorage.removeItem('mirim_vip_ok');
+   sessionStorage.removeItem('mirim_vip_view');
+   $('vipBomPanel')?.classList.add('hidden');
+
+   updateAdminUI();
+   updateWorkerUI();
+   $('work')?.classList.add('hidden');
+   $('photoSearchPanel')?.classList.add('hidden');
+   $('home')?.classList.remove('hidden');
+   return;
+ }
+ openAdminPasswordLogin();
 }
 // 관리자 상태 선언이 완료된 뒤 UI 초기화
 updateAdminUI();
@@ -5964,22 +6029,43 @@ async function sha256Text(text){
 }
 
 function openVipLogin(){
- if(currentWorker){alert('일반 작업자 로그인 상태에서는 VIP BOM에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
- if(sessionStorage.getItem('mirim_vip_ok')==='1'){openVipBom();return;}
- $('vipPinInput').value='';$('vipLoginError').textContent='';$('vipLoginError').classList.add('hidden');
- $('vipLoginModal').classList.remove('hidden');$('vipLoginModal').setAttribute('aria-hidden','false');
- setTimeout(()=>$('vipPinInput')?.focus(),60);
-}
-function closeVipLogin(){$('vipLoginModal').classList.add('hidden');$('vipLoginModal').setAttribute('aria-hidden','true');}
-async function submitVipLogin(){
- const pin=($('vipPinInput')?.value||'').trim();
- if(!pin)return;
- if(await sha256Text(pin)!==VIP_PIN_HASH){
-   $('vipLoginError').textContent='VIP PIN이 올바르지 않습니다.';$('vipLoginError').classList.remove('hidden');return;
+ if(!isAdmin){
+   alert('관리자 로그인 후 VIP BOM에 들어갈 수 있습니다.');
+   return;
  }
+ /* 이전 VIP 인증값이 있어도 항상 비밀번호를 다시 입력 */
+ sessionStorage.removeItem('mirim_vip_ok');
+ const input=$('vipPinInput'),err=$('vipLoginError'),modal=$('vipLoginModal');
+ if(input)input.value='';
+ if(err){err.textContent='';err.classList.add('hidden');}
+ modal?.classList.remove('hidden');
+ modal?.setAttribute('aria-hidden','false');
+ setTimeout(()=>input?.focus(),60);
+}
+function closeVipLogin(){
+ $('vipLoginModal')?.classList.add('hidden');
+ $('vipLoginModal')?.setAttribute('aria-hidden','true');
+ if($('vipPinInput'))$('vipPinInput').value='';
+}
+async function submitVipLogin(){
+ if(!isAdmin){
+   closeVipLogin();
+   alert('관리자 로그인 후 VIP BOM에 들어갈 수 있습니다.');
+   return;
+ }
+ const pw=($('vipPinInput')?.value||'').trim();
+ if(!pw)return;
+ if(await sha256Text(pw)!==PRIVILEGED_PASSWORD_HASH){
+   $('vipLoginError').textContent='VIP 비밀번호가 올바르지 않습니다.';
+   $('vipLoginError').classList.remove('hidden');
+   $('vipPinInput').value='';
+   $('vipPinInput').focus();
+   return;
+ }
+ /* VIP 인증은 이번 진입에만 사용 */
  sessionStorage.setItem('mirim_vip_ok','1');
- isAdmin=true;sessionStorage.setItem('mirim_prod_admin','1');updateAdminUI();
- closeVipLogin();openVipBom();
+ closeVipLogin();
+ openVipBom();
 }
 
 function loadBomRows(){
@@ -6009,8 +6095,13 @@ function closeVipBom(){
  if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
 }
 function vipLogout(){
- sessionStorage.removeItem('mirim_vip_ok');sessionStorage.removeItem('mirim_vip_view');
- isAdmin=false;sessionStorage.removeItem('mirim_prod_admin');updateAdminUI();closeVipBom();
+ sessionStorage.removeItem('mirim_vip_ok');
+ sessionStorage.removeItem('mirim_vip_view');
+ closeVipLogin();
+ $('vipBomPanel')?.classList.add('hidden');
+ $('home')?.classList.remove('hidden');
+ updateAdminUI();
+ try{showAdminReferenceHome();}catch(e){}
 }
 
 function previewBomPhotos(event){
@@ -6357,10 +6448,11 @@ function exportBomCalculation(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+ $('adminPasswordInput')?.addEventListener('keyup',e=>{if(e.key==='Enter')submitAdminPasswordLogin();});
  $('vipPinInput')?.addEventListener('keyup',e=>{if(e.key==='Enter')submitVipLogin();});
- if(sessionStorage.getItem('mirim_vip_ok')==='1'&&sessionStorage.getItem('mirim_vip_view')==='1'){
-   setTimeout(openVipBom,120);
- }
+ /* 관리자/VIP 자동 로그인·자동 복원 없음 */
+ sessionStorage.removeItem('mirim_vip_ok');
+ sessionStorage.removeItem('mirim_vip_view');
 });
 </script>
 
@@ -7105,17 +7197,27 @@ function adminLogoutByIdle(){
   isAdmin=false;
   sessionStorage.removeItem('mirim_prod_admin');
   sessionStorage.removeItem(ADMIN_IDLE_KEY);
+  sessionStorage.removeItem('mirim_vip_ok');
+  sessionStorage.removeItem('mirim_vip_view');
   if(adminIdleTimer){clearTimeout(adminIdleTimer);adminIdleTimer=null;}
+  try{$('vipBomPanel')?.classList.add('hidden');}catch(e){}
   try{updateAdminUI();}catch(e){}
   try{updateWorkerUI();}catch(e){}
   try{
-    document.body.classList.add('worker-locked');
-    $('home')?.classList.add('hidden');
     $('work')?.classList.add('hidden');
     $('photoSearchPanel')?.classList.add('hidden');
     $('notifPanel')?.classList.add('hidden');
     $('loginLogPanel')?.classList.add('hidden');
-    $('workerLoginPanel')?.classList.remove('hidden');
+
+    if(currentWorker){
+      document.body.classList.remove('worker-locked');
+      $('workerLoginPanel')?.classList.add('hidden');
+      $('home')?.classList.remove('hidden');
+    }else{
+      document.body.classList.add('worker-locked');
+      $('home')?.classList.add('hidden');
+      $('workerLoginPanel')?.classList.remove('hidden');
+    }
   }catch(e){}
   alert('🔒 관리자 모드가 1시간 동안 사용되지 않아 자동 로그아웃되었습니다.');
 }
