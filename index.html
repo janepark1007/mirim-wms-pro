@@ -4697,6 +4697,14 @@ function search(){
             ${getAllLocations(x.part).length?`<b class="all-location-line" style="margin-top:7px;padding-top:7px;border-top:1px solid #bcd6c8;color:#087c49">위치 총수량 · ${getAllLocations(x.part).reduce((sum,e)=>sum+Number(e.qty||0),0).toLocaleString()}개</b>`:''}
           </div>
 
+          <div class="later-check-direct-wrap">
+            <button type="button" class="later-check-btn later-check-direct"
+              onclick='addLaterCheck(${JSON.stringify(x.part||"")},${JSON.stringify(x.name||"")},${JSON.stringify((getAllLocations(x.part)||[]).map(e=>formatLoc(e)).join(" / "))})'>
+              📌 나중에 확인
+            </button>
+            <small>위치 미확인 · ERP 미등록 · 작업자 문의 · 수량 확인 등을 나중에 처리할 때 사용</small>
+          </div>
+
           ${rows.length>1?`<div id="searchInboundHistory_${i}" class="search-inbound-history hidden"></div>`:''}
           ${isAdmin?`<div class="meta worker-admin-detail">
             <div><small>구분</small><b>${esc(getItemDivision(x.part)||x.category||'미분류')}</b></div>
@@ -6924,6 +6932,48 @@ body:not(.admin-view) #orderInboundMatchCard{
 }
 body.admin-view #orderInboundMatchCard{
   display:block!important;
+}
+</style>
+
+
+<style id="later-check-direct-v9">
+.later-check-direct-wrap{
+  margin-top:10px;
+  padding:10px 12px;
+  border:1px solid #efd36d;
+  border-radius:11px;
+  background:#fff9db;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.later-check-direct{
+  min-height:42px;
+  padding:0 16px!important;
+  background:#ffd928!important;
+  border:1px solid #d8b400!important;
+  color:#3f3300!important;
+  font-size:14px;
+  font-weight:1000!important;
+  box-shadow:0 2px 5px rgba(120,95,0,.12);
+}
+.later-check-direct-wrap small{
+  color:#6f6031;
+  font-size:12px;
+  font-weight:800;
+}
+@media(max-width:760px){
+  .later-check-direct-wrap{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .later-check-direct{
+    width:100%;
+    min-height:48px;
+    font-size:15px;
+  }
 }
 </style>
 
