@@ -12773,4 +12773,294 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+
+<style id="FINAL-mobile-order-table-lock">
+@media screen and (max-width:760px){
+
+  /* ===== 주문요청&문의건: 카드형 완전 금지 ===== */
+  html body #todayOrderCard .order-table-wrap{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    border:1px solid #dfe7e2!important;
+    border-radius:8px!important;
+    background:#fff!important;
+  }
+
+  html body #todayOrderCard .order-table-wrap > table{
+    display:table!important;
+    width:1500px!important;
+    min-width:1500px!important;
+    max-width:1500px!important;
+    table-layout:fixed!important;
+    border-collapse:collapse!important;
+    border-spacing:0!important;
+    margin:0!important;
+  }
+
+  html body #todayOrderCard .order-table-wrap > table > thead{
+    display:table-header-group!important;
+  }
+
+  html body #todayOrderCard .order-table-wrap > table > tbody{
+    display:table-row-group!important;
+  }
+
+  html body #todayOrderCard .order-table-wrap > table > thead > tr,
+  html body #todayOrderCard .order-table-wrap > table > tbody > tr,
+  html body #todayOrderCard .order-table-wrap > table > tbody > tr.mobile-order-expanded{
+    display:table-row!important;
+    grid-template-columns:none!important;
+    grid-template-rows:none!important;
+    width:auto!important;
+    height:42px!important;
+    min-height:42px!important;
+    max-height:42px!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+    overflow:visible!important;
+  }
+
+  html body #todayOrderCard .order-table-wrap > table > thead > tr > th,
+  html body #todayOrderCard .order-table-wrap > table > tbody > tr > td,
+  html body #todayOrderCard .order-table-wrap > table > tbody > tr.mobile-order-expanded > td{
+    display:table-cell!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    position:static!important;
+    float:none!important;
+    width:auto!important;
+    height:42px!important;
+    min-height:42px!important;
+    max-height:42px!important;
+    margin:0!important;
+    padding:4px 5px!important;
+    border:0!important;
+    border-right:1px solid #edf1ef!important;
+    border-bottom:1px solid #dfe7e3!important;
+    border-radius:0!important;
+    background:#fff!important;
+    font-size:10px!important;
+    line-height:1.2!important;
+    vertical-align:middle!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    box-sizing:border-box!important;
+  }
+
+  html body #todayOrderCard .order-table-wrap > table > thead > tr > th{
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    background:#eef7f1!important;
+    color:#173b29!important;
+    font-weight:1000!important;
+    position:sticky!important;
+    top:0!important;
+    z-index:5!important;
+  }
+
+  html body #todayOrderCard td::before{
+    content:none!important;
+    display:none!important;
+  }
+
+  /* ===== 열 순서 / 폭 ===== */
+  html body #todayOrderCard th:nth-child(1),
+  html body #todayOrderCard td:nth-child(1){width:88px!important}
+
+  html body #todayOrderCard th:nth-child(2),
+  html body #todayOrderCard td:nth-child(2){
+    width:105px!important;
+    font-weight:900!important;
+  }
+
+  html body #todayOrderCard th:nth-child(3),
+  html body #todayOrderCard td:nth-child(3){
+    width:245px!important;
+    text-align:left!important;
+  }
+
+  html body #todayOrderCard th:nth-child(4),
+  html body #todayOrderCard td:nth-child(4){width:60px!important}
+
+  html body #todayOrderCard th:nth-child(5),
+  html body #todayOrderCard td:nth-child(5){width:65px!important}
+
+  html body #todayOrderCard th:nth-child(6),
+  html body #todayOrderCard td:nth-child(6){
+    width:78px!important;
+    font-weight:800!important;
+  }
+
+  html body #todayOrderCard th:nth-child(7),
+  html body #todayOrderCard td:nth-child(7){width:78px!important}
+
+  html body #todayOrderCard th:nth-child(8),
+  html body #todayOrderCard td:nth-child(8){
+    width:180px!important;
+    text-align:left!important;
+  }
+
+  html body #todayOrderCard th:nth-child(9),
+  html body #todayOrderCard td:nth-child(9){width:115px!important}
+
+  html body #todayOrderCard th:nth-child(10),
+  html body #todayOrderCard td:nth-child(10){width:115px!important}
+
+  html body #todayOrderCard th:nth-child(11),
+  html body #todayOrderCard td:nth-child(11){width:370px!important}
+
+  /* 사진: 한 줄 유지용 작은 썸네일 */
+  html body #todayOrderCard td img,
+  html body #todayOrderCard .order-inquiry-photo{
+    display:inline-block!important;
+    width:32px!important;
+    height:32px!important;
+    max-width:32px!important;
+    max-height:32px!important;
+    object-fit:cover!important;
+    margin:0 auto!important;
+    border-radius:4px!important;
+  }
+
+  /* 상태 뱃지 */
+  html body #todayOrderCard .order-status,
+  html body #todayOrderCard [class*="status"]{
+    font-size:9px!important;
+    line-height:1!important;
+    padding:3px 6px!important;
+    white-space:nowrap!important;
+  }
+
+  /* ===== 카톡 재문의도 같은 한 줄 안에서 ===== */
+  html body #todayOrderCard .order-reinquiry-grid{
+    display:grid!important;
+    grid-template-columns:105px 52px 105px 52px!important;
+    grid-template-rows:28px!important;
+    gap:3px!important;
+    align-items:center!important;
+    width:100%!important;
+    min-width:0!important;
+    height:28px!important;
+    max-height:28px!important;
+    overflow:hidden!important;
+  }
+
+  html body #todayOrderCard .order-reply-capture{
+    display:contents!important;
+  }
+
+  html body #todayOrderCard .order-reply-capture input{
+    display:block!important;
+    width:105px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:2px 4px!important;
+    font-size:8px!important;
+    border-radius:4px!important;
+  }
+
+  html body #todayOrderCard .order-reply-capture button{
+    display:block!important;
+    width:52px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:0 2px!important;
+    font-size:8px!important;
+    border-radius:4px!important;
+  }
+
+  html body #todayOrderCard input[id^="order_reinquiry_note_"]{
+    display:block!important;
+    width:105px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:2px 4px!important;
+    font-size:8px!important;
+    border-radius:4px!important;
+  }
+
+  html body #todayOrderCard .admin-kakao-inquiry-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:52px!important;
+    min-width:52px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:0 2px!important;
+    font-size:8px!important;
+    font-weight:1000!important;
+    background:#fee500!important;
+    color:#191919!important;
+    border:1px solid #d3b700!important;
+    border-radius:4px!important;
+  }
+
+  /* 파일첨부는 한 줄 표에서 숨김, 재문의 기능은 유지 */
+  html body #todayOrderCard .order-reinquiry-grid input[type="file"],
+  html body #todayOrderCard .order-reinquiry-grid small{
+    display:none!important;
+  }
+
+  /* 이전 카드형 버튼/스타일 제거 */
+  html body #todayOrderCard .mobile-order-more-v49{
+    display:none!important;
+  }
+
+  html body #todayOrderCard tbody td:nth-child(n+9){
+    display:table-cell!important;
+  }
+
+  /* 주문카드 둥근 테두리 잔재 제거 */
+  html body #todayOrderCard tbody tr[class]{
+    border-radius:0!important;
+  }
+}
+</style>
+
+<script id="FINAL-mobile-order-table-lock-js">
+(function(){
+  function forceTable(){
+    if(window.innerWidth>760)return;
+    const card=document.getElementById('todayOrderCard');
+    if(!card)return;
+
+    card.querySelectorAll('tbody tr').forEach(tr=>{
+      tr.classList.remove('mobile-order-expanded');
+      tr.querySelectorAll('.mobile-order-more-v49').forEach(b=>b.remove());
+      tr.style.setProperty('display','table-row','important');
+      tr.style.setProperty('height','42px','important');
+
+      [...tr.children].forEach(td=>{
+        if(td.tagName==='TD'){
+          td.style.setProperty('display','table-cell','important');
+          td.style.setProperty('height','42px','important');
+        }
+      });
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(forceTable,500));
+  window.addEventListener('resize',()=>setTimeout(forceTable,50));
+
+  const observer=new MutationObserver(()=>{
+    clearTimeout(window.__FINALorderTable);
+    window.__FINALorderTable=setTimeout(forceTable,30);
+  });
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
