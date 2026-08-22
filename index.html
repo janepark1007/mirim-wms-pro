@@ -9500,4 +9500,170 @@ if(typeof adminSetWorkerReceipt==='function'){
 }
 </script>
 
+
+<style id="receipt-confirm-sort-expire-v40">
+/* 자재확인 미확인은 강조, 확인완료는 하단에서 은은하게 */
+.admin-main-match-row.unchecked{
+  background:#fff7f4!important;
+}
+.admin-main-match-row.unchecked td:first-child{
+  border-left:4px solid #d95c43!important;
+}
+.admin-main-match-row.checked{
+  background:#f6fbf7!important;
+  opacity:.92;
+}
+.admin-main-confirm.none{
+  background:#ffe2dc!important;
+  color:#9a2f1c!important;
+}
+.admin-main-confirm.self,
+.admin-main-confirm.admin{
+  background:#dff4e5!important;
+  color:#17622a!important;
+}
+</style>
+
+<script>
+function adminMainReceiptConfirmedAtV40(r){
+  const note=String(r?.note||'');
+  /* [수령확인:이름 / 날짜 / 받은수량:...] 안의 날짜 추출 */
+  const m=note.match(/\[수령확인:[^\/\]]+\/\s*([^\/\]]+)\s*\/\s*받은수량:/);
+  if(m){
+    const raw=String(m[1]||'').trim()
+      .replace(/\.\s*/g,'-')
+      .replace(/오전\s*/,'AM ')
+      .replace(/오후\s*/,'PM ');
+    let d=new Date(m[1].trim());
+    if(Number.isFinite(d.getTime()))return d.getTime();
+  }
+  /* 관리자 입고확정 시점도 보조 기준 */
+  const a=note.match(/\[관리자입고확정:[^\/\]]+\/\s*([^\/\]]+)/);
+  if(a){
+    const d=new Date(a[1].trim());
+    if(Number.isFinite(d.getTime()))return d.getTime();
+  }
+  return 0;
+}
+
+async function loadAdminMainOrderMatch(){
+  ensureAdminMainOrderMatchCard();
+  const body=document.getElementById('adminMainOrderMatchBody');
+  const sum=document.getElementById('adminMainOrderMatchSummary');
+  if(!body||!sum)return;
+
+  if(!isAdmin){
+    body.innerHTML='<tr><td colspan="11">관리자 모드에서만 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+  if(!sharedReady||!sharedDb){
+    body.innerHTML='<tr><td colspan="11">공용 동기화 연결 후 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+
+  try{
+    const {data,error}=await sharedDb.from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(1000);
+    if(error)throw error;
+
+    const now=Date.now();
+    const TWO_DAYS=2*24*60*60*1000;
+
+    const rows=(data||[]).filter(r=>{
+      if(typeof isRealMaterialOrderRow==='function' && !isRealMaterialOrderRow(r))return false;
+      if(String(r.status||'')==='문의완료')return false;
+
+      const receipt=adminMainReceiptState(r);
+      const isChecked=receipt.cls==='self' || receipt.cls==='admin';
+
+      /* 확인 완료된 건은 확인 시점부터 2일 후 메인 자동대조에서만 숨김 */
+      if(isChecked){
+        const confirmedAt=adminMainReceiptConfirmedAtV40(r);
+        if(confirmedAt && (now-confirmedAt)>=TWO_DAYS)return false;
+      }
+      return true;
+    }).map(r=>{
+      const req=Number(r.request_qty||0);
+      const matched=typeof orderInboundMatchedQty==='function'?orderInboundMatchedQty(r.note):0;
+      const receipt=adminMainReceiptState(r);
+      const remain=Math.max(0,req-matched);
+      const pct=req>0?Math.min(100,Math.round(matched/req*100)):0;
+
+      let state='미입고';
+      if(String(r.status||'')==='입고완료' || matched>=req && req>0) state='입고완료';
+      else if(matched>0) state='부분입고';
+
+      const checked=receipt.cls==='self'||receipt.cls==='admin';
+      const confirmedAt=checked?adminMainReceiptConfirmedAtV40(r):0;
+      return {...r,_req:req,_matched:matched,_remain:remain,_pct:pct,_state:state,_receipt:receipt,_checked:checked,_confirmedAt:confirmedAt};
+    }).sort((a,b)=>{
+      /*
+       1. 본인 미확인 상단
+       2. 관리자 승인대기
+       3. 확인완료 하단
+       같은 그룹에서는 최신 주문 우선
+      */
+      const rank=x=>{
+        if(!x._checked && x._receipt.cls==='none')return 0;
+        if(x._receipt.cls==='wait')return 1;
+        if(!x._checked)return 2;
+        return 3;
+      };
+      const d=rank(a)-rank(b);
+      if(d!==0)return d;
+      return new Date(b.created_at||0)-new Date(a.created_at||0);
+    });
+
+    const unchecked=rows.filter(x=>!x._checked && x._receipt.cls==='none').length;
+    const approval=rows.filter(x=>x._receipt.cls==='wait').length;
+    const checked=rows.filter(x=>x._checked).length;
+    const partial=rows.filter(x=>x._state==='부분입고').length;
+    const done=rows.filter(x=>x._state==='입고완료').length;
+
+    sum.innerHTML=`
+      <span class="admin-main-match-chip wait">자재 미확인 <b>${unchecked}</b>건</span>
+      <span class="admin-main-match-chip approval">승인대기 <b>${approval}</b>건</span>
+      <span class="admin-main-match-chip self">자재 확인완료 <b>${checked}</b>건</span>
+      <span class="admin-main-match-chip partial">부분입고 <b>${partial}</b>건</span>
+      <span class="admin-main-match-chip done">입고완료 <b>${done}</b>건</span>`;
+
+    const table=document.querySelector('#adminMainOrderMatchCard table');
+    if(table){
+      table.querySelector('thead').innerHTML=`<tr>
+        <th>입고상태</th><th>자재확인</th><th>주문일</th><th>품번</th><th>품명</th><th>요청자</th>
+        <th>주문수량</th><th>본인확인수량</th><th>입고대조누계</th><th>남은수량</th><th>진행률</th>
+      </tr>`;
+    }
+
+    const show=rows.slice(0,40);
+    body.innerHTML=show.length?show.map(r=>{
+      const stateCls=r._state==='미입고'?'zero':r._state==='부분입고'?'partial':'done';
+      const rowCls=r._checked?'checked':'unchecked';
+      const date=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}):'';
+      return `<tr class="admin-main-match-row ${rowCls}">
+        <td><span class="admin-main-match-status ${stateCls}">${r._state}</span></td>
+        <td>
+          <span class="admin-main-confirm ${r._receipt.cls}">${r._checked?'자재확인 완료':r._receipt.label}</span>
+          ${r._receipt.who?`<div style="margin-top:3px;font-size:10px;color:#69756f">${esc(r._receipt.who)}</div>`:''}
+        </td>
+        <td>${esc(date)}</td>
+        <td><b>${esc(r.part_no||'기타')}</b></td>
+        <td>${esc(r.item_name||'')}</td>
+        <td>${esc(r.requester||'')}</td>
+        <td>${r._req.toLocaleString()}</td>
+        <td class="admin-main-workerqty">${Number(r._receipt.qty||0).toLocaleString()}</td>
+        <td>${r._matched.toLocaleString()}</td>
+        <td><b>${r._remain.toLocaleString()}</b></td>
+        <td>${r._pct}%<div class="admin-main-match-progress"><span style="width:${r._pct}%"></span></div></td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="11">현재 확인할 주문이 없습니다.</td></tr>';
+  }catch(e){
+    console.warn('관리자 메인 자동대조 조회 실패',e);
+    body.innerHTML='<tr><td colspan="11">자동대조 내역을 불러오지 못했습니다.</td></tr>';
+  }
+}
+</script>
+
 </body></html>
