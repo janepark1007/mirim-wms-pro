@@ -9028,4 +9028,272 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+
+<style id="admin-main-match-v37">
+/* 최근 주문내역 제거 */
+body.admin-view.admin-reference-home #adminReferenceHome .ar-orders{
+  display:none!important;
+}
+
+/* 메인 자동대조 카드 */
+#adminMainOrderMatchCard{
+  display:none;
+  width:100%;
+  box-sizing:border-box;
+  margin:0;
+  padding:14px;
+  background:#fff;
+  border:1px solid #dce7e0;
+  border-radius:14px;
+}
+body.admin-view.admin-reference-home #adminMainOrderMatchCard{
+  display:block!important;
+}
+
+.admin-main-match-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.admin-main-match-head h3{
+  margin:0;
+  font-size:20px;
+}
+.admin-main-match-sub{
+  color:#6e7a73;
+  font-size:12px;
+  font-weight:800;
+  margin-top:3px;
+}
+.admin-main-match-actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.admin-main-match-actions button{
+  min-height:36px;
+  padding:0 12px;
+  border:1px solid #acd0bb;
+  border-radius:9px;
+  background:#fff;
+  color:#0b6d3e;
+  font-weight:1000;
+  font-size:12px;
+}
+.admin-main-match-actions .primary{
+  background:#087a43;
+  color:#fff;
+  border-color:#087a43;
+}
+
+.admin-main-match-summary{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin:0 0 10px;
+}
+.admin-main-match-chip{
+  padding:7px 10px;
+  border-radius:10px;
+  border:1px solid #dbe6df;
+  background:#f8fbf9;
+  font-weight:1000;
+  font-size:12px;
+}
+.admin-main-match-chip.wait{background:#fff0ed;color:#9a2f1c;border-color:#efc8c0}
+.admin-main-match-chip.partial{background:#fff7d6;color:#765900;border-color:#ead58b}
+.admin-main-match-chip.done{background:#e9f8ee;color:#126338;border-color:#bfe2cb}
+
+.admin-main-match-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+.admin-main-match-table{
+  width:100%;
+  min-width:900px;
+  border-collapse:collapse;
+  font-size:12px;
+}
+.admin-main-match-table th,
+.admin-main-match-table td{
+  padding:8px 7px;
+  border-bottom:1px solid #e5ece8;
+  text-align:left;
+  vertical-align:middle;
+}
+.admin-main-match-table th{
+  background:#eef7f1;
+  white-space:nowrap;
+}
+.admin-main-match-status{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.admin-main-match-status.zero{background:#ffe2dc;color:#9a2f1c}
+.admin-main-match-status.partial{background:#fff0b8;color:#725600}
+.admin-main-match-status.done{background:#dff4e5;color:#17622a}
+.admin-main-match-progress{
+  height:7px;
+  background:#e7ece9;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:4px;
+}
+.admin-main-match-progress span{
+  display:block;
+  height:100%;
+  background:#168a4e;
+}
+
+@media(max-width:760px){
+  #adminMainOrderMatchCard{padding:10px 8px}
+  .admin-main-match-head h3{font-size:17px}
+  .admin-main-match-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .admin-main-match-actions button{
+    width:100%;
+    min-width:0;
+    padding:0 5px;
+    font-size:11px;
+  }
+  .admin-main-match-table{
+    min-width:760px;
+    font-size:11px;
+  }
+}
+</style>
+
+<script>
+function ensureAdminMainOrderMatchCard(){
+  const root=ensureAdminReferenceHome();
+  if(!root)return null;
+  let card=document.getElementById('adminMainOrderMatchCard');
+  if(card)return card;
+
+  const shortcuts=root.querySelector('.ar-shortcuts');
+  card=document.createElement('section');
+  card.id='adminMainOrderMatchCard';
+  card.innerHTML=`
+    <div class="admin-main-match-head">
+      <div>
+        <h3>📦 주문요청-입고 자동대조</h3>
+        <div class="admin-main-match-sub">주문수량과 실제 입고대조 누계를 비교해 미입고·부분입고·완료를 확인합니다.</div>
+      </div>
+      <div class="admin-main-match-actions">
+        <button type="button" onclick="loadAdminMainOrderMatch()">↻ 새로고침</button>
+        <button type="button" class="primary" onclick="openAdminTaskView('match')">전체 자동대조 열기 →</button>
+      </div>
+    </div>
+    <div id="adminMainOrderMatchSummary" class="admin-main-match-summary"></div>
+    <div class="admin-main-match-wrap">
+      <table class="admin-main-match-table">
+        <thead>
+          <tr>
+            <th>상태</th><th>주문일</th><th>품번</th><th>품명</th><th>요청자</th>
+            <th>주문수량</th><th>입고대조 누계</th><th>남은수량</th><th>진행률</th>
+          </tr>
+        </thead>
+        <tbody id="adminMainOrderMatchBody">
+          <tr><td colspan="9">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  if(shortcuts)shortcuts.insertAdjacentElement('afterend',card);
+  else root.appendChild(card);
+  return card;
+}
+
+async function loadAdminMainOrderMatch(){
+  ensureAdminMainOrderMatchCard();
+  const body=document.getElementById('adminMainOrderMatchBody');
+  const sum=document.getElementById('adminMainOrderMatchSummary');
+  if(!body||!sum)return;
+
+  if(!isAdmin){
+    body.innerHTML='<tr><td colspan="9">관리자 모드에서만 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+  if(!sharedReady||!sharedDb){
+    body.innerHTML='<tr><td colspan="9">공용 동기화 연결 후 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+
+  try{
+    const {data,error}=await sharedDb.from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(1000);
+    if(error)throw error;
+
+    const rows=(data||[]).filter(r=>{
+      if(typeof isRealMaterialOrderRow==='function' && !isRealMaterialOrderRow(r))return false;
+      return !['입고완료','문의완료'].includes(String(r.status||''));
+    }).map(r=>{
+      const req=Number(r.request_qty||0);
+      const matched=typeof orderInboundMatchedQty==='function'?orderInboundMatchedQty(r.note):0;
+      const remain=Math.max(0,req-matched);
+      const pct=req>0?Math.min(100,Math.round(matched/req*100)):0;
+      const state=matched<=0?'미입고':matched<req?'부분입고':'입고대조 완료';
+      return {...r,_req:req,_matched:matched,_remain:remain,_pct:pct,_state:state};
+    });
+
+    const zero=rows.filter(x=>x._state==='미입고').length;
+    const partial=rows.filter(x=>x._state==='부분입고').length;
+    const done=rows.filter(x=>x._state==='입고대조 완료').length;
+
+    sum.innerHTML=`
+      <span class="admin-main-match-chip">대조 대상 <b>${rows.length}</b>건</span>
+      <span class="admin-main-match-chip wait">미입고 <b>${zero}</b>건</span>
+      <span class="admin-main-match-chip partial">부분입고 <b>${partial}</b>건</span>
+      <span class="admin-main-match-chip done">대조완료 <b>${done}</b>건</span>`;
+
+    const show=rows.slice(0,12);
+    body.innerHTML=show.length?show.map(r=>{
+      const cls=r._state==='미입고'?'zero':r._state==='부분입고'?'partial':'done';
+      const date=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}):'';
+      return `<tr>
+        <td><span class="admin-main-match-status ${cls}">${r._state}</span></td>
+        <td>${esc(date)}</td>
+        <td><b>${esc(r.part_no||'기타')}</b></td>
+        <td>${esc(r.item_name||'')}</td>
+        <td>${esc(r.requester||'')}</td>
+        <td>${r._req.toLocaleString()}</td>
+        <td>${r._matched.toLocaleString()}</td>
+        <td><b>${r._remain.toLocaleString()}</b></td>
+        <td>${r._pct}%<div class="admin-main-match-progress"><span style="width:${r._pct}%"></span></div></td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="9">현재 자동대조할 주문이 없습니다.</td></tr>';
+  }catch(e){
+    console.warn('관리자 메인 자동대조 조회 실패',e);
+    body.innerHTML='<tr><td colspan="9">자동대조 내역을 불러오지 못했습니다.</td></tr>';
+  }
+}
+
+const _oldShowAdminReferenceHomeV37 = showAdminReferenceHome;
+showAdminReferenceHome = function(){
+  _oldShowAdminReferenceHomeV37();
+  try{ensureAdminMainOrderMatchCard();}catch(e){}
+  try{loadAdminMainOrderMatch();}catch(e){}
+};
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(isAdmin){
+      ensureAdminMainOrderMatchCard();
+      loadAdminMainOrderMatch();
+    }
+  },1600);
+});
+</script>
+
 </body></html>
