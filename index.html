@@ -4178,7 +4178,7 @@ async function loadTodayOrderRequests(){
      .order('created_at',{ascending:false})
      .limit(500);
    if(error)throw error;
-   todayOrderRows=(data||[]).filter(r=>!['입고완료','문의완료','수령확인'].includes(r.status));
+   todayOrderRows=(data||[]).filter(r=>!['입고완료','문의완료','수령확인'].includes(r.status)); /* 부분입고·입고대조완료는 작업자 확인 전까지 표시 */
    renderTodayOrderRequests();
  }catch(e){
    console.warn('오늘 주문요청 불러오기 실패',e);
@@ -4481,7 +4481,7 @@ function renderTodayOrderRequests(){
 
        const confirmedQty=orderReceivedQty(r.note),approvalReq=orderReceiptApprovalRequest(r.note);
        const inboundMatchedQty=(typeof orderInboundMatchedQty==='function')?Number(orderInboundMatchedQty(r.note)||0):0;
-       const canWorkerConfirmInbound = !isInquiry && !isAdmin && mine && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
+       const canWorkerConfirmInbound = !isInquiry && !isAdmin && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
        const workerAction = isInquiry ? '' :
          (isAdmin
            ? `<div class="worker-receive-check admin-worker-receive">
@@ -12098,6 +12098,72 @@ async function workerConfirmInboundMatchedOrder(id){
 
   alert(`✅ 작업자 확인 완료\n입고대조 ${matched.toLocaleString()}개 확인 처리되었습니다.`);
 }
+</script>
+
+
+<style id="worker-confirm-force-visible-v11">
+body:not(.admin-view) #todayOrderCard td .worker-receive-check.worker-inbound-confirm-ready{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  height:auto!important;
+  min-height:44px!important;
+  overflow:visible!important;
+}
+body:not(.admin-view) #todayOrderCard td .worker-receive-check.worker-inbound-confirm-ready input{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body:not(.admin-view) #todayOrderCard td .worker-receive-check.worker-inbound-confirm-ready .inbound-confirm-btn,
+body:not(.admin-view) #todayOrderCard td button.inbound-confirm-btn,
+body:not(.admin-view) #todayOrderCard td button[onclick*="workerConfirmInboundMatchedOrder"]{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  min-width:96px!important;
+  min-height:38px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:#087a43!important;
+  color:#fff!important;
+  border:0!important;
+  border-radius:8px!important;
+  font-weight:1000!important;
+}
+</style>
+
+<script id="worker-confirm-force-visible-v11-js">
+(function(){
+  function forceV11(){
+    if(isAdmin)return;
+    const card=document.getElementById('todayOrderCard');
+    if(!card)return;
+
+    card.querySelectorAll('.worker-inbound-confirm-ready').forEach(box=>{
+      box.style.setProperty('display','grid','important');
+      box.style.setProperty('visibility','visible','important');
+      box.style.setProperty('opacity','1','important');
+    });
+
+    card.querySelectorAll('.inbound-confirm-btn,button[onclick*="workerConfirmInboundMatchedOrder"]').forEach(btn=>{
+      btn.style.setProperty('display','inline-flex','important');
+      btn.style.setProperty('visibility','visible','important');
+      btn.style.setProperty('opacity','1','important');
+      btn.style.setProperty('pointer-events','auto','important');
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(forceV11,800));
+  document.addEventListener('click',()=>setTimeout(forceV11,80),true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__forceConfirmV11);
+    window.__forceConfirmV11=setTimeout(forceV11,50);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
 </script>
 
 </body></html>
