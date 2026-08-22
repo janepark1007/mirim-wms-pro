@@ -3077,6 +3077,7 @@ async function workerLogin(){
    try{updateHomeSummary();}catch(e){}
    try{renderDailyHistories();}catch(e){}
 
+   try{await loadWorkerPersonalAlerts(true);}catch(e){console.warn('로그인 개인알림 표시 실패',e);}
    alert(`✅ ${currentWorker.name}님, 반갑습니다!\n\n🌱 ${workerPositiveMessage(currentWorker.name)}\n\n메인 화면으로 이동합니다.`);
    window.scrollTo({top:0,behavior:'smooth'});
  }catch(e){
@@ -6976,5 +6977,79 @@ body.admin-view #orderInboundMatchCard{
   }
 }
 </style>
+
+
+<style id="worker-personal-alert-v10">
+#workerPersonalAlertCard{border:2px solid #f0c85d;background:#fffdf5;margin-top:12px}
+.worker-personal-alert-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.worker-personal-alert-head h2{margin:0;font-size:20px}
+.worker-personal-alert-count{padding:6px 10px;border-radius:999px;background:#fff0b8;color:#725600;font-weight:1000}
+.worker-personal-alert-list{display:grid;gap:8px;margin-top:10px}
+.worker-personal-alert-item{padding:11px 12px;border:1px solid #eadca8;border-radius:11px;background:#fff}
+.worker-personal-alert-item.age3{background:#fff8d8;border-color:#e5c13a}
+.worker-personal-alert-item.age7{background:#fff0ee;border-color:#d83a2e}
+.worker-personal-alert-item b{display:block;margin-bottom:4px}
+.worker-personal-alert-meta{font-size:12px;color:#66756d;line-height:1.5}
+.worker-personal-alert-msg{margin-top:6px;font-weight:900}
+.worker-personal-alert-item.age7 .worker-personal-alert-msg{color:#b42318}
+.worker-personal-alert-refresh{min-height:36px;border:1px solid #d8c57b;background:#fff;border-radius:8px;padding:0 10px;font-weight:900}
+body.admin-view #workerPersonalAlertCard{display:none!important}
+@media(max-width:760px){
+ #workerPersonalAlertCard{padding:12px 9px!important}
+ .worker-personal-alert-head h2{font-size:18px}
+}
+</style>
+<script>
+let workerPersonalAlertRows=[];
+
+function ensureWorkerPersonalAlertCard(){
+ if(document.getElementById('workerPersonalAlertCard'))return;
+ const home=document.getElementById('home');if(!home)return;
+ const welcome=home.querySelector('.welcome-row');
+ const card=document.createElement('section');
+ card.id='workerPersonalAlertCard';card.className='card hidden';
+ card.innerHTML=`<div class="worker-personal-alert-head">
+   <div><h2>🔔 내 확인 알림</h2><div class="worker-personal-alert-meta">내가 요청한 주문 중 확인이 필요한 건만 표시됩니다.</div></div>
+   <div style="display:flex;gap:6px;align-items:center"><span id="workerPersonalAlertCount" class="worker-personal-alert-count">0건</span><button type="button" class="worker-personal-alert-refresh" onclick="loadWorkerPersonalAlerts(false)">↻</button></div>
+ </div><div id="workerPersonalAlertList" class="worker-personal-alert-list"></div>`;
+ if(welcome)welcome.insertAdjacentElement('afterend',card);else home.insertAdjacentElement('afterbegin',card);
+}
+
+function workerReceiptAlreadyConfirmed(note,status){
+ if(['수령확인','수령승인대기','입고완료','문의완료','입고대조완료'].includes(String(status||'')))return true;
+ return /\[수령확인:[^\]]+\]/.test(String(note||''));
+}
+
+async function loadWorkerPersonalAlerts(showPopup){
+ ensureWorkerPersonalAlertCard();
+ const card=document.getElementById('workerPersonalAlertCard'),list=document.getElementById('workerPersonalAlertList'),count=document.getElementById('workerPersonalAlertCount');
+ if(!card||!list||!count)return;
+ if(!currentWorker||isAdmin){card.classList.add('hidden');return}
+ card.classList.remove('hidden');
+ if(!sharedReady||!sharedDb){count.textContent='연결 확인';list.innerHTML='<div class="notice">공용 동기화 연결 후 내 알림을 확인할 수 있습니다.</div>';return}
+ try{
+   const {data,error}=await sharedDb.from('production_order_requests').select('*').eq('requester',String(currentWorker.name||'')).order('created_at',{ascending:false}).limit(500);
+   if(error)throw error;
+   const now=Date.now();
+   const rows=(data||[]).filter(r=>{
+     if(workerReceiptAlreadyConfirmed(r.note,r.status))return false;
+     if(['문의중','문의완료'].includes(String(r.status||'')))return false;
+     if(Number(r.request_qty||0)<=0)return false;
+     const t=new Date(r.created_at).getTime();if(!Number.isFinite(t))return false;
+     return Math.floor((now-t)/86400000)>=3;
+   }).map(r=>({...r,_days:Math.max(0,Math.floor((now-new Date(r.created_at).getTime())/86400000))}));
+   workerPersonalAlertRows=rows;count.textContent=rows.length+'건';
+   list.innerHTML=rows.length?rows.map(r=>{
+     const severe=r._days>=7,cls=severe?'age7':'age3',label=severe?'🚨 7일 이상 · 긴급 확인':'⚠️ 3일 이상 · 본인확인 필요';
+     return `<div class="worker-personal-alert-item ${cls}"><b>${label}</b><div><strong>${esc(r.part_no||'기타주문')}</strong> · ${esc(r.item_name||'')}</div><div class="worker-personal-alert-meta">요청수량 ${Number(r.request_qty||0).toLocaleString()}개 · 요청 후 ${r._days}일 · 상태 ${esc(r.status||'요청')}</div><div class="worker-personal-alert-msg">받은 수량을 확인한 뒤 주문목록에서 ☑ 본인확인을 해주세요.</div></div>`;
+   }).join(''):'<div class="notice" style="background:#eaf8ef">✅ 현재 3일 이상 지난 미확인 주문이 없습니다.</div>';
+   if(showPopup&&rows.length){
+     const urgent=rows.filter(r=>r._days>=7).length,normal=rows.length-urgent;
+     alert([`🔔 ${currentWorker.name}님 확인할 주문이 ${rows.length}건 있습니다.`,normal?`⚠️ 3일 이상 본인확인 필요 ${normal}건`:'',urgent?`🚨 7일 이상 긴급확인 ${urgent}건`:'','','메인 화면의 「내 확인 알림」에서 확인해 주세요.'].filter(Boolean).join('\n'));
+   }
+ }catch(e){console.warn('작업자 개인 알림 조회 실패',e);count.textContent='오류';list.innerHTML='<div class="notice">내 주문 알림을 불러오지 못했습니다.</div>'}
+}
+window.addEventListener('load',()=>{setTimeout(()=>{ensureWorkerPersonalAlertCard();if(currentWorker&&!isAdmin)loadWorkerPersonalAlerts(false)},1400)});
+</script>
 
 </body></html>
