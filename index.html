@@ -12268,4 +12268,70 @@ body:not(.admin-view) #todayOrderCard .self-receive-btn:disabled{
 })();
 </script>
 
+
+<style id="worker-later-check-restore-v13">
+/* 작업자 위치확인 검색 결과에서 '나중에 확인' 버튼 복구 */
+body:not(.admin-view) #results .later-check-direct-wrap{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-top:8px!important;
+}
+
+body:not(.admin-view) #results .later-check-btn{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-height:42px!important;
+  border:1px solid #e2c65a!important;
+  border-radius:9px!important;
+  background:#fff6c9!important;
+  color:#6d5700!important;
+  font-weight:1000!important;
+}
+
+/* 위치확인 모드에서만 자연스럽게 표시 */
+body:not(.admin-view) #work #results .later-check-direct-wrap{
+  box-sizing:border-box!important;
+}
+</style>
+
+<script id="worker-later-check-restore-v13-js">
+(function(){
+  function restoreLaterCheckV13(){
+    if(isAdmin)return;
+    const results=document.getElementById('results');
+    if(!results)return;
+
+    results.querySelectorAll('.later-check-direct-wrap').forEach(el=>{
+      el.style.setProperty('display','block','important');
+      el.style.setProperty('visibility','visible','important');
+      el.style.setProperty('opacity','1','important');
+    });
+
+    results.querySelectorAll('.later-check-btn').forEach(btn=>{
+      btn.style.setProperty('display','inline-flex','important');
+      btn.style.setProperty('visibility','visible','important');
+      btn.style.setProperty('opacity','1','important');
+      btn.style.setProperty('pointer-events','auto','important');
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(restoreLaterCheckV13,700));
+  document.addEventListener('click',()=>setTimeout(restoreLaterCheckV13,50),true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__laterCheckRestoreV13);
+    window.__laterCheckRestoreV13=setTimeout(restoreLaterCheckV13,50);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
