@@ -11579,4 +11579,127 @@ body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input[type="file"]{
 })();
 </script>
 
+
+<style id="mobile-inout-center-v7">
+@media(max-width:760px){
+
+  /* 입고/출고 작업 화면 전체 센터 */
+  body:not(.admin-view) #work{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work > .card{
+    width:calc(100% - 16px)!important;
+    max-width:680px!important;
+    margin:10px auto 90px!important;
+    padding:12px!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #title{
+    text-align:center!important;
+    margin:0 0 12px!important;
+  }
+
+  /* 검색영역 가운데 */
+  body:not(.admin-view) #work .searchrow,
+  body:not(.admin-view) #work .division-search-row{
+    width:100%!important;
+    max-width:620px!important;
+    margin:0 auto!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #count{
+    width:100%!important;
+    max-width:620px!important;
+    margin:8px auto 0!important;
+    text-align:center!important;
+  }
+
+  body:not(.admin-view) #work #results{
+    width:100%!important;
+    max-width:620px!important;
+    margin:10px auto 0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 검색 결과 카드 */
+  body:not(.admin-view) #work #results .result{
+    width:100%!important;
+    max-width:620px!important;
+    margin:0 auto 10px!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .result-card-main{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 입고/출고 수량 입력 영역 가운데 */
+  body:not(.admin-view) #work #results .outgrid{
+    width:100%!important;
+    max-width:420px!important;
+    margin:10px auto 0!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .outgrid input{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:46px!important;
+    margin:0 auto!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .approval-note,
+  body:not(.admin-view) #work #results .worker-direct-save-note{
+    width:100%!important;
+    max-width:420px!important;
+    margin:7px auto 0!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 입고/출고 저장버튼 가운데 */
+  body:not(.admin-view) #work #results button[onclick*="saveIn"],
+  body:not(.admin-view) #work #results button[onclick*="saveOut"]{
+    display:block!important;
+    width:100%!important;
+    max-width:420px!important;
+    min-height:50px!important;
+    margin:9px auto 0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 품번/품명/위치 정보도 모바일에서 가운데 기준 */
+  body:not(.admin-view) #work #results .result-part,
+  body:not(.admin-view) #work #results .result-name{
+    text-align:center!important;
+  }
+
+  body:not(.admin-view) #work #results .result-location{
+    width:100%!important;
+    max-width:520px!important;
+    margin:8px auto 0!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .all-location-line{
+    text-align:center!important;
+  }
+}
+</style>
+
 </body></html>
