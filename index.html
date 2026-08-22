@@ -11702,4 +11702,277 @@ body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input[type="file"]{
 }
 </style>
 
+
+<style id="mobile-inout-layout-hardfix-v8">
+@media(max-width:760px){
+
+  /* ===== 작업화면 전체 폭 강제 정상화 ===== */
+  html,body{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  body:not(.admin-view) #work,
+  body:not(.admin-view) #work > .card,
+  body:not(.admin-view) #work #results,
+  body:not(.admin-view) #work #results .result,
+  body:not(.admin-view) #work #results .result-card-main{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+    transform:none!important;
+    left:auto!important;
+    right:auto!important;
+  }
+
+  body:not(.admin-view) #work > .card{
+    width:calc(100% - 12px)!important;
+    padding:10px!important;
+  }
+
+  /* ===== 품목 정보 ===== */
+  body:not(.admin-view) #work #results .result-card-main{
+    display:block!important;
+    padding:10px!important;
+    overflow:hidden!important;
+  }
+
+  body:not(.admin-view) #work #results .result-part{
+    width:100%!important;
+    max-width:100%!important;
+    text-align:center!important;
+    font-size:18px!important;
+    font-weight:1000!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+  }
+
+  body:not(.admin-view) #work #results .result-name{
+    width:100%!important;
+    max-width:100%!important;
+    margin:5px auto 0!important;
+    padding:0 4px!important;
+    text-align:center!important;
+    font-size:16px!important;
+    line-height:1.35!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 사진이 있으면 가운데 */
+  body:not(.admin-view) #work #results .result-photo,
+  body:not(.admin-view) #work #results img{
+    max-width:100%!important;
+  }
+
+  /* ===== 위치 박스 ===== */
+  body:not(.admin-view) #work #results .result-location{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:10px auto!important;
+    padding:10px!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  body:not(.admin-view) #work #results .result-location small,
+  body:not(.admin-view) #work #results .result-location b,
+  body:not(.admin-view) #work #results .all-location-line{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+  }
+
+  /* ===== 입고/출고 입력 ===== */
+  body:not(.admin-view) #work #results .outgrid{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    gap:7px!important;
+    margin:8px auto 0!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .outgrid input,
+  body:not(.admin-view) #work #results input[id^="in_qty_"],
+  body:not(.admin-view) #work #results input[id^="qty_"],
+  body:not(.admin-view) #work #results input[id^="w_"],
+  body:not(.admin-view) #work #results input[id^="in_worker_"]{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:46px!important;
+    margin:0!important;
+    padding:8px 10px!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .approval-note,
+  body:not(.admin-view) #work #results .worker-direct-save-note{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:7px auto 0!important;
+    padding:8px!important;
+    box-sizing:border-box!important;
+    text-align:center!important;
+    white-space:normal!important;
+  }
+
+  body:not(.admin-view) #work #results button[onclick*="saveIn"],
+  body:not(.admin-view) #work #results button[onclick*="saveOut"]{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:52px!important;
+    margin:9px auto 0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* ===== 하단 미림 자재 문의 카드 ===== */
+  body:not(.admin-view) #work #results .inquiry-card,
+  body:not(.admin-view) #work #results [class*="inquiry"],
+  body:not(.admin-view) #work #results .order-box,
+  body:not(.admin-view) #work #results .order-request-box{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:10px auto 0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* 문의 카드 내부 모든 폼은 화면 안에 */
+  body:not(.admin-view) #work #results label,
+  body:not(.admin-view) #work #results select,
+  body:not(.admin-view) #work #results textarea,
+  body:not(.admin-view) #work #results input,
+  body:not(.admin-view) #work #results button{
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results select,
+  body:not(.admin-view) #work #results textarea{
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  /* 카톡 주문 버튼도 잘리지 않게 */
+  body:not(.admin-view) #work #results button[onclick*="shareOrderRequest"],
+  body:not(.admin-view) #work #results button[onclick*="Kakao"],
+  body:not(.admin-view) #work #results .kakao-btn{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 혹시 내부에 고정폭이 남아도 강제로 해제 */
+  body:not(.admin-view) #work #results *{
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+
+<style id="mobile-order-share-hardfix-v81">
+@media(max-width:760px){
+  body:not(.admin-view) #work #results .order-share{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:10px auto 0!important;
+    padding:10px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  body:not(.admin-view) #work #results .order-share-title{
+    width:100%!important;
+    max-width:100%!important;
+    font-size:16px!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body:not(.admin-view) #work #results .order-share .item-admin-grid{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  body:not(.admin-view) #work #results .order-share label{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  body:not(.admin-view) #work #results .order-share input,
+  body:not(.admin-view) #work #results .order-share select{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .order-share-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  body:not(.admin-view) #work #results .order-share-row .kakao-share-btn,
+  body:not(.admin-view) #work #results .order-share .kakao-share-btn{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:48px!important;
+    margin:0!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    font-size:15px!important;
+    box-sizing:border-box!important;
+  }
+
+  body:not(.admin-view) #work #results .order-share small{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin-top:6px!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+}
+</style>
+
 </body></html>
