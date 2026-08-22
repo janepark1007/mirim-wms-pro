@@ -6373,4 +6373,151 @@ document.addEventListener('DOMContentLoaded',()=>{
 }
 </style>
 
+
+<style id="worker-desktop-order-fit-v4">
+@media(min-width:900px){
+  body:not(.admin-view) main{
+    width:calc(100% - 24px)!important;
+    max-width:1760px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard{
+    width:100%!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    padding:12px 10px!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .order-table-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    font-size:12px!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard th,
+  body:not(.admin-view) #todayOrderCard td{
+    min-width:0!important;
+    padding:7px 5px!important;
+    font-size:12px!important;
+    line-height:1.25!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    vertical-align:middle!important;
+  }
+
+  /* 작업자 화면 기준 열 너비 */
+  body:not(.admin-view) #todayOrderCard th:nth-child(1),
+  body:not(.admin-view) #todayOrderCard td:nth-child(1){width:5%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(2),
+  body:not(.admin-view) #todayOrderCard td:nth-child(2){width:7%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(3),
+  body:not(.admin-view) #todayOrderCard td:nth-child(3){width:15%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(4),
+  body:not(.admin-view) #todayOrderCard td:nth-child(4){width:6%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(5),
+  body:not(.admin-view) #todayOrderCard td:nth-child(5){width:5%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(6),
+  body:not(.admin-view) #todayOrderCard td:nth-child(6){width:6%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(7),
+  body:not(.admin-view) #todayOrderCard td:nth-child(7){width:6%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(8),
+  body:not(.admin-view) #todayOrderCard td:nth-child(8){width:12%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(9),
+  body:not(.admin-view) #todayOrderCard td:nth-child(9){width:15%!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(10),
+  body:not(.admin-view) #todayOrderCard td:nth-child(10){width:0!important;padding:0!important;display:none!important}
+  body:not(.admin-view) #todayOrderCard th:nth-child(11),
+  body:not(.admin-view) #todayOrderCard td:nth-child(11){width:23%!important}
+
+  body:not(.admin-view) #todayOrderCard .order-inquiry-photo{
+    width:58px!important;
+    height:54px!important;
+    object-fit:contain!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .order-note-compact{
+    min-width:0!important;
+    max-width:none!important;
+    width:100%!important;
+    font-size:12px!important;
+    line-height:1.25!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .worker-receive-check{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:4px!important;
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .worker-receive-check input{
+    width:100%!important;
+    min-width:0!important;
+    min-height:34px!important;
+    padding:5px 7px!important;
+    font-size:12px!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .self-receive-btn{
+    min-height:34px!important;
+    padding:0 8px!important;
+    font-size:11px!important;
+    white-space:nowrap!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .order-reinquiry-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:4px!important;
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input,
+  body:not(.admin-view) #todayOrderCard .order-reinquiry-grid button{
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:34px!important;
+    font-size:11px!important;
+    padding:4px 6px!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .order-reply-capture{
+    grid-column:1/-1!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:4px!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input[type="file"]{
+    grid-column:1/-1!important;
+    width:100%!important;
+    font-size:10px!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .order-reinquiry-grid small{
+    grid-column:1/-1!important;
+    font-size:9px!important;
+    line-height:1.15!important;
+  }
+
+  body:not(.admin-view) #todayOrderCard .admin-kakao-inquiry-btn{
+    min-height:34px!important;
+    padding:0 8px!important;
+    font-size:11px!important;
+  }
+}
+</style>
+
 </body></html>
