@@ -7834,7 +7834,7 @@ function ensureAdminRegisteredCount(){
  const item=document.createElement('div');
  item.id='adminRegisteredItemCountBox';
  item.className='summary-item';
- item.innerHTML=`<span>등록 품목수</span><b id="adminRegisteredItemCount">0개</b>`;
+ item.innerHTML=`<span>실제 등록 품목수</span><b id="adminRegisteredItemCount">0개</b>`;
 
  /* ERP 품목 칸 바로 앞에 배치 */
  const children=[...box.children];
@@ -7845,21 +7845,39 @@ function ensureAdminRegisteredCount(){
  updateAdminRegisteredCount();
 }
 
+function getActualEnteredItemCount(){
+ let enteredItemCount=0;
+ try{
+   if(sharedReady && sharedCache && sharedCache.stock){
+     enteredItemCount=Object.keys(sharedCache.stock).filter(p=>{
+       const v=sharedCache.stock[p];
+       return v!==null && v!==undefined && v!=='';
+     }).length;
+   }else{
+     const seen=new Set();
+     (ITEMS||[]).forEach(x=>{
+       const p=String(x.part||'');
+       if(!p||seen.has(p))return;
+       try{
+         const v=localStorage.getItem(stockKey(p));
+         if(v!==null && v!=='')seen.add(p);
+       }catch(e){}
+     });
+     enteredItemCount=seen.size;
+   }
+ }catch(e){}
+ return enteredItemCount;
+}
+
 function updateAdminRegisteredCount(){
  const el=document.getElementById('adminRegisteredItemCount');
  if(!el)return;
- let count=0;
- try{
-   if(Array.isArray(ITEMS)){
-     const seen=new Set();
-     ITEMS.forEach(x=>{
-       const p=String(x?.part||'').trim();
-       if(p)seen.add(p);
-     });
-     count=seen.size;
-   }
- }catch(e){}
+ const count=getActualEnteredItemCount();
  el.textContent=count.toLocaleString()+'개';
+
+ /* 기존 현 입력 품목수와도 동일하게 유지 */
+ const original=document.getElementById('homeStockTotal');
+ if(original)original.textContent=count.toLocaleString();
 }
 
 /* 기존 요약 갱신 뒤에도 등록 품목수 유지 */
