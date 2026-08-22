@@ -4674,6 +4674,17 @@ async function shareOrderRequest(x,i){
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre><!-- step26: admin confirm exact relevant only -->
+
+<style id="admin-order-focus-clean-v27">
+/* 주문·문의 통합관리 등 관리자 단일 관리화면에서는 선택한 관리 패널만 표시 */
+body.admin-view.admin-task-focus main > *:not(#adminTaskFocusPanel){
+  display:none!important;
+}
+body.admin-view.admin-task-focus main > #adminTaskFocusPanel{
+  display:block!important;
+}
+</style>
+
 </body></html>`);
      w.document.close();
    }
