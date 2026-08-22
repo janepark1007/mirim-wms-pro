@@ -10795,12 +10795,8 @@ body.admin-task-focus #locationOrganizerCard button{
       await Promise.allSettled(jobs);
 
       try{ if(typeof updateHomeSummary==='function') updateHomeSummary(); }catch(e){}
-      try{
-        if(typeof search==='function'){
-          const q=document.getElementById('q');
-          if(q && q.value.trim()) search();
-        }
-      }catch(e){}
+      /* 실시간 공용 갱신에서는 search()를 자동 호출하지 않음.
+         작업자 로그인 복원/화면전환 중 반복 로그인 팝업 방지 */
       try{
         if(isAdmin &&
            typeof loadLocationOrganizer==='function' &&
@@ -11974,5 +11970,29 @@ body:not(.admin-view) #todayOrderCard .order-reinquiry-grid input[type="file"]{
   }
 }
 </style>
+
+
+<script id="no-auto-login-popup-v9">
+(function(){
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      if(typeof search!=='function' || window.__searchWrappedV9)return;
+      window.__searchWrappedV9=true;
+
+      const originalSearchV9=search;
+      search=function(){
+        if(!currentWorker && !isAdmin){
+          /* 자동 호출이면 조용히 종료 */
+          if(!navigator.userActivation || !navigator.userActivation.isActive){
+            return;
+          }
+          /* 실제 사용자가 검색을 눌렀을 때만 기존 로그인 안내 */
+        }
+        return originalSearchV9.apply(this,arguments);
+      };
+    },300);
+  });
+})();
+</script>
 
 </body></html>
