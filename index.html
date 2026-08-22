@@ -13107,4 +13107,38 @@ body.admin-view.admin-quick-io #recentOutboundCard{
 }
 </style>
 
+
+<style id="hide-admin-recent-orders-v35">
+/* 관리자 메인에서 최근 주문 내역은 어디서든 강제로 숨김 */
+body.admin-view #adminReferenceHome .ar-orders,
+body.admin-view #adminReferenceHome .ar-orders-head,
+body.admin-view #adminReferenceHome .ar-table-wrap,
+body.admin-view #adminReferenceHome #arOrdersBody{
+  display:none!important;
+}
+</style>
+
+<script id="hide-admin-recent-orders-v35-js">
+(function(){
+  function hideAdminRecentOrdersV35(){
+    if(!isAdmin)return;
+    const root=document.getElementById('adminReferenceHome');
+    if(!root)return;
+
+    root.querySelectorAll('.ar-orders').forEach(el=>{
+      el.style.setProperty('display','none','important');
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(hideAdminRecentOrdersV35,500));
+
+  const obs=new MutationObserver(()=>{
+    if(!isAdmin)return;
+    clearTimeout(window.__hideAdminRecentOrdersV35);
+    window.__hideAdminRecentOrdersV35=setTimeout(hideAdminRecentOrdersV35,50);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
