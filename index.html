@@ -12418,48 +12418,175 @@ body:not(.admin-view) #results .later-check-btn:active{
 }
 </style>
 
-<script id="location-cards-enhancer-v15">
+
+<style id="location-cards-stock-total-v16">
+.location-card-wrap-v15{
+  padding:12px!important;
+}
+.location-summary-v15{
+  display:block!important;
+  margin-bottom:8px!important;
+  font-weight:900!important;
+  color:#496156!important;
+}
+.location-cards-v16{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+  width:100%!important;
+}
+.location-card-v16{
+  border-radius:10px!important;
+  padding:10px 12px!important;
+  min-width:0!important;
+  border:1px solid rgba(0,0,0,.08)!important;
+}
+.location-card-v16.loc-1{
+  background:#e7f7ed!important;
+  border-color:#b9dfc7!important;
+}
+.location-card-v16.loc-2{
+  background:#fff4cc!important;
+  border-color:#ead58a!important;
+}
+.location-card-v16.loc-3{
+  background:#e8f0ff!important;
+  border-color:#bfd0ef!important;
+}
+.location-label-v16{
+  font-size:12px!important;
+  font-weight:1000!important;
+  margin-bottom:4px!important;
+  color:#44564d!important;
+}
+.location-value-v16{
+  font-size:17px!important;
+  line-height:1.35!important;
+  font-weight:1000!important;
+  color:#0b6b3e!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+.location-card-v16.loc-2 .location-value-v16{color:#8a6500!important}
+.location-card-v16.loc-3 .location-value-v16{color:#245d93!important}
+
+.stock-total-v16{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-top:8px!important;
+  padding:10px 12px!important;
+  border-radius:10px!important;
+  background:#f2ecff!important;
+  border:1px solid #d7c8f2!important;
+}
+.stock-total-v16 .stock-total-label-v16{
+  font-size:12px!important;
+  font-weight:1000!important;
+  color:#6846a5!important;
+}
+.stock-total-v16 .stock-total-value-v16{
+  font-size:18px!important;
+  font-weight:1000!important;
+  color:#5b32a3!important;
+}
+
+@media(max-width:760px){
+  .location-cards-v16{
+    grid-template-columns:1fr!important;
+  }
+  .location-card-v16{
+    padding:9px 10px!important;
+  }
+  .location-value-v16{
+    font-size:16px!important;
+  }
+}
+</style>
+
+<script id="location-cards-enhancer-v16">
 (function(){
-  function enhanceLocationsV15(){
+  function isTotalLineV16(el){
+    const txt=(el.textContent||'').replace(/\s+/g,' ').trim();
+    return /총\s*수량|총수량|재고\s*총\s*수량|재고총수량|합계|총\s*재고/i.test(txt);
+  }
+
+  function enhanceLocationsV16(){
     document.querySelectorAll('.result-location').forEach(box=>{
-      if(box.classList.contains('location-card-wrap-v15'))return;
-      const lines=[...box.querySelectorAll('.all-location-line')];
-      if(!lines.length)return;
+      if(box.dataset.locV16==='1') return;
+
+      const allLines=[...box.querySelectorAll('.all-location-line')];
+      if(!allLines.length) return;
+
+      const locLines=allLines.filter(el=>!isTotalLineV16(el)).slice(0,3);
+      const totalLines=allLines.filter(isTotalLineV16);
 
       const small=box.querySelector('small');
-      if(small)small.classList.add('location-summary-v15');
+      if(small) small.classList.add('location-summary-v15');
 
       const wrap=document.createElement('div');
-      wrap.className='location-cards-v15';
+      wrap.className='location-cards-v16';
 
-      lines.slice(0,3).forEach((line,idx)=>{
+      locLines.forEach((line,idx)=>{
         const card=document.createElement('div');
-        card.className=`location-card-v15 loc-${idx+1}`;
+        card.className=`location-card-v16 loc-${idx+1}`;
 
         const label=document.createElement('div');
-        label.className='location-label-v15';
+        label.className='location-label-v16';
         label.textContent=`${idx+1}자재위치`;
 
         const value=document.createElement('div');
-        value.className='location-value-v15';
+        value.className='location-value-v16';
         value.innerHTML=line.innerHTML;
 
         card.appendChild(label);
         card.appendChild(value);
         wrap.appendChild(card);
-        line.remove();
       });
 
+      locLines.forEach(line=>line.remove());
+
+      if(wrap.children.length){
+        box.appendChild(wrap);
+      }
+
+      if(totalLines.length){
+        const totalText=totalLines.map(el=>el.textContent||'').join(' ').trim();
+        let numeric='';
+        const nums=totalText.match(/-?\d[\d,]*(?:\.\d+)?/g);
+        if(nums && nums.length) numeric=nums[nums.length-1];
+
+        const totalBox=document.createElement('div');
+        totalBox.className='stock-total-v16';
+
+        const lbl=document.createElement('div');
+        lbl.className='stock-total-label-v16';
+        lbl.textContent='재고총수량';
+
+        const val=document.createElement('div');
+        val.className='stock-total-value-v16';
+        val.textContent=numeric ? numeric : totalText.replace(/총\s*수량|총수량|재고\s*총\s*수량|재고총수량|합계|총\s*재고/gi,'').trim();
+
+        totalBox.appendChild(lbl);
+        totalBox.appendChild(val);
+        box.appendChild(totalBox);
+
+        totalLines.forEach(el=>el.remove());
+      }
+
       box.classList.add('location-card-wrap-v15');
-      box.appendChild(wrap);
+      box.dataset.locV16='1';
     });
   }
 
-  window.addEventListener('load',()=>setTimeout(enhanceLocationsV15,500));
-  document.addEventListener('click',()=>setTimeout(enhanceLocationsV15,60),true);
+  window.addEventListener('load',()=>setTimeout(enhanceLocationsV16,500));
+  document.addEventListener('click',()=>setTimeout(enhanceLocationsV16,60),true);
+
   const obs=new MutationObserver(()=>{
-    clearTimeout(window.__locEnhanceV15);
-    window.__locEnhanceV15=setTimeout(enhanceLocationsV15,50);
+    clearTimeout(window.__locEnhanceV16);
+    window.__locEnhanceV16=setTimeout(enhanceLocationsV16,50);
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
