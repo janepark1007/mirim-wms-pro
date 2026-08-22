@@ -7330,6 +7330,8 @@ async function openAdminTaskView(type){
 
  if(type==='orders'){
    titleText='🛒 주문요청 & 문의건 통합관리';
+   try{ensureAdminWorkerConfirmLogV37();await loadAdminWorkerConfirmLogV37();}catch(e){console.warn(e);}
+   moveAdminTaskElement(document.getElementById('adminWorkerConfirmLogV37'),content);
    const el=document.getElementById('todayOrderCard');
    moveAdminTaskElement(el,content);
    try{await loadTodayOrderRequests();}catch(e){}
@@ -13212,9 +13214,9 @@ body.admin-view #adminReferenceHome #arOrdersBody{
     if(!root)return;
 
     root.querySelectorAll(
-      '.ar-btn[onclick*="openExistingAdminSection(\\'records\\')"],' +
-      '.ar-btn.match,' +
-      '.ar-btn[onclick*="openAdminTaskView(\\'match\\')"]'
+      ".ar-btn[onclick*=\"openExistingAdminSection('records')\"]," +
+      ".ar-btn.match," +
+      ".ar-btn[onclick*=\"openAdminTaskView('match')\"]"
     ).forEach(btn=>btn.remove());
   }
 
@@ -13227,6 +13229,192 @@ body.admin-view #adminReferenceHome #arOrdersBody{
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
+</script>
+
+
+<style id="admin-worker-confirm-log-v37-style">
+#adminWorkerConfirmLogV37{
+  display:none;
+  margin:0 0 12px;
+  padding:14px;
+  border:1px solid #cfe4d7;
+  border-radius:14px;
+  background:#f5fbf7;
+  box-sizing:border-box;
+}
+body.admin-view #adminTaskFocusContent #adminWorkerConfirmLogV37{
+  display:block!important;
+}
+#adminWorkerConfirmLogV37 .awcl-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+#adminWorkerConfirmLogV37 .awcl-title{
+  font-size:18px;
+  font-weight:1000;
+  color:#155c38;
+}
+#adminWorkerConfirmLogV37 .awcl-count{
+  padding:5px 9px;
+  border-radius:999px;
+  background:#dff2e6;
+  color:#0b6b3e;
+  font-size:12px;
+  font-weight:1000;
+}
+#adminWorkerConfirmLogV37 .awcl-table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+#adminWorkerConfirmLogV37 table{
+  width:100%;
+  min-width:760px;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:10px;
+  overflow:hidden;
+}
+#adminWorkerConfirmLogV37 th,
+#adminWorkerConfirmLogV37 td{
+  padding:9px 10px;
+  border-bottom:1px solid #e6eee9;
+  text-align:left;
+  font-size:12px;
+  vertical-align:middle;
+}
+#adminWorkerConfirmLogV37 th{
+  background:#eaf6ef;
+  color:#315b45;
+  font-weight:1000;
+}
+#adminWorkerConfirmLogV37 .awcl-ok{
+  display:inline-block;
+  padding:4px 7px;
+  border-radius:8px;
+  background:#daf3e4;
+  color:#087a43;
+  font-weight:1000;
+  white-space:nowrap;
+}
+#adminWorkerConfirmLogV37 .awcl-empty{
+  padding:16px;
+  text-align:center;
+  color:#65746c;
+  font-weight:800;
+}
+@media(max-width:760px){
+  #adminWorkerConfirmLogV37{padding:10px 8px}
+  #adminWorkerConfirmLogV37 .awcl-title{font-size:16px}
+}
+</style>
+
+<script id="admin-worker-confirm-log-v37-js">
+function ensureAdminWorkerConfirmLogV37(){
+  let card=document.getElementById('adminWorkerConfirmLogV37');
+  if(card)return card;
+
+  card=document.createElement('section');
+  card.id='adminWorkerConfirmLogV37';
+  card.innerHTML=`
+    <div class="awcl-head">
+      <div class="awcl-title">✅ 작업자 본인확인 완료</div>
+      <span id="adminWorkerConfirmCountV37" class="awcl-count">0건</span>
+    </div>
+    <div class="awcl-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>확인시간</th>
+            <th>작업자</th>
+            <th>품번</th>
+            <th>품명</th>
+            <th>확인수량</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody id="adminWorkerConfirmBodyV37">
+          <tr><td colspan="6" class="awcl-empty">확인 기록을 불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  const anchor=document.getElementById('todayOrderCard');
+  if(anchor?.parentNode)anchor.parentNode.insertBefore(card,anchor);
+  else document.querySelector('main')?.appendChild(card);
+  return card;
+}
+
+function parseWorkerReceiptV37(note){
+  const raw=String(note||'');
+  const m=raw.match(/\[수령확인:([^\]]+)\]/);
+  if(!m)return null;
+
+  const inner=String(m[1]||'').trim();
+  const worker=(inner.split('/')[0]||'').trim();
+  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
+  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
+
+  let time='';
+  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
+  if(timeMatch)time=String(timeMatch[1]||'').trim();
+
+  const adminDirect=/관리자직접확인/.test(inner);
+  return {worker,qty,time,adminDirect};
+}
+
+async function loadAdminWorkerConfirmLogV37(){
+  if(!isAdmin||!sharedReady||!sharedDb)return;
+
+  ensureAdminWorkerConfirmLogV37();
+  const body=document.getElementById('adminWorkerConfirmBodyV37');
+  const count=document.getElementById('adminWorkerConfirmCountV37');
+  if(!body)return;
+
+  try{
+    const {data,error}=await sharedDb
+      .from('production_order_requests')
+      .select('*')
+      .eq('status','수령확인')
+      .order('created_at',{ascending:false})
+      .limit(100);
+
+    if(error)throw error;
+
+    const rows=(data||[])
+      .map(r=>({r,info:parseWorkerReceiptV37(r.note)}))
+      .filter(x=>x.info && !x.info.adminDirect)
+      .slice(0,20);
+
+    if(count)count.textContent=rows.length+'건';
+
+    body.innerHTML=rows.length
+      ? rows.map(({r,info})=>`
+          <tr>
+            <td>${esc(info.time||'-')}</td>
+            <td><b>${esc(info.worker||r.requester||'-')}</b></td>
+            <td>${esc(r.part_no||'-')}</td>
+            <td>${esc(r.item_name||'-')}</td>
+            <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
+            <td><span class="awcl-ok">✅ 본인확인 완료</span></td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="awcl-empty">작업자 본인확인 완료 기록이 없습니다.</td></tr>';
+  }catch(e){
+    console.warn('작업자 본인확인 기록 조회 실패',e);
+    if(body)body.innerHTML='<tr><td colspan="6" class="awcl-empty">확인 기록을 불러오지 못했습니다.</td></tr>';
+  }
+}
+
+/* 관리자 주문통합관리 화면을 열어둔 동안 새 본인확인도 자동 반영 */
+setInterval(()=>{
+  if(!isAdmin)return;
+  const card=document.getElementById('adminWorkerConfirmLogV37');
+  if(!card || !document.body.classList.contains('admin-task-focus'))return;
+  loadAdminWorkerConfirmLogV37();
+},5000);
 </script>
 
 </body></html>
