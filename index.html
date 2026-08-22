@@ -8757,7 +8757,7 @@ function showAdminReferenceHome(){
   try{restoreAdminTaskElements();}catch(e){}
   try{restoreAdminShortcutFocusV41();}catch(e){}
 
-  document.body.classList.remove('admin-task-focus','admin-shortcut-focus','admin-quick-io');
+  document.body.classList.remove('admin-task-focus','admin-shortcut-focus','admin-quick-io','admin-location-focus');
   document.body.classList.add('admin-reference-home');
 
   /* 과거 상세화면에서 남은 inline display를 모두 제거 */
@@ -8786,7 +8786,7 @@ openMode = function(m){
 
 const _origOpenAdminTaskView = openAdminTaskView;
 openAdminTaskView = async function(type){
-  document.body.classList.remove('admin-reference-home','admin-quick-io');
+  document.body.classList.remove('admin-reference-home','admin-quick-io','admin-location-focus');
   return await _origOpenAdminTaskView(type);
 };
 
@@ -9900,7 +9900,7 @@ function restoreAdminShortcutFocusV41(){
 
 function closeAdminShortcutFocusV41(){
   restoreAdminShortcutFocusV41();
-  document.body.classList.remove('admin-shortcut-focus','admin-task-focus');
+  document.body.classList.remove('admin-shortcut-focus','admin-task-focus','admin-location-focus');
   const panel=document.getElementById('adminShortcutFocusPanel');
   if(panel)panel.style.display='none';
   if(isAdmin){
@@ -9916,8 +9916,9 @@ async function openAdminShortcutListV41(kind){
   restoreAdminShortcutFocusV41();
   ensureAdminShortcutFocusPanelV41();
 
-  document.body.classList.remove('admin-reference-home','admin-task-focus');
+  document.body.classList.remove('admin-reference-home','admin-task-focus','admin-location-focus');
   document.body.classList.add('admin-shortcut-focus');
+  if(kind==='location')document.body.classList.add('admin-location-focus');
 
   const title=document.getElementById('adminShortcutFocusTitle');
   const panel=document.getElementById('adminShortcutFocusPanel');
@@ -13845,6 +13846,66 @@ setInterval(()=>{
   if(!document.getElementById('adminWorkerConfirmDirectV40'))return;
   loadAdminWorkerConfirmDirectV40();
 },5000);
+</script>
+
+
+<style id="location-editor-only-own-page-v41">
+/* 관리자에서는 기존 위치 정리·수정 카드를 기본적으로 무조건 숨김 */
+body.admin-view #locationOrganizerCard{
+  display:none!important;
+}
+
+/* 오직 '기존 위치 정리·수정' 메뉴를 연 상태에서만 표시 */
+body.admin-view.admin-location-focus.admin-shortcut-focus
+#adminShortcutFocusContent > #locationOrganizerCard{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+/* 다른 관리자 화면에서는 어떤 위치에 남아 있어도 절대 표시하지 않음 */
+body.admin-view:not(.admin-location-focus) #locationOrganizerCard,
+body.admin-view.admin-task-focus #locationOrganizerCard,
+body.admin-view.admin-reference-home #locationOrganizerCard{
+  display:none!important;
+}
+</style>
+
+<script id="location-editor-only-own-page-v41-js">
+(function(){
+  function enforceLocationOnlyV41(){
+    if(!isAdmin)return;
+
+    const card=document.getElementById('locationOrganizerCard');
+    if(!card)return;
+
+    const isLocationPage =
+      document.body.classList.contains('admin-location-focus') &&
+      document.body.classList.contains('admin-shortcut-focus') &&
+      card.parentElement?.id==='adminShortcutFocusContent';
+
+    if(isLocationPage){
+      card.style.setProperty('display','block','important');
+      card.style.setProperty('visibility','visible','important');
+    }else{
+      card.style.setProperty('display','none','important');
+    }
+  }
+
+  window.addEventListener('load',()=>setTimeout(enforceLocationOnlyV41,500));
+  document.addEventListener('click',()=>setTimeout(enforceLocationOnlyV41,50),true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__locationOnlyV41);
+    window.__locationOnlyV41=setTimeout(enforceLocationOnlyV41,50);
+  });
+  obs.observe(document.documentElement,{
+    childList:true,
+    subtree:true,
+    attributes:true,
+    attributeFilter:['class']
+  });
+})();
 </script>
 
 </body></html>
