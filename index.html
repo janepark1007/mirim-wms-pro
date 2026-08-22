@@ -4705,7 +4705,7 @@ function search(){
 
    const outbound=mode==='outbound'
      ? `<div class="outgrid">
-          <input id="w_${i}" value="${esc(currentWorker?.name||'')}" readonly placeholder="작업자">
+          <input id="w_${i}" value="${esc(currentWorker?.name||(isAdmin?'관리자':''))}" readonly placeholder="작업자">
           <input id="qty_${i}" type="number" inputmode="numeric" placeholder="출고수량">
         </div>
         <div class="approval-note worker-direct-save-note">✅ 작업자 직접 출고등록 · 공용 DB 자동반영</div>
@@ -13013,5 +13013,218 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
   color:#fff!important;
 }
 </style>
+
+
+<style id="admin-quick-io-inputs-only-v33">
+/* =========================================================
+   관리자 빠른입고/빠른출고 화면만 간소화
+   다른 관리자 화면/작업자 화면에는 영향 없음
+   ========================================================= */
+
+/* 관리자 빠른 입출고에서는 작업 카드만 깔끔하게 */
+body.admin-view.admin-quick-io #work{
+  display:block!important;
+  width:100%!important;
+  max-width:1000px!important;
+  margin:14px auto!important;
+}
+
+body.admin-view.admin-quick-io #work > .card{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 auto!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-view.admin-quick-io #work #title{
+  text-align:center!important;
+  font-size:27px!important;
+  font-weight:1000!important;
+  margin:0 0 14px!important;
+}
+
+/* 검색은 품번/품명 + 검색버튼만 */
+body.admin-view.admin-quick-io #work .division-search-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  max-width:720px!important;
+  margin:0 auto!important;
+}
+
+body.admin-view.admin-quick-io #work #divisionSearch{
+  display:none!important;
+}
+
+body.admin-view.admin-quick-io #work #q{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:50px!important;
+  font-size:17px!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-view.admin-quick-io #work #searchBtn{
+  display:block!important;
+  min-width:100px!important;
+  min-height:50px!important;
+  font-size:16px!important;
+}
+
+body.admin-view.admin-quick-io #work #count{
+  max-width:720px!important;
+  margin:8px auto 0!important;
+}
+
+/* 결과 카드: 품번/품명 + 입고/출고 입력란 + 저장버튼만 */
+body.admin-view.admin-quick-io #results{
+  max-width:720px!important;
+  margin:10px auto 0!important;
+}
+
+body.admin-view.admin-quick-io #results .result{
+  width:100%!important;
+  margin:0 auto 10px!important;
+  padding:0!important;
+}
+
+body.admin-view.admin-quick-io #results .result-card-main{
+  display:block!important;
+  width:100%!important;
+  padding:16px!important;
+  box-sizing:border-box!important;
+}
+
+/* 부가정보 전부 숨김 */
+body.admin-view.admin-quick-io #results .result-photo-box,
+body.admin-view.admin-quick-io #results .result-location,
+body.admin-view.admin-quick-io #results .later-check-direct-wrap,
+body.admin-view.admin-quick-io #results .worker-admin-detail,
+body.admin-view.admin-quick-io #results .qty-compare,
+body.admin-view.admin-quick-io #results .current-stock-edit,
+body.admin-view.admin-quick-io #results .loc-editor,
+body.admin-view.admin-quick-io #results .order-share,
+body.admin-view.admin-quick-io #results .item-admin-meta,
+body.admin-view.admin-quick-io #results .item-movement-history,
+body.admin-view.admin-quick-io #results .search-inbound-history{
+  display:none!important;
+}
+
+/* 품목 식별은 남김 */
+body.admin-view.admin-quick-io #results .result-part{
+  display:block!important;
+  text-align:center!important;
+  font-size:24px!important;
+  font-weight:1000!important;
+  margin:0!important;
+}
+
+body.admin-view.admin-quick-io #results .result-name{
+  display:block!important;
+  text-align:center!important;
+  font-size:18px!important;
+  font-weight:900!important;
+  margin:5px 0 14px!important;
+  line-height:1.35!important;
+}
+
+/* 실제 입력란 */
+body.admin-view.admin-quick-io #results .outgrid{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+  width:100%!important;
+  max-width:560px!important;
+  margin:0 auto!important;
+}
+
+body.admin-view.admin-quick-io #results .outgrid input{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:52px!important;
+  padding:10px 12px!important;
+  font-size:17px!important;
+  text-align:center!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-view.admin-quick-io #results .worker-direct-save-note{
+  display:block!important;
+  width:100%!important;
+  max-width:560px!important;
+  margin:8px auto 0!important;
+  text-align:center!important;
+}
+
+body.admin-view.admin-quick-io #results button[onclick*="saveIn"],
+body.admin-view.admin-quick-io #results button[onclick*="saveOut"]{
+  display:block!important;
+  width:100%!important;
+  max-width:560px!important;
+  min-height:54px!important;
+  margin:9px auto 0!important;
+  font-size:17px!important;
+}
+
+/* 빠른입출고 중에는 메인용 최근 입출고 카드가 같이 보이지 않게 */
+body.admin-view.admin-quick-io #recentInboundCard,
+body.admin-view.admin-quick-io #recentOutboundCard{
+  display:none!important;
+}
+
+@media(max-width:760px){
+  body.admin-view.admin-quick-io #work{
+    width:calc(100% - 10px)!important;
+    margin:8px auto!important;
+  }
+  body.admin-view.admin-quick-io #work > .card{
+    padding:12px!important;
+  }
+  body.admin-view.admin-quick-io #work .division-search-row{
+    grid-template-columns:1fr!important;
+  }
+  body.admin-view.admin-quick-io #work #searchBtn{
+    width:100%!important;
+  }
+  body.admin-view.admin-quick-io #results .outgrid{
+    grid-template-columns:1fr!important;
+  }
+}
+</style>
+
+<script id="admin-quick-io-inputs-only-v33-js">
+(function(){
+  const originalOpenModeV33 = window.openMode;
+
+  window.openMode = function(m){
+    const adminQuickIo = !!isAdmin && (m==='inbound' || m==='outbound');
+
+    if(adminQuickIo){
+      /* 관리자 메인/단독보기 상태를 정리하고 작업화면으로 이동 */
+      document.body.classList.remove('admin-reference-home','admin-task-focus','admin-shortcut-focus');
+      document.body.classList.add('admin-quick-io');
+
+      const ref=document.getElementById('adminReferenceHome');
+      if(ref)ref.style.removeProperty('display');
+    }else{
+      document.body.classList.remove('admin-quick-io');
+    }
+
+    return originalOpenModeV33.apply(this,arguments);
+  };
+
+  /* 관리자 빠른입출고에서 홈으로 돌아가면 간소화 클래스 해제 */
+  const homeBtn=document.getElementById('homeBtn');
+  if(homeBtn){
+    homeBtn.addEventListener('click',()=>{
+      document.body.classList.remove('admin-quick-io');
+    },true);
+  }
+})();
+</script>
 
 </body></html>
