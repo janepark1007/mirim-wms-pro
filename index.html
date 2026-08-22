@@ -14363,4 +14363,77 @@ body.admin-view button[onclick*='openAdminTaskView("orders")']{
   obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+
+<!-- STEP32: 관리자 모드 주문요청·입고 자동대조 전체 강제 제거 -->
+<style id="step32-remove-admin-order-match">
+body.admin-view #orderInboundMatchCard,
+body.admin-view #adminMainOrderMatchCard,
+body.admin-view .ar-btn.match,
+body.admin-view [data-admin-task="match"],
+body.admin-view button[onclick*="openAdminTaskView('match')"],
+body.admin-view button[onclick*='openAdminTaskView("match")'],
+body.admin-view button[onclick*="openExistingAdminSection('match')"],
+body.admin-view button[onclick*='openExistingAdminSection("match")']{
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+</style>
+<script id="step32-remove-admin-order-match-js">
+(function(){
+  function removeAdminOrderMatchStep32(){
+    if(!window.isAdmin && !document.body.classList.contains('admin-view')) return;
+
+    /* 자동대조 상세화면에 들어가 있으면 관리자 메인으로 즉시 복귀 */
+    const title=(document.getElementById('adminShortcutFocusTitle')?.textContent||'')+' '+
+                (document.getElementById('adminTaskFocusTitle')?.textContent||'');
+    if(/주문.*입고.*자동대조/.test(title)){
+      try{
+        if(typeof closeAdminShortcutFocusV41==='function') closeAdminShortcutFocusV41();
+        else if(typeof showAdminReferenceHome==='function') showAdminReferenceHome();
+      }catch(e){}
+      document.body.classList.remove('admin-shortcut-focus','admin-task-focus');
+    }
+
+    /* 관리자 메인의 자동대조 현황판과 모든 바로가기 제거 */
+    document.querySelectorAll('#adminMainOrderMatchCard, #orderInboundMatchCard').forEach(el=>{
+      if(document.body.classList.contains('admin-view')) el.remove();
+    });
+    document.querySelectorAll('.ar-btn.match,[data-admin-task="match"],button[onclick*="openAdminTaskView(\\\'match\\\')"],button[onclick*=\'openAdminTaskView("match")\'],button[onclick*="openExistingAdminSection(\\\'match\\\')"],button[onclick*=\'openExistingAdminSection("match")\']').forEach(el=>el.remove());
+  }
+
+  /* 함수로 직접 열려고 해도 관리자에서는 차단 */
+  const oldShortcut=window.openAdminShortcutFocusV41;
+  if(typeof oldShortcut==='function'){
+    window.openAdminShortcutFocusV41=function(kind){
+      if(kind==='match' && (window.isAdmin || document.body.classList.contains('admin-view'))){
+        removeAdminOrderMatchStep32(); return;
+      }
+      return oldShortcut.apply(this,arguments);
+    };
+  }
+  const oldTask=window.openAdminTaskView;
+  if(typeof oldTask==='function'){
+    window.openAdminTaskView=function(type){
+      if(type==='match' && (window.isAdmin || document.body.classList.contains('admin-view'))){
+        removeAdminOrderMatchStep32(); return;
+      }
+      return oldTask.apply(this,arguments);
+    };
+  }
+
+  window.addEventListener('load',()=>setTimeout(removeAdminOrderMatchStep32,200));
+  document.addEventListener('click',()=>setTimeout(removeAdminOrderMatchStep32,20),true);
+  new MutationObserver(()=>{
+    if(document.body.classList.contains('admin-view')) removeAdminOrderMatchStep32();
+  }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
 </body></html>
