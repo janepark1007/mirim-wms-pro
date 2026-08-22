@@ -10902,4 +10902,484 @@ body.admin-task-focus #locationOrganizerCard button{
 })();
 </script>
 
+
+<style id="mobile-worker-core-v2-style">
+/* ===== 2단계: 모바일 작업자 핵심 기능 ===== */
+#mobileWorkerCoreV2,
+#workerMyOrdersV2,
+#adminWorkerOrdersV2{display:none}
+
+@media(max-width:760px){
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2{
+    display:block!important;
+    margin:10px 0!important;
+    padding:12px!important;
+    border:1px solid #d8e6de!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    box-shadow:0 3px 12px rgba(0,0,0,.05)!important;
+  }
+  #mobileWorkerCoreV2 .mw-title{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    margin-bottom:9px;font-size:16px;font-weight:1000;color:#183b2b
+  }
+  #mobileWorkerCoreV2 .mw-live{
+    display:inline-flex;align-items:center;gap:4px;padding:3px 7px;
+    border-radius:999px;background:#eaf7ef;color:#087a43;font-size:9px;font-weight:1000
+  }
+  #mobileWorkerCoreV2 .mw-live::before{
+    content:"";width:6px;height:6px;border-radius:50%;background:#19a35a
+  }
+  #mobileWorkerCoreV2 .mw-grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  #mobileWorkerCoreV2 .mw-btn{
+    min-height:67px!important;
+    border:1px solid #d7e4dc!important;
+    border-radius:12px!important;
+    background:#f9fcfa!important;
+    padding:8px 6px!important;
+    font-size:13px!important;
+    font-weight:1000!important;
+    color:#173b29!important;
+    text-align:center!important;
+  }
+  #mobileWorkerCoreV2 .mw-btn .ico{display:block;font-size:21px;margin-bottom:3px}
+  #mobileWorkerCoreV2 .mw-btn small{
+    display:block;margin-top:2px;font-size:9px;font-weight:800;color:#66776e
+  }
+  #mobileWorkerCoreV2 .mw-alerts{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px
+  }
+  #mobileWorkerCoreV2 .mw-age{
+    padding:7px;border-radius:9px;font-size:11px;font-weight:1000;text-align:center
+  }
+  #mobileWorkerCoreV2 .mw-age.age3{background:#fff7c7;color:#705900;border:1px solid #e5cb56}
+  #mobileWorkerCoreV2 .mw-age.age7{background:#ffe9e7;color:#a31616;border:1px solid #e6a3a0}
+
+  body:not(.admin-view):not(.worker-locked) #workerMyOrdersV2{
+    display:none;
+    margin:10px 0 90px;
+    padding:10px 8px;
+    border:1px solid #dce7e0;
+    border-radius:13px;
+    background:#fff;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMyOrdersV2.show{display:block!important}
+  #workerMyOrdersV2 .my-order-head{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px
+  }
+  #workerMyOrdersV2 .my-order-head b{font-size:16px}
+  #workerMyOrdersV2 .my-order-head button{
+    min-height:34px;border:1px solid #cedbd4;border-radius:8px;background:#fff;padding:0 10px;font-weight:900
+  }
+  #workerMyOrdersV2 .my-order-scroll{
+    width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e1e8e4;border-radius:8px
+  }
+  #workerMyOrdersV2 table{
+    width:870px;min-width:870px;border-collapse:collapse;table-layout:fixed
+  }
+  #workerMyOrdersV2 th,#workerMyOrdersV2 td{
+    padding:6px 5px;border-bottom:1px solid #e5ece8;border-right:1px solid #edf1ef;
+    font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center
+  }
+  #workerMyOrdersV2 th{background:#eef7f1;font-weight:1000}
+  #workerMyOrdersV2 td.name{text-align:left}
+  #workerMyOrdersV2 tr.age3 td{background:#fffbea}
+  #workerMyOrdersV2 tr.age7 td{background:#fff0ee}
+  #workerMyOrdersV2 .age-badge{
+    display:inline-block;padding:2px 5px;border-radius:999px;font-size:8px;font-weight:1000
+  }
+  #workerMyOrdersV2 .age-badge.a3{background:#f4cf28;color:#332900}
+  #workerMyOrdersV2 .age-badge.a7{background:#c92323;color:#fff}
+
+  /* 기존 작업자 바로가기는 모바일에서 숨기고 새 핵심메뉴만 사용 */
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+    display:none!important;
+  }
+}
+
+/* 관리자: 작업자 주문 전체 */
+body.admin-view #adminWorkerOrdersV2{
+  display:block!important;
+  width:min(1760px,calc(100% - 20px));
+  margin:12px auto;
+  padding:12px;
+  border:1px solid #d9e5de;
+  border-radius:14px;
+  background:#fff;
+  box-sizing:border-box;
+}
+#adminWorkerOrdersV2 .awo-head{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px
+}
+#adminWorkerOrdersV2 .awo-title{font-size:17px;font-weight:1000}
+#adminWorkerOrdersV2 .awo-live{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;
+  background:#eaf7ef;color:#087a43;font-size:10px;font-weight:1000
+}
+#adminWorkerOrdersV2 .awo-count{
+  display:inline-block;min-width:22px;padding:3px 7px;border-radius:999px;background:#c92323;color:#fff;
+  text-align:center;font-size:10px;font-weight:1000
+}
+#adminWorkerOrdersV2 .awo-scroll{width:100%;overflow:auto;max-height:430px;border:1px solid #e0e8e3;border-radius:9px}
+#adminWorkerOrdersV2 table{width:100%;min-width:1120px;border-collapse:collapse}
+#adminWorkerOrdersV2 th,#adminWorkerOrdersV2 td{
+  padding:7px 6px;border-bottom:1px solid #e5ece8;font-size:11px;vertical-align:middle;white-space:nowrap
+}
+#adminWorkerOrdersV2 th{position:sticky;top:0;background:#eef7f1;z-index:2;font-weight:1000}
+#adminWorkerOrdersV2 td.name{white-space:normal;min-width:220px}
+#adminWorkerOrdersV2 tr.age3 td{background:#fffbea}
+#adminWorkerOrdersV2 tr.age7 td{background:#fff0ee}
+</style>
+
+<script id="mobile-worker-core-v2-js">
+(function(){
+  let workerMyOrdersRowsV2=[];
+  let adminAllWorkerOrdersRowsV2=[];
+  let workerOrderRealtimeV2=null;
+  let adminOrderRealtimeV2=null;
+  let soundUnlockedV2=false;
+  let initialAdminLoadedV2=false;
+
+  const DONE_V2=new Set(['입고완료','문의완료','수령확인','입고대조완료']);
+
+  function eV2(v){
+    if(typeof esc==='function')return esc(v);
+    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function ageDaysV2(created){
+    const n=new Date(created).getTime();
+    if(!Number.isFinite(n))return 0;
+    return Math.max(0,Math.floor((Date.now()-n)/86400000));
+  }
+  function dateV2(created){
+    try{
+      return new Date(created).toLocaleString('ko-KR',{
+        timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'
+      });
+    }catch(e){return ''}
+  }
+  function playToneV2(kind='normal'){
+    if(!soundUnlockedV2)return;
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return;
+      const ctx=new AC();
+      const once=(delay,freq)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.frequency.value=freq;o.type='sine';
+        g.gain.setValueAtTime(.0001,ctx.currentTime+delay);
+        g.gain.exponentialRampToValueAtTime(.12,ctx.currentTime+delay+.01);
+        g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+delay+.18);
+        o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+delay);o.stop(ctx.currentTime+delay+.2);
+      };
+      once(0,kind==='urgent'?980:820);
+      if(kind==='urgent')once(.23,980);
+      setTimeout(()=>ctx.close(),700);
+    }catch(e){}
+  }
+  ['click','touchstart','pointerdown'].forEach(ev=>{
+    window.addEventListener(ev,()=>{soundUnlockedV2=true},{passive:true});
+  });
+
+  function ensureWorkerCoreV2(){
+    const home=document.getElementById('home');
+    if(!home)return null;
+    let card=document.getElementById('mobileWorkerCoreV2');
+    if(card)return card;
+
+    card=document.createElement('section');
+    card.id='mobileWorkerCoreV2';
+    card.innerHTML=`
+      <div class="mw-title">
+        <span>📱 작업자 핵심 메뉴</span>
+        <span class="mw-live">공용 실시간</span>
+      </div>
+      <div class="mw-grid">
+        <button class="mw-btn" data-mwv2="location"><span class="ico">📍</span>자재위치확인<small>품번·품명으로 위치 검색</small></button>
+        <button class="mw-btn" data-mwv2="outbound"><span class="ico">📤</span>출고등록<small>사용 자재 출고 기록</small></button>
+        <button class="mw-btn" data-mwv2="inbound"><span class="ico">📥</span>입고등록<small>입고 자재 수량 등록</small></button>
+        <button class="mw-btn" data-mwv2="orders"><span class="ico">💬</span>주문·문의 통합관리<small>미완료 주문·문의 확인</small></button>
+        <button class="mw-btn" data-mwv2="myorders"><span class="ico">🧾</span>내 주문내역<small>내가 요청한 전체 기록</small></button>
+        <button class="mw-btn" data-mwv2="order"><span class="ico">🛒</span>카톡 주문하기<small>주문·문의 새로 보내기</small></button>
+      </div>
+      <div class="mw-alerts">
+        <div class="mw-age age3">⚠️ 3일 이상 <b id="workerAge3CountV2">0</b>건</div>
+        <div class="mw-age age7">🚨 7일 이상 <b id="workerAge7CountV2">0</b>건</div>
+      </div>`;
+
+    const welcome=home.querySelector('.welcome-row');
+    if(welcome)welcome.insertAdjacentElement('afterend',card);
+    else home.insertAdjacentElement('afterbegin',card);
+
+    card.querySelectorAll('[data-mwv2]').forEach(btn=>{
+      btn.onclick=async()=>{
+        if(!currentWorker){
+          try{showWorkerLogin()}catch(e){}
+          return alert('작업자 로그인 후 사용할 수 있습니다.');
+        }
+        const k=btn.dataset.mwv2;
+        if(k==='location')return openMode('location');
+        if(k==='outbound')return openMode('outbound');
+        if(k==='inbound')return openMode('inbound');
+        if(k==='order')return typeof openStandaloneOrder==='function'?openStandaloneOrder():openMode('order');
+        if(k==='orders'){
+          if(typeof openWorkerOrdersV43==='function')return openWorkerOrdersV43();
+          const c=document.getElementById('todayOrderCard');
+          if(c){c.style.display='block';c.scrollIntoView({behavior:'smooth'});}
+          return;
+        }
+        if(k==='myorders')return openMyOrdersV2();
+      };
+    });
+    return card;
+  }
+
+  function ensureMyOrdersV2(){
+    const home=document.getElementById('home');
+    if(!home)return null;
+    let card=document.getElementById('workerMyOrdersV2');
+    if(card)return card;
+    card=document.createElement('section');
+    card.id='workerMyOrdersV2';
+    card.innerHTML=`
+      <div class="my-order-head">
+        <b>🧾 내가 주문한 내역</b>
+        <button type="button" id="myOrdersCloseV2">닫기</button>
+      </div>
+      <div style="font-size:10px;color:#66776e;font-weight:800;margin-bottom:6px">
+        노랑 = 3일 이상 · 빨강 = 7일 이상 미완료
+      </div>
+      <div class="my-order-scroll">
+        <table>
+          <thead><tr><th style="width:110px">요청일시</th><th style="width:110px">품번</th><th style="width:250px">품명</th><th style="width:65px">수량</th><th style="width:100px">상태</th><th style="width:90px">경과</th><th style="width:145px">비고</th></tr></thead>
+          <tbody id="workerMyOrdersBodyV2"></tbody>
+        </table>
+      </div>`;
+    home.appendChild(card);
+    card.querySelector('#myOrdersCloseV2').onclick=()=>card.classList.remove('show');
+    return card;
+  }
+
+  async function loadMyOrdersV2(){
+    if(!currentWorker||!sharedReady||!sharedDb)return;
+    try{
+      const {data,error}=await sharedDb.from('production_order_requests')
+        .select('*')
+        .eq('requester',currentWorker.name)
+        .order('created_at',{ascending:false})
+        .limit(300);
+      if(error)throw error;
+      workerMyOrdersRowsV2=data||[];
+      renderMyOrdersV2();
+      renderWorkerAgeAlertV2();
+    }catch(e){console.warn('내 주문내역 불러오기 실패',e)}
+  }
+
+  function renderMyOrdersV2(){
+    const body=document.getElementById('workerMyOrdersBodyV2');
+    if(!body)return;
+    body.innerHTML=workerMyOrdersRowsV2.length?workerMyOrdersRowsV2.map(r=>{
+      const d=ageDaysV2(r.created_at),open=!DONE_V2.has(String(r.status||''));
+      const cls=open&&d>=7?'age7':open&&d>=3?'age3':'';
+      const badge=open&&d>=7?`<span class="age-badge a7">${d}일</span>`:
+                  open&&d>=3?`<span class="age-badge a3">${d}일</span>`:`${d}일`;
+      const note=typeof cleanOrderNote==='function'?cleanOrderNote(r.note):String(r.note||'');
+      return `<tr class="${cls}">
+        <td>${eV2(dateV2(r.created_at))}</td>
+        <td><b>${eV2(r.part_no||'')}</b></td>
+        <td class="name">${eV2(r.item_name||'')}</td>
+        <td>${Number(r.request_qty||0).toLocaleString()}</td>
+        <td>${eV2(r.status||'요청')}</td>
+        <td>${badge}</td>
+        <td title="${eV2(note)}">${eV2(note||'-')}</td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="7">내 주문·문의 내역이 없습니다.</td></tr>';
+  }
+
+  function renderWorkerAgeAlertV2(){
+    if(!currentWorker)return;
+    const open=workerMyOrdersRowsV2.filter(r=>!DONE_V2.has(String(r.status||'')));
+    const age7=open.filter(r=>ageDaysV2(r.created_at)>=7);
+    const age3=open.filter(r=>ageDaysV2(r.created_at)>=3 && ageDaysV2(r.created_at)<7);
+    const c3=document.getElementById('workerAge3CountV2');
+    const c7=document.getElementById('workerAge7CountV2');
+    if(c3)c3.textContent=String(age3.length);
+    if(c7)c7.textContent=String(age7.length);
+
+    const key='mirim_worker_age_alert_v2_'+currentWorker.name;
+    let prev={three:0,seven:0};
+    try{prev=JSON.parse(localStorage.getItem(key)||'{}')||prev}catch(e){}
+    const hasNew7=age7.length>Number(prev.seven||0);
+    const hasNew3=age3.length>Number(prev.three||0);
+    if(hasNew7||hasNew3){
+      if(soundUnlockedV2){
+        playToneV2(hasNew7?'urgent':'normal');
+        try{localStorage.setItem(key,JSON.stringify({three:age3.length,seven:age7.length}))}catch(e){}
+      }
+    }else{
+      try{localStorage.setItem(key,JSON.stringify({three:age3.length,seven:age7.length}))}catch(e){}
+    }
+  }
+
+  async function openMyOrdersV2(){
+    ensureMyOrdersV2()?.classList.add('show');
+    await loadMyOrdersV2();
+    document.getElementById('workerMyOrdersV2')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  window.openMyOrdersV2=openMyOrdersV2;
+
+  /* ===== 관리자: 모든 작업자 주문 데이터 ===== */
+  function ensureAdminWorkerOrdersV2(){
+    const home=document.getElementById('adminReferenceHome')||document.getElementById('home')||document.querySelector('main');
+    if(!home)return null;
+    let card=document.getElementById('adminWorkerOrdersV2');
+    if(card)return card;
+    card=document.createElement('section');
+    card.id='adminWorkerOrdersV2';
+    card.innerHTML=`
+      <div class="awo-head">
+        <div>
+          <span class="awo-title">🔔 작업자 주문·문의 전체</span>
+          <span class="awo-count" id="adminNewOrderCountV2">0</span>
+        </div>
+        <div>
+          <span class="awo-live">● 공용 실시간</span>
+          <button type="button" id="adminReloadOrdersV2" style="margin-left:6px;min-height:32px;border:1px solid #ccd8d1;border-radius:8px;background:#fff;font-weight:900">새로고침</button>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#66776e;font-weight:800;margin-bottom:7px">
+        모든 작업자의 주문·문의가 표시됩니다. 3일 이상 노랑 · 7일 이상 빨강
+      </div>
+      <div class="awo-scroll">
+        <table>
+          <thead><tr><th>요청일시</th><th>요청자</th><th>품번</th><th>품명</th><th>수량</th><th>상태</th><th>경과</th><th>비고</th></tr></thead>
+          <tbody id="adminWorkerOrdersBodyV2"></tbody>
+        </table>
+      </div>`;
+    home.appendChild(card);
+    card.querySelector('#adminReloadOrdersV2').onclick=loadAdminWorkerOrdersV2;
+    return card;
+  }
+
+  async function loadAdminWorkerOrdersV2(){
+    if(!isAdmin||!sharedReady||!sharedDb)return;
+    ensureAdminWorkerOrdersV2();
+    try{
+      const {data,error}=await sharedDb.from('production_order_requests')
+        .select('*').order('created_at',{ascending:false}).limit(500);
+      if(error)throw error;
+      const before=adminAllWorkerOrdersRowsV2[0]?.id;
+      adminAllWorkerOrdersRowsV2=data||[];
+      renderAdminWorkerOrdersV2();
+      if(initialAdminLoadedV2 && before && adminAllWorkerOrdersRowsV2[0]?.id!==before){
+        playToneV2('normal');
+      }
+      initialAdminLoadedV2=true;
+    }catch(e){console.warn('관리자 작업자 주문 전체 불러오기 실패',e)}
+  }
+
+  function renderAdminWorkerOrdersV2(){
+    const body=document.getElementById('adminWorkerOrdersBodyV2');
+    const count=document.getElementById('adminNewOrderCountV2');
+    if(!body)return;
+    const open=adminAllWorkerOrdersRowsV2.filter(r=>!DONE_V2.has(String(r.status||'')));
+    if(count)count.textContent=String(open.length);
+    body.innerHTML=adminAllWorkerOrdersRowsV2.length?adminAllWorkerOrdersRowsV2.map(r=>{
+      const d=ageDaysV2(r.created_at),isOpen=!DONE_V2.has(String(r.status||''));
+      const cls=isOpen&&d>=7?'age7':isOpen&&d>=3?'age3':'';
+      const note=typeof cleanOrderNote==='function'?cleanOrderNote(r.note):String(r.note||'');
+      return `<tr class="${cls}">
+        <td>${eV2(dateV2(r.created_at))}</td>
+        <td><b>${eV2(r.requester||'')}</b></td>
+        <td>${eV2(r.part_no||'')}</td>
+        <td class="name">${eV2(r.item_name||'')}</td>
+        <td>${Number(r.request_qty||0).toLocaleString()}</td>
+        <td>${eV2(r.status||'요청')}</td>
+        <td>${d}일</td>
+        <td>${eV2(note||'-')}</td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="8">작업자 주문·문의 데이터가 없습니다.</td></tr>';
+  }
+
+  function notifyAdminNewOrderV2(r){
+    if(!isAdmin)return;
+    playToneV2('normal');
+    try{
+      if('Notification' in window && Notification.permission==='granted'){
+        new Notification('🛒 새 작업자 주문·문의',{
+          body:`${r.requester||'작업자'} · ${r.part_no||''} · ${r.item_name||''}`
+        });
+      }
+    }catch(e){}
+  }
+
+  function startOrderRealtimeV2(){
+    if(!sharedReady||!sharedDb)return;
+
+    try{
+      workerOrderRealtimeV2=sharedDb.channel('mirim_worker_myorders_v2')
+        .on('postgres_changes',{event:'*',schema:'public',table:'production_order_requests'},()=>{
+          if(currentWorker)setTimeout(loadMyOrdersV2,120);
+        }).subscribe();
+    }catch(e){console.warn(e)}
+
+    try{
+      adminOrderRealtimeV2=sharedDb.channel('mirim_admin_workerorders_v2')
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'production_order_requests'},payload=>{
+          if(isAdmin){
+            notifyAdminNewOrderV2(payload.new||{});
+            setTimeout(loadAdminWorkerOrdersV2,100);
+          }
+        })
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'production_order_requests'},()=>{
+          if(isAdmin)setTimeout(loadAdminWorkerOrdersV2,100);
+        }).subscribe();
+    }catch(e){console.warn(e)}
+  }
+
+  async function bootWorkerCoreV2(){
+    ensureWorkerCoreV2();
+    ensureMyOrdersV2();
+
+    let tries=0;
+    while((!sharedReady||!sharedDb) && tries<40){
+      await new Promise(r=>setTimeout(r,400));tries++;
+    }
+    if(sharedReady&&sharedDb){
+      startOrderRealtimeV2();
+      if(currentWorker)await loadMyOrdersV2();
+      if(isAdmin){
+        ensureAdminWorkerOrdersV2();
+        await loadAdminWorkerOrdersV2();
+      }
+    }
+
+    /* Realtime이 막혀 있어도 5초마다 현재 화면 데이터 확인 */
+    if(window.__workerOrderPollV2)clearInterval(window.__workerOrderPollV2);
+    window.__workerOrderPollV2=setInterval(()=>{
+      if(document.visibilityState!=='visible')return;
+      if(currentWorker)loadMyOrdersV2();
+      if(isAdmin)loadAdminWorkerOrdersV2();
+    },5000);
+  }
+
+  /* 관리자/작업자 모드가 나중에 전환되어도 패널 생성 */
+  document.addEventListener('click',()=>{
+    setTimeout(()=>{
+      if(currentWorker)ensureWorkerCoreV2();
+      if(isAdmin){
+        ensureAdminWorkerOrdersV2();
+        loadAdminWorkerOrdersV2();
+      }
+    },150);
+  },true);
+
+  window.addEventListener('load',()=>setTimeout(bootWorkerCoreV2,900));
+})();
+</script>
+
 </body></html>
