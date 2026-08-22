@@ -11107,4 +11107,250 @@ body.admin-task-focus #locationOrganizerCard button{
 })();
 </script>
 
+
+<style id="worker-activity-admin-alert-v50">
+#adminWorkerActivityAlertCard{
+  display:none;
+  width:100%;
+  box-sizing:border-box;
+  margin:10px 0;
+  padding:12px;
+  border:1px solid #cfe0d6;
+  border-radius:13px;
+  background:#fff;
+}
+body.admin-view #adminWorkerActivityAlertCard{
+  display:block!important;
+}
+.admin-worker-alert-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.admin-worker-alert-title{
+  font-size:17px;
+  font-weight:1000;
+}
+.admin-worker-alert-count{
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#eaf6ee;
+  color:#17623c;
+  font-weight:1000;
+  font-size:12px;
+}
+.admin-worker-alert-list{
+  display:grid;
+  gap:6px;
+  max-height:260px;
+  overflow:auto;
+}
+.admin-worker-alert-item{
+  padding:8px 9px;
+  border:1px solid #e1e9e4;
+  border-radius:9px;
+  background:#f9fbfa;
+  font-size:12px;
+  line-height:1.4;
+}
+.admin-worker-alert-item.new{
+  background:#fff9da;
+  border-color:#e8cf6d;
+}
+.admin-worker-alert-item b{
+  color:#174e34;
+}
+.admin-worker-alert-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.admin-worker-alert-actions button{
+  min-height:34px;
+  padding:0 10px;
+  border:1px solid #bfd4c7;
+  border-radius:8px;
+  background:#fff;
+  color:#145a38;
+  font-weight:900;
+  font-size:11px;
+}
+</style>
+
+<script id="worker-activity-admin-alert-v50-js">
+const WORKER_ACTIVITY_KEY_V50='mirim_worker_activity_v50';
+let adminAlertAudioEnabledV50=false;
+let adminAlertLastSeenV50=Number(localStorage.getItem('mirim_admin_alert_last_seen_v50')||0);
+
+function getWorkerActivityV50(){
+  try{return JSON.parse(localStorage.getItem(WORKER_ACTIVITY_KEY_V50)||'[]')}catch(e){return []}
+}
+function setWorkerActivityV50(rows){
+  try{localStorage.setItem(WORKER_ACTIVITY_KEY_V50,JSON.stringify((rows||[]).slice(0,300)))}catch(e){}
+}
+
+function addWorkerActivityV50(type,detail){
+  if(isAdmin || !currentWorker)return;
+  const rows=getWorkerActivityV50();
+  rows.unshift({
+    id:Date.now()+Math.random(),
+    time:Date.now(),
+    worker:String(currentWorker?.name||'작업자'),
+    type:String(type||'작업'),
+    detail:String(detail||''),
+    read:false
+  });
+  setWorkerActivityV50(rows);
+}
+
+function enableAdminAlertSoundV50(){
+  if(!isAdmin)return;
+  adminAlertAudioEnabledV50=true;
+}
+
+function playAdminAlertSoundV50(){
+  if(!isAdmin || !adminAlertAudioEnabledV50)return;
+  try{
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    if(!AudioCtx)return;
+    const ctx=new AudioCtx();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(880,ctx.currentTime);
+    gain.gain.setValueAtTime(0.0001,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.12,ctx.currentTime+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime+0.2);
+    setTimeout(()=>ctx.close(),350);
+  }catch(e){}
+}
+
+function ensureAdminWorkerActivityAlertCardV50(){
+  if(document.getElementById('adminWorkerActivityAlertCard'))return;
+  const root=document.getElementById('adminReferenceHome') || document.getElementById('home');
+  if(!root)return;
+
+  const card=document.createElement('section');
+  card.id='adminWorkerActivityAlertCard';
+  card.innerHTML=`
+    <div class="admin-worker-alert-head">
+      <div>
+        <div class="admin-worker-alert-title">🔔 작업자 활동 알림</div>
+        <div style="font-size:11px;color:#6c7971;margin-top:2px">작업자 모드의 주요 움직임을 최근순으로 표시합니다.</div>
+      </div>
+      <div class="admin-worker-alert-actions">
+        <span id="adminWorkerAlertCountV50" class="admin-worker-alert-count">0건</span>
+        <button type="button" onclick="markAllAdminWorkerAlertsReadV50()">모두 확인</button>
+        <button type="button" onclick="renderAdminWorkerActivityAlertsV50()">새로고침</button>
+      </div>
+    </div>
+    <div id="adminWorkerAlertListV50" class="admin-worker-alert-list"></div>`;
+  const shortcuts=root.querySelector('.ar-shortcuts');
+  if(shortcuts)shortcuts.insertAdjacentElement('afterend',card);
+  else root.insertAdjacentElement('afterbegin',card);
+}
+
+function renderAdminWorkerActivityAlertsV50(){
+  if(!isAdmin)return;
+  ensureAdminWorkerActivityAlertCardV50();
+  const list=document.getElementById('adminWorkerAlertListV50');
+  const count=document.getElementById('adminWorkerAlertCountV50');
+  if(!list||!count)return;
+
+  const rows=getWorkerActivityV50();
+  const unread=rows.filter(x=>!x.read).length;
+  count.textContent=unread+'건';
+
+  list.innerHTML=rows.length?rows.slice(0,30).map(x=>{
+    const dt=new Date(x.time).toLocaleString('ko-KR');
+    return `<div class="admin-worker-alert-item ${x.read?'':'new'}">
+      <b>${esc(x.worker)}</b> · ${esc(x.type)}
+      <div>${esc(x.detail||'')}</div>
+      <div style="font-size:10px;color:#758178;margin-top:2px">${esc(dt)}</div>
+    </div>`;
+  }).join(''):'<div class="admin-worker-alert-item">최근 작업자 활동이 없습니다.</div>';
+
+  const latest=rows[0]?.time||0;
+  if(unread>0 && latest>adminAlertLastSeenV50){
+    playAdminAlertSoundV50();
+    adminAlertLastSeenV50=latest;
+    localStorage.setItem('mirim_admin_alert_last_seen_v50',String(latest));
+  }
+}
+
+function markAllAdminWorkerAlertsReadV50(){
+  if(!isAdmin)return;
+  const rows=getWorkerActivityV50().map(x=>({...x,read:true}));
+  setWorkerActivityV50(rows);
+  renderAdminWorkerActivityAlertsV50();
+}
+
+/* 관리자 화면 한 번 클릭/터치 후 소리 허용 */
+['click','touchstart','pointerdown'].forEach(evt=>{
+  window.addEventListener(evt,()=>{
+    if(isAdmin)enableAdminAlertSoundV50();
+  },{passive:true});
+});
+
+/* 작업자 주요 행동 기록 */
+document.addEventListener('click',e=>{
+  if(isAdmin || !currentWorker)return;
+  const btn=e.target.closest('button');
+  if(!btn)return;
+  const txt=(btn.innerText||'').replace(/\s+/g,' ').trim();
+  if(!txt)return;
+
+  if(txt.includes('검색')){
+    addWorkerActivityV50('검색',txt);
+  }else if(txt.includes('카톡') || txt.includes('TALK')){
+    addWorkerActivityV50('카톡 문의/주문',txt);
+  }else if(txt.includes('본인확인') || txt.includes('자재확인')){
+    addWorkerActivityV50('자재 확인',txt);
+  }else if(txt.includes('나중에 확인')){
+    addWorkerActivityV50('나중에 확인',txt);
+  }else if(txt.includes('반환')){
+    addWorkerActivityV50('자재 반환',txt);
+  }else if(txt.includes('입고')){
+    addWorkerActivityV50('입고 작업',txt);
+  }else if(txt.includes('출고')){
+    addWorkerActivityV50('출고 작업',txt);
+  }else if(txt.includes('주문') || txt.includes('문의')){
+    addWorkerActivityV50('주문/문의 확인',txt);
+  }
+});
+
+/* 검색창 Enter 등 버튼 없이 실행되는 경우 */
+document.addEventListener('keydown',e=>{
+  if(isAdmin || !currentWorker || e.key!=='Enter')return;
+  const el=e.target;
+  if(el && (el.tagName==='INPUT' || el.tagName==='TEXTAREA')){
+    const val=String(el.value||'').trim();
+    if(val) addWorkerActivityV50('검색/입력',val);
+  }
+});
+
+/* 관리자 모드에서는 주기적으로 새 활동 확인 */
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(isAdmin){
+      ensureAdminWorkerActivityAlertCardV50();
+      renderAdminWorkerActivityAlertsV50();
+    }
+  },1200);
+});
+setInterval(()=>{
+  if(isAdmin && document.visibilityState==='visible'){
+    renderAdminWorkerActivityAlertsV50();
+  }
+},15000);
+</script>
+
 </body></html>
