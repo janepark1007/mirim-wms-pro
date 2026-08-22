@@ -12809,4 +12809,168 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 }
 </style>
 
+
+<style id="worker-pc-mobile-unified-v21">
+/* =========================================================
+   작업자 모드 PC / 모바일 핵심 메뉴 완전 통일
+   - 같은 메뉴, 같은 색상, 같은 기능
+   - 화면 크기에 따라 배열만 변경
+   ========================================================= */
+
+/* 기존 구형 작업자 바로가기 메뉴는 작업자 모드에서 숨김 */
+body:not(.admin-view) #workerMainShortcutCard{
+  display:none!important;
+}
+
+/* 새 핵심 메뉴는 PC/모바일 모두 표시 */
+body:not(.admin-view) #mobileWorkerCoreV2{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:calc(100% - 20px)!important;
+  max-width:1180px!important;
+  margin:14px auto!important;
+  padding:16px!important;
+  box-sizing:border-box!important;
+}
+
+/* 제목 */
+body:not(.admin-view) #mobileWorkerCoreV2 h2,
+body:not(.admin-view) #mobileWorkerCoreV2 h3,
+body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-title{
+  font-size:26px!important;
+  line-height:1.25!important;
+  font-weight:1000!important;
+  text-align:center!important;
+  margin:0 0 14px!important;
+}
+
+/* 공통 그리드 */
+body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-grid,
+body:not(.admin-view) #mobileWorkerCoreV2 .quick{
+  display:grid!important;
+  gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
+}
+
+/* PC: 핵심 메뉴 3열 */
+@media(min-width:761px){
+  body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-grid,
+  body:not(.admin-view) #mobileWorkerCoreV2 .quick{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+
+  body:not(.admin-view) #mobileWorkerCoreV2 button{
+    min-height:82px!important;
+    font-size:21px!important;
+    padding:14px 12px!important;
+  }
+}
+
+/* 모바일: 핵심 메뉴 2열 */
+@media(max-width:760px){
+  body:not(.admin-view) #mobileWorkerCoreV2{
+    width:calc(100% - 10px)!important;
+    max-width:100%!important;
+    margin:8px auto!important;
+    padding:10px!important;
+  }
+
+  body:not(.admin-view) #mobileWorkerCoreV2 .worker-core-grid,
+  body:not(.admin-view) #mobileWorkerCoreV2 .quick{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+
+  body:not(.admin-view) #mobileWorkerCoreV2 button{
+    min-height:76px!important;
+    font-size:19px!important;
+    padding:12px 7px!important;
+  }
+}
+
+/* 아주 작은 모바일에서도 메뉴가 깨지지 않게 */
+@media(max-width:360px){
+  body:not(.admin-view) #mobileWorkerCoreV2 button{
+    min-height:72px!important;
+    font-size:17px!important;
+    padding:10px 5px!important;
+  }
+}
+
+/* PC/모바일 공통 버튼 안전 처리 */
+body:not(.admin-view) #mobileWorkerCoreV2 button{
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:keep-all!important;
+  text-align:center!important;
+  font-weight:1000!important;
+  border-radius:12px!important;
+}
+
+/* 기존에 맞춘 핵심 메뉴 색상 유지 */
+body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*="openStandaloneOrder"]{
+  background:#fee500!important;
+  color:#2b2200!important;
+  border:1px solid #d7bd00!important;
+}
+
+body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*="openMode('outbound')"],
+body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("outbound")']{
+  background:#fde8e8!important;
+  color:#9f1d1d!important;
+  border:1px solid #f2bcbc!important;
+}
+
+body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*="openMode('inbound')"],
+body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("inbound")']{
+  background:#dff7ee!important;
+  color:#0b6b52!important;
+  border:1px solid #b6e8d8!important;
+}
+
+body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*="openMode('location')"],
+body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")']{
+  background:#eee7fb!important;
+  color:#5e3aa8!important;
+  border:1px solid #d6c7f2!important;
+}
+</style>
+
+<script id="worker-pc-mobile-unified-v21-js">
+(function(){
+  function unifyWorkerMenuV21(){
+    if(isAdmin)return;
+
+    const core=document.getElementById('mobileWorkerCoreV2');
+    const old=document.getElementById('workerMainShortcutCard');
+
+    if(old){
+      old.style.setProperty('display','none','important');
+    }
+
+    if(core){
+      core.classList.remove('hidden');
+      core.style.setProperty('display','block','important');
+      core.style.setProperty('visibility','visible','important');
+      core.style.setProperty('opacity','1','important');
+    }
+  }
+
+  window.addEventListener('load',()=>setTimeout(unifyWorkerMenuV21,500));
+  window.addEventListener('resize',()=>setTimeout(unifyWorkerMenuV21,50));
+  document.addEventListener('click',()=>setTimeout(unifyWorkerMenuV21,50),true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__workerMenuV21);
+    window.__workerMenuV21=setTimeout(unifyWorkerMenuV21,50);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+})();
+</script>
+
 </body></html>
