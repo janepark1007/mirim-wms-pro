@@ -14459,4 +14459,75 @@ body.admin-view button[onclick*='openExistingAdminSection("match")']{
   }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+
+<!-- STEP34: 관리자 바로가기 NAS 엑셀 연동 제거 + 남은 버튼 화면폭 균등 정렬 -->
+<style id="step34-admin-shortcuts-fullwidth">
+/* 관리자 바로가기에서 NAS 엑셀 연동 버튼 강제 숨김 */
+body.admin-view #adminReferenceHome .ar-grid button[onclick*="openExistingAdminSection('nas')"],
+body.admin-view #adminReferenceHome .ar-grid button[onclick*='openExistingAdminSection("nas")'],
+body.admin-view #adminReferenceHome .ar-grid .admin-nas-shortcut,
+body.admin-view .admin-welcome-shortcut-btn[onclick*="openExistingAdminSection('nas')"],
+body.admin-view .admin-welcome-shortcut-btn[onclick*='openExistingAdminSection("nas")']{
+  display:none!important;
+  visibility:hidden!important;
+}
+
+/* 남은 관리자 바로가기 버튼이 각 줄의 가로폭을 빈자리 없이 채우도록 */
+body.admin-view #adminReferenceHome .ar-grid{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  width:100%!important;
+  align-items:stretch!important;
+}
+body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
+  flex:1 1 210px!important;
+  width:auto!important;
+  min-width:190px!important;
+  max-width:none!important;
+  min-height:74px!important;
+}
+
+@media(max-width:760px){
+  body.admin-view #adminReferenceHome .ar-grid{gap:7px!important}
+  body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
+    flex:1 1 calc(50% - 7px)!important;
+    min-width:145px!important;
+  }
+}
+@media(max-width:390px){
+  body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
+    flex-basis:100%!important;
+    min-width:0!important;
+  }
+}
+</style>
+<script id="step34-admin-shortcuts-fullwidth-js">
+(function(){
+  function cleanNasShortcutStep34(){
+    if(!(window.isAdmin || document.body.classList.contains('admin-view'))) return;
+    const roots=[document.getElementById('adminReferenceHome'), document];
+    roots.forEach(root=>{
+      if(!root)return;
+      root.querySelectorAll(
+        "button[onclick*=\"openExistingAdminSection('nas')\"],button[onclick*='openExistingAdminSection(\"nas\")']"
+      ).forEach(btn=>{
+        const inShortcut = btn.closest('.ar-grid') || btn.classList.contains('admin-welcome-shortcut-btn');
+        if(inShortcut) btn.remove();
+      });
+      /* onclick 문자열이 변형되어도 관리자 바로가기에서 NAS 엑셀 연동 문구면 제거 */
+      root.querySelectorAll('#adminReferenceHome .ar-grid button,.admin-welcome-shortcut-btn').forEach(btn=>{
+        if((btn.textContent||'').replace(/\s+/g,' ').includes('NAS 엑셀 연동')) btn.remove();
+      });
+    });
+  }
+  window.addEventListener('load',()=>setTimeout(cleanNasShortcutStep34,150));
+  document.addEventListener('click',()=>setTimeout(cleanNasShortcutStep34,20),true);
+  const obs=new MutationObserver(()=>{
+    if(document.body.classList.contains('admin-view')) cleanNasShortcutStep34();
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
 </body></html>
