@@ -4531,15 +4531,21 @@ function renderTodayOrderRequests(){
        const mine=currentWorker&&String(r.requester||'')===String(currentWorker.name||'');
 
        const confirmedQty=orderReceivedQty(r.note),approvalReq=orderReceiptApprovalRequest(r.note);
+       const receiptInfo=orderReceiptInfo(r.note);
+       const adminReceiptDone=/관리자승인:|관리자직접확인|\[관리자최종확인:/.test(String(r.note||''));
+       /* 관리자 확인창은 '실제 작업자 본인확인' 또는 '실제 승인대기' 해당 건에만 표시한다.
+          관리자가 이미 확인한 건은 기록은 남기되 화면의 확인창에서는 즉시 제외한다. */
+       const exactSelfConfirmed = String(r.status||'')==='수령확인' && !!receiptInfo && confirmedQty>0 && !adminReceiptDone;
+       const exactApprovalPending = String(r.status||'')==='수령승인대기' && !!approvalReq && approvalReq.qty>0;
        const inboundMatchedQty=(typeof orderInboundMatchedQty==='function')?Number(orderInboundMatchedQty(r.note)||0):0;
        const canWorkerConfirmInbound = !isInquiry && !isAdmin && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
        const workerAction = isInquiry ? '' :
          (isAdmin
-           ? ((confirmedQty||approvalReq) ? `<div class="worker-receive-check admin-worker-receive">
+           ? ((exactSelfConfirmed||exactApprovalPending) ? `<div class="worker-receive-check admin-worker-receive">
                 <input id="admin_worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric"
-                       value="${confirmedQty||approvalReq?.qty||''}" placeholder="받은 수량">
-                ${confirmedQty?`<button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>`:''}
-                ${approvalReq?`<button class="approval-receive-btn" onclick="adminApproveWorkerReceipt(${r.id})">🔐 ${esc(approvalReq.worker)} ${Number(approvalReq.qty||0).toLocaleString()}개 승인</button>`:''}
+                       value="${exactSelfConfirmed?confirmedQty:(approvalReq?.qty||'')}" placeholder="받은 수량">
+                ${exactSelfConfirmed?`<button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>`:''}
+                ${exactApprovalPending?`<button class="approval-receive-btn" onclick="adminApproveWorkerReceipt(${r.id})">🔐 ${esc(approvalReq.worker)} ${Number(approvalReq.qty||0).toLocaleString()}개 승인</button>`:''}
               </div>` : '')
            : (r.status==='수령승인대기'
               ? `<div class="worker-receive-check">
@@ -4667,7 +4673,8 @@ async function shareOrderRequest(x,i){
 
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
-     <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
+     <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre><!-- step26: admin confirm exact relevant only -->
+</body></html>`);
      w.document.close();
    }
    alert('문의내용을 복사했습니다. 사진과 함께 「미림 자재 문의」 카톡방으로 보내주세요.');
@@ -14162,4 +14169,5 @@ body.admin-view.admin-reference-home #adminWorkerOrdersV2{
 })();
 </script>
 
+<!-- step26: admin confirm exact relevant only -->
 </body></html>
