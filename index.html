@@ -13161,4 +13161,135 @@ body.admin-view #adminReferenceHome .ar-btn{
 })();
 </script>
 
+
+<script id="admin-shortcut-navigation-fix-v29">
+(function(){
+  function resetAdminFocusV29(){
+    /* 이전에 열었던 관리자 단독보기의 이동된 요소를 원래 위치로 복구 */
+    try{
+      if(typeof restoreAdminTaskElements==='function') restoreAdminTaskElements();
+    }catch(e){console.warn(e);}
+    try{
+      if(typeof restoreAdminShortcutFocusV41==='function') restoreAdminShortcutFocusV41();
+    }catch(e){console.warn(e);}
+
+    document.body.classList.remove('admin-task-focus','admin-shortcut-focus');
+
+    const taskPanel=document.getElementById('adminTaskFocusPanel');
+    if(taskPanel) taskPanel.classList.add('hidden');
+
+    const shortcutPanel=document.getElementById('adminShortcutFocusPanel');
+    if(shortcutPanel) shortcutPanel.style.display='none';
+
+    const taskContent=document.getElementById('adminTaskFocusContent');
+    if(taskContent) taskContent.innerHTML='';
+
+    const shortcutContent=document.getElementById('adminShortcutFocusContent');
+    if(shortcutContent) shortcutContent.innerHTML='';
+  }
+
+  function openAdminIoV29(kind){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+    resetAdminFocusV29();
+
+    /* 관리자 메인을 완전히 닫고 입/출고 작업화면만 표시 */
+    document.body.classList.remove('admin-reference-home');
+
+    const ref=document.getElementById('adminReferenceHome');
+    if(ref)ref.style.display='none';
+
+    const home=document.getElementById('home');
+    if(home)home.classList.add('hidden');
+
+    const work=document.getElementById('work');
+    if(work)work.classList.remove('hidden');
+
+    const photo=document.getElementById('photoSearchPanel');
+    if(photo)photo.classList.add('hidden');
+
+    mode=kind;
+
+    const title=document.getElementById('title');
+    if(title)title.textContent=kind==='outbound'?'빠른 출고':'빠른 입고';
+
+    const q=document.getElementById('q');
+    if(q)q.value='';
+
+    const results=document.getElementById('results');
+    if(results)results.innerHTML='';
+
+    const count=document.getElementById('count');
+    if(count)count.textContent='';
+
+    setTimeout(()=>q?.focus(),50);
+  }
+
+  async function runAdminShortcutV29(kind){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+    if(kind==='inbound' || kind==='outbound'){
+      openAdminIoV29(kind);
+      return;
+    }
+
+    resetAdminFocusV29();
+
+    if(['orders','match','later','history','unreg'].includes(kind)){
+      await openAdminTaskView(kind);
+      return;
+    }
+
+    if(['records','location','nas','users','alerts'].includes(kind)){
+      if(typeof openAdminShortcutListV41==='function'){
+        await openAdminShortcutListV41(kind);
+      }else{
+        openExistingAdminSection(kind);
+      }
+    }
+  }
+
+  function getAdminShortcutKindV29(btn){
+    if(btn.classList.contains('in'))return 'inbound';
+    if(btn.classList.contains('out'))return 'outbound';
+    if(btn.classList.contains('order'))return 'orders';
+    if(btn.classList.contains('match'))return 'match';
+    if(btn.classList.contains('later'))return 'later';
+    if(btn.classList.contains('unreg'))return 'unreg';
+
+    const onclick=btn.getAttribute('onclick')||'';
+    if(onclick.includes("'history'"))return 'history';
+    if(onclick.includes("'records'"))return 'records';
+    if(onclick.includes("'location'"))return 'location';
+    if(onclick.includes("'nas'"))return 'nas';
+    if(onclick.includes("'users'"))return 'users';
+    if(onclick.includes("'alerts'"))return 'alerts';
+
+    return '';
+  }
+
+  /* 기존에 여러 번 덧씌워진 onclick보다 먼저 정확한 동작을 실행 */
+  document.addEventListener('click',function(e){
+    if(!isAdmin)return;
+
+    const btn=e.target.closest('#adminReferenceHome .ar-btn');
+    if(!btn)return;
+
+    const kind=getAdminShortcutKindV29(btn);
+    if(!kind)return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    Promise.resolve(runAdminShortcutV29(kind)).catch(err=>{
+      console.error('관리자 바로가기 실행 오류',err);
+      alert('관리 화면을 열지 못했습니다.');
+    });
+  },true);
+
+  window.resetAdminFocusV29=resetAdminFocusV29;
+})();
+</script>
+
 </body></html>
