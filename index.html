@@ -965,33 +965,6 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
-
-<style id="admin-stat-strip-horizontal-v33">
-/* STEP33: 관리자 현황 5개를 PC 모든 화면에서 가로 한 줄로 고정 */
-@media (min-width:761px){
-  .admin-stat-strip{
-    display:grid!important;
-    grid-template-columns:repeat(5,minmax(0,1fr))!important;
-    width:100%!important;
-    align-items:stretch!important;
-  }
-  .admin-stat-strip>div{
-    min-width:0!important;
-    border-right:1px solid rgba(255,255,255,.20)!important;
-  }
-  .admin-stat-strip>div:last-child{border-right:0!important;}
-}
-/* 모바일은 읽기 좋게 2열, 마지막 항목은 전체폭 */
-@media (max-width:760px){
-  .admin-stat-strip{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-  .admin-stat-strip>div:nth-child(2n){border-right:0!important;}
-  .admin-stat-strip>div:last-child{grid-column:1/-1!important;border-right:0!important;}
-}
-</style>
-<style id="admin2-mode-style">
-#admin2LoginBtn{border-color:#6f5bd3;color:#4f3db0;background:#f4f1ff}
-body.admin2-view #admin2LoginBtn{background:#4f3db0;color:#fff;border-color:#4f3db0}
-</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1001,7 +974,7 @@ body.admin2-view #admin2LoginBtn{background:#4f3db0;color:#fff;border-color:#4f3
       <button type="button" class="order-modal-close" onclick="closeVipLogin()">✕</button>
     </div>
     <label class="order-note-label">VIP PIN
-      <input id="vipPinInput" type="password" maxlength="32" autocomplete="current-password" placeholder="VIP 비밀번호 입력">
+      <input id="vipPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="VIP PIN 입력">
     </label>
     <div id="vipLoginError" class="vip-login-error hidden"></div>
     <button type="button" class="primary" style="width:100%;min-height:50px;margin-top:12px" onclick="submitVipLogin()">VIP BOM 관리 열기</button>
@@ -1079,7 +1052,6 @@ body.admin2-view #admin2LoginBtn{background:#4f3db0;color:#fff;border-color:#4f3
     <button id="loginLogBtn" class="admin-btn hidden">👤 로그인 이력</button>
     <button id="notifBtn" class="admin-btn hidden">🔔 <span class="desktop-only">알림 </span><span id="notifCount">0</span></button>
     <button id="adminLoginBtn" class="admin-btn">관리자 로그인</button>
-    <button id="admin2LoginBtn" class="admin-btn" type="button">관리자 모드2</button>
     <button id="homeBtn" class="primary compact-home-btn">홈</button>
   </div>
 </header>
@@ -1413,31 +1385,6 @@ body.admin2-view #admin2LoginBtn{background:#4f3db0;color:#fff;border-color:#4f3
       <span id="todayOrderCount" class="worker-badge">0건</span>
     </div>
     <div class="order-age-legend"><span class="age3">3일 이상 · 재확인</span><span class="age7">7일 이상 · 긴급 재확인</span><b>완료되지 않은 주문·문의 품번에 표시됩니다.</b></div>
-
-    <section id="workerConfirmDoneBoxV42" class="worker-confirm-done-box-v42">
-      <div class="wcd42-head">
-        <div class="wcd42-title">✅ 작업자 본인확인 완료</div>
-        <span id="workerConfirmDoneCountV42" class="wcd42-count">0건</span>
-      </div>
-      <div class="wcd42-table-wrap">
-        <table class="wcd42-table">
-          <thead>
-            <tr>
-              <th>확인시간</th>
-              <th>작업자</th>
-              <th>품번</th>
-              <th>품명</th>
-              <th>확인수량</th>
-              <th>상태</th>
-            </tr>
-          </thead>
-          <tbody id="workerConfirmDoneBodyV42">
-            <tr><td colspan="6" class="wcd42-empty">본인확인 기록을 확인하는 중...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
     <datalist id="orderReplySuggestions"><option value="수량을 다시 확인해 달라는 답변을 받았습니다."><option value="현재 필요한 정확한 수량을 재확인 요청받았습니다."><option value="재고수량 확인 후 다시 알려 달라는 답변을 받았습니다."><option value="주문 가능 수량을 다시 알려 달라는 답변을 받았습니다."></datalist>
     <div id="pendingOrderAlert"></div>
     <div class="order-table-wrap">
@@ -2031,7 +1978,6 @@ async function submitStandaloneOrder(){
 function openMode(m){
  if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
  if(m==='order'){openStandaloneOrder();return;}
- document.body.classList.toggle('admin-quick-io',!!isAdmin&&(m==='inbound'||m==='outbound'));
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
  const m=b.dataset.mode;
@@ -2039,12 +1985,6 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
 });
 $('adminLoginBtn').onclick=adminLogin;
 $('homeBtn').onclick=async()=>{
- if(isAdmin){
-   $('work').classList.add('hidden');
-   $('photoSearchPanel')?.classList.add('hidden');
-   showAdminReferenceHome();
-   return;
- }
  if(!currentWorker){showWorkerLogin();return;}
  $('work').classList.add('hidden');
  $('photoSearchPanel')?.classList.add('hidden');
@@ -2990,12 +2930,11 @@ function renderWorkerPersonalTasks(){
 }
 
 function updatePrivilegedAccessUI(){
+ const workerOnly=!!currentWorker&&!isAdmin;
  const vipOpen=sessionStorage.getItem('mirim_vip_view')==='1';
  const adminBtn=$('adminLoginBtn'),vipBtn=$('vipLoginBtn'),workerBtn=$('workerLoginBtn');
- /* 작업자 로그인 후 관리자 로그인 가능 */
- if(adminBtn)adminBtn.style.display=(vipOpen||(!currentWorker&&!isAdmin))?'none':'';
- /* VIP는 관리자 로그인 후에만 표시 */
- if(vipBtn)vipBtn.style.display=(isAdmin&&!vipOpen)?'':'none';
+ if(adminBtn)adminBtn.style.display=(workerOnly||vipOpen)?'none':'';
+ if(vipBtn)vipBtn.style.display=workerOnly?'none':'';
  if(workerBtn)workerBtn.style.display=(isAdmin||vipOpen)?'none':'';
 }
 
@@ -3188,12 +3127,9 @@ async function loadWorkerLoginLogs(){
    alert('로그인 이력 불러오기 실패: '+(e.message||e));
  }
 }
-let isAdmin=false;
-let isAdmin2=false;
-/* 관리자/VIP는 자동복원하지 않고 매번 비밀번호 입력 */
-sessionStorage.removeItem('mirim_prod_admin');
-sessionStorage.removeItem('mirim_vip_ok');
-sessionStorage.removeItem('mirim_vip_view');
+let isAdmin=sessionStorage.getItem('mirim_prod_admin')==='1';
+// 새로고침 시 저장된 관리자 모드를 우선 복원하고 남아 있는 작업자 세션만 정리
+if(currentWorker&&isAdmin){currentWorker=null;sessionStorage.removeItem('mirim_worker_session');}
 
 function updateAdminUI(){
  try{
@@ -3252,107 +3188,37 @@ function updateAdminUI(){
    uc.style.display=isAdmin?'block':'none';
  }
 }
-const MIRIM_ADMIN_PASSWORD_HASH='55ba1fa16f5d68266980097522bdd5c76f0ded4ea528a15f6a07ca7d0a0965b3';
-
-async function adminLogin(){
+function adminLogin(){
+ if(currentWorker&&!isAdmin){alert('일반 작업자 로그인 상태에서는 관리자 모드에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
  if(isAdmin){
    isAdmin=false;
-   sessionStorage.removeItem('mirim_prod_admin');
-   sessionStorage.removeItem('mirim_admin_last_activity_v11');
-   sessionStorage.removeItem('mirim_vip_ok');
-   sessionStorage.removeItem('mirim_vip_view');
-   document.body.classList.remove('admin-reference-home','admin-task-focus','admin-shortcut-focus','admin-quick-io');
+   sessionStorage.removeItem('mirim_prod_admin');sessionStorage.removeItem('mirim_admin_last_activity_v11');
    updateAdminUI();
-   updateWorkerUI();
+   if(!currentWorker) updateWorkerUI();
    return;
  }
-
- if(!currentWorker){
-   alert('먼저 작업자 로그인을 해주세요.');
-   try{showWorkerLogin();}catch(e){}
-   return;
+ const cfg=window.MIRIM_CONFIG||{};
+ const adminPin = String(cfg.adminPin || '2589');
+ const pin=prompt('관리자 PIN을 입력하세요.');
+ if(pin===null)return;
+ if(String(pin)===adminPin){
+   isAdmin=true;
+   sessionStorage.setItem('mirim_prod_admin','1');
+   currentWorker=null;
+   sessionStorage.removeItem('mirim_worker_session');
+   document.body.classList.remove('worker-locked');
+   $('workerLoginPanel')?.classList.add('hidden');
+   $('home')?.classList.remove('hidden');
+   updateAdminUI();
+   try{updateHomeSummary();}catch(e){}
+   try{loadAdminNotifications();}catch(e){}
+   updateAdminUI();
+   try{showAdminReferenceHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
+   alert('관리자 로그인 완료');
+ }else{
+   alert('관리자 PIN이 맞지 않습니다.');
  }
-
- const pw=prompt('관리자 비밀번호를 입력하세요.');
- if(pw===null)return;
- if(await sha256Text(String(pw).trim())!==MIRIM_ADMIN_PASSWORD_HASH){
-   alert('관리자 비밀번호가 맞지 않습니다.');
-   return;
- }
-
- /* 관리자 진입 시 작업자 세션을 분리해 관리자 기능 충돌 방지 */
- isAdmin=true;
- sessionStorage.setItem('mirim_prod_admin','1');
- currentWorker=null;
- sessionStorage.removeItem('mirim_worker_session');
-
- document.body.classList.remove('worker-locked','admin-task-focus','admin-shortcut-focus','admin-quick-io');
- $('workerLoginPanel')?.classList.add('hidden');
- updateAdminUI();
- try{updateHomeSummary();}catch(e){}
- try{loadAdminNotifications();}catch(e){}
- try{showAdminReferenceHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
- alert('✅ 관리자 로그인 완료');
 }
-
-/* 관리자 모드2 로그인 - ID mirin / 비밀번호 1006 */
-const MIRIM_ADMIN2_ID='mirin';
-const MIRIM_ADMIN2_PASSWORD_HASH='478c4ffb1cbcea37956a748e6c19d8eadd0a47e86f5e308d26cad39453b5d1ab';
-
-async function admin2Login(){
-  if(isAdmin2){
-    isAdmin2=false;
-    isAdmin=false;
-    sessionStorage.removeItem('mirim_prod_admin2');
-    sessionStorage.removeItem('mirim_prod_admin');
-    document.body.classList.remove('admin2-view','admin-view','admin-reference-home','admin-task-focus','admin-shortcut-focus','admin-quick-io');
-    try{updateAdminUI();}catch(e){}
-    try{updateWorkerUI();}catch(e){}
-    alert('관리자 모드2에서 로그아웃했습니다.');
-    return;
-  }
-  const id=prompt('관리자 모드2 아이디를 입력하세요.');
-  if(id===null)return;
-  const pw=prompt('관리자 모드2 비밀번호를 입력하세요.');
-  if(pw===null)return;
-  if(String(id).trim()!==MIRIM_ADMIN2_ID || await sha256Text(String(pw).trim())!==MIRIM_ADMIN2_PASSWORD_HASH){
-    alert('관리자 모드2 아이디 또는 비밀번호가 맞지 않습니다.');
-    return;
-  }
-  isAdmin2=true;
-  isAdmin=true; // 기존 관리자 기능을 그대로 사용할 수 있게 연결
-  sessionStorage.setItem('mirim_prod_admin2','1');
-  sessionStorage.setItem('mirim_prod_admin','1');
-  currentWorker=null;
-  sessionStorage.removeItem('mirim_worker_session');
-  document.body.classList.remove('worker-locked','admin-task-focus','admin-shortcut-focus','admin-quick-io');
-  document.body.classList.add('admin2-view');
-  $('workerLoginPanel')?.classList.add('hidden');
-  try{updateAdminUI();}catch(e){}
-  try{updateHomeSummary();}catch(e){}
-  try{showAdminReferenceHome();}catch(e){console.warn(e);}
-  const rp=$('roleModePill'); if(rp)rp.textContent='관리자 모드2';
-  const wt=$('welcomeTitle'); if(wt)wt.textContent='안녕하세요, 관리자 모드2님!';
-  const b=$('admin2LoginBtn'); if(b)b.textContent='관리자2 로그아웃';
-  alert('✅ 관리자 모드2 로그인 완료');
-}
-
-(function initAdmin2(){
-  const btn=document.getElementById('admin2LoginBtn');
-  if(btn)btn.onclick=admin2Login;
-  if(sessionStorage.getItem('mirim_prod_admin2')==='1'){
-    isAdmin2=true;
-    isAdmin=true;
-    document.body.classList.add('admin2-view');
-    setTimeout(()=>{
-      try{updateAdminUI();showAdminReferenceHome();}catch(e){}
-      const rp=$('roleModePill'); if(rp)rp.textContent='관리자 모드2';
-      const wt=$('welcomeTitle'); if(wt)wt.textContent='안녕하세요, 관리자 모드2님!';
-      const b=$('admin2LoginBtn'); if(b)b.textContent='관리자2 로그아웃';
-    },0);
-  }
-})();
-
 // 관리자 상태 선언이 완료된 뒤 UI 초기화
 updateAdminUI();
 
@@ -4354,11 +4220,7 @@ function orderReceivedQty(note){
 }
 function orderReceiptApprovalRequest(note){
  const m=String(note||'').match(/\[수령승인요청:([^\/\]]+)\/\s*수량:([0-9.]+)\s*\/\s*사유:([^\/\]]*)\/\s*([^\]]+)\]/);
- if(!m)return null;
- const req={worker:String(m[1]||'').trim(),qty:Number(m[2]||0),reason:String(m[3]||'').trim(),time:String(m[4]||'').trim()};
- /* 이유가 없는 승인요청은 관리자 주문확인 대상에 표시하지 않음 */
- if(!req.reason)return null;
- return req;
+ return m?{worker:String(m[1]||'').trim(),qty:Number(m[2]||0),reason:String(m[3]||'').trim(),time:String(m[4]||'').trim()}:null;
 }
 async function workerConfirmOrderReceived(id){
  if(!currentWorker)return alert('작업자 로그인 후 사용할 수 있습니다.');
@@ -4588,7 +4450,6 @@ async function adminKakaoOrderInquiry(id){
 }
 
 function renderTodayOrderRequests(){
- if(isAdmin){try{loadWorkerConfirmDoneV42();}catch(e){console.warn(e);}}
  const body=$('todayOrderBody');
  const count=$('todayOrderCount');
  const rangeLabel=$('orderRangeLabel');
@@ -4619,21 +4480,16 @@ function renderTodayOrderRequests(){
        const mine=currentWorker&&String(r.requester||'')===String(currentWorker.name||'');
 
        const confirmedQty=orderReceivedQty(r.note),approvalReq=orderReceiptApprovalRequest(r.note);
-       const receiptInfo=orderReceiptInfo(r.note);
-       const adminReceiptDone=/관리자승인:|관리자직접확인|\[관리자최종확인:/.test(String(r.note||''));
-       /* 관리자 확인창은 '실제 작업자 본인확인' 또는 '실제 승인대기' 해당 건에만 표시한다.
-          관리자가 이미 확인한 건은 기록은 남기되 화면의 확인창에서는 즉시 제외한다. */
-       const exactSelfConfirmed = String(r.status||'')==='수령확인' && !!receiptInfo && confirmedQty>0 && !adminReceiptDone;
-       const exactApprovalPending = String(r.status||'')==='수령승인대기' && !!approvalReq && approvalReq.qty>0;
        const inboundMatchedQty=(typeof orderInboundMatchedQty==='function')?Number(orderInboundMatchedQty(r.note)||0):0;
        const canWorkerConfirmInbound = !isInquiry && !isAdmin && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
        const workerAction = isInquiry ? '' :
          (isAdmin
-           ? (exactSelfConfirmed
-              ? `<div class="admin-selfconfirm-v30"><span>✅ 작업자 본인확인</span><b>${Number(confirmedQty||0).toLocaleString()}개</b><small>${esc(receiptInfo||'')}</small></div>`
-              : (exactApprovalPending
-                 ? `<div class="admin-selfconfirm-v30 approval"><span>🔐 확인수량 승인대기</span><b>${Number(approvalReq?.qty||0).toLocaleString()}개</b><small>${esc(approvalReq?.worker||'')}</small></div>`
-                 : ''))
+           ? `<div class="worker-receive-check admin-worker-receive">
+                <input id="admin_worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric"
+                       value="${confirmedQty||inboundMatchedQty||Number(r.request_qty||0)||''}" placeholder="받은 수량">
+                <button class="self-receive-btn" onclick="adminSetWorkerReceipt(${r.id})">☑ 관리자 확인</button>
+                ${approvalReq?`<button class="approval-receive-btn" onclick="adminApproveWorkerReceipt(${r.id})">🔐 ${esc(approvalReq.worker)} ${Number(approvalReq.qty||0).toLocaleString()}개 승인</button>`:''}
+              </div>`
            : (r.status==='수령승인대기'
               ? `<div class="worker-receive-check">
                    <input id="worker_received_qty_${r.id}" type="number" min="1" inputmode="numeric" value="${approvalReq?.qty||confirmedQty||inboundMatchedQty||''}" placeholder="받은 수량">
@@ -4651,22 +4507,16 @@ function renderTodayOrderRequests(){
                      ${confirmedQty?`<small class="worker-receive-done">현재 확인수량 ${Number(confirmedQty).toLocaleString()}개</small>`:''}
                    </div>`));
 
-       /* 관리자 입고확인은 작업자의 실제 본인확인(또는 승인대기)이 있는 해당 건에만 표시 */
        const adminAction=isAdmin
          ? (isInquiry
             ? `<button type="button" class="primary" onclick="completeOrderInquiry(${r.id})">☑ 문의완료</button>`
-            : (exactSelfConfirmed
-               ? `<div class="admin-order-confirm-wrap admin-final-confirm-v30">
-                    <input id="admin_order_qty_${r.id}" type="number" min="1" inputmode="numeric"
-                           value="${Number(confirmedQty||0)}" placeholder="입고확인수량">
-                    <button onclick="adminConfirmOrderReceivedQty(${r.id})">✅ 관리자 확인 · 입고확정</button>
-                  </div>`
-               : (exactApprovalPending
-                  ? `<div class="admin-order-confirm-wrap admin-final-confirm-v30">
-                       <input type="number" value="${Number(approvalReq?.qty||0)}" readonly>
-                       <button onclick="adminApproveWorkerReceipt(${r.id})">🔐 확인수량 승인</button>
-                     </div>`
-                  : '')))
+            : (r.status==='입고완료'
+            ? `<small>✅ ${esc(orderAdminConfirmInfo(r.note)||'입고확정 완료')}</small>`
+            : `<div class="admin-order-confirm-wrap">
+                 <input id="admin_order_qty_${r.id}" type="number" min="1" inputmode="numeric"
+                        value="${Number(r.request_qty||0)}" placeholder="입고확인수량">
+                 <button onclick="adminConfirmOrderReceivedQty(${r.id})">입고수량 추가·확정</button>
+               </div>`))
          : '';
 
        const ageRowClass=requestAgeDays>=7?'order-age-row-7':requestAgeDays>=3?'order-age-row-3':'';
@@ -4766,19 +4616,7 @@ async function shareOrderRequest(x,i){
 
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
-     <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre><!-- step26: admin confirm exact relevant only -->
-
-<style id="admin-order-focus-clean-v27">
-/* 주문·문의 통합관리 등 관리자 단일 관리화면에서는 선택한 관리 패널만 표시 */
-body.admin-view.admin-task-focus main > *:not(#adminTaskFocusPanel){
-  display:none!important;
-}
-body.admin-view.admin-task-focus main > #adminTaskFocusPanel{
-  display:block!important;
-}
-</style>
-
-</body></html>`);
+     <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
      w.document.close();
    }
    alert('문의내용을 복사했습니다. 사진과 함께 「미림 자재 문의」 카톡방으로 보내주세요.');
@@ -4845,7 +4683,7 @@ function search(){
 
    const outbound=mode==='outbound'
      ? `<div class="outgrid">
-          <input id="w_${i}" value="${esc(currentWorker?.name||(isAdmin?'관리자':''))}" readonly placeholder="등록자">
+          <input id="w_${i}" value="${esc(currentWorker?.name||'')}" readonly placeholder="작업자">
           <input id="qty_${i}" type="number" inputmode="numeric" placeholder="출고수량">
         </div>
         <div class="approval-note worker-direct-save-note">✅ 작업자 직접 출고등록 · 공용 DB 자동반영</div>
@@ -5362,8 +5200,8 @@ async function notifyAdminOutbound(x,qty,worker,approved,approvalReason){
  }
 }
 async function saveOut(x,i){
- if(!currentWorker&&!isAdmin) return alert('출고 저장 전 작업자 또는 관리자 로그인이 필요합니다.');
- const worker=currentWorker?.name||(isAdmin?'관리자':'');
+ if(!currentWorker) return alert('출고 저장 전 작업자 로그인이 필요합니다.');
+ const worker=currentWorker.name;
  const qty=Number($('qty_'+i)?.value);
 
  
@@ -6126,41 +5964,22 @@ async function sha256Text(text){
 }
 
 function openVipLogin(){
- if(!isAdmin){
-   alert('관리자 로그인 후 VIP BOM에 들어갈 수 있습니다.');
-   return;
- }
- sessionStorage.removeItem('mirim_vip_ok');
- $('vipPinInput').value='';
- $('vipLoginError').textContent='';
- $('vipLoginError').classList.add('hidden');
- $('vipLoginModal').classList.remove('hidden');
- $('vipLoginModal').setAttribute('aria-hidden','false');
+ if(currentWorker){alert('일반 작업자 로그인 상태에서는 VIP BOM에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
+ if(sessionStorage.getItem('mirim_vip_ok')==='1'){openVipBom();return;}
+ $('vipPinInput').value='';$('vipLoginError').textContent='';$('vipLoginError').classList.add('hidden');
+ $('vipLoginModal').classList.remove('hidden');$('vipLoginModal').setAttribute('aria-hidden','false');
  setTimeout(()=>$('vipPinInput')?.focus(),60);
 }
-function closeVipLogin(){
- $('vipLoginModal').classList.add('hidden');
- $('vipLoginModal').setAttribute('aria-hidden','true');
- if($('vipPinInput'))$('vipPinInput').value='';
-}
+function closeVipLogin(){$('vipLoginModal').classList.add('hidden');$('vipLoginModal').setAttribute('aria-hidden','true');}
 async function submitVipLogin(){
- if(!isAdmin){
-   closeVipLogin();
-   alert('관리자 로그인 후 VIP BOM에 들어갈 수 있습니다.');
-   return;
- }
- const pw=($('vipPinInput')?.value||'').trim();
- if(!pw)return;
- if(await sha256Text(pw)!==MIRIM_ADMIN_PASSWORD_HASH){
-   $('vipLoginError').textContent='VIP 비밀번호가 올바르지 않습니다.';
-   $('vipLoginError').classList.remove('hidden');
-   $('vipPinInput').value='';
-   $('vipPinInput').focus();
-   return;
+ const pin=($('vipPinInput')?.value||'').trim();
+ if(!pin)return;
+ if(await sha256Text(pin)!==VIP_PIN_HASH){
+   $('vipLoginError').textContent='VIP PIN이 올바르지 않습니다.';$('vipLoginError').classList.remove('hidden');return;
  }
  sessionStorage.setItem('mirim_vip_ok','1');
- closeVipLogin();
- openVipBom();
+ isAdmin=true;sessionStorage.setItem('mirim_prod_admin','1');updateAdminUI();
+ closeVipLogin();openVipBom();
 }
 
 function loadBomRows(){
@@ -6190,13 +6009,8 @@ function closeVipBom(){
  if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
 }
 function vipLogout(){
- sessionStorage.removeItem('mirim_vip_ok');
- sessionStorage.removeItem('mirim_vip_view');
- closeVipLogin();
- closeVipBom();
- if(isAdmin){
-   try{showAdminReferenceHome();}catch(e){}
- }
+ sessionStorage.removeItem('mirim_vip_ok');sessionStorage.removeItem('mirim_vip_view');
+ isAdmin=false;sessionStorage.removeItem('mirim_prod_admin');updateAdminUI();closeVipBom();
 }
 
 function previewBomPhotos(event){
@@ -6544,8 +6358,9 @@ function exportBomCalculation(){
 
 document.addEventListener('DOMContentLoaded',()=>{
  $('vipPinInput')?.addEventListener('keyup',e=>{if(e.key==='Enter')submitVipLogin();});
- sessionStorage.removeItem('mirim_vip_ok');
- sessionStorage.removeItem('mirim_vip_view');
+ if(sessionStorage.getItem('mirim_vip_ok')==='1'&&sessionStorage.getItem('mirim_vip_view')==='1'){
+   setTimeout(openVipBom,120);
+ }
 });
 </script>
 
@@ -7093,11 +6908,10 @@ function ensureLaterCheckCard(){
 }
 function renderLaterChecks(){
  ensureLaterCheckCard();
- const a=getLaterChecks(),valid=a.filter(x=>String(x.reason||'').trim()),open=valid.filter(x=>!x.done),body=document.getElementById('laterCheckBody'),cnt=document.getElementById('laterCheckCount');
+ const a=getLaterChecks(),open=a.filter(x=>!x.done),body=document.getElementById('laterCheckBody'),cnt=document.getElementById('laterCheckCount');
  if(cnt)cnt.textContent=open.length+'건';
  if(!body)return;
- /* 확인사유가 실제로 있는 건만 화면에 표시하고 기존 기록 자체는 삭제하지 않음 */
- const rows=[...open,...valid.filter(x=>x.done).slice(0,10)];
+ const rows=[...open,...a.filter(x=>x.done).slice(0,10)];
  body.innerHTML=rows.length?rows.map(x=>`<tr class="${x.done?'later-done':''}">
  <td>${x.done?'✅ 완료':'📌 확인필요'}</td><td><b>${esc(x.part||'-')}</b></td><td>${esc(x.name||'-')}</td><td>${esc(x.location||'-')}</td>
  <td class="later-reason">${esc(x.reason||'')}</td><td>${esc(x.memo||'-')}</td><td>${esc(x.writer||'-')}</td>
@@ -7438,29 +7252,6 @@ function ensureAdminTaskFocusPanel(){
      </div>
      <button type="button" class="admin-task-back" onclick="closeAdminTaskView()">← 관리 바로가기</button>
    </div>
-   <section id="adminWorkerConfirmTopV39" class="admin-worker-confirm-top-v39 hidden">
-     <div class="awct-head">
-       <div class="awct-title">✅ 작업자 본인확인 완료</div>
-       <span id="adminWorkerConfirmCountV39" class="awct-count">0건</span>
-     </div>
-     <div class="awct-table-wrap">
-       <table>
-         <thead>
-           <tr>
-             <th>확인시간</th>
-             <th>작업자</th>
-             <th>품번</th>
-             <th>품명</th>
-             <th>확인수량</th>
-             <th>상태</th>
-           </tr>
-         </thead>
-         <tbody id="adminWorkerConfirmBodyV39">
-           <tr><td colspan="6" class="awct-empty">본인확인 기록을 불러오는 중...</td></tr>
-         </tbody>
-       </table>
-     </div>
-   </section>
    <div id="adminTaskFocusContent"></div>`;
  main.insertBefore(panel,main.firstChild);
  return panel;
@@ -7491,45 +7282,10 @@ async function openAdminTaskView(type){
  if(!panel||!content)return;
  restoreAdminTaskElements();
  content.innerHTML='';
- const confirmTopV39=document.getElementById('adminWorkerConfirmTopV39');
- if(confirmTopV39)confirmTopV39.classList.add('hidden');
  let titleText='관리 작업';
- document.body.classList.remove('admin-orders-focus');
 
  if(type==='orders'){
-   document.body.classList.add('admin-orders-focus');
    titleText='🛒 주문요청 & 문의건 통합관리';
-
-   /* 본인확인 완료 영역을 주문통합관리 내용 맨 위에 직접 생성 */
-   const confirmBox=document.createElement('section');
-   confirmBox.id='adminWorkerConfirmDirectV40';
-   confirmBox.className='admin-worker-confirm-direct-v40';
-   confirmBox.innerHTML=`
-     <div class="awc40-head">
-       <div class="awc40-title">✅ 작업자 본인확인 완료</div>
-       <span id="adminWorkerConfirmCountV40" class="awc40-count">0건</span>
-     </div>
-     <div class="awc40-table-wrap">
-       <table>
-         <thead>
-           <tr>
-             <th>확인시간</th>
-             <th>작업자</th>
-             <th>품번</th>
-             <th>품명</th>
-             <th>확인수량</th>
-             <th>상태</th>
-           </tr>
-         </thead>
-         <tbody id="adminWorkerConfirmBodyV40">
-           <tr><td colspan="6" class="awc40-empty">본인확인 기록을 불러오는 중...</td></tr>
-         </tbody>
-       </table>
-     </div>`;
-   content.appendChild(confirmBox);
-
-   try{await loadAdminWorkerConfirmDirectV40();}catch(e){console.warn(e);}
-
    const el=document.getElementById('todayOrderCard');
    moveAdminTaskElement(el,content);
    try{await loadTodayOrderRequests();}catch(e){}
@@ -7564,14 +7320,11 @@ async function openAdminTaskView(type){
 
 function closeAdminTaskView(){
  restoreAdminTaskElements();
- document.body.classList.remove('admin-task-focus','admin-orders-focus');
+ document.body.classList.remove('admin-task-focus');
  try{collapseAdminHomeDetails();}catch(e){}
  const panel=document.getElementById('adminTaskFocusPanel');
  if(panel)panel.classList.add('hidden');
- if(isAdmin)showAdminReferenceHome();
- else{
-   const home=document.getElementById('home');if(home)home.classList.remove('hidden');
- }
+ const home=document.getElementById('home');if(home)home.classList.remove('hidden');
  window.scrollTo({top:0,behavior:'instant'});
 }
 
@@ -8763,19 +8516,19 @@ function ensureAdminReferenceHome(){
     <section class="ar-card ar-shortcuts">
       <div class="ar-title">📌 관리자 바로가기</div>
       <div class="ar-grid">
-        <button class="ar-btn in" onclick="openMode('inbound')"><span class="ico">⬇️</span><span>입고 등록</span></button>
-        <button class="ar-btn unreg" onclick="openAdminTaskView('unreg')"><span class="ico">⚠️</span><span>ERP 미등록 자재</span></button>
-        <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
+        <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
+        <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
+        <button class="ar-btn in" onclick="openMode('inbound')"><span class="ico">⬇️</span><span>입고 등록</span></button>
 
         <button class="ar-btn out" onclick="openMode('outbound')"><span class="ico">⬆️</span><span>출고 등록</span></button>
         <button class="ar-btn order" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
-        <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn match" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문·입고 자동대조</span></button>
+        <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
         <button class="ar-btn" onclick="openAdminTaskView('history')"><span class="ico">📋</span><span>최근 입출고 기록</span></button>
-        <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
+        <button class="ar-btn unreg" onclick="openAdminTaskView('unreg')"><span class="ico">⚠️</span><span>ERP 미등록 자재</span></button>
       </div>
     </section>
 
@@ -8899,25 +8652,19 @@ function showAdminReferenceHome(){
   if(!isAdmin)return;
 
   try{restoreAdminTaskElements();}catch(e){}
-  try{restoreAdminShortcutFocusV41();}catch(e){}
-
-  document.body.classList.remove('admin-task-focus','admin-shortcut-focus','admin-quick-io','admin-location-focus');
+  document.body.classList.remove('admin-task-focus');
   document.body.classList.add('admin-reference-home');
 
-  /* 과거 상세화면에서 남은 inline display를 모두 제거 */
-  const main=document.querySelector('main');
-  if(main)[...main.children].forEach(el=>el.style.removeProperty('display'));
-
   const root=ensureAdminReferenceHome();
-  if(root)root.style.removeProperty('display');
+  if(root)root.style.display='block';
 
+  ['home','work','photoSearchPanel','notifPanel','loginLogPanel','recentInboundCard','recentOutboundCard'].forEach(id=>{
+    document.getElementById(id)?.classList.add('hidden');
+  });
   document.getElementById('adminTaskFocusPanel')?.classList.add('hidden');
-  const shortcutPanel=document.getElementById('adminShortcutFocusPanel');
-  if(shortcutPanel)shortcutPanel.style.display='none';
 
   updateAdminReferenceStats();
   loadAdminReferenceOrders();
-  try{wireAdminShortcutButtonsV41();}catch(e){}
   window.scrollTo({top:0,behavior:'instant'});
 }
 
@@ -8930,13 +8677,13 @@ openMode = function(m){
 
 const _origOpenAdminTaskView = openAdminTaskView;
 openAdminTaskView = async function(type){
-  document.body.classList.remove('admin-reference-home','admin-quick-io','admin-location-focus');
+  document.body.classList.remove('admin-reference-home');
   return await _origOpenAdminTaskView(type);
 };
 
 const _origOpenExistingAdminSection = openExistingAdminSection;
 openExistingAdminSection = function(kind){
-  document.body.classList.remove('admin-reference-home','admin-quick-io');
+  document.body.classList.remove('admin-reference-home');
   return _origOpenExistingAdminSection(kind);
 };
 
@@ -10044,7 +9791,7 @@ function restoreAdminShortcutFocusV41(){
 
 function closeAdminShortcutFocusV41(){
   restoreAdminShortcutFocusV41();
-  document.body.classList.remove('admin-shortcut-focus','admin-task-focus','admin-location-focus');
+  document.body.classList.remove('admin-shortcut-focus','admin-task-focus');
   const panel=document.getElementById('adminShortcutFocusPanel');
   if(panel)panel.style.display='none';
   if(isAdmin){
@@ -10060,9 +9807,8 @@ async function openAdminShortcutListV41(kind){
   restoreAdminShortcutFocusV41();
   ensureAdminShortcutFocusPanelV41();
 
-  document.body.classList.remove('admin-reference-home','admin-task-focus','admin-location-focus');
+  document.body.classList.remove('admin-reference-home','admin-task-focus');
   document.body.classList.add('admin-shortcut-focus');
-  if(kind==='location')document.body.classList.add('admin-location-focus');
 
   const title=document.getElementById('adminShortcutFocusTitle');
   const panel=document.getElementById('adminShortcutFocusPanel');
@@ -10787,22 +10533,39 @@ body.admin-view.admin-reference-home #adminReferenceHome .ar-footer{
 <script id="admin-main-deduplicate-final-js-v46">
 (function(){
   function cleanAdminMainV46(){
-    if(typeof isAdmin==='undefined'||!isAdmin)return;
-    if(!document.body.classList.contains('admin-reference-home'))return;
+    if(!window.isAdmin && typeof isAdmin!=='undefined' && !isAdmin) return;
+    if(!document.body.classList.contains('admin-reference-home')) return;
 
+    const main=document.querySelector('main');
     const ref=document.getElementById('adminReferenceHome');
-    if(!ref)return;
+    if(!main || !ref) return;
 
-    /* 중복 관리자 메인만 제거하고 다른 화면에는 inline display를 절대 남기지 않음 */
+    /* 혹시 같은 관리자 메인이 복제되었다면 첫 번째 하나만 유지 */
     const refs=[...document.querySelectorAll('#adminReferenceHome')];
     refs.slice(1).forEach(el=>el.remove());
 
-    try{wireAdminShortcutButtonsV41();}catch(e){}
+    /* 최근 주문 내역은 DOM에서도 제거 */
+    ref.querySelectorAll('.ar-orders').forEach(el=>el.remove());
+
+    /* 메인 자동대조 카드가 새 관리자 메인 밖에 생성되었다면 안으로 이동 */
+    const match=document.getElementById('adminMainOrderMatchCard');
+    const shortcuts=ref.querySelector('.ar-shortcuts');
+    if(match && !ref.contains(match)){
+      if(shortcuts) shortcuts.insertAdjacentElement('afterend',match);
+      else ref.appendChild(match);
+    }
+
+    /* 관리자 기본 메인에서는 나머지 main 직계 요소를 확실히 숨김 */
+    [...main.children].forEach(el=>{
+      if(el!==ref) el.style.setProperty('display','none','important');
+    });
+    ref.style.setProperty('display','block','important');
   }
 
   window.addEventListener('load',()=>setTimeout(cleanAdminMainV46,700));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(cleanAdminMainV46,700));
+
   const obs=new MutationObserver(()=>{
-    if(!document.body.classList.contains('admin-reference-home'))return;
     clearTimeout(window.__cleanAdminMainV46);
     window.__cleanAdminMainV46=setTimeout(cleanAdminMainV46,80);
   });
@@ -13131,1612 +12894,4 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 })();
 </script>
 
-
-<style id="mobile-only-hide-inout-v25">
-/* 터치 모바일에서만 작업자 핵심 메뉴의 입고/출고 숨김
-   PC는 창 폭과 상관없이 영향 없음 */
-@media (max-width:760px) and (hover:none) and (pointer:coarse){
-  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*="openMode('outbound')"],
-  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*='openMode("outbound")'],
-  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*="openMode('inbound')"],
-  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2 button[onclick*='openMode("inbound")']{
-    display:none!important;
-  }
-}
-</style>
-
-
-<style id="admin-shortcut-colors-only-v26">
-/* 관리자 바로가기 - 사용자가 지정한 6개 버튼 색상만 변경 */
-
-/* 입고 등록 - 진한 녹색 */
-.admin-view #adminReferenceHome .ar-btn.in{
-  background:#087a43!important;
-  border-color:#056234!important;
-  color:#fff!important;
-}
-
-/* 출고 등록 - 진한 빨강 */
-.admin-view #adminReferenceHome .ar-btn.out{
-  background:#c62828!important;
-  border-color:#a61f1f!important;
-  color:#fff!important;
-}
-
-/* 주문·문의 통합관리 - 진한 핑크 */
-.admin-view #adminReferenceHome .ar-btn.order{
-  background:#d81b60!important;
-  border-color:#ad1457!important;
-  color:#fff!important;
-}
-
-/* 나중에 확인 - 진한 파랑 */
-.admin-view #adminReferenceHome .ar-btn.later{
-  background:#1565c0!important;
-  border-color:#0d47a1!important;
-  color:#fff!important;
-}
-
-/* 최근 입출고 기록 - 민트 */
-.admin-view #adminReferenceHome .ar-btn[onclick*="openAdminTaskView('history')"]{
-  background:#c9f3e5!important;
-  border-color:#8edfc5!important;
-  color:#075f49!important;
-}
-
-/* ERP 미등록 자재 - 진한 자주색 */
-.admin-view #adminReferenceHome .ar-btn.unreg{
-  background:#7b1e5a!important;
-  border-color:#5d1543!important;
-  color:#fff!important;
-}
-
-/* 위 6개 버튼 아이콘/글자 색상 유지 */
-.admin-view #adminReferenceHome .ar-btn.in .ico,
-.admin-view #adminReferenceHome .ar-btn.out .ico,
-.admin-view #adminReferenceHome .ar-btn.order .ico,
-.admin-view #adminReferenceHome .ar-btn.later .ico,
-.admin-view #adminReferenceHome .ar-btn.unreg .ico{
-  color:#fff!important;
-}
-</style>
-
-
-<style id="admin-quick-io-clean-v34">
-/* 관리자 빠른입고/빠른출고에서 입력에 필요한 영역만 표시 */
-body.admin-view.admin-quick-io #work{
-  width:min(920px,calc(100% - 24px))!important;
-  max-width:920px!important;
-  margin:14px auto!important;
-}
-body.admin-view.admin-quick-io #work > .card{
-  width:100%!important;
-  max-width:100%!important;
-  padding:18px!important;
-  box-sizing:border-box!important;
-}
-body.admin-view.admin-quick-io #work #title{
-  text-align:center!important;
-  font-size:27px!important;
-  font-weight:1000!important;
-  margin-bottom:14px!important;
-}
-body.admin-view.admin-quick-io #work .division-search-row{
-  max-width:720px!important;
-  margin:0 auto!important;
-}
-body.admin-view.admin-quick-io #work #count{
-  max-width:720px!important;
-  margin:8px auto 0!important;
-}
-body.admin-view.admin-quick-io #results{
-  max-width:720px!important;
-  margin:10px auto 0!important;
-}
-body.admin-view.admin-quick-io #results .result-card-main{
-  display:block!important;
-  width:100%!important;
-  padding:16px!important;
-  box-sizing:border-box!important;
-}
-/* 입력과 저장 외 부가영역 숨김 */
-body.admin-view.admin-quick-io #results .result-photo-box,
-body.admin-view.admin-quick-io #results .result-location,
-body.admin-view.admin-quick-io #results .later-check-direct-wrap,
-body.admin-view.admin-quick-io #results .worker-admin-detail,
-body.admin-view.admin-quick-io #results .meta,
-body.admin-view.admin-quick-io #results .qty-compare,
-body.admin-view.admin-quick-io #results .stock-summary,
-body.admin-view.admin-quick-io #results .current-stock-edit,
-body.admin-view.admin-quick-io #results .loc-editor,
-body.admin-view.admin-quick-io #results .order-share,
-body.admin-view.admin-quick-io #results .item-admin-meta,
-body.admin-view.admin-quick-io #results .item-movement-history,
-body.admin-view.admin-quick-io #results .search-inbound-history{
-  display:none!important;
-}
-body.admin-view.admin-quick-io #results .result-part{
-  text-align:center!important;
-  font-size:24px!important;
-  font-weight:1000!important;
-}
-body.admin-view.admin-quick-io #results .result-name{
-  text-align:center!important;
-  font-size:18px!important;
-  font-weight:900!important;
-  margin:5px 0 14px!important;
-}
-body.admin-view.admin-quick-io #results .outgrid{
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:10px!important;
-  max-width:560px!important;
-  margin:0 auto!important;
-}
-body.admin-view.admin-quick-io #results .outgrid input{
-  width:100%!important;
-  min-height:52px!important;
-  font-size:17px!important;
-  text-align:center!important;
-  box-sizing:border-box!important;
-}
-body.admin-view.admin-quick-io #results .worker-direct-save-note{
-  max-width:560px!important;
-  margin:8px auto 0!important;
-  text-align:center!important;
-}
-body.admin-view.admin-quick-io #results button[onclick*="saveIn"],
-body.admin-view.admin-quick-io #results button[onclick*="saveOut"]{
-  display:block!important;
-  width:100%!important;
-  max-width:560px!important;
-  min-height:54px!important;
-  margin:9px auto 0!important;
-  font-size:17px!important;
-}
-body.admin-view.admin-quick-io #recentInboundCard,
-body.admin-view.admin-quick-io #recentOutboundCard{
-  display:none!important;
-}
-@media(max-width:760px){
-  body.admin-view.admin-quick-io #work{
-    width:calc(100% - 10px)!important;
-  }
-  body.admin-view.admin-quick-io #results .outgrid{
-    grid-template-columns:1fr!important;
-  }
-}
-</style>
-
-
-<style id="hide-admin-recent-orders-v35">
-/* 관리자 메인에서 최근 주문 내역은 어디서든 강제로 숨김 */
-body.admin-view #adminReferenceHome .ar-orders,
-body.admin-view #adminReferenceHome .ar-orders-head,
-body.admin-view #adminReferenceHome .ar-table-wrap,
-body.admin-view #adminReferenceHome #arOrdersBody{
-  display:none!important;
-}
-</style>
-
-<script id="hide-admin-recent-orders-v35-js">
-(function(){
-  function hideAdminRecentOrdersV35(){
-    if(!isAdmin)return;
-    const root=document.getElementById('adminReferenceHome');
-    if(!root)return;
-
-    root.querySelectorAll('.ar-orders').forEach(el=>{
-      el.style.setProperty('display','none','important');
-    });
-  }
-
-  window.addEventListener('load',()=>setTimeout(hideAdminRecentOrdersV35,500));
-
-  const obs=new MutationObserver(()=>{
-    if(!isAdmin)return;
-    clearTimeout(window.__hideAdminRecentOrdersV35);
-    window.__hideAdminRecentOrdersV35=setTimeout(hideAdminRecentOrdersV35,50);
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
-
-
-<style id="admin-remove-two-light-colors-v36">
-/* 관리자 바로가기에서 기록 불러오기 / 주문·입고 자동대조 강제 숨김 */
-.admin-view #adminReferenceHome .ar-btn[onclick*="openExistingAdminSection('records')"],
-.admin-view #adminReferenceHome .ar-btn.match,
-.admin-view #adminReferenceHome .ar-btn[onclick*="openAdminTaskView('match')"]{
-  display:none!important;
-}
-
-/* 관리자 바로가기 진한색상 → 연한색상으로 변경 */
-
-/* 입고 등록 - 연한 녹색 */
-.admin-view #adminReferenceHome .ar-btn.in{
-  background:#e4f6ea!important;
-  border-color:#b9dfc7!important;
-  color:#17633e!important;
-}
-
-/* 출고 등록 - 연한 적색 */
-.admin-view #adminReferenceHome .ar-btn.out{
-  background:#fde9e8!important;
-  border-color:#efc2bf!important;
-  color:#9f2722!important;
-}
-
-/* 주문·문의 통합관리 - 연한 핑크 */
-.admin-view #adminReferenceHome .ar-btn.order{
-  background:#fbe5ef!important;
-  border-color:#efbfd3!important;
-  color:#a42c61!important;
-}
-
-/* 나중에 확인 - 연한 파랑 */
-.admin-view #adminReferenceHome .ar-btn.later{
-  background:#e6f0fb!important;
-  border-color:#bed3eb!important;
-  color:#245d93!important;
-}
-
-/* 최근 입출고 기록 - 연한 민트 */
-.admin-view #adminReferenceHome .ar-btn[onclick*="openAdminTaskView('history')"]{
-  background:#e1f7ef!important;
-  border-color:#b8e7d6!important;
-  color:#176d55!important;
-}
-
-/* ERP 미등록 자재 - 연한 자주색 */
-.admin-view #adminReferenceHome .ar-btn.unreg{
-  background:#f0e5ee!important;
-  border-color:#d9bfd2!important;
-  color:#7a3d66!important;
-}
-
-/* 위 버튼들의 아이콘도 글자색과 맞춤 */
-.admin-view #adminReferenceHome .ar-btn.in .ico,
-.admin-view #adminReferenceHome .ar-btn.out .ico,
-.admin-view #adminReferenceHome .ar-btn.order .ico,
-.admin-view #adminReferenceHome .ar-btn.later .ico,
-.admin-view #adminReferenceHome .ar-btn.unreg .ico{
-  color:inherit!important;
-}
-</style>
-
-<script id="admin-remove-two-v36-js">
-(function(){
-  function removeTwoAdminButtonsV36(){
-    if(!isAdmin)return;
-    const root=document.getElementById('adminReferenceHome');
-    if(!root)return;
-
-    root.querySelectorAll(
-      ".ar-btn[onclick*=\"openExistingAdminSection('records')\"]," +
-      ".ar-btn.match," +
-      ".ar-btn[onclick*=\"openAdminTaskView('match')\"]"
-    ).forEach(btn=>btn.remove());
-  }
-
-  window.addEventListener('load',()=>setTimeout(removeTwoAdminButtonsV36,500));
-
-  const obs=new MutationObserver(()=>{
-    if(!isAdmin)return;
-    clearTimeout(window.__removeTwoAdminV36);
-    window.__removeTwoAdminV36=setTimeout(removeTwoAdminButtonsV36,50);
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
-
-
-<style id="admin-worker-confirm-log-v37-style">
-#adminWorkerConfirmLogV37{
-  display:none;
-  margin:0 0 12px;
-  padding:14px;
-  border:1px solid #cfe4d7;
-  border-radius:14px;
-  background:#f5fbf7;
-  box-sizing:border-box;
-}
-body.admin-view #adminTaskFocusContent #adminWorkerConfirmLogV37{
-  display:block!important;
-}
-#adminWorkerConfirmLogV37 .awcl-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-#adminWorkerConfirmLogV37 .awcl-title{
-  font-size:18px;
-  font-weight:1000;
-  color:#155c38;
-}
-#adminWorkerConfirmLogV37 .awcl-count{
-  padding:5px 9px;
-  border-radius:999px;
-  background:#dff2e6;
-  color:#0b6b3e;
-  font-size:12px;
-  font-weight:1000;
-}
-#adminWorkerConfirmLogV37 .awcl-table-wrap{
-  width:100%;
-  overflow-x:auto;
-}
-#adminWorkerConfirmLogV37 table{
-  width:100%;
-  min-width:760px;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:10px;
-  overflow:hidden;
-}
-#adminWorkerConfirmLogV37 th,
-#adminWorkerConfirmLogV37 td{
-  padding:9px 10px;
-  border-bottom:1px solid #e6eee9;
-  text-align:left;
-  font-size:12px;
-  vertical-align:middle;
-}
-#adminWorkerConfirmLogV37 th{
-  background:#eaf6ef;
-  color:#315b45;
-  font-weight:1000;
-}
-#adminWorkerConfirmLogV37 .awcl-ok{
-  display:inline-block;
-  padding:4px 7px;
-  border-radius:8px;
-  background:#daf3e4;
-  color:#087a43;
-  font-weight:1000;
-  white-space:nowrap;
-}
-#adminWorkerConfirmLogV37 .awcl-empty{
-  padding:16px;
-  text-align:center;
-  color:#65746c;
-  font-weight:800;
-}
-@media(max-width:760px){
-  #adminWorkerConfirmLogV37{padding:10px 8px}
-  #adminWorkerConfirmLogV37 .awcl-title{font-size:16px}
-}
-</style>
-
-<script id="admin-worker-confirm-log-v37-js">
-function ensureAdminWorkerConfirmLogV37(){
-  let card=document.getElementById('adminWorkerConfirmLogV37');
-  if(card)return card;
-
-  card=document.createElement('section');
-  card.id='adminWorkerConfirmLogV37';
-  card.innerHTML=`
-    <div class="awcl-head">
-      <div class="awcl-title">✅ 작업자 본인확인 완료</div>
-      <span id="adminWorkerConfirmCountV37" class="awcl-count">0건</span>
-    </div>
-    <div class="awcl-table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>확인시간</th>
-            <th>작업자</th>
-            <th>품번</th>
-            <th>품명</th>
-            <th>확인수량</th>
-            <th>상태</th>
-          </tr>
-        </thead>
-        <tbody id="adminWorkerConfirmBodyV37">
-          <tr><td colspan="6" class="awcl-empty">확인 기록을 불러오는 중...</td></tr>
-        </tbody>
-      </table>
-    </div>`;
-
-  const anchor=document.getElementById('todayOrderCard');
-  if(anchor?.parentNode)anchor.parentNode.insertBefore(card,anchor);
-  else document.querySelector('main')?.appendChild(card);
-  return card;
-}
-
-function parseWorkerReceiptV37(note){
-  const raw=String(note||'');
-  const m=raw.match(/\[수령확인:([^\]]+)\]/);
-  if(!m)return null;
-
-  const inner=String(m[1]||'').trim();
-  const worker=(inner.split('/')[0]||'').trim();
-  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
-  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
-
-  let time='';
-  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
-  if(timeMatch)time=String(timeMatch[1]||'').trim();
-
-  const adminDirect=/관리자직접확인/.test(inner);
-  return {worker,qty,time,adminDirect};
-}
-
-async function loadAdminWorkerConfirmLogV37(){
-  if(!isAdmin||!sharedReady||!sharedDb)return;
-
-  ensureAdminWorkerConfirmLogV37();
-  const body=document.getElementById('adminWorkerConfirmBodyV37');
-  const count=document.getElementById('adminWorkerConfirmCountV37');
-  if(!body)return;
-
-  try{
-    const {data,error}=await sharedDb
-      .from('production_order_requests')
-      .select('*')
-      .eq('status','수령확인')
-      .order('created_at',{ascending:false})
-      .limit(100);
-
-    if(error)throw error;
-
-    const rows=(data||[])
-      .map(r=>({r,info:parseWorkerReceiptV37(r.note)}))
-      .filter(x=>x.info && !x.info.adminDirect)
-      .slice(0,20);
-
-    if(count)count.textContent=rows.length+'건';
-
-    body.innerHTML=rows.length
-      ? rows.map(({r,info})=>`
-          <tr>
-            <td>${esc(info.time||'-')}</td>
-            <td><b>${esc(info.worker||r.requester||'-')}</b></td>
-            <td>${esc(r.part_no||'-')}</td>
-            <td>${esc(r.item_name||'-')}</td>
-            <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
-            <td><span class="awcl-ok">✅ 본인확인 완료</span></td>
-          </tr>
-        `).join('')
-      : '<tr><td colspan="6" class="awcl-empty">작업자 본인확인 완료 기록이 없습니다.</td></tr>';
-  }catch(e){
-    console.warn('작업자 본인확인 기록 조회 실패',e);
-    if(body)body.innerHTML='<tr><td colspan="6" class="awcl-empty">확인 기록을 불러오지 못했습니다.</td></tr>';
-  }
-}
-
-/* 관리자 주문통합관리 화면을 열어둔 동안 새 본인확인도 자동 반영 */
-setInterval(()=>{
-  if(!isAdmin)return;
-  const card=document.getElementById('adminWorkerConfirmLogV37');
-  if(!card || !document.body.classList.contains('admin-task-focus'))return;
-  loadAdminWorkerConfirmLogV37();
-},5000);
-</script>
-
-
-<style id="admin-worker-confirm-top-fixed-v38">
-/* 주문·문의 통합관리 화면 맨 위에 작업자 본인확인 완료 영역 강제 표시 */
-body.admin-view #adminTaskFocusContent #adminWorkerConfirmLogV37{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  width:100%!important;
-  max-width:100%!important;
-  margin:0 0 12px!important;
-  position:relative!important;
-  z-index:5!important;
-}
-</style>
-
-<script id="admin-worker-confirm-top-fixed-v38-js">
-(function(){
-  async function forceWorkerConfirmTopV38(){
-    if(!isAdmin)return;
-
-    const panel=document.getElementById('adminTaskFocusPanel');
-    const content=document.getElementById('adminTaskFocusContent');
-    const today=document.getElementById('todayOrderCard');
-
-    if(!panel || !content || !today)return;
-
-    /* 주문통합관리 화면일 때만 */
-    const title=(document.getElementById('adminTaskFocusTitle')?.textContent||'');
-    if(!/주문.*문의.*통합관리/.test(title))return;
-
-    try{
-      if(typeof ensureAdminWorkerConfirmLogV37==='function'){
-        ensureAdminWorkerConfirmLogV37();
-      }
-      if(typeof loadAdminWorkerConfirmLogV37==='function'){
-        await loadAdminWorkerConfirmLogV37();
-      }
-    }catch(e){console.warn(e);}
-
-    const card=document.getElementById('adminWorkerConfirmLogV37');
-    if(!card)return;
-
-    /* 무조건 todayOrderCard 바로 위로 이동 */
-    if(card.parentNode!==content || card.nextElementSibling!==today){
-      content.insertBefore(card,today);
-    }
-
-    card.style.setProperty('display','block','important');
-    card.style.setProperty('visibility','visible','important');
-    card.style.setProperty('opacity','1','important');
-  }
-
-  window.addEventListener('load',()=>setTimeout(forceWorkerConfirmTopV38,700));
-
-  document.addEventListener('click',()=>{
-    setTimeout(forceWorkerConfirmTopV38,120);
-  },true);
-
-  const obs=new MutationObserver(()=>{
-    clearTimeout(window.__confirmTopV38);
-    window.__confirmTopV38=setTimeout(forceWorkerConfirmTopV38,80);
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
-
-
-<style id="admin-worker-confirm-embedded-v39-style">
-#adminWorkerConfirmTopV39{
-  display:block;
-  width:100%;
-  margin:0 0 12px;
-  padding:14px;
-  border:2px solid #8fc8a7;
-  border-radius:14px;
-  background:#eef9f2;
-  box-sizing:border-box;
-}
-#adminWorkerConfirmTopV39.hidden{display:none!important}
-#adminWorkerConfirmTopV39 .awct-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-#adminWorkerConfirmTopV39 .awct-title{
-  font-size:20px;
-  font-weight:1000;
-  color:#0b6b3e;
-}
-#adminWorkerConfirmTopV39 .awct-count{
-  padding:5px 10px;
-  border-radius:999px;
-  background:#087a43;
-  color:#fff;
-  font-size:13px;
-  font-weight:1000;
-}
-#adminWorkerConfirmTopV39 .awct-table-wrap{
-  width:100%;
-  overflow-x:auto;
-}
-#adminWorkerConfirmTopV39 table{
-  width:100%;
-  min-width:760px;
-  border-collapse:collapse;
-  background:#fff;
-}
-#adminWorkerConfirmTopV39 th,
-#adminWorkerConfirmTopV39 td{
-  padding:9px 10px;
-  border-bottom:1px solid #e2ebe6;
-  text-align:left;
-  font-size:12px;
-  vertical-align:middle;
-}
-#adminWorkerConfirmTopV39 th{
-  background:#dff2e6;
-  color:#24513a;
-  font-weight:1000;
-}
-#adminWorkerConfirmTopV39 .awct-ok{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:8px;
-  background:#d9f1e2;
-  color:#087a43;
-  font-weight:1000;
-}
-#adminWorkerConfirmTopV39 .awct-empty{
-  padding:18px!important;
-  text-align:center!important;
-  color:#63756b;
-  font-weight:900;
-}
-</style>
-
-<script id="admin-worker-confirm-embedded-v39-js">
-function parseWorkerConfirmV39(note){
-  const raw=String(note||'');
-  const matches=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
-  if(!matches.length)return null;
-
-  const inner=String(matches[matches.length-1][1]||'').trim();
-
-  /* 관리자가 직접 확인한 건은 작업자 본인확인 목록에서 제외 */
-  if(/관리자직접확인/.test(inner))return null;
-
-  const worker=(inner.split('/')[0]||'').trim();
-  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
-  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
-
-  let time='';
-  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
-  if(timeMatch)time=String(timeMatch[1]||'').trim();
-
-  return {worker,qty,time};
-}
-
-async function loadAdminWorkerConfirmTopV39(){
-  if(!isAdmin||!sharedReady||!sharedDb)return;
-
-  const box=document.getElementById('adminWorkerConfirmTopV39');
-  const body=document.getElementById('adminWorkerConfirmBodyV39');
-  const count=document.getElementById('adminWorkerConfirmCountV39');
-  if(!box||!body)return;
-
-  box.classList.remove('hidden');
-  body.innerHTML='<tr><td colspan="6" class="awct-empty">본인확인 기록을 불러오는 중...</td></tr>';
-
-  try{
-    /* 상태값에 의존하지 않고 최근 주문 전체에서 수령확인 기록을 찾음 */
-    const {data,error}=await sharedDb
-      .from('production_order_requests')
-      .select('*')
-      .order('created_at',{ascending:false})
-      .limit(500);
-
-    if(error)throw error;
-
-    const rows=(data||[])
-      .map(r=>({r,info:parseWorkerConfirmV39(r.note)}))
-      .filter(x=>x.info)
-      .slice(0,30);
-
-    if(count)count.textContent=rows.length+'건';
-
-    if(!rows.length){
-      body.innerHTML='<tr><td colspan="6" class="awct-empty">아직 작업자 본인확인 완료 기록이 없습니다.</td></tr>';
-      return;
-    }
-
-    body.innerHTML=rows.map(({r,info})=>`
-      <tr>
-        <td>${esc(info.time||'-')}</td>
-        <td><b>${esc(info.worker||r.requester||'-')}</b></td>
-        <td><b>${esc(r.part_no||'-')}</b></td>
-        <td>${esc(r.item_name||'-')}</td>
-        <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
-        <td><span class="awct-ok">✅ 작업자 본인확인</span></td>
-      </tr>
-    `).join('');
-  }catch(e){
-    console.warn('작업자 본인확인 조회 실패',e);
-    if(count)count.textContent='오류';
-    body.innerHTML='<tr><td colspan="6" class="awct-empty">본인확인 기록을 불러오지 못했습니다.</td></tr>';
-  }
-}
-
-/* 주문·문의 통합관리 화면을 열어둔 동안만 5초마다 갱신 */
-setInterval(()=>{
-  if(!isAdmin)return;
-  const box=document.getElementById('adminWorkerConfirmTopV39');
-  if(!box || box.classList.contains('hidden'))return;
-  loadAdminWorkerConfirmTopV39();
-},5000);
-</script>
-
-
-<style id="admin-worker-confirm-direct-v40-style">
-#adminTaskFocusContent #adminWorkerConfirmDirectV40{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  width:100%!important;
-  max-width:100%!important;
-  margin:0 0 14px!important;
-  padding:14px!important;
-  border:2px solid #79bd98!important;
-  border-radius:14px!important;
-  background:#eef9f2!important;
-  box-sizing:border-box!important;
-}
-#adminWorkerConfirmDirectV40 .awc40-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-#adminWorkerConfirmDirectV40 .awc40-title{
-  font-size:20px;
-  font-weight:1000;
-  color:#075e36;
-}
-#adminWorkerConfirmDirectV40 .awc40-count{
-  display:inline-block;
-  padding:5px 10px;
-  border-radius:999px;
-  background:#087a43;
-  color:#fff;
-  font-size:13px;
-  font-weight:1000;
-}
-#adminWorkerConfirmDirectV40 .awc40-table-wrap{
-  width:100%;
-  overflow-x:auto;
-}
-#adminWorkerConfirmDirectV40 table{
-  width:100%;
-  min-width:760px;
-  border-collapse:collapse;
-  background:#fff;
-}
-#adminWorkerConfirmDirectV40 th,
-#adminWorkerConfirmDirectV40 td{
-  padding:9px 10px;
-  border-bottom:1px solid #e2ebe6;
-  text-align:left;
-  font-size:12px;
-  vertical-align:middle;
-}
-#adminWorkerConfirmDirectV40 th{
-  background:#dff2e6;
-  color:#24513a;
-  font-weight:1000;
-}
-#adminWorkerConfirmDirectV40 .awc40-ok{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:8px;
-  background:#d9f1e2;
-  color:#087a43;
-  font-weight:1000;
-  white-space:nowrap;
-}
-#adminWorkerConfirmDirectV40 .awc40-empty{
-  padding:18px!important;
-  text-align:center!important;
-  color:#63756b;
-  font-weight:900;
-}
-</style>
-
-<script id="admin-worker-confirm-direct-v40-js">
-function parseWorkerConfirmDirectV40(note){
-  const raw=String(note||'');
-  const matches=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
-  if(!matches.length)return null;
-
-  const inner=String(matches[matches.length-1][1]||'').trim();
-
-  /* 관리자 직접확인은 제외하고 작업자가 누른 본인확인만 표시 */
-  if(/관리자직접확인/.test(inner))return null;
-
-  const worker=(inner.split('/')[0]||'').trim();
-  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
-  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
-
-  let time='';
-  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
-  if(timeMatch)time=String(timeMatch[1]||'').trim();
-
-  return {worker,qty,time};
-}
-
-async function loadAdminWorkerConfirmDirectV40(){
-  if(!isAdmin)return;
-
-  const body=document.getElementById('adminWorkerConfirmBodyV40');
-  const count=document.getElementById('adminWorkerConfirmCountV40');
-  if(!body)return;
-
-  if(!sharedReady||!sharedDb){
-    if(count)count.textContent='0건';
-    body.innerHTML='<tr><td colspan="6" class="awc40-empty">공용 DB 연결을 확인해 주세요.</td></tr>';
-    return;
-  }
-
-  try{
-    const {data,error}=await sharedDb
-      .from('production_order_requests')
-      .select('*')
-      .order('created_at',{ascending:false})
-      .limit(500);
-
-    if(error)throw error;
-
-    const rows=(data||[])
-      .map(r=>({r,info:parseWorkerConfirmDirectV40(r.note)}))
-      .filter(x=>x.info)
-      .slice(0,30);
-
-    if(count)count.textContent=rows.length+'건';
-
-    if(!rows.length){
-      body.innerHTML='<tr><td colspan="6" class="awc40-empty">아직 작업자 본인확인 완료 기록이 없습니다.</td></tr>';
-      return;
-    }
-
-    body.innerHTML=rows.map(({r,info})=>`
-      <tr>
-        <td>${esc(info.time||'-')}</td>
-        <td><b>${esc(info.worker||r.requester||'-')}</b></td>
-        <td><b>${esc(r.part_no||'-')}</b></td>
-        <td>${esc(r.item_name||'-')}</td>
-        <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
-        <td><span class="awc40-ok">✅ 작업자 본인확인</span></td>
-      </tr>
-    `).join('');
-  }catch(e){
-    console.error('작업자 본인확인 완료 조회 실패',e);
-    if(count)count.textContent='오류';
-    body.innerHTML='<tr><td colspan="6" class="awc40-empty">본인확인 기록을 불러오지 못했습니다.</td></tr>';
-  }
-}
-
-/* 해당 화면이 열려 있을 때만 자동 갱신 */
-setInterval(()=>{
-  if(!isAdmin)return;
-  if(!document.getElementById('adminWorkerConfirmDirectV40'))return;
-  loadAdminWorkerConfirmDirectV40();
-},5000);
-</script>
-
-
-<style id="location-editor-only-own-page-v41">
-/* 관리자에서는 기존 위치 정리·수정 카드를 기본적으로 무조건 숨김 */
-body.admin-view #locationOrganizerCard{
-  display:none!important;
-}
-
-/* 오직 '기존 위치 정리·수정' 메뉴를 연 상태에서만 표시 */
-body.admin-view.admin-location-focus.admin-shortcut-focus
-#adminShortcutFocusContent > #locationOrganizerCard{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-}
-
-/* 다른 관리자 화면에서는 어떤 위치에 남아 있어도 절대 표시하지 않음 */
-body.admin-view:not(.admin-location-focus) #locationOrganizerCard,
-body.admin-view.admin-task-focus #locationOrganizerCard,
-body.admin-view.admin-reference-home #locationOrganizerCard{
-  display:none!important;
-}
-</style>
-
-<script id="location-editor-only-own-page-v41-js">
-(function(){
-  function enforceLocationOnlyV41(){
-    if(!isAdmin)return;
-
-    const card=document.getElementById('locationOrganizerCard');
-    if(!card)return;
-
-    const isLocationPage =
-      document.body.classList.contains('admin-location-focus') &&
-      document.body.classList.contains('admin-shortcut-focus') &&
-      card.parentElement?.id==='adminShortcutFocusContent';
-
-    if(isLocationPage){
-      card.style.setProperty('display','block','important');
-      card.style.setProperty('visibility','visible','important');
-    }else{
-      card.style.setProperty('display','none','important');
-    }
-  }
-
-  window.addEventListener('load',()=>setTimeout(enforceLocationOnlyV41,500));
-  document.addEventListener('click',()=>setTimeout(enforceLocationOnlyV41,50),true);
-
-  const obs=new MutationObserver(()=>{
-    clearTimeout(window.__locationOnlyV41);
-    window.__locationOnlyV41=setTimeout(enforceLocationOnlyV41,50);
-  });
-  obs.observe(document.documentElement,{
-    childList:true,
-    subtree:true,
-    attributes:true,
-    attributeFilter:['class']
-  });
-})();
-</script>
-
-
-<style id="worker-confirm-done-v42-style">
-/* 작업자 화면에서는 보이지 않고 관리자 주문통합관리에서만 보임 */
-#workerConfirmDoneBoxV42{
-  display:none;
-}
-body.admin-view #todayOrderCard #workerConfirmDoneBoxV42{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  width:100%!important;
-  margin:10px 0 14px!important;
-  padding:12px!important;
-  border:2px solid #82c79f!important;
-  border-radius:12px!important;
-  background:#eef9f2!important;
-  box-sizing:border-box!important;
-}
-#workerConfirmDoneBoxV42 .wcd42-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:9px;
-}
-#workerConfirmDoneBoxV42 .wcd42-title{
-  font-size:18px;
-  font-weight:1000;
-  color:#075e36;
-}
-#workerConfirmDoneBoxV42 .wcd42-count{
-  display:inline-block;
-  padding:5px 10px;
-  border-radius:999px;
-  background:#087a43;
-  color:#fff;
-  font-size:12px;
-  font-weight:1000;
-}
-#workerConfirmDoneBoxV42 .wcd42-table-wrap{
-  width:100%;
-  overflow-x:auto;
-}
-#workerConfirmDoneBoxV42 .wcd42-table{
-  width:100%!important;
-  min-width:760px!important;
-  table-layout:auto!important;
-  border-collapse:collapse!important;
-  background:#fff;
-}
-#workerConfirmDoneBoxV42 .wcd42-table th,
-#workerConfirmDoneBoxV42 .wcd42-table td{
-  width:auto!important;
-  min-width:0!important;
-  padding:8px 9px!important;
-  border-bottom:1px solid #e3ece7!important;
-  text-align:left!important;
-  font-size:12px!important;
-  line-height:1.3!important;
-}
-#workerConfirmDoneBoxV42 .wcd42-table th{
-  background:#dff2e6!important;
-  color:#24513a!important;
-  font-weight:1000!important;
-}
-#workerConfirmDoneBoxV42 .wcd42-ok{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:8px;
-  background:#d9f1e2;
-  color:#087a43;
-  font-weight:1000;
-  white-space:nowrap;
-}
-#workerConfirmDoneBoxV42 .wcd42-empty{
-  padding:16px!important;
-  text-align:center!important;
-  color:#64756c!important;
-  font-weight:900!important;
-}
-</style>
-
-<script id="worker-confirm-done-v42-js">
-function parseWorkerConfirmDoneV42(note){
-  const raw=String(note||'');
-  const matches=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
-  if(!matches.length)return null;
-
-  const inner=String(matches[matches.length-1][1]||'').trim();
-
-  /* 관리자 직접 확인은 작업자 본인확인 기록에서 제외 */
-  if(/관리자직접확인/.test(inner))return null;
-
-  const worker=(inner.split('/')[0]||'').trim();
-  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
-  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
-
-  let time='';
-  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
-  if(timeMatch)time=String(timeMatch[1]||'').trim();
-
-  return {worker,qty,time};
-}
-
-async function loadWorkerConfirmDoneV42(){
-  if(!isAdmin)return;
-
-  const box=document.getElementById('workerConfirmDoneBoxV42');
-  const body=document.getElementById('workerConfirmDoneBodyV42');
-  const count=document.getElementById('workerConfirmDoneCountV42');
-  if(!box||!body)return;
-
-  box.style.setProperty('display','block','important');
-
-  if(!sharedReady||!sharedDb){
-    if(count)count.textContent='0건';
-    body.innerHTML='<tr><td colspan="6" class="wcd42-empty">공용 DB 연결 후 본인확인 기록이 표시됩니다.</td></tr>';
-    return;
-  }
-
-  try{
-    const {data,error}=await sharedDb
-      .from('production_order_requests')
-      .select('*')
-      .order('created_at',{ascending:false})
-      .limit(500);
-
-    if(error)throw error;
-
-    const rows=(data||[])
-      .map(r=>({r,info:parseWorkerConfirmDoneV42(r.note)}))
-      .filter(x=>x.info)
-      .slice(0,30);
-
-    if(count)count.textContent=rows.length+'건';
-
-    if(!rows.length){
-      body.innerHTML='<tr><td colspan="6" class="wcd42-empty">아직 작업자 본인확인 완료 기록이 없습니다.</td></tr>';
-      return;
-    }
-
-    body.innerHTML=rows.map(({r,info})=>`
-      <tr>
-        <td>${esc(info.time||'-')}</td>
-        <td><b>${esc(info.worker||r.requester||'-')}</b></td>
-        <td><b>${esc(r.part_no||'-')}</b></td>
-        <td>${esc(r.item_name||'-')}</td>
-        <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
-        <td><span class="wcd42-ok">✅ 작업자 본인확인</span></td>
-      </tr>
-    `).join('');
-  }catch(e){
-    console.error('작업자 본인확인 기록 조회 실패',e);
-    if(count)count.textContent='오류';
-    body.innerHTML='<tr><td colspan="6" class="wcd42-empty">본인확인 기록을 불러오지 못했습니다.</td></tr>';
-  }
-}
-
-/* 관리자 주문통합관리 화면을 열어둔 동안 자동 갱신 */
-setInterval(()=>{
-  if(!isAdmin)return;
-  const box=document.getElementById('workerConfirmDoneBoxV42');
-  const card=document.getElementById('todayOrderCard');
-  if(!box||!card||card.offsetParent===null)return;
-  loadWorkerConfirmDoneV42();
-},5000);
-</script>
-
-
-<style id="hide-admin-worker-orders-main-v43">
-/* 관리자 메인에서는 '작업자 주문·문의 전체' 카드를 어디서든 강제로 숨김 */
-body.admin-view #adminReferenceHome #adminWorkerOrdersV2,
-body.admin-view.admin-reference-home #adminWorkerOrdersV2{
-  display:none!important;
-  visibility:hidden!important;
-  height:0!important;
-  min-height:0!important;
-  max-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  overflow:hidden!important;
-}
-</style>
-
-<script id="hide-admin-worker-orders-main-v43-js">
-(function(){
-  function hideAdminWorkerOrdersMainV43(){
-    if(!isAdmin)return;
-
-    const card=document.getElementById('adminWorkerOrdersV2');
-    if(!card)return;
-
-    const onAdminMain=document.body.classList.contains('admin-reference-home') ||
-      card.closest('#adminReferenceHome');
-
-    if(onAdminMain){
-      card.style.setProperty('display','none','important');
-      card.style.setProperty('visibility','hidden','important');
-      card.style.setProperty('height','0','important');
-      card.style.setProperty('margin','0','important');
-      card.style.setProperty('padding','0','important');
-      card.style.setProperty('border','0','important');
-      card.style.setProperty('overflow','hidden','important');
-    }
-  }
-
-  window.addEventListener('load',()=>setTimeout(hideAdminWorkerOrdersMainV43,500));
-
-  const obs=new MutationObserver(()=>{
-    if(!isAdmin)return;
-    clearTimeout(window.__hideAdminWorkerOrdersV43);
-    window.__hideAdminWorkerOrdersV43=setTimeout(hideAdminWorkerOrdersMainV43,50);
-  });
-  obs.observe(document.documentElement,{
-    childList:true,
-    subtree:true,
-    attributes:true,
-    attributeFilter:['class']
-  });
-})();
-</script>
-
-<!-- step26: admin confirm exact relevant only -->
-
-<!-- step28: 관리자 주문·문의 통합관리 전용 화면 - 다른 관리자 메인 영역 숨김 -->
-<style id="admin-task-focus-only-step28">
-body.admin-view.admin-task-focus main > :not(#adminTaskFocusPanel){
-  display:none!important;
-}
-body.admin-view.admin-task-focus #adminTaskFocusPanel{
-  display:block!important;
-  width:100%!important;
-  max-width:none!important;
-}
-</style>
-
-
-<!-- step29 exact: 주문·문의 통합관리에서는 하단 3개 영역 표시 금지 -->
-<style id="admin-orders-focus-exact-step29">
-body.admin-view.admin-orders-focus #excelExportPanel,
-body.admin-view.admin-orders-focus #syncBar,
-body.admin-view.admin-orders-focus #home{
-  display:none!important;
-  visibility:hidden!important;
-  height:0!important;
-  min-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  overflow:hidden!important;
-}
-body.admin-view.admin-orders-focus #adminTaskFocusPanel{
-  display:block!important;
-}
-</style>
-
-
-<!-- step30: 관리자 주문·문의 본인확인 → 입고확정 흐름 정리 -->
-<style id="order-admin-selfconfirm-flow-v30">
-/* 위/별도에 중복으로 뜨던 '작업자 본인확인 완료' 묶음은 관리자 주문통합관리에서는 숨김 */
-body.admin-view.admin-task-focus #adminWorkerConfirmTopV39,
-body.admin-view.admin-task-focus #adminWorkerConfirmDirectV40,
-body.admin-view.admin-task-focus #adminWorkerConfirmLogV37,
-body.admin-view.admin-task-focus #todayOrderCard #workerConfirmDoneBoxV42{display:none!important}
-.admin-selfconfirm-v30{display:grid;gap:3px;min-width:150px;padding:8px 10px;border-radius:10px;background:#e2f6e9;border:1px solid #bfe3cb;color:#087a43}
-.admin-selfconfirm-v30 span{font-weight:1000;white-space:nowrap}.admin-selfconfirm-v30 b{font-size:15px}.admin-selfconfirm-v30 small{color:#597067;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.admin-selfconfirm-v30.approval{background:#fff4d6;border-color:#efd99d;color:#7b5b00}
-.admin-final-confirm-v30{min-width:275px!important}.admin-final-confirm-v30 input{width:105px!important}.admin-final-confirm-v30 button{background:#087a43!important;color:#fff!important}
-#adminConfirmedRecentV30{margin-top:14px;border:1px solid #cfe2d7;border-radius:13px;background:#f8fcf9;overflow:hidden}
-#adminConfirmedRecentV30 .acr30-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 13px;background:#eaf7ef;color:#075f35;font-weight:1000}
-#adminConfirmedRecentV30 .acr30-head small{font-weight:800;color:#557166}
-#adminConfirmedRecentV30 .acr30-wrap{overflow:auto;max-height:360px}
-#adminConfirmedRecentV30 table{width:100%;min-width:760px;border-collapse:collapse;font-size:12px}
-#adminConfirmedRecentV30 th,#adminConfirmedRecentV30 td{padding:8px 9px;border-bottom:1px solid #e4ebe7;text-align:left;white-space:nowrap}
-#adminConfirmedRecentV30 th{background:#f2f8f4;color:#365b47;position:sticky;top:0}
-#adminConfirmedRecentV30 .saved{display:inline-block;padding:4px 8px;border-radius:999px;background:#dff3e6;color:#087a43;font-weight:1000}
-@media(max-width:760px){.admin-final-confirm-v30{min-width:210px!important}.admin-selfconfirm-v30{min-width:125px}}
-</style>
-<script id="order-admin-selfconfirm-flow-v30-js">
-(function(){
-  function ensureAdminConfirmedRecentV30(){
-    if(document.getElementById('adminConfirmedRecentV30'))return document.getElementById('adminConfirmedRecentV30');
-    const card=document.getElementById('todayOrderCard');
-    const wrap=card?.querySelector('.order-table-wrap');
-    if(!card||!wrap)return null;
-    const sec=document.createElement('section');
-    sec.id='adminConfirmedRecentV30';
-    sec.innerHTML=`<div class="acr30-head"><span>✅ 관리자 확인 완료 · 최근 20건</span><small>20건을 넘은 기록은 화면에서 빠지고 기록·엑셀에는 계속 저장됩니다.</small></div>
-      <div class="acr30-wrap"><table><thead><tr><th>확정시간</th><th>작업자</th><th>품번</th><th>품명</th><th>확정수량</th><th>상태</th></tr></thead><tbody id="adminConfirmedRecentBodyV30"><tr><td colspan="6">불러오는 중...</td></tr></tbody></table></div>`;
-    wrap.insertAdjacentElement('afterend',sec);
-    return sec;
-  }
-  function adminConfirmStampV30(note){
-    const raw=String(note||'');
-    const m=[...raw.matchAll(/\[관리자입고확정:([^\]]+)\]/g)];
-    if(!m.length)return null;
-    const inner=String(m[m.length-1][1]||'');
-    const parts=inner.split('/').map(x=>x.trim());
-    const qtym=inner.match(/수량:([0-9.]+)/);
-    return {admin:parts[0]||'관리자',time:parts[1]||'',qty:qtym?Number(qtym[1]||0):0};
-  }
-  function workerConfirmStampV30(note){
-    const raw=String(note||'');
-    const m=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
-    if(!m.length)return null;
-    const inner=String(m[m.length-1][1]||'');
-    if(/관리자직접확인/.test(inner))return null;
-    return {worker:(inner.split('/')[0]||'').trim()};
-  }
-  async function loadAdminConfirmedRecentV30(){
-    if(!isAdmin||!sharedReady||!sharedDb)return;
-    const sec=ensureAdminConfirmedRecentV30(),body=document.getElementById('adminConfirmedRecentBodyV30');
-    if(!sec||!body)return;
-    try{
-      const {data,error}=await sharedDb.from('production_order_requests').select('*').eq('status','입고완료').order('completed_at',{ascending:false}).limit(100);
-      if(error)throw error;
-      const rows=(data||[]).map(r=>({r,a:adminConfirmStampV30(r.note),w:workerConfirmStampV30(r.note)})).filter(x=>x.a&&x.w).slice(0,20);
-      body.innerHTML=rows.length?rows.map(({r,a,w})=>`<tr><td>${esc(a.time||recordDateTime(r.completed_at||r.created_at))}</td><td>${esc(w.worker||r.requester||'-')}</td><td><b>${esc(r.part_no||'-')}</b></td><td>${esc(r.item_name||'-')}</td><td><b>${Number(a.qty||0).toLocaleString()}</b></td><td><span class="saved">저장됨</span></td></tr>`).join(''):'<tr><td colspan="6">관리자 확인 완료 기록이 없습니다.</td></tr>';
-    }catch(e){console.warn('최근 관리자 확인 완료 조회 실패',e);body.innerHTML='<tr><td colspan="6">완료 기록을 불러오지 못했습니다.</td></tr>';}
-  }
-  window.loadAdminConfirmedRecentV30=loadAdminConfirmedRecentV30;
-  const oldLoad=window.loadTodayOrderRequests;
-  if(typeof oldLoad==='function'){
-    window.loadTodayOrderRequests=async function(){const v=await oldLoad.apply(this,arguments);try{if(isAdmin)await loadAdminConfirmedRecentV30();}catch(e){}return v;};
-  }
-  const oldOpen=window.openAdminTaskView;
-  if(typeof oldOpen==='function'){
-    window.openAdminTaskView=async function(type){const v=await oldOpen.apply(this,arguments);if(type==='orders'&&isAdmin){ensureAdminConfirmedRecentV30();await loadAdminConfirmedRecentV30();}return v;};
-  }
-  const oldConfirm=window.adminConfirmOrderReceivedQty;
-  if(typeof oldConfirm==='function'){
-    window.adminConfirmOrderReceivedQty=async function(id){const v=await oldConfirm.apply(this,arguments);try{await loadAdminConfirmedRecentV30();}catch(e){}return v;};
-  }
-})();
-</script>
-
-
-<!-- STEP31: 관리자 모드 주문·문의 통합관리 강제 제거 -->
-<style id="step31-remove-admin-order-management">
-body.admin-view #todayOrderCard,
-body.admin-view #adminWorkerOrdersV2,
-body.admin-view #adminRecentOrdersCard,
-body.admin-view #adminWorkerConfirmTopV39,
-body.admin-view #adminWorkerConfirmDirectV40,
-body.admin-view #workerConfirmDoneBoxV42,
-body.admin-view [data-admin-task="orders"],
-body.admin-view .admin-extra-shortcut.task-orders,
-body.admin-view .ar-btn.order,
-body.admin-view #adminReferenceHome .ar-orders,
-body.admin-view button[onclick*="openAdminTaskView('orders')"],
-body.admin-view button[onclick*='openAdminTaskView("orders")']{
-  display:none!important;
-  visibility:hidden!important;
-}
-</style>
-<script id="step31-remove-admin-order-management-js">
-(function(){
-  function removeAdminOrderEntryStep31(){
-    if(!window.isAdmin && !document.body.classList.contains('admin-view')) return;
-
-    /* 관리자 주문·문의 통합관리로 진입된 상태면 즉시 관리자 메인으로 복귀 */
-    if(document.body.classList.contains('admin-orders-focus') ||
-       ((document.getElementById('adminTaskFocusTitle')?.textContent||'').match(/주문.*문의.*통합관리/))){
-      try{
-        if(typeof closeAdminTaskView==='function') closeAdminTaskView();
-        else if(typeof showAdminReferenceHome==='function') showAdminReferenceHome();
-      }catch(e){}
-      document.body.classList.remove('admin-orders-focus','admin-task-focus');
-    }
-
-    /* 관리자 화면의 주문통합관리 진입 버튼 자체를 제거 */
-    document.querySelectorAll(
-      '[data-admin-task="orders"], .admin-extra-shortcut.task-orders, .ar-btn.order, #adminReferenceHome .ar-orders, button[onclick*="openAdminTaskView(\\'orders\\')"], button[onclick*=\'openAdminTaskView("orders")\']'
-    ).forEach(el=>{
-      if(el.closest('#workerMainShortcutCard') && !document.body.classList.contains('admin-view')) return;
-      el.remove();
-    });
-  }
-
-  const oldOpen=window.openAdminTaskView;
-  if(typeof oldOpen==='function'){
-    window.openAdminTaskView=function(type){
-      if(type==='orders' && (window.isAdmin || document.body.classList.contains('admin-view'))){
-        removeAdminOrderEntryStep31();
-        return;
-      }
-      return oldOpen.apply(this,arguments);
-    };
-  }
-
-  window.addEventListener('load',()=>setTimeout(removeAdminOrderEntryStep31,250));
-  document.addEventListener('click',()=>setTimeout(removeAdminOrderEntryStep31,30),true);
-  const obs=new MutationObserver(()=>{
-    if(document.body.classList.contains('admin-view')) removeAdminOrderEntryStep31();
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-})();
-</script>
-
-
-<!-- STEP32: 관리자 모드 주문요청·입고 자동대조 전체 강제 제거 -->
-<style id="step32-remove-admin-order-match">
-body.admin-view #orderInboundMatchCard,
-body.admin-view #adminMainOrderMatchCard,
-body.admin-view .ar-btn.match,
-body.admin-view [data-admin-task="match"],
-body.admin-view button[onclick*="openAdminTaskView('match')"],
-body.admin-view button[onclick*='openAdminTaskView("match")'],
-body.admin-view button[onclick*="openExistingAdminSection('match')"],
-body.admin-view button[onclick*='openExistingAdminSection("match")']{
-  display:none!important;
-  visibility:hidden!important;
-  height:0!important;
-  min-height:0!important;
-  max-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  overflow:hidden!important;
-}
-</style>
-<script id="step32-remove-admin-order-match-js">
-(function(){
-  function removeAdminOrderMatchStep32(){
-    if(!window.isAdmin && !document.body.classList.contains('admin-view')) return;
-
-    /* 자동대조 상세화면에 들어가 있으면 관리자 메인으로 즉시 복귀 */
-    const title=(document.getElementById('adminShortcutFocusTitle')?.textContent||'')+' '+
-                (document.getElementById('adminTaskFocusTitle')?.textContent||'');
-    if(/주문.*입고.*자동대조/.test(title)){
-      try{
-        if(typeof closeAdminShortcutFocusV41==='function') closeAdminShortcutFocusV41();
-        else if(typeof showAdminReferenceHome==='function') showAdminReferenceHome();
-      }catch(e){}
-      document.body.classList.remove('admin-shortcut-focus','admin-task-focus');
-    }
-
-    /* 관리자 메인의 자동대조 현황판과 모든 바로가기 제거 */
-    document.querySelectorAll('#adminMainOrderMatchCard, #orderInboundMatchCard').forEach(el=>{
-      if(document.body.classList.contains('admin-view')) el.remove();
-    });
-    document.querySelectorAll('.ar-btn.match,[data-admin-task="match"],button[onclick*="openAdminTaskView(\\\'match\\\')"],button[onclick*=\'openAdminTaskView("match")\'],button[onclick*="openExistingAdminSection(\\\'match\\\')"],button[onclick*=\'openExistingAdminSection("match")\']').forEach(el=>el.remove());
-  }
-
-  /* 함수로 직접 열려고 해도 관리자에서는 차단 */
-  const oldShortcut=window.openAdminShortcutFocusV41;
-  if(typeof oldShortcut==='function'){
-    window.openAdminShortcutFocusV41=function(kind){
-      if(kind==='match' && (window.isAdmin || document.body.classList.contains('admin-view'))){
-        removeAdminOrderMatchStep32(); return;
-      }
-      return oldShortcut.apply(this,arguments);
-    };
-  }
-  const oldTask=window.openAdminTaskView;
-  if(typeof oldTask==='function'){
-    window.openAdminTaskView=function(type){
-      if(type==='match' && (window.isAdmin || document.body.classList.contains('admin-view'))){
-        removeAdminOrderMatchStep32(); return;
-      }
-      return oldTask.apply(this,arguments);
-    };
-  }
-
-  window.addEventListener('load',()=>setTimeout(removeAdminOrderMatchStep32,200));
-  document.addEventListener('click',()=>setTimeout(removeAdminOrderMatchStep32,20),true);
-  new MutationObserver(()=>{
-    if(document.body.classList.contains('admin-view')) removeAdminOrderMatchStep32();
-  }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-})();
-</script>
-
-
-<!-- STEP34: 관리자 바로가기 NAS 엑셀 연동 제거 + 남은 버튼 화면폭 균등 정렬 -->
-<style id="step34-admin-shortcuts-fullwidth">
-/* 관리자 바로가기에서 NAS 엑셀 연동 버튼 강제 숨김 */
-body.admin-view #adminReferenceHome .ar-grid button[onclick*="openExistingAdminSection('nas')"],
-body.admin-view #adminReferenceHome .ar-grid button[onclick*='openExistingAdminSection("nas")'],
-body.admin-view #adminReferenceHome .ar-grid .admin-nas-shortcut,
-body.admin-view .admin-welcome-shortcut-btn[onclick*="openExistingAdminSection('nas')"],
-body.admin-view .admin-welcome-shortcut-btn[onclick*='openExistingAdminSection("nas")']{
-  display:none!important;
-  visibility:hidden!important;
-}
-
-/* 남은 관리자 바로가기 버튼이 각 줄의 가로폭을 빈자리 없이 채우도록 */
-body.admin-view #adminReferenceHome .ar-grid{
-  display:flex!important;
-  flex-wrap:wrap!important;
-  gap:8px!important;
-  width:100%!important;
-  align-items:stretch!important;
-}
-body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
-  flex:1 1 210px!important;
-  width:auto!important;
-  min-width:190px!important;
-  max-width:none!important;
-  min-height:74px!important;
-}
-
-@media(max-width:760px){
-  body.admin-view #adminReferenceHome .ar-grid{gap:7px!important}
-  body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
-    flex:1 1 calc(50% - 7px)!important;
-    min-width:145px!important;
-  }
-}
-@media(max-width:390px){
-  body.admin-view #adminReferenceHome .ar-grid > .ar-btn{
-    flex-basis:100%!important;
-    min-width:0!important;
-  }
-}
-</style>
-<script id="step34-admin-shortcuts-fullwidth-js">
-(function(){
-  function cleanNasShortcutStep34(){
-    if(!(window.isAdmin || document.body.classList.contains('admin-view'))) return;
-    const roots=[document.getElementById('adminReferenceHome'), document];
-    roots.forEach(root=>{
-      if(!root)return;
-      root.querySelectorAll(
-        "button[onclick*=\"openExistingAdminSection('nas')\"],button[onclick*='openExistingAdminSection(\"nas\")']"
-      ).forEach(btn=>{
-        const inShortcut = btn.closest('.ar-grid') || btn.classList.contains('admin-welcome-shortcut-btn');
-        if(inShortcut) btn.remove();
-      });
-      /* onclick 문자열이 변형되어도 관리자 바로가기에서 NAS 엑셀 연동 문구면 제거 */
-      root.querySelectorAll('#adminReferenceHome .ar-grid button,.admin-welcome-shortcut-btn').forEach(btn=>{
-        if((btn.textContent||'').replace(/\s+/g,' ').includes('NAS 엑셀 연동')) btn.remove();
-      });
-    });
-  }
-  window.addEventListener('load',()=>setTimeout(cleanNasShortcutStep34,150));
-  document.addEventListener('click',()=>setTimeout(cleanNasShortcutStep34,20),true);
-  const obs=new MutationObserver(()=>{
-    if(document.body.classList.contains('admin-view')) cleanNasShortcutStep34();
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-})();
-</script>
-
-<style id="admin2-five-only-v40">
-#admin2CleanHome{display:none}
-body.admin2-view main > *{display:none!important}
-body.admin2-view #admin2CleanHome{display:block!important}
-body.admin2-view #work:not(.hidden){display:block!important}
-body.admin2-view #standaloneOrderModal:not(.hidden){display:flex!important}
-body.admin2-view #workerLoginPanel{display:none!important}
-body.admin2-view .top-actions > *{display:none!important}
-body.admin2-view #admin2LoginBtn,body.admin2-view #homeBtn{display:inline-flex!important}
-#admin2CleanHome{width:100%;max-width:none;margin:0;padding:22px 26px 34px;background:#f3f6f8;min-height:calc(100vh - 80px)}
-.admin2-clean-head{background:linear-gradient(135deg,#17233a,#253a5c);border-radius:22px;padding:26px 30px;color:#fff;box-shadow:0 12px 28px rgba(20,35,60,.16)}
-.admin2-clean-head h2{margin:0;font-size:30px;color:#fff}.admin2-clean-head p{margin:7px 0 0;color:#d9e2f1;font-weight:700}
-.admin2-five-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:18px}
-.admin2-clean-btn,.admin2-erp-card{border:0;border-radius:20px;min-height:170px;padding:22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;box-shadow:0 8px 22px rgba(32,45,65,.10);font-weight:900;overflow:hidden}
-.admin2-clean-btn{cursor:pointer;color:#17233a;transition:.15s transform,.15s box-shadow}.admin2-clean-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(32,45,65,.15)}
-.admin2-clean-btn .ico,.admin2-erp-card .ico{font-size:38px;line-height:1}.admin2-clean-btn span:nth-child(2),.admin2-erp-card>span:nth-child(2){font-size:22px}.admin2-clean-btn small,.admin2-erp-card small{font-size:13px;opacity:.72}
-.admin2-clean-btn.in{grid-column:span 6;background:#dff5ea}.admin2-clean-btn.out{grid-column:span 6;background:#ffe8e5}.admin2-clean-btn.loc{grid-column:span 4;background:#e7efff}.admin2-erp-card{grid-column:span 4;background:#17233a;color:#fff}.admin2-clean-btn.kakao{grid-column:span 4;background:#fff1ad}
-.admin2-erp-card b{font-size:38px;color:#fff;letter-spacing:-1px}
-@media(max-width:900px){.admin2-clean-btn.in,.admin2-clean-btn.out{grid-column:span 6}.admin2-clean-btn.loc,.admin2-erp-card,.admin2-clean-btn.kakao{grid-column:span 12}.admin2-clean-btn,.admin2-erp-card{min-height:140px}}
-@media(max-width:620px){#admin2CleanHome{padding:12px}.admin2-clean-head{padding:20px}.admin2-clean-head h2{font-size:24px}.admin2-clean-btn.in,.admin2-clean-btn.out,.admin2-clean-btn.loc,.admin2-erp-card,.admin2-clean-btn.kakao{grid-column:span 12}.admin2-clean-btn,.admin2-erp-card{min-height:120px;padding:18px}}
-</style>
-<script id="admin2-five-only-v40-js">
-(function(){
-  function admin2ErpTotal(){
-    try{return (Array.isArray(ITEMS)?ITEMS.filter(x=>String(x?.part||'').trim() && String(x?.part||'').trim()!=='합계').length:0)}catch(e){return 0}
-  }
-  window.ensureAdmin2CleanHome=function(){
-    let root=document.getElementById('admin2CleanHome');
-    if(!root){root=document.createElement('section');root.id='admin2CleanHome';document.querySelector('main')?.insertBefore(root,document.querySelector('main')?.firstChild||null)}
-    root.innerHTML=`<div class="admin2-clean-head"><h2>관리자 모드2 · 자재 업무</h2><p>입고·출고·위치·ERP·카톡 문의를 빠르게 처리합니다.</p></div><div class="admin2-five-grid">
-      <button type="button" class="admin2-clean-btn in" onclick="openMode('inbound')"><span class="ico">📥</span><span>입고 등록</span><small>입고수량 등록</small></button>
-      <button type="button" class="admin2-clean-btn out" onclick="openMode('outbound')"><span class="ico">📤</span><span>출고 등록</span><small>출고수량 등록</small></button>
-      <button type="button" class="admin2-clean-btn loc" id="admin2LocationOrganizeBtn"><span class="ico">🧹</span><span>위치 정리</span><small>기존 위치 등록·수정</small></button>
-      <div class="admin2-erp-card"><span class="ico">🗄️</span><span>ERP 품목</span><b id="admin2ErpTotal">0개</b><small>ERP 총 품목수</small></div>
-      <button type="button" class="admin2-clean-btn kakao" id="admin2KakaoInquiryBtn"><span class="ico">💬</span><span>카톡 문의</span><small>자재 주문·문의</small></button>
-    </div>`;
-    root.querySelector('#admin2LocationOrganizeBtn').onclick=function(){
-      document.body.classList.remove('admin2-view');
-      try{openExistingAdminSection('location')}catch(e){try{openAdminShortcutListV41('location')}catch(_){alert('위치 정리 화면을 열지 못했습니다.')}}
-      document.body.classList.add('admin2-view');
-      const w=document.getElementById('work'); if(w)w.classList.remove('hidden');
-    };
-    root.querySelector('#admin2KakaoInquiryBtn').onclick=function(){
-      try{if(typeof openStandaloneOrder==='function')openStandaloneOrder();else openMode('order')}catch(e){alert('카톡 문의 화면을 열지 못했습니다.')}
-    };
-    const el=document.getElementById('admin2ErpTotal'); if(el)el.textContent=admin2ErpTotal().toLocaleString()+'개';
-    return root;
-  };
-  window.showAdmin2CleanHome=function(){
-    if(!window.isAdmin2 && !document.body.classList.contains('admin2-view'))return;
-    document.body.classList.add('admin2-view');
-    ensureAdmin2CleanHome();
-    document.getElementById('work')?.classList.add('hidden');
-    document.getElementById('photoSearchPanel')?.classList.add('hidden');
-  };
-  function enforce(){if(!document.body.classList.contains('admin2-view'))return;ensureAdmin2CleanHome();const rp=document.getElementById('roleModePill');if(rp)rp.textContent='관리자 모드2'}
-  document.addEventListener('click',function(e){if(!document.body.classList.contains('admin2-view'))return;if(e.target.closest('#homeBtn')){e.preventDefault();e.stopImmediatePropagation();setTimeout(showAdmin2CleanHome,0)}},true);
-  const oldAdmin2Login=window.admin2Login;
-  if(typeof oldAdmin2Login==='function'){window.admin2Login=async function(){await oldAdmin2Login.apply(this,arguments);if(document.body.classList.contains('admin2-view'))setTimeout(showAdmin2CleanHome,0)};const b=document.getElementById('admin2LoginBtn');if(b)b.onclick=window.admin2Login}
-  window.addEventListener('load',()=>{if(sessionStorage.getItem('mirim_prod_admin2')==='1')setTimeout(showAdmin2CleanHome,50)});
-  new MutationObserver(()=>{clearTimeout(window.__a2v40);window.__a2v40=setTimeout(enforce,30)}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
-})();
-</script>
-
-<!-- STEP45: 관리자1 완전 제거 / 관리자2 새출발 - ERP 데이터 + 위치정리만 유지 -->
-<style id="step45-admin-reset">
-/* 관리자1 진입점 완전 제거 */
-#adminLoginBtn{display:none!important}
-/* 관리자2 메인은 전용 2개 기능만 */
-body.admin2-view main>*{display:none!important}
-body.admin2-view #admin2FreshHome{display:block!important}
-#admin2FreshHome{display:none;width:100%;max-width:none;margin:0;padding:24px;min-height:calc(100vh - 84px);background:#f6f8fb;box-sizing:border-box}
-.admin2fresh-head{padding:26px 28px;border-radius:20px;background:#17324d;color:#fff;box-shadow:0 10px 24px rgba(20,40,65,.12)}
-.admin2fresh-head h2{margin:0;font-size:30px;color:#fff}.admin2fresh-head p{margin:8px 0 0;color:#dce8f3;font-weight:700}
-.admin2fresh-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
-.admin2fresh-card{min-height:220px;border:0;border-radius:22px;padding:28px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 8px 22px rgba(30,50,75,.10);box-sizing:border-box}
-button.admin2fresh-card{cursor:pointer}.admin2fresh-card .ico{font-size:44px}.admin2fresh-card .title{font-size:25px;font-weight:900}.admin2fresh-card small{font-size:14px;font-weight:800;opacity:.72}
-.admin2fresh-card.erp{background:#17324d;color:#fff}.admin2fresh-card.erp b{font-size:44px;color:#fff}.admin2fresh-card.loc{background:#e6efff;color:#17324d}
-/* 위치정리 화면을 연 동안 관리자2 홈은 숨기고 해당 위치정리 카드만 허용 */
-body.admin2-location-mode #admin2FreshHome{display:none!important}
-body.admin2-location-mode main>*{display:none!important}
-body.admin2-location-mode #locationOrganizerCard{display:block!important}
-body.admin2-location-mode #work:not(.hidden){display:block!important}
-body.admin2-location-mode #admin2LocationBack{display:block!important}
-#admin2LocationBack{display:none;position:sticky;top:8px;z-index:9999;margin:10px 0;padding:12px 18px;border:0;border-radius:12px;background:#17324d;color:#fff;font-weight:900;cursor:pointer}
-@media(max-width:760px){#admin2FreshHome{padding:12px}.admin2fresh-grid{grid-template-columns:1fr}.admin2fresh-card{min-height:160px;padding:20px}.admin2fresh-head h2{font-size:24px}}
-</style>
-<script id="step45-admin-reset-js">
-(function(){
-  function erpTotal(){
-    try{return Array.isArray(window.ITEMS)?window.ITEMS.length:(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS)?ITEMS.length:0)}catch(e){return 0}
-  }
-  function hardRemoveAdmin1(){
-    const b=document.getElementById('adminLoginBtn'); if(b)b.remove();
-    /* 관리자1 세션/상태가 남아 있어도 관리자2 새 화면에는 끌고 오지 않음 */
-    if(document.body.classList.contains('admin2-view')){
-      document.body.classList.remove('admin-view','admin-reference-home','admin-task-focus','admin-shortcut-focus','admin-quick-io');
-    }
-  }
-  function ensureFreshHome(){
-    let root=document.getElementById('admin2FreshHome');
-    if(!root){
-      root=document.createElement('section');root.id='admin2FreshHome';
-      const main=document.querySelector('main'); if(main)main.insertBefore(root,main.firstChild||null);
-    }
-    root.innerHTML=`<div class="admin2fresh-head"><h2>관리자 모드2 · 새 자재관리</h2><p>ERP 등록자료와 위치 정리만 유지하고 새롭게 시작합니다.</p></div>
-      <div class="admin2fresh-grid">
-        <div class="admin2fresh-card erp"><span class="ico">🗄️</span><span class="title">ERP 품목</span><b id="admin2FreshErpCount">0개</b><small>기존 등록 ERP 품목 데이터 유지</small></div>
-        <button type="button" class="admin2fresh-card loc" id="admin2FreshLocationBtn"><span class="ico">🧹</span><span class="title">위치 정리</span><small>기존 위치 등록 · 수정 데이터 유지</small></button>
-      </div>`;
-    const c=root.querySelector('#admin2FreshErpCount');if(c)c.textContent=erpTotal().toLocaleString()+'개';
-    const btn=root.querySelector('#admin2FreshLocationBtn');if(btn)btn.onclick=openLocationOnly;
-    return root;
-  }
-  function showFreshHome(){
-    if(!document.body.classList.contains('admin2-view'))return;
-    document.body.classList.remove('admin2-location-mode');
-    hardRemoveAdmin1();ensureFreshHome();
-    const rp=document.getElementById('roleModePill');if(rp)rp.textContent='관리자 모드2';
-  }
-  function openLocationOnly(){
-    document.body.classList.add('admin2-location-mode');
-    try{
-      if(typeof openExistingAdminSection==='function')openExistingAdminSection('location');
-      else if(typeof openAdminShortcutListV41==='function')openAdminShortcutListV41('location');
-      else {const c=document.getElementById('locationOrganizerCard');if(c)c.classList.remove('hidden')}
-      if(typeof loadLocationOrganizer==='function')loadLocationOrganizer();
-    }catch(e){console.error(e);alert('위치 정리 화면을 열지 못했습니다.');document.body.classList.remove('admin2-location-mode');return}
-    let back=document.getElementById('admin2LocationBack');
-    if(!back){back=document.createElement('button');back.id='admin2LocationBack';back.type='button';back.textContent='← 관리자 모드2 메인';back.onclick=showFreshHome;const main=document.querySelector('main');if(main)main.insertBefore(back,main.firstChild||null)}
-  }
-  /* 관리자1 로그인 함수도 진입 차단 */
-  window.adminLogin=function(){alert('관리자 모드1은 삭제되었습니다. 관리자 모드2를 사용해 주세요.')};
-  window.showAdmin2FreshHome=showFreshHome;
-  document.addEventListener('click',function(e){
-    if(document.body.classList.contains('admin2-view') && e.target.closest('#homeBtn')){e.preventDefault();e.stopImmediatePropagation();showFreshHome()}
-  },true);
-  const obs=new MutationObserver(()=>{if(document.getElementById('adminLoginBtn'))hardRemoveAdmin1()});
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-  window.addEventListener('load',()=>{hardRemoveAdmin1();if(sessionStorage.getItem('mirim_prod_admin2')==='1')setTimeout(showFreshHome,80)});
-  setTimeout(()=>{hardRemoveAdmin1();if(document.body.classList.contains('admin2-view'))showFreshHome()},0);
-})();
-</script>
 </body></html>
