@@ -10158,4 +10158,229 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+
+<style id="worker-readonly-shortcuts-v44">
+/* 작업자 메인: 체크한 6개 기능만 표시 */
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
+  display:none!important;
+}
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="location"],
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="photo"],
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="order"],
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="orders"],
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="later"],
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="history"]{
+  display:flex!important;
+}
+
+/* 6개만 보기 좋게 3열/모바일 2열 */
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+@media(max-width:760px){
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+/* 작업자 읽기전용: 위치/사진 수정 기능 숨김 */
+body:not(.admin-view) #results .photo-actions,
+body:not(.admin-view) #results .photo-change-btn,
+body:not(.admin-view) #results .photo-delete-btn,
+body:not(.admin-view) #results button[onclick*="saveLocation"],
+body:not(.admin-view) #results button[onclick*="editLocation"],
+body:not(.admin-view) #results button[onclick*="deleteLocation"],
+body:not(.admin-view) #results button[onclick*="saveMultiLocation"],
+body:not(.admin-view) #results .multi-loc-actions,
+body:not(.admin-view) #results .location-edit-actions,
+body:not(.admin-view) #results .admin-only{
+  display:none!important;
+}
+
+/* 주문/문의 통합관리: 작업자는 보기 + 카톡 문의만 */
+body:not(.admin-view) #todayOrderCard input[type="number"],
+body:not(.admin-view) #todayOrderCard .worker-receive-check,
+body:not(.admin-view) #todayOrderCard .self-receive-btn,
+body:not(.admin-view) #todayOrderCard .approval-receive-btn,
+body:not(.admin-view) #todayOrderCard button[onclick*="workerConfirmOrderReceived"],
+body:not(.admin-view) #todayOrderCard button[onclick*="admin"],
+body:not(.admin-view) #todayOrderCard button[onclick*="complete"],
+body:not(.admin-view) #todayOrderCard button[onclick*="delete"]{
+  display:none!important;
+}
+
+/* 나중에 확인: 작업자는 목록 열람만, 완료/재열기/수정은 금지 */
+body:not(.admin-view) #laterCheckCard .later-actions,
+body:not(.admin-view) #laterCheckCard button[onclick*="finishLaterCheck"],
+body:not(.admin-view) #laterCheckCard button[onclick*="reopenLaterCheck"]{
+  display:none!important;
+}
+
+/* 위치검색 결과에서 '나중에 확인 추가'는 수정 행위이므로 숨김 */
+body:not(.admin-view) #results .later-check-direct-wrap,
+body:not(.admin-view) #results .later-check-btn{
+  display:none!important;
+}
+
+/* 최근 입출고 기록은 읽기전용 */
+body:not(.admin-view) #recentInboundCard button,
+body:not(.admin-view) #recentOutboundCard button{
+  display:none!important;
+}
+
+/* 읽기 전용 안내 */
+.worker-readonly-note{
+  display:none;
+  margin:0 0 10px;
+  padding:9px 11px;
+  border:1px solid #cddfd5;
+  border-radius:10px;
+  background:#f3faf6;
+  color:#37604b;
+  font-size:12px;
+  font-weight:900;
+}
+body:not(.admin-view):not(.worker-locked) .worker-readonly-note{
+  display:block;
+}
+</style>
+
+<script>
+function enforceWorkerReadonlyV44(){
+  if(isAdmin || !currentWorker)return;
+
+  /* 작업자 메인 6개만 재구성 */
+  const card=typeof ensureWorkerMainShortcutCardV43==='function'
+    ? ensureWorkerMainShortcutCardV43()
+    : document.getElementById('workerMainShortcutCard');
+
+  if(card){
+    let note=card.querySelector('.worker-readonly-note');
+    if(!note){
+      note=document.createElement('div');
+      note.className='worker-readonly-note';
+      note.textContent='👀 작업자 모드: 조회 전용 · 카톡 문의/주문만 전송 가능';
+      const title=card.querySelector('.worker-main-shortcut-title');
+      if(title)title.insertAdjacentElement('afterend',note);
+      else card.insertAdjacentElement('afterbegin',note);
+    }
+
+    /* 최근 입출고 버튼이 없으면 추가 */
+    const grid=card.querySelector('.worker-main-shortcut-grid');
+    if(grid && !grid.querySelector('[data-worker-main="history"]')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='worker-main-shortcut-btn';
+      b.dataset.workerMain='history';
+      b.innerHTML='<span class="ico">📋</span><span>최근 입출고 기록</span><small>입고·출고 확인</small>';
+      grid.appendChild(b);
+    }
+  }
+
+  wireWorkerReadonlyButtonsV44();
+}
+
+function openWorkerHistoryReadonlyV44(){
+  if(!currentWorker)return;
+  const inCard=document.getElementById('recentInboundCard');
+  const outCard=document.getElementById('recentOutboundCard');
+  if(!inCard && !outCard)return alert('최근 입출고 기록을 찾지 못했습니다.');
+
+  document.getElementById('home')?.classList.remove('hidden');
+  if(inCard){
+    inCard.classList.remove('hidden');
+    inCard.style.setProperty('display','block','important');
+  }
+  if(outCard){
+    outCard.classList.remove('hidden');
+    outCard.style.setProperty('display','block','important');
+  }
+  try{if(typeof renderDailyHistories==='function')renderDailyHistories();}catch(e){}
+  (inCard||outCard)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function openWorkerOrdersReadonlyV44(){
+  if(!currentWorker)return;
+  const card=document.getElementById('todayOrderCard');
+  if(!card)return alert('주문·문의 목록을 찾지 못했습니다.');
+  document.getElementById('home')?.classList.remove('hidden');
+  card.classList.remove('hidden');
+  card.style.setProperty('display','block','important');
+  try{if(typeof loadTodayOrderRequests==='function')loadTodayOrderRequests();}catch(e){}
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function openWorkerLaterReadonlyV44(){
+  if(!currentWorker)return;
+  try{
+    if(typeof ensureLaterCheckCard==='function')ensureLaterCheckCard();
+    if(typeof renderLaterChecks==='function')renderLaterChecks();
+  }catch(e){}
+  const card=document.getElementById('laterCheckCard');
+  if(!card)return alert('나중에 확인 목록을 찾지 못했습니다.');
+  card.classList.remove('hidden');
+  card.style.setProperty('display','block','important');
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function wireWorkerReadonlyButtonsV44(){
+  const card=document.getElementById('workerMainShortcutCard');
+  if(!card)return;
+
+  card.querySelectorAll('[data-worker-main]').forEach(btn=>{
+    const kind=btn.dataset.workerMain;
+    btn.onclick=(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+
+      if(!currentWorker){
+        try{showWorkerLogin();}catch(err){}
+        alert('작업자 로그인 후 사용할 수 있습니다.');
+        return;
+      }
+
+      if(kind==='location'){
+        try{openMode('location');}catch(err){alert('위치확인 화면을 열지 못했습니다.');}
+        return;
+      }
+      if(kind==='photo'){
+        try{openPhotoSearch();}catch(err){alert('사진검색 화면을 열지 못했습니다.');}
+        return;
+      }
+      if(kind==='order'){
+        try{openMode('order');}catch(err){alert('카톡 주문 화면을 열지 못했습니다.');}
+        return;
+      }
+      if(kind==='orders'){
+        openWorkerOrdersReadonlyV44();
+        return;
+      }
+      if(kind==='later'){
+        openWorkerLaterReadonlyV44();
+        return;
+      }
+      if(kind==='history'){
+        openWorkerHistoryReadonlyV44();
+        return;
+      }
+
+      alert('이 기능은 작업자 모드에서 사용할 수 없습니다.');
+    };
+  });
+}
+
+/* 작업자 모드에서 수정 함수가 직접 호출돼도 차단 */
+function workerReadonlyBlockedV44(action){
+  if(!isAdmin && currentWorker){
+    alert('🔒 작업자 모드는 조회 전용입니다.\n수정이 필요하면 관리자에게 요청해 주세요.');
+    return true;
+  }
+  return false;
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(enforceWorkerReadonlyV44,1200);
+});
+</script>
+
 </body></html>
