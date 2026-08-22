@@ -12419,7 +12419,8 @@ body:not(.admin-view) #results .later-check-btn:active{
 </style>
 
 
-<style id="location-cards-stock-total-v16">
+
+<style id="location-cards-stock-total-v17">
 .location-card-wrap-v15{
   padding:12px!important;
 }
@@ -12429,37 +12430,43 @@ body:not(.admin-view) #results .later-check-btn:active{
   font-weight:900!important;
   color:#496156!important;
 }
-.location-cards-v16{
+.location-cards-v17{
   display:grid!important;
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;
   width:100%!important;
 }
-.location-card-v16{
+.location-card-v17{
   border-radius:10px!important;
   padding:10px 12px!important;
   min-width:0!important;
+  min-height:66px!important;
   border:1px solid rgba(0,0,0,.08)!important;
+  box-sizing:border-box!important;
 }
-.location-card-v16.loc-1{
+.location-card-v17.loc-1{
   background:#e7f7ed!important;
   border-color:#b9dfc7!important;
 }
-.location-card-v16.loc-2{
+.location-card-v17.loc-2{
   background:#fff4cc!important;
   border-color:#ead58a!important;
 }
-.location-card-v16.loc-3{
-  background:#e8f0ff!important;
-  border-color:#bfd0ef!important;
+.location-card-v17.stock-total{
+  background:#d81b60!important;
+  border-color:#ad1457!important;
+  color:#fff!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
 }
-.location-label-v16{
+.location-label-v17{
   font-size:12px!important;
   font-weight:1000!important;
   margin-bottom:4px!important;
   color:#44564d!important;
 }
-.location-value-v16{
+.location-value-v17{
   font-size:17px!important;
   line-height:1.35!important;
   font-weight:1000!important;
@@ -12468,125 +12475,138 @@ body:not(.admin-view) #results .later-check-btn:active{
   overflow-wrap:anywhere!important;
   word-break:break-word!important;
 }
-.location-card-v16.loc-2 .location-value-v16{color:#8a6500!important}
-.location-card-v16.loc-3 .location-value-v16{color:#245d93!important}
-
-.stock-total-v16{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:12px!important;
-  margin-top:8px!important;
-  padding:10px 12px!important;
-  border-radius:10px!important;
-  background:#f2ecff!important;
-  border:1px solid #d7c8f2!important;
+.location-card-v17.loc-2 .location-value-v17{
+  color:#8a6500!important;
 }
-.stock-total-v16 .stock-total-label-v16{
-  font-size:12px!important;
-  font-weight:1000!important;
-  color:#6846a5!important;
+.location-card-v17.stock-total .location-label-v17,
+.location-card-v17.stock-total .location-value-v17{
+  color:#fff!important;
 }
-.stock-total-v16 .stock-total-value-v16{
-  font-size:18px!important;
-  font-weight:1000!important;
-  color:#5b32a3!important;
+.location-card-v17.stock-total .location-value-v17{
+  font-size:22px!important;
 }
 
 @media(max-width:760px){
-  .location-cards-v16{
+  .location-cards-v17{
     grid-template-columns:1fr!important;
   }
-  .location-card-v16{
+  .location-card-v17{
     padding:9px 10px!important;
   }
-  .location-value-v16{
+  .location-value-v17{
     font-size:16px!important;
   }
 }
 </style>
 
-<script id="location-cards-enhancer-v16">
+<script id="location-cards-enhancer-v17">
 (function(){
-  function isTotalLineV16(el){
+  function isTotalLineV17(el){
     const txt=(el.textContent||'').replace(/\s+/g,' ').trim();
-    return /총\s*수량|총수량|재고\s*총\s*수량|재고총수량|합계|총\s*재고/i.test(txt);
+    return /총\s*수량|총수량|재고\s*총\s*수량|재고총수량|자재\s*총\s*수량|자재총수량|합계|총\s*재고/i.test(txt);
   }
 
-  function enhanceLocationsV16(){
+  function extractTotalV17(text){
+    const nums=String(text||'').match(/-?\d[\d,]*(?:\.\d+)?/g);
+    return nums&&nums.length ? nums[nums.length-1] : String(text||'').replace(
+      /총\s*수량|총수량|재고\s*총\s*수량|재고총수량|자재\s*총\s*수량|자재총수량|합계|총\s*재고/gi,''
+    ).trim();
+  }
+
+  function enhanceLocationsV17(){
     document.querySelectorAll('.result-location').forEach(box=>{
-      if(box.dataset.locV16==='1') return;
+      if(box.dataset.locV17==='1') return;
 
-      const allLines=[...box.querySelectorAll('.all-location-line')];
-      if(!allLines.length) return;
+      /* v15/v16로 변환된 카드가 있으면 원래 내용 기준으로 재구성 */
+      const oldCards=[...box.querySelectorAll('.location-card-v15,.location-card-v16')];
+      const rawLines=[...box.querySelectorAll('.all-location-line')];
 
-      const locLines=allLines.filter(el=>!isTotalLineV16(el)).slice(0,3);
-      const totalLines=allLines.filter(isTotalLineV16);
+      let locHtml=[];
+      let totalText='';
+
+      if(oldCards.length){
+        oldCards.forEach(card=>{
+          const txt=(card.textContent||'').trim();
+          const val=card.querySelector('.location-value-v15,.location-value-v16');
+          if(/재고총수량|자재총수량|총수량/i.test(txt)){
+            totalText=val?val.textContent:txt;
+          }else if(val){
+            locHtml.push(val.innerHTML);
+          }
+        });
+      }
+
+      rawLines.forEach(line=>{
+        if(isTotalLineV17(line)){
+          totalText=line.textContent||'';
+        }else{
+          locHtml.push(line.innerHTML);
+        }
+      });
+
+      const oldTotal=box.querySelector('.stock-total-v16');
+      if(oldTotal){
+        totalText=oldTotal.textContent||totalText;
+      }
+
+      locHtml=locHtml.slice(0,2);
+
+      if(!locHtml.length && !totalText) return;
+
+      box.querySelectorAll('.location-cards-v15,.location-cards-v16,.stock-total-v16,.all-location-line').forEach(el=>el.remove());
 
       const small=box.querySelector('small');
       if(small) small.classList.add('location-summary-v15');
 
       const wrap=document.createElement('div');
-      wrap.className='location-cards-v16';
+      wrap.className='location-cards-v17';
 
-      locLines.forEach((line,idx)=>{
+      locHtml.forEach((html,idx)=>{
         const card=document.createElement('div');
-        card.className=`location-card-v16 loc-${idx+1}`;
+        card.className=`location-card-v17 loc-${idx+1}`;
 
         const label=document.createElement('div');
-        label.className='location-label-v16';
+        label.className='location-label-v17';
         label.textContent=`${idx+1}자재위치`;
 
         const value=document.createElement('div');
-        value.className='location-value-v16';
-        value.innerHTML=line.innerHTML;
+        value.className='location-value-v17';
+        value.innerHTML=html;
 
         card.appendChild(label);
         card.appendChild(value);
         wrap.appendChild(card);
       });
 
-      locLines.forEach(line=>line.remove());
+      if(totalText){
+        const card=document.createElement('div');
+        card.className='location-card-v17 stock-total';
 
-      if(wrap.children.length){
-        box.appendChild(wrap);
+        const label=document.createElement('div');
+        label.className='location-label-v17';
+        label.textContent='자재총수량';
+
+        const value=document.createElement('div');
+        value.className='location-value-v17';
+        value.textContent=extractTotalV17(totalText);
+
+        card.appendChild(label);
+        card.appendChild(value);
+        wrap.appendChild(card);
       }
 
-      if(totalLines.length){
-        const totalText=totalLines.map(el=>el.textContent||'').join(' ').trim();
-        let numeric='';
-        const nums=totalText.match(/-?\d[\d,]*(?:\.\d+)?/g);
-        if(nums && nums.length) numeric=nums[nums.length-1];
-
-        const totalBox=document.createElement('div');
-        totalBox.className='stock-total-v16';
-
-        const lbl=document.createElement('div');
-        lbl.className='stock-total-label-v16';
-        lbl.textContent='재고총수량';
-
-        const val=document.createElement('div');
-        val.className='stock-total-value-v16';
-        val.textContent=numeric ? numeric : totalText.replace(/총\s*수량|총수량|재고\s*총\s*수량|재고총수량|합계|총\s*재고/gi,'').trim();
-
-        totalBox.appendChild(lbl);
-        totalBox.appendChild(val);
-        box.appendChild(totalBox);
-
-        totalLines.forEach(el=>el.remove());
-      }
-
+      box.appendChild(wrap);
       box.classList.add('location-card-wrap-v15');
-      box.dataset.locV16='1';
+      box.dataset.locV17='1';
     });
   }
 
-  window.addEventListener('load',()=>setTimeout(enhanceLocationsV16,500));
-  document.addEventListener('click',()=>setTimeout(enhanceLocationsV16,60),true);
+  window.addEventListener('load',()=>setTimeout(enhanceLocationsV17,500));
+  document.addEventListener('click',()=>setTimeout(enhanceLocationsV17,60),true);
 
   const obs=new MutationObserver(()=>{
-    clearTimeout(window.__locEnhanceV16);
-    window.__locEnhanceV16=setTimeout(enhanceLocationsV16,50);
+    clearTimeout(window.__locEnhanceV17);
+    window.__locEnhanceV17=setTimeout(enhanceLocationsV17,50);
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
