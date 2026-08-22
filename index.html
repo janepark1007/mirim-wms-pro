@@ -967,24 +967,6 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 
 </head>
 <body>
-
-<div id="adminPasswordModal" class="order-modal-backdrop hidden" aria-hidden="true">
-  <div class="order-modal-card vip-modal-card" role="dialog" aria-modal="true">
-    <div class="order-modal-head">
-      <div>
-        <div class="vip-login-title">🛡️ 관리자 로그인</div>
-        <div>작업자 로그인 후 관리자 비밀번호를 입력하세요.</div>
-      </div>
-      <button type="button" onclick="closeAdminPasswordLogin()">✕</button>
-    </div>
-    <label class="order-note-label">관리자 비밀번호
-      <input id="adminPasswordInput" type="password" maxlength="32" autocomplete="current-password" placeholder="관리자 비밀번호 입력">
-    </label>
-    <div id="adminPasswordError" class="vip-login-error hidden"></div>
-    <button type="button" class="primary" style="width:100%;min-height:50px;margin-top:12px" onclick="submitAdminPasswordLogin()">관리자 모드 열기</button>
-  </div>
-</div>
-
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
   <div class="order-modal-card vip-modal-card" role="dialog" aria-modal="true">
     <div class="order-modal-head">
@@ -2950,14 +2932,10 @@ function renderWorkerPersonalTasks(){
 function updatePrivilegedAccessUI(){
  const vipOpen=sessionStorage.getItem('mirim_vip_view')==='1';
  const adminBtn=$('adminLoginBtn'),vipBtn=$('vipLoginBtn'),workerBtn=$('workerLoginBtn');
-
- /* 작업자 로그인 상태에서도 관리자 로그인 버튼 표시 */
+ /* 작업자 로그인 후 관리자 로그인 가능 */
  if(adminBtn)adminBtn.style.display=(vipOpen||(!currentWorker&&!isAdmin))?'none':'';
-
- /* VIP BOM은 관리자 로그인 후에만 표시 */
+ /* VIP는 관리자 로그인 후에만 표시 */
  if(vipBtn)vipBtn.style.display=(isAdmin&&!vipOpen)?'':'none';
-
- /* 관리자/VIP 상태에서는 작업자 로그인 버튼 숨김 */
  if(workerBtn)workerBtn.style.display=(isAdmin||vipOpen)?'none':'';
 }
 
@@ -3151,7 +3129,7 @@ async function loadWorkerLoginLogs(){
  }
 }
 let isAdmin=false;
-/* 관리자/VIP는 새로고침 후 자동 복원하지 않음: 비밀번호를 반드시 다시 입력 */
+/* 관리자/VIP는 비밀번호를 입력한 현재 세션 동작에서만 진입 */
 sessionStorage.removeItem('mirim_prod_admin');
 sessionStorage.removeItem('mirim_vip_ok');
 sessionStorage.removeItem('mirim_vip_view');
@@ -3213,76 +3191,53 @@ function updateAdminUI(){
    uc.style.display=isAdmin?'block':'none';
  }
 }
-const PRIVILEGED_PASSWORD_HASH='55ba1fa16f5d68266980097522bdd5c76f0ded4ea528a15f6a07ca7d0a0965b3';
+const MIRIM_ADMIN_PASSWORD_HASH='55ba1fa16f5d68266980097522bdd5c76f0ded4ea528a15f6a07ca7d0a0965b3';
 
-function openAdminPasswordLogin(){
+async function adminLogin(){
+ if(isAdmin){
+   isAdmin=false;
+   sessionStorage.removeItem('mirim_prod_admin');
+   sessionStorage.removeItem('mirim_admin_last_activity_v11');
+   sessionStorage.removeItem('mirim_vip_ok');
+   sessionStorage.removeItem('mirim_vip_view');
+   document.body.classList.remove('admin-reference-home');
+   const ar=document.getElementById('adminReferenceHome');
+   if(ar)ar.style.display='none';
+   updateAdminUI();
+   updateWorkerUI();
+   if(currentWorker){
+     $('workerLoginPanel')?.classList.add('hidden');
+     $('work')?.classList.add('hidden');
+     $('photoSearchPanel')?.classList.add('hidden');
+     $('home')?.classList.remove('hidden');
+   }
+   return;
+ }
+
  if(!currentWorker){
    alert('먼저 작업자 로그인을 해주세요.');
    try{showWorkerLogin();}catch(e){}
    return;
  }
- const input=$('adminPasswordInput'),err=$('adminPasswordError'),modal=$('adminPasswordModal');
- if(input)input.value='';
- if(err){err.textContent='';err.classList.add('hidden');}
- modal?.classList.remove('hidden');
- modal?.setAttribute('aria-hidden','false');
- setTimeout(()=>input?.focus(),60);
-}
-function closeAdminPasswordLogin(){
- const modal=$('adminPasswordModal');
- modal?.classList.add('hidden');
- modal?.setAttribute('aria-hidden','true');
- if($('adminPasswordInput'))$('adminPasswordInput').value='';
-}
-async function submitAdminPasswordLogin(){
- if(!currentWorker){
-   closeAdminPasswordLogin();
-   alert('먼저 작업자 로그인을 해주세요.');
-   return;
- }
- const pw=($('adminPasswordInput')?.value||'').trim();
- const err=$('adminPasswordError');
- if(!pw){
-   if(err){err.textContent='관리자 비밀번호를 입력하세요.';err.classList.remove('hidden');}
-   return;
- }
- if(await sha256Text(pw)!==PRIVILEGED_PASSWORD_HASH){
-   if(err){err.textContent='관리자 비밀번호가 올바르지 않습니다.';err.classList.remove('hidden');}
-   if($('adminPasswordInput')){$('adminPasswordInput').value='';$('adminPasswordInput').focus();}
+
+ const pw=prompt('관리자 비밀번호를 입력하세요.');
+ if(pw===null)return;
+ if(await sha256Text(String(pw).trim())!==MIRIM_ADMIN_PASSWORD_HASH){
+   alert('관리자 비밀번호가 맞지 않습니다.');
    return;
  }
 
- /* 작업자 세션은 그대로 유지하고 관리자 권한만 추가 */
+ /* 작업자 세션은 유지하고 관리자 권한만 추가 */
  isAdmin=true;
  sessionStorage.setItem('mirim_prod_admin','1');
  document.body.classList.remove('worker-locked');
- closeAdminPasswordLogin();
+ $('workerLoginPanel')?.classList.add('hidden');
 
  updateAdminUI();
  try{updateHomeSummary();}catch(e){}
  try{loadAdminNotifications();}catch(e){}
  try{showAdminReferenceHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
  alert('✅ 관리자 로그인 완료');
-}
-
-function adminLogin(){
- if(isAdmin){
-   /* 관리자 로그아웃 시 기존 작업자 로그인 상태로 복귀 */
-   isAdmin=false;
-   sessionStorage.removeItem('mirim_prod_admin');
-   sessionStorage.removeItem('mirim_admin_last_activity_v11');
-   sessionStorage.removeItem('mirim_vip_ok');
-   sessionStorage.removeItem('mirim_vip_view');
-   $('vipBomPanel')?.classList.add('hidden');
-
-   updateAdminUI();
-   updateWorkerUI();
-   $('work')?.classList.add('hidden');
-   $('photoSearchPanel')?.classList.add('hidden');
-   $('home')?.classList.remove('hidden');
-   return;
- }
- openAdminPasswordLogin();
 }
 // 관리자 상태 선언이 완료된 뒤 UI 초기화
 updateAdminUI();
@@ -6033,18 +5988,18 @@ function openVipLogin(){
    alert('관리자 로그인 후 VIP BOM에 들어갈 수 있습니다.');
    return;
  }
- /* 이전 VIP 인증값이 있어도 항상 비밀번호를 다시 입력 */
+ /* VIP는 진입할 때마다 비밀번호 재입력 */
  sessionStorage.removeItem('mirim_vip_ok');
- const input=$('vipPinInput'),err=$('vipLoginError'),modal=$('vipLoginModal');
- if(input)input.value='';
- if(err){err.textContent='';err.classList.add('hidden');}
- modal?.classList.remove('hidden');
- modal?.setAttribute('aria-hidden','false');
- setTimeout(()=>input?.focus(),60);
+ $('vipPinInput').value='';
+ $('vipLoginError').textContent='';
+ $('vipLoginError').classList.add('hidden');
+ $('vipLoginModal').classList.remove('hidden');
+ $('vipLoginModal').setAttribute('aria-hidden','false');
+ setTimeout(()=>$('vipPinInput')?.focus(),60);
 }
 function closeVipLogin(){
- $('vipLoginModal')?.classList.add('hidden');
- $('vipLoginModal')?.setAttribute('aria-hidden','true');
+ $('vipLoginModal').classList.add('hidden');
+ $('vipLoginModal').setAttribute('aria-hidden','true');
  if($('vipPinInput'))$('vipPinInput').value='';
 }
 async function submitVipLogin(){
@@ -6055,14 +6010,13 @@ async function submitVipLogin(){
  }
  const pw=($('vipPinInput')?.value||'').trim();
  if(!pw)return;
- if(await sha256Text(pw)!==PRIVILEGED_PASSWORD_HASH){
+ if(await sha256Text(pw)!==MIRIM_ADMIN_PASSWORD_HASH){
    $('vipLoginError').textContent='VIP 비밀번호가 올바르지 않습니다.';
    $('vipLoginError').classList.remove('hidden');
    $('vipPinInput').value='';
    $('vipPinInput').focus();
    return;
  }
- /* VIP 인증은 이번 진입에만 사용 */
  sessionStorage.setItem('mirim_vip_ok','1');
  closeVipLogin();
  openVipBom();
@@ -6098,10 +6052,10 @@ function vipLogout(){
  sessionStorage.removeItem('mirim_vip_ok');
  sessionStorage.removeItem('mirim_vip_view');
  closeVipLogin();
- $('vipBomPanel')?.classList.add('hidden');
- $('home')?.classList.remove('hidden');
- updateAdminUI();
- try{showAdminReferenceHome();}catch(e){}
+ closeVipBom();
+ if(isAdmin){
+   try{showAdminReferenceHome();}catch(e){}
+ }
 }
 
 function previewBomPhotos(event){
@@ -6448,9 +6402,7 @@ function exportBomCalculation(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
- $('adminPasswordInput')?.addEventListener('keyup',e=>{if(e.key==='Enter')submitAdminPasswordLogin();});
  $('vipPinInput')?.addEventListener('keyup',e=>{if(e.key==='Enter')submitVipLogin();});
- /* 관리자/VIP 자동 로그인·자동 복원 없음 */
  sessionStorage.removeItem('mirim_vip_ok');
  sessionStorage.removeItem('mirim_vip_view');
 });
@@ -7197,27 +7149,17 @@ function adminLogoutByIdle(){
   isAdmin=false;
   sessionStorage.removeItem('mirim_prod_admin');
   sessionStorage.removeItem(ADMIN_IDLE_KEY);
-  sessionStorage.removeItem('mirim_vip_ok');
-  sessionStorage.removeItem('mirim_vip_view');
   if(adminIdleTimer){clearTimeout(adminIdleTimer);adminIdleTimer=null;}
-  try{$('vipBomPanel')?.classList.add('hidden');}catch(e){}
   try{updateAdminUI();}catch(e){}
   try{updateWorkerUI();}catch(e){}
   try{
+    document.body.classList.add('worker-locked');
+    $('home')?.classList.add('hidden');
     $('work')?.classList.add('hidden');
     $('photoSearchPanel')?.classList.add('hidden');
     $('notifPanel')?.classList.add('hidden');
     $('loginLogPanel')?.classList.add('hidden');
-
-    if(currentWorker){
-      document.body.classList.remove('worker-locked');
-      $('workerLoginPanel')?.classList.add('hidden');
-      $('home')?.classList.remove('hidden');
-    }else{
-      document.body.classList.add('worker-locked');
-      $('home')?.classList.add('hidden');
-      $('workerLoginPanel')?.classList.remove('hidden');
-    }
+    $('workerLoginPanel')?.classList.remove('hidden');
   }catch(e){}
   alert('🔒 관리자 모드가 1시간 동안 사용되지 않아 자동 로그아웃되었습니다.');
 }
@@ -13065,231 +13007,5 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
   color:#fff!important;
 }
 </style>
-
-
-<style id="admin-shortcuts-click-fix-v28">
-/* 관리자 바로가기 클릭 영역만 복구 */
-body.admin-view #adminReferenceHome,
-body.admin-view #adminReferenceHome .ar-shortcuts,
-body.admin-view #adminReferenceHome .ar-grid,
-body.admin-view #adminReferenceHome .ar-btn{
-  pointer-events:auto!important;
-  user-select:auto!important;
-}
-
-body.admin-view #adminReferenceHome .ar-btn{
-  cursor:pointer!important;
-  position:relative!important;
-  z-index:2!important;
-}
-</style>
-
-<script id="admin-shortcuts-click-fix-v28-js">
-(function(){
-  function wireAdminReferenceShortcutsV28(){
-    if(!isAdmin)return;
-    const root=document.getElementById('adminReferenceHome');
-    if(!root)return;
-
-    /* 로그인 모달이 혹시 남아 있으면 완전히 닫기 */
-    const adminModal=document.getElementById('adminPasswordModal');
-    if(adminModal){
-      adminModal.classList.add('hidden');
-      adminModal.setAttribute('aria-hidden','true');
-      adminModal.style.removeProperty('display');
-    }
-
-    document.body.classList.remove('worker-locked');
-
-    const actions=[
-      ['기록 불러오기',()=>openExistingAdminSection('records')],
-      ['기존 위치 정리·수정',()=>openExistingAdminSection('location')],
-      ['NAS 엑셀 연동',()=>openExistingAdminSection('nas')],
-      ['사용자 관리',()=>openExistingAdminSection('users')],
-      ['알림 확인',()=>openExistingAdminSection('alerts')],
-      ['입고 등록',()=>openMode('inbound')],
-      ['출고 등록',()=>openMode('outbound')],
-      ['주문·문의 통합관리',()=>openAdminTaskView('orders')],
-      ['주문·입고 자동대조',()=>openAdminTaskView('match')],
-      ['나중에 확인',()=>openAdminTaskView('later')],
-      ['최근 입출고 기록',()=>openAdminTaskView('history')],
-      ['ERP 미등록 자재',()=>openAdminTaskView('unreg')]
-    ];
-
-    root.querySelectorAll('.ar-btn').forEach(btn=>{
-      const label=(btn.innerText||'').replace(/\s+/g,' ').trim();
-      const found=actions.find(([name])=>label.includes(name));
-      if(!found)return;
-
-      btn.onclick=(e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-
-        if(!isAdmin){
-          alert('관리자 모드에서만 사용할 수 있습니다.');
-          return;
-        }
-
-        try{
-          found[1]();
-        }catch(err){
-          console.error('관리자 바로가기 실행 오류',err);
-          alert('관리 화면을 열지 못했습니다.');
-        }
-      };
-
-      btn.style.setProperty('pointer-events','auto','important');
-      btn.style.setProperty('cursor','pointer','important');
-    });
-  }
-
-  window.wireAdminReferenceShortcutsV28=wireAdminReferenceShortcutsV28;
-
-  window.addEventListener('load',()=>setTimeout(wireAdminReferenceShortcutsV28,900));
-
-  document.addEventListener('click',e=>{
-    if(e.target.closest('#adminReferenceHome'))setTimeout(wireAdminReferenceShortcutsV28,30);
-  },true);
-
-  /* 관리자 메인이 다시 그려질 때 버튼 연결 복구 */
-  const obs=new MutationObserver(()=>{
-    if(!isAdmin)return;
-    clearTimeout(window.__adminShortcutWireV28);
-    window.__adminShortcutWireV28=setTimeout(wireAdminReferenceShortcutsV28,60);
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
-
-
-<script id="admin-shortcut-navigation-fix-v29">
-(function(){
-  function resetAdminFocusV29(){
-    /* 이전에 열었던 관리자 단독보기의 이동된 요소를 원래 위치로 복구 */
-    try{
-      if(typeof restoreAdminTaskElements==='function') restoreAdminTaskElements();
-    }catch(e){console.warn(e);}
-    try{
-      if(typeof restoreAdminShortcutFocusV41==='function') restoreAdminShortcutFocusV41();
-    }catch(e){console.warn(e);}
-
-    document.body.classList.remove('admin-task-focus','admin-shortcut-focus');
-
-    const taskPanel=document.getElementById('adminTaskFocusPanel');
-    if(taskPanel) taskPanel.classList.add('hidden');
-
-    const shortcutPanel=document.getElementById('adminShortcutFocusPanel');
-    if(shortcutPanel) shortcutPanel.style.display='none';
-
-    const taskContent=document.getElementById('adminTaskFocusContent');
-    if(taskContent) taskContent.innerHTML='';
-
-    const shortcutContent=document.getElementById('adminShortcutFocusContent');
-    if(shortcutContent) shortcutContent.innerHTML='';
-  }
-
-  function openAdminIoV29(kind){
-    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
-
-    resetAdminFocusV29();
-
-    /* 관리자 메인을 완전히 닫고 입/출고 작업화면만 표시 */
-    document.body.classList.remove('admin-reference-home');
-
-    const ref=document.getElementById('adminReferenceHome');
-    if(ref)ref.style.display='none';
-
-    const home=document.getElementById('home');
-    if(home)home.classList.add('hidden');
-
-    const work=document.getElementById('work');
-    if(work)work.classList.remove('hidden');
-
-    const photo=document.getElementById('photoSearchPanel');
-    if(photo)photo.classList.add('hidden');
-
-    mode=kind;
-
-    const title=document.getElementById('title');
-    if(title)title.textContent=kind==='outbound'?'빠른 출고':'빠른 입고';
-
-    const q=document.getElementById('q');
-    if(q)q.value='';
-
-    const results=document.getElementById('results');
-    if(results)results.innerHTML='';
-
-    const count=document.getElementById('count');
-    if(count)count.textContent='';
-
-    setTimeout(()=>q?.focus(),50);
-  }
-
-  async function runAdminShortcutV29(kind){
-    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
-
-    if(kind==='inbound' || kind==='outbound'){
-      openAdminIoV29(kind);
-      return;
-    }
-
-    resetAdminFocusV29();
-
-    if(['orders','match','later','history','unreg'].includes(kind)){
-      await openAdminTaskView(kind);
-      return;
-    }
-
-    if(['records','location','nas','users','alerts'].includes(kind)){
-      if(typeof openAdminShortcutListV41==='function'){
-        await openAdminShortcutListV41(kind);
-      }else{
-        openExistingAdminSection(kind);
-      }
-    }
-  }
-
-  function getAdminShortcutKindV29(btn){
-    if(btn.classList.contains('in'))return 'inbound';
-    if(btn.classList.contains('out'))return 'outbound';
-    if(btn.classList.contains('order'))return 'orders';
-    if(btn.classList.contains('match'))return 'match';
-    if(btn.classList.contains('later'))return 'later';
-    if(btn.classList.contains('unreg'))return 'unreg';
-
-    const onclick=btn.getAttribute('onclick')||'';
-    if(onclick.includes("'history'"))return 'history';
-    if(onclick.includes("'records'"))return 'records';
-    if(onclick.includes("'location'"))return 'location';
-    if(onclick.includes("'nas'"))return 'nas';
-    if(onclick.includes("'users'"))return 'users';
-    if(onclick.includes("'alerts'"))return 'alerts';
-
-    return '';
-  }
-
-  /* 기존에 여러 번 덧씌워진 onclick보다 먼저 정확한 동작을 실행 */
-  document.addEventListener('click',function(e){
-    if(!isAdmin)return;
-
-    const btn=e.target.closest('#adminReferenceHome .ar-btn');
-    if(!btn)return;
-
-    const kind=getAdminShortcutKindV29(btn);
-    if(!kind)return;
-
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    Promise.resolve(runAdminShortcutV29(kind)).catch(err=>{
-      console.error('관리자 바로가기 실행 오류',err);
-      alert('관리 화면을 열지 못했습니다.');
-    });
-  },true);
-
-  window.resetAdminFocusV29=resetAdminFocusV29;
-})();
-</script>
 
 </body></html>
