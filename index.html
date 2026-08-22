@@ -5123,7 +5123,7 @@ function renderTodayOrderRequests(){
 
        const ageRowClass=requestAgeDays>=7?'order-age-row-7':requestAgeDays>=3?'order-age-row-3':'';
        return `<tr class="${ageRowClass}">
-         <td>${isAdmin?recordDateTime(r.created_at):new Date(r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit'})}</td>
+         <td>${recordDateTime(r.created_at)}</td>
          <td><span class="${partAgeClass}" title="${esc(partAgeTitle)}">${esc(r.part_no||'')}</span></td>
          <td>${isInquiry?`<b>💬 ${esc(inquiryType)}</b><br>`:''}${esc(r.item_name||'')}</td>
          <td>${inquiryPhoto?`<a href="${esc(inquiryPhoto)}" target="_blank" rel="noopener"><img class="order-inquiry-photo" src="${esc(inquiryPhoto)}" alt="문의사진"></a>`:'<span class="order-no-photo">사진 없음</span>'}</td>
@@ -13062,5 +13062,273 @@ window.addEventListener('load',()=>{
   observer.observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
+
+
+<style id="FINAL-mobile-orders-date-fullscroll-v57">
+@media screen and (max-width:760px){
+
+  /* 주문관리 영역 자체가 오른쪽 열을 잘라먹지 않도록 */
+  html,body{
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  #todayOrderCard{
+    width:100%!important;
+    max-width:100%!important;
+    overflow:visible!important;
+    padding:7px 5px!important;
+    box-sizing:border-box!important;
+  }
+
+  #todayOrderCard .order-table-wrap{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:scroll!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-x:contain!important;
+    touch-action:pan-x pan-y!important;
+    box-sizing:border-box!important;
+    border:1px solid #dfe7e2!important;
+    border-radius:8px!important;
+    background:#fff!important;
+    scrollbar-width:auto!important;
+  }
+
+  /* 실제 테이블 전체폭을 확보해서 사진 뒤쪽까지 존재하게 함 */
+  #todayOrderCard .order-table-wrap > table{
+    display:table!important;
+    width:1540px!important;
+    min-width:1540px!important;
+    max-width:1540px!important;
+    table-layout:fixed!important;
+    border-collapse:collapse!important;
+    margin:0!important;
+  }
+
+  #todayOrderCard .order-table-wrap > table > thead{
+    display:table-header-group!important;
+  }
+  #todayOrderCard .order-table-wrap > table > tbody{
+    display:table-row-group!important;
+  }
+
+  #todayOrderCard .order-table-wrap > table > tbody > tr,
+  #todayOrderCard .order-table-wrap > table > tbody > tr.mobile-order-expanded{
+    display:table-row!important;
+    grid-template-columns:none!important;
+    width:auto!important;
+    height:44px!important;
+    min-height:44px!important;
+    max-height:44px!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+  }
+
+  #todayOrderCard .order-table-wrap th,
+  #todayOrderCard .order-table-wrap td,
+  #todayOrderCard .order-table-wrap tbody tr.mobile-order-expanded td{
+    display:table-cell!important;
+    grid-column:auto!important;
+    position:static!important;
+    float:none!important;
+    height:44px!important;
+    min-height:44px!important;
+    max-height:44px!important;
+    padding:4px 5px!important;
+    margin:0!important;
+    border:0!important;
+    border-right:1px solid #edf1ef!important;
+    border-bottom:1px solid #dfe7e3!important;
+    border-radius:0!important;
+    box-sizing:border-box!important;
+    vertical-align:middle!important;
+    font-size:10px!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #todayOrderCard .order-table-wrap th{
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    background:#eef7f1!important;
+    color:#173b29!important;
+    font-weight:1000!important;
+    position:sticky!important;
+    top:0!important;
+    z-index:5!important;
+  }
+
+  #todayOrderCard td::before{
+    content:none!important;
+    display:none!important;
+  }
+
+  /* 요청일시: 월/일 + 시간까지 보이도록 폭 확대 */
+  #todayOrderCard th:nth-child(1),
+  #todayOrderCard td:nth-child(1){
+    width:118px!important;
+    min-width:118px!important;
+    text-align:center!important;
+  }
+
+  #todayOrderCard th:nth-child(2),
+  #todayOrderCard td:nth-child(2){
+    width:105px!important;
+    min-width:105px!important;
+    font-weight:900!important;
+  }
+
+  #todayOrderCard th:nth-child(3),
+  #todayOrderCard td:nth-child(3){
+    width:250px!important;
+    min-width:250px!important;
+    text-align:left!important;
+  }
+
+  #todayOrderCard th:nth-child(4),
+  #todayOrderCard td:nth-child(4){
+    width:62px!important;
+    min-width:62px!important;
+    text-align:center!important;
+  }
+
+  #todayOrderCard th:nth-child(5),
+  #todayOrderCard td:nth-child(5){
+    width:65px!important;
+    min-width:65px!important;
+    text-align:center!important;
+  }
+
+  #todayOrderCard th:nth-child(6),
+  #todayOrderCard td:nth-child(6){
+    width:78px!important;
+    min-width:78px!important;
+    font-weight:800!important;
+  }
+
+  #todayOrderCard th:nth-child(7),
+  #todayOrderCard td:nth-child(7){
+    width:82px!important;
+    min-width:82px!important;
+  }
+
+  #todayOrderCard th:nth-child(8),
+  #todayOrderCard td:nth-child(8){
+    width:180px!important;
+    min-width:180px!important;
+    text-align:left!important;
+  }
+
+  #todayOrderCard th:nth-child(9),
+  #todayOrderCard td:nth-child(9){
+    width:115px!important;
+    min-width:115px!important;
+  }
+
+  #todayOrderCard th:nth-child(10),
+  #todayOrderCard td:nth-child(10){
+    width:115px!important;
+    min-width:115px!important;
+  }
+
+  #todayOrderCard th:nth-child(11),
+  #todayOrderCard td:nth-child(11){
+    width:370px!important;
+    min-width:370px!important;
+  }
+
+  /* 문의사진 */
+  #todayOrderCard .order-inquiry-photo{
+    width:32px!important;
+    height:32px!important;
+    max-width:32px!important;
+    max-height:32px!important;
+    object-fit:cover!important;
+    display:inline-block!important;
+    border-radius:4px!important;
+  }
+
+  /* 카톡 재문의 한 줄 유지 */
+  #todayOrderCard .order-reinquiry-grid{
+    display:grid!important;
+    grid-template-columns:105px 52px 105px 52px!important;
+    grid-template-rows:28px!important;
+    gap:3px!important;
+    align-items:center!important;
+    width:100%!important;
+    min-width:0!important;
+    height:28px!important;
+    overflow:hidden!important;
+  }
+
+  #todayOrderCard .order-reply-capture{
+    display:contents!important;
+  }
+
+  #todayOrderCard .order-reply-capture input,
+  #todayOrderCard input[id^="order_reinquiry_note_"]{
+    width:105px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:2px 4px!important;
+    font-size:8px!important;
+  }
+
+  #todayOrderCard .order-reply-capture button,
+  #todayOrderCard .admin-kakao-inquiry-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:52px!important;
+    min-width:52px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:0 2px!important;
+    font-size:8px!important;
+  }
+
+  #todayOrderCard .order-reinquiry-grid input[type="file"],
+  #todayOrderCard .order-reinquiry-grid small{
+    display:none!important;
+  }
+
+  /* 이전 카드형 UI 잔재 제거 */
+  #todayOrderCard .mobile-order-more-v49{
+    display:none!important;
+  }
+
+  #todayOrderCard tbody td:nth-child(n+9){
+    display:table-cell!important;
+  }
+
+  /* 좌우 스크롤 가능하다는 안내 */
+  #todayOrderCard .order-table-wrap::before{
+    content:"← 좌우로 밀어서 사진 · 수량 · 요청자 · 상태 · 카톡 재문의까지 확인 →";
+    display:block!important;
+    position:sticky;
+    left:0;
+    width:100vw;
+    max-width:100%;
+    box-sizing:border-box;
+    padding:5px 7px;
+    background:#f7fbf8;
+    color:#587066;
+    font-size:9px;
+    font-weight:900;
+    text-align:center;
+    border-bottom:1px solid #e2e9e5;
+  }
+}
+</style>
 
 </body></html>
