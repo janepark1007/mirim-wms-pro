@@ -9329,4 +9329,175 @@ ensureAdminReferenceHome=function(){
 };
 </script>
 
+
+<style id="admin-main-match-receipt-v39">
+.admin-main-match-table{min-width:1180px!important}
+.admin-main-match-table th,.admin-main-match-table td{font-size:11px!important;padding:7px 6px!important}
+.admin-main-confirm{
+  display:inline-block;padding:4px 8px;border-radius:999px;font-weight:1000;white-space:nowrap
+}
+.admin-main-confirm.none{background:#f1f3f2;color:#69756f}
+.admin-main-confirm.self{background:#fff0b8;color:#725600}
+.admin-main-confirm.wait{background:#ffe2dc;color:#9a2f1c}
+.admin-main-confirm.admin{background:#dff4e5;color:#17622a}
+.admin-main-match-row.selfchecked{background:#fffdf4}
+.admin-main-match-row.partial{background:#fffaf0}
+.admin-main-match-row.done{background:#f3fbf6}
+.admin-main-workerqty{font-weight:1000;color:#175b38}
+.admin-main-match-chip.self{background:#fff0b8;color:#725600;border-color:#ead06c}
+.admin-main-match-chip.approval{background:#ffe2dc;color:#9a2f1c;border-color:#efb9ae}
+</style>
+
+<script>
+function adminMainReceiptState(r){
+  const note=String(r?.note||'');
+  const status=String(r?.status||'');
+  const approval=(typeof orderReceiptApprovalRequest==='function')?orderReceiptApprovalRequest(note):null;
+  const qty=(typeof orderReceivedQty==='function')?orderReceivedQty(note):0;
+  const info=(typeof orderReceiptInfo==='function')?orderReceiptInfo(note):'';
+
+  if(status==='수령승인대기' || approval){
+    return {label:'관리자 승인대기',cls:'wait',qty:approval?.qty||qty||0,who:approval?.worker||''};
+  }
+  if(status==='수령확인' || qty>0 || info){
+    const adminApproved=/관리자승인:|관리자직접확인/.test(note);
+    return {
+      label:adminApproved?'관리자 확인완료':'본인확인 완료',
+      cls:adminApproved?'admin':'self',
+      qty:qty||0,
+      who:(info||'').split('/')[0]?.trim()||r.requester||''
+    };
+  }
+  return {label:'본인 미확인',cls:'none',qty:0,who:''};
+}
+
+async function loadAdminMainOrderMatch(){
+  ensureAdminMainOrderMatchCard();
+  const body=document.getElementById('adminMainOrderMatchBody');
+  const sum=document.getElementById('adminMainOrderMatchSummary');
+  if(!body||!sum)return;
+
+  if(!isAdmin){
+    body.innerHTML='<tr><td colspan="11">관리자 모드에서만 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+  if(!sharedReady||!sharedDb){
+    body.innerHTML='<tr><td colspan="11">공용 동기화 연결 후 확인할 수 있습니다.</td></tr>';
+    return;
+  }
+
+  try{
+    const {data,error}=await sharedDb.from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(1000);
+    if(error)throw error;
+
+    const rows=(data||[]).filter(r=>{
+      if(typeof isRealMaterialOrderRow==='function' && !isRealMaterialOrderRow(r))return false;
+      return !['문의완료'].includes(String(r.status||''));
+    }).map(r=>{
+      const req=Number(r.request_qty||0);
+      const matched=typeof orderInboundMatchedQty==='function'?orderInboundMatchedQty(r.note):0;
+      const receipt=adminMainReceiptState(r);
+      const remain=Math.max(0,req-matched);
+      const pct=req>0?Math.min(100,Math.round(matched/req*100)):0;
+
+      let state='미입고';
+      if(String(r.status||'')==='입고완료' || matched>=req && req>0) state='입고완료';
+      else if(matched>0) state='부분입고';
+
+      return {...r,_req:req,_matched:matched,_remain:remain,_pct:pct,_state:state,_receipt:receipt};
+    }).sort((a,b)=>{
+      /* 가장 먼저 볼 것: 본인확인 안 된 주문 → 승인대기 → 본인확인 → 입고완료 */
+      const rank=x=>{
+        if(x._receipt.cls==='none' && x._state!=='입고완료')return 0;
+        if(x._receipt.cls==='wait')return 1;
+        if(x._receipt.cls==='self')return 2;
+        if(x._state==='부분입고')return 3;
+        if(x._state==='미입고')return 4;
+        return 5;
+      };
+      const d=rank(a)-rank(b);
+      if(d!==0)return d;
+      return new Date(b.created_at||0)-new Date(a.created_at||0);
+    });
+
+    const zero=rows.filter(x=>x._state==='미입고').length;
+    const partial=rows.filter(x=>x._state==='부분입고').length;
+    const done=rows.filter(x=>x._state==='입고완료').length;
+    const self=rows.filter(x=>x._receipt.cls==='self'||x._receipt.cls==='admin').length;
+    const approval=rows.filter(x=>x._receipt.cls==='wait').length;
+
+    sum.innerHTML=`
+      <span class="admin-main-match-chip">대조 대상 <b>${rows.length}</b>건</span>
+      <span class="admin-main-match-chip wait">미입고 <b>${zero}</b>건</span>
+      <span class="admin-main-match-chip partial">부분입고 <b>${partial}</b>건</span>
+      <span class="admin-main-match-chip done">입고완료 <b>${done}</b>건</span>
+      <span class="admin-main-match-chip self">본인확인 <b>${self}</b>건</span>
+      <span class="admin-main-match-chip approval">승인대기 <b>${approval}</b>건</span>`;
+
+    const table=document.querySelector('#adminMainOrderMatchCard table');
+    if(table){
+      table.querySelector('thead').innerHTML=`<tr>
+        <th>입고상태</th><th>본인확인</th><th>주문일</th><th>품번</th><th>품명</th><th>요청자</th>
+        <th>주문수량</th><th>본인확인수량</th><th>입고대조누계</th><th>남은수량</th><th>진행률</th>
+      </tr>`;
+    }
+
+    const show=rows.slice(0,30);
+    body.innerHTML=show.length?show.map(r=>{
+      const stateCls=r._state==='미입고'?'zero':r._state==='부분입고'?'partial':'done';
+      const rowCls=r._receipt.cls==='self'?'selfchecked':(r._state==='부분입고'?'partial':(r._state==='입고완료'?'done':''));
+      const date=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}):'';
+      return `<tr class="admin-main-match-row ${rowCls}">
+        <td><span class="admin-main-match-status ${stateCls}">${r._state}</span></td>
+        <td>
+          <span class="admin-main-confirm ${r._receipt.cls}">${r._receipt.label}</span>
+          ${r._receipt.who?`<div style="margin-top:3px;font-size:10px;color:#69756f">${esc(r._receipt.who)}</div>`:''}
+        </td>
+        <td>${esc(date)}</td>
+        <td><b>${esc(r.part_no||'기타')}</b></td>
+        <td>${esc(r.item_name||'')}</td>
+        <td>${esc(r.requester||'')}</td>
+        <td>${r._req.toLocaleString()}</td>
+        <td class="admin-main-workerqty">${Number(r._receipt.qty||0).toLocaleString()}</td>
+        <td>${r._matched.toLocaleString()}</td>
+        <td><b>${r._remain.toLocaleString()}</b></td>
+        <td>${r._pct}%<div class="admin-main-match-progress"><span style="width:${r._pct}%"></span></div></td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="11">현재 자동대조할 주문이 없습니다.</td></tr>';
+  }catch(e){
+    console.warn('관리자 메인 자동대조 조회 실패',e);
+    body.innerHTML='<tr><td colspan="11">자동대조 내역을 불러오지 못했습니다.</td></tr>';
+  }
+}
+
+/* 작업자 본인확인/관리자 승인/관리자 직접확인 후 메인 자동대조도 즉시 갱신 */
+if(typeof workerConfirmOrderReceived==='function'){
+  const _v39WorkerConfirm=workerConfirmOrderReceived;
+  workerConfirmOrderReceived=async function(id){
+    const r=await _v39WorkerConfirm(id);
+    try{await loadAdminMainOrderMatch();}catch(e){}
+    return r;
+  };
+}
+if(typeof adminApproveWorkerReceipt==='function'){
+  const _v39AdminApprove=adminApproveWorkerReceipt;
+  adminApproveWorkerReceipt=async function(id){
+    const r=await _v39AdminApprove(id);
+    try{await loadAdminMainOrderMatch();}catch(e){}
+    return r;
+  };
+}
+if(typeof adminSetWorkerReceipt==='function'){
+  const _v39AdminSet=adminSetWorkerReceipt;
+  adminSetWorkerReceipt=async function(id){
+    const r=await _v39AdminSet(id);
+    try{await loadAdminMainOrderMatch();}catch(e){}
+    return r;
+  };
+}
+</script>
+
 </body></html>
