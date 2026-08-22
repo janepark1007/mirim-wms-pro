@@ -1116,6 +1116,199 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
+
+<style id="mobile-order-one-line-full-v55">
+@media(max-width:760px){
+  #todayOrderCard{
+    padding:6px 4px!important;
+    overflow:hidden!important;
+  }
+
+  #todayOrderCard .order-table-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    border:1px solid #dce6e0!important;
+    border-radius:8px!important;
+  }
+
+  #todayOrderCard .order-table-wrap table{
+    width:1180px!important;
+    min-width:1180px!important;
+    max-width:none!important;
+    table-layout:fixed!important;
+    border-collapse:collapse!important;
+  }
+
+  #todayOrderCard thead{display:table-header-group!important}
+  #todayOrderCard tbody{display:table-row-group!important}
+  #todayOrderCard tr{
+    display:table-row!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+  }
+
+  #todayOrderCard th,
+  #todayOrderCard td{
+    display:table-cell!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    padding:3px 4px!important;
+    border-right:1px solid #edf1ef!important;
+    border-bottom:1px solid #e1e8e4!important;
+    font-size:9px!important;
+    line-height:1.1!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    vertical-align:middle!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+  }
+
+  #todayOrderCard th{
+    height:30px!important;
+    min-height:30px!important;
+    max-height:30px!important;
+    background:#eef7f1!important;
+    font-weight:1000!important;
+    position:sticky!important;
+    top:0!important;
+    z-index:3!important;
+  }
+
+  #todayOrderCard td::before{
+    content:none!important;
+    display:none!important;
+  }
+
+  /* 요청시간 */
+  #todayOrderCard th:nth-child(1),
+  #todayOrderCard td:nth-child(1){width:78px!important}
+
+  /* 품번 */
+  #todayOrderCard th:nth-child(2),
+  #todayOrderCard td:nth-child(2){
+    width:92px!important;
+    font-weight:900!important;
+  }
+
+  /* 품명 */
+  #todayOrderCard th:nth-child(3),
+  #todayOrderCard td:nth-child(3){
+    width:245px!important;
+    text-align:left!important;
+  }
+
+  /* 사진 */
+  #todayOrderCard th:nth-child(4),
+  #todayOrderCard td:nth-child(4){width:44px!important}
+
+  /* 수량 */
+  #todayOrderCard th:nth-child(5),
+  #todayOrderCard td:nth-child(5){width:58px!important}
+
+  /* 요청자 */
+  #todayOrderCard th:nth-child(6),
+  #todayOrderCard td:nth-child(6){
+    width:76px!important;
+    font-weight:800!important;
+  }
+
+  /* 상태 */
+  #todayOrderCard th:nth-child(7),
+  #todayOrderCard td:nth-child(7){width:72px!important}
+
+  /* 비고 */
+  #todayOrderCard th:nth-child(8),
+  #todayOrderCard td:nth-child(8){
+    width:160px!important;
+    text-align:left!important;
+  }
+
+  /* 본인확인 */
+  #todayOrderCard th:nth-child(9),
+  #todayOrderCard td:nth-child(9){width:95px!important}
+
+  /* 관리자확인 */
+  #todayOrderCard th:nth-child(10),
+  #todayOrderCard td:nth-child(10){width:95px!important}
+
+  /* 카톡 재문의 */
+  #todayOrderCard th:nth-child(11),
+  #todayOrderCard td:nth-child(11){width:165px!important}
+
+  #todayOrderCard td img,
+  #todayOrderCard .order-inquiry-photo{
+    width:26px!important;
+    height:26px!important;
+    max-width:26px!important;
+    max-height:26px!important;
+    object-fit:cover!important;
+    margin:0 auto!important;
+    border-radius:4px!important;
+  }
+
+  /* 카톡 영역: 입력 1칸 + 전송 버튼 한 줄 */
+  #todayOrderCard .order-reinquiry-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 48px!important;
+    gap:3px!important;
+    width:100%!important;
+    min-width:0!important;
+    height:28px!important;
+    overflow:hidden!important;
+  }
+
+  #todayOrderCard .order-reply-capture,
+  #todayOrderCard .order-reinquiry-grid input[type="file"],
+  #todayOrderCard .order-reinquiry-grid small{
+    display:none!important;
+  }
+
+  #todayOrderCard input[id^="order_reinquiry_note_"]{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:2px 4px!important;
+    font-size:8px!important;
+    border-radius:4px!important;
+  }
+
+  #todayOrderCard .admin-kakao-inquiry-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:48px!important;
+    min-width:48px!important;
+    height:27px!important;
+    min-height:27px!important;
+    padding:0!important;
+    font-size:8px!important;
+    font-weight:1000!important;
+    background:#fee500!important;
+    color:#191919!important;
+    border:1px solid #d4b900!important;
+    border-radius:4px!important;
+  }
+
+  /* 카드형 잔재 완전 제거 */
+  #todayOrderCard .mobile-order-more-v49{display:none!important}
+  #todayOrderCard tbody tr.mobile-order-expanded td:nth-child(n+9),
+  #todayOrderCard tbody td:nth-child(n+9){display:table-cell!important}
+}
+</style>
+
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
