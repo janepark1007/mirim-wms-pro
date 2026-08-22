@@ -2485,7 +2485,7 @@ function locationOrganizerAllLocationHtml(part,rowIndex,editingId){
  return `${lines}<div style="margin-top:6px;padding-top:5px;border-top:1px solid #c9ddd2;color:#087c49;font-weight:900">위치 총수량 ${total.toLocaleString()}개</div>`;
 }
 async function loadLocationOrganizer(){
- if(!isAdmin)return alert('관리자 로그인 후 사용할 수 있습니다.');
+ if(!isAdmin)return;
  try{
    if(sharedReady)await loadSharedLocations();
    locationOrganizerRows=[];
@@ -5452,7 +5452,7 @@ async function fetchItemActivity(fromStr,toStr){
 }
 
 async function loadRecordLookup(){
- if(!isAdmin)return alert('관리자 로그인 후 사용할 수 있습니다.');
+ if(!isAdmin)return;
  if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
 
  const type=$('recordType')?.value||'IN';
@@ -10780,7 +10780,7 @@ body.admin-task-focus #locationOrganizerCard button{
       if(typeof loadTodayOrderRequests==='function') jobs.push(loadTodayOrderRequests());
       if(typeof loadFiveDayOrders==='function') jobs.push(loadFiveDayOrders());
       if(typeof loadErpUnregisteredItems==='function') jobs.push(loadErpUnregisteredItems());
-      if(typeof loadAdminNotifications==='function' && window.isAdmin) jobs.push(loadAdminNotifications());
+      if(typeof loadAdminNotifications==='function' && isAdmin) jobs.push(loadAdminNotifications());
       await Promise.allSettled(jobs);
 
       try{ if(typeof updateHomeSummary==='function') updateHomeSummary(); }catch(e){}
@@ -10791,7 +10791,8 @@ body.admin-task-focus #locationOrganizerCard button{
         }
       }catch(e){}
       try{
-        if(typeof loadLocationOrganizer==='function' &&
+        if(isAdmin &&
+           typeof loadLocationOrganizer==='function' &&
            document.getElementById('locationOrganizerCard') &&
            !document.getElementById('locationOrganizerCard').classList.contains('hidden')){
           loadLocationOrganizer();
