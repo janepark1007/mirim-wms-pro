@@ -9296,4 +9296,37 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+
+<style id="force-remove-recent-orders-v38">
+/* 최근 주문 내역: 어떤 이전 CSS/스크립트보다 우선하여 강제 제거 */
+#adminReferenceHome .ar-orders,
+body.admin-view #adminReferenceHome .ar-orders,
+body.admin-view.admin-reference-home #adminReferenceHome .ar-orders{
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+</style>
+<script>
+function forceRemoveRecentOrdersV38(){
+  const root=document.getElementById('adminReferenceHome');
+  if(!root)return;
+  root.querySelectorAll('.ar-orders').forEach(el=>el.remove());
+}
+window.addEventListener('load',()=>setTimeout(forceRemoveRecentOrdersV38,100));
+document.addEventListener('DOMContentLoaded',()=>setTimeout(forceRemoveRecentOrdersV38,100));
+const _ensureAdminReferenceHomeV38=ensureAdminReferenceHome;
+ensureAdminReferenceHome=function(){
+  const root=_ensureAdminReferenceHomeV38();
+  setTimeout(forceRemoveRecentOrdersV38,0);
+  return root;
+};
+</script>
+
 </body></html>
