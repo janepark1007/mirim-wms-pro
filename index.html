@@ -7296,6 +7296,29 @@ function ensureAdminTaskFocusPanel(){
      </div>
      <button type="button" class="admin-task-back" onclick="closeAdminTaskView()">← 관리 바로가기</button>
    </div>
+   <section id="adminWorkerConfirmTopV39" class="admin-worker-confirm-top-v39 hidden">
+     <div class="awct-head">
+       <div class="awct-title">✅ 작업자 본인확인 완료</div>
+       <span id="adminWorkerConfirmCountV39" class="awct-count">0건</span>
+     </div>
+     <div class="awct-table-wrap">
+       <table>
+         <thead>
+           <tr>
+             <th>확인시간</th>
+             <th>작업자</th>
+             <th>품번</th>
+             <th>품명</th>
+             <th>확인수량</th>
+             <th>상태</th>
+           </tr>
+         </thead>
+         <tbody id="adminWorkerConfirmBodyV39">
+           <tr><td colspan="6" class="awct-empty">본인확인 기록을 불러오는 중...</td></tr>
+         </tbody>
+       </table>
+     </div>
+   </section>
    <div id="adminTaskFocusContent"></div>`;
  main.insertBefore(panel,main.firstChild);
  return panel;
@@ -7326,12 +7349,14 @@ async function openAdminTaskView(type){
  if(!panel||!content)return;
  restoreAdminTaskElements();
  content.innerHTML='';
+ const confirmTopV39=document.getElementById('adminWorkerConfirmTopV39');
+ if(confirmTopV39)confirmTopV39.classList.add('hidden');
  let titleText='관리 작업';
 
  if(type==='orders'){
    titleText='🛒 주문요청 & 문의건 통합관리';
-   try{ensureAdminWorkerConfirmLogV37();await loadAdminWorkerConfirmLogV37();}catch(e){console.warn(e);}
-   moveAdminTaskElement(document.getElementById('adminWorkerConfirmLogV37'),content);
+   if(confirmTopV39)confirmTopV39.classList.remove('hidden');
+   try{await loadAdminWorkerConfirmTopV39();}catch(e){console.warn(e);}
    const el=document.getElementById('todayOrderCard');
    moveAdminTaskElement(el,content);
    try{await loadTodayOrderRequests();}catch(e){}
@@ -13481,6 +13506,159 @@ body.admin-view #adminTaskFocusContent #adminWorkerConfirmLogV37{
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
+</script>
+
+
+<style id="admin-worker-confirm-embedded-v39-style">
+#adminWorkerConfirmTopV39{
+  display:block;
+  width:100%;
+  margin:0 0 12px;
+  padding:14px;
+  border:2px solid #8fc8a7;
+  border-radius:14px;
+  background:#eef9f2;
+  box-sizing:border-box;
+}
+#adminWorkerConfirmTopV39.hidden{display:none!important}
+#adminWorkerConfirmTopV39 .awct-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+#adminWorkerConfirmTopV39 .awct-title{
+  font-size:20px;
+  font-weight:1000;
+  color:#0b6b3e;
+}
+#adminWorkerConfirmTopV39 .awct-count{
+  padding:5px 10px;
+  border-radius:999px;
+  background:#087a43;
+  color:#fff;
+  font-size:13px;
+  font-weight:1000;
+}
+#adminWorkerConfirmTopV39 .awct-table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+#adminWorkerConfirmTopV39 table{
+  width:100%;
+  min-width:760px;
+  border-collapse:collapse;
+  background:#fff;
+}
+#adminWorkerConfirmTopV39 th,
+#adminWorkerConfirmTopV39 td{
+  padding:9px 10px;
+  border-bottom:1px solid #e2ebe6;
+  text-align:left;
+  font-size:12px;
+  vertical-align:middle;
+}
+#adminWorkerConfirmTopV39 th{
+  background:#dff2e6;
+  color:#24513a;
+  font-weight:1000;
+}
+#adminWorkerConfirmTopV39 .awct-ok{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:8px;
+  background:#d9f1e2;
+  color:#087a43;
+  font-weight:1000;
+}
+#adminWorkerConfirmTopV39 .awct-empty{
+  padding:18px!important;
+  text-align:center!important;
+  color:#63756b;
+  font-weight:900;
+}
+</style>
+
+<script id="admin-worker-confirm-embedded-v39-js">
+function parseWorkerConfirmV39(note){
+  const raw=String(note||'');
+  const matches=[...raw.matchAll(/\[수령확인:([^\]]+)\]/g)];
+  if(!matches.length)return null;
+
+  const inner=String(matches[matches.length-1][1]||'').trim();
+
+  /* 관리자가 직접 확인한 건은 작업자 본인확인 목록에서 제외 */
+  if(/관리자직접확인/.test(inner))return null;
+
+  const worker=(inner.split('/')[0]||'').trim();
+  const qtyMatch=inner.match(/받은수량:([0-9.]+)/);
+  const qty=qtyMatch?Number(qtyMatch[1]||0):0;
+
+  let time='';
+  const timeMatch=inner.match(/^[^\/]+\/\s*(.*?)\s*\/\s*받은수량:/);
+  if(timeMatch)time=String(timeMatch[1]||'').trim();
+
+  return {worker,qty,time};
+}
+
+async function loadAdminWorkerConfirmTopV39(){
+  if(!isAdmin||!sharedReady||!sharedDb)return;
+
+  const box=document.getElementById('adminWorkerConfirmTopV39');
+  const body=document.getElementById('adminWorkerConfirmBodyV39');
+  const count=document.getElementById('adminWorkerConfirmCountV39');
+  if(!box||!body)return;
+
+  box.classList.remove('hidden');
+  body.innerHTML='<tr><td colspan="6" class="awct-empty">본인확인 기록을 불러오는 중...</td></tr>';
+
+  try{
+    /* 상태값에 의존하지 않고 최근 주문 전체에서 수령확인 기록을 찾음 */
+    const {data,error}=await sharedDb
+      .from('production_order_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(500);
+
+    if(error)throw error;
+
+    const rows=(data||[])
+      .map(r=>({r,info:parseWorkerConfirmV39(r.note)}))
+      .filter(x=>x.info)
+      .slice(0,30);
+
+    if(count)count.textContent=rows.length+'건';
+
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="6" class="awct-empty">아직 작업자 본인확인 완료 기록이 없습니다.</td></tr>';
+      return;
+    }
+
+    body.innerHTML=rows.map(({r,info})=>`
+      <tr>
+        <td>${esc(info.time||'-')}</td>
+        <td><b>${esc(info.worker||r.requester||'-')}</b></td>
+        <td><b>${esc(r.part_no||'-')}</b></td>
+        <td>${esc(r.item_name||'-')}</td>
+        <td><b>${Number(info.qty||0).toLocaleString()}</b></td>
+        <td><span class="awct-ok">✅ 작업자 본인확인</span></td>
+      </tr>
+    `).join('');
+  }catch(e){
+    console.warn('작업자 본인확인 조회 실패',e);
+    if(count)count.textContent='오류';
+    body.innerHTML='<tr><td colspan="6" class="awct-empty">본인확인 기록을 불러오지 못했습니다.</td></tr>';
+  }
+}
+
+/* 주문·문의 통합관리 화면을 열어둔 동안만 5초마다 갱신 */
+setInterval(()=>{
+  if(!isAdmin)return;
+  const box=document.getElementById('adminWorkerConfirmTopV39');
+  if(!box || box.classList.contains('hidden'))return;
+  loadAdminWorkerConfirmTopV39();
+},5000);
 </script>
 
 </body></html>
