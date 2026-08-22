@@ -1981,7 +1981,6 @@ function openMode(m){
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
  const m=b.dataset.mode;
- if(m==='inbound' && !isAdmin){alert('📥 빠른입고는 관리자 로그인 후 사용할 수 있습니다.');return;}
  openMode(m);
 });
 $('adminLoginBtn').onclick=adminLogin;
@@ -4821,7 +4820,7 @@ async function saveIn(x,i){
  const qty=Number($('in_qty_'+i)?.value);
  if(!worker)return alert('등록자 이름을 입력하세요.');
  if(!qty||qty<=0)return alert('입고수량을 입력하세요.');
- if(!requireManagerApproval('입고',x,qty,worker))return;
+ /* 작업자 로그인만 되어 있으면 입고 가능 - 관리자 PIN 요구 안 함 */
  try{
    if(sharedReady){
      await sharedAddMovement('IN',x,qty,worker);
@@ -4844,7 +4843,7 @@ async function saveIn(x,i){
    search();
    if(sharedReady){
      const mr=lastInboundOrderMatchResult||{allocated:0,remaining:qty,matches:[]};
-     const lines=['✅ 관리자 승인 · 입고 입력 성공'];
+     const lines=['✅ 입고 입력 성공 · 공용 DB 반영'];
      if(mr.matches.length){
        lines.push('','🛒 주문요청 자동 대조');
        mr.matches.forEach(m=>lines.push(`• ${m.part||m.name} · 요청 ${m.requested.toLocaleString()} / 누계입고 ${m.matched.toLocaleString()} / 남음 ${m.remain.toLocaleString()} · ${m.requester}`));
@@ -4853,7 +4852,7 @@ async function saveIn(x,i){
        lines.push('','ℹ️ 일치하는 미완료 주문요청이 없습니다.');
      }
      alert(lines.join('\n'));
-   }else alert('✅ 관리자 승인 · 이 기기에 입고 입력 성공');
+   }else alert('✅ 이 기기에 입고 입력 성공');
  }catch(err){
    console.error(err);
    alert('입고 저장 실패: '+(err.message||err));
@@ -5205,7 +5204,7 @@ async function saveOut(x,i){
  }
 
  const approval=needsAdminApproval(x,qty);
- if(!requireManagerApproval('출고',x,qty,worker)) return;
+ /* 작업자 로그인만 되어 있으면 출고 가능 - 관리자 PIN 요구 안 함 */
 
  try{
    if(sharedReady){
@@ -5236,7 +5235,7 @@ async function saveOut(x,i){
    renderWorkerOutboundAlert();
    search();
 
-   alert(sharedReady?'✅ 관리자 승인 · 출고 입력 성공':'✅ 관리자 승인 · 이 기기에 출고 입력 성공');
+   alert(sharedReady?'✅ 출고 입력 성공 · 공용 DB 반영':'✅ 이 기기에 출고 입력 성공');
  }catch(err){
    console.error('출고 저장 실패',err);
    alert('출고 저장 실패: '+(err.message||err));
@@ -11100,8 +11099,8 @@ body.admin-view #adminWorkerOrdersV2{
       </div>
       <div class="mw-grid">
         <button class="mw-btn" data-mwv2="location"><span class="ico">📍</span>자재위치확인<small>품번·품명으로 위치 검색</small></button>
-        <button class="mw-btn" data-mwv2="outbound"><span class="ico">📤</span>출고등록<small>사용 자재 출고 기록</small></button>
-        <button class="mw-btn" data-mwv2="inbound"><span class="ico">📥</span>입고등록<small>입고 자재 수량 등록</small></button>
+        <button class="mw-btn" data-mwv2="outbound"><span class="ico">📤</span>출고등록<small>작업자 직접 출고 저장</small></button>
+        <button class="mw-btn" data-mwv2="inbound"><span class="ico">📥</span>입고등록<small>작업자 직접 입고 저장</small></button>
         <button class="mw-btn" data-mwv2="orders"><span class="ico">💬</span>주문·문의 통합관리<small>미완료 주문·문의 확인</small></button>
         <button class="mw-btn" data-mwv2="myorders"><span class="ico">🧾</span>내 주문내역<small>내가 요청한 전체 기록</small></button>
         <button class="mw-btn" data-mwv2="order"><span class="ico">🛒</span>카톡 주문하기<small>주문·문의 새로 보내기</small></button>
@@ -11379,6 +11378,23 @@ body.admin-view #adminWorkerOrdersV2{
   },true);
 
   window.addEventListener('load',()=>setTimeout(bootWorkerCoreV2,900));
+})();
+</script>
+
+
+<script id="worker-inout-permission-v3">
+(function(){
+  function allowWorkerInOutV3(){
+    if(!currentWorker || isAdmin)return;
+    document.querySelectorAll('[data-mode="inbound"],[data-mode="outbound"]').forEach(btn=>{
+      btn.removeAttribute('disabled');
+      btn.style.removeProperty('display');
+      btn.style.removeProperty('pointer-events');
+      btn.style.removeProperty('opacity');
+    });
+  }
+  window.addEventListener('load',()=>setTimeout(allowWorkerInOutV3,700));
+  document.addEventListener('click',()=>setTimeout(allowWorkerInOutV3,50),true);
 })();
 </script>
 
