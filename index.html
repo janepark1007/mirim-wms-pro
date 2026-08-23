@@ -965,6 +965,27 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
+
+<style id="worker-unregistered-entry-v32">
+/* 작업자모드: ERP 미등록 자재 입력창 표시 */
+body:not(.admin-view):not(.worker-locked) #unregisteredItemCard{
+  display:block!important;
+  visibility:visible!important;
+}
+body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+@media(max-width:760px){
+  body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:430px){
+  body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
+    grid-template-columns:1fr!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1977,6 +1998,10 @@ async function submitStandaloneOrder(){
 
 function openMode(m){
  if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
+ if(m==='inbound' && !isAdmin && String(currentWorker?.name||'').trim()!=='박향숙'){
+   alert('빠른입고 입력은 박향숙 관리자만 사용할 수 있습니다.');
+   return;
+ }
  if(m==='order'){openStandaloneOrder();return;}
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
@@ -3219,6 +3244,7 @@ function adminLogin(){
    alert('관리자 PIN이 맞지 않습니다.');
  }
 }
+try{fillUnregisteredWorker();}catch(e){}
 // 관리자 상태 선언이 완료된 뒤 UI 초기화
 updateAdminUI();
 
@@ -4089,7 +4115,7 @@ function renderErpUnregisteredItems(){
 }
 
 async function saveErpUnregisteredItem(){
- if(!isAdmin)return alert('ERP 미등록 자재 등록은 관리자만 가능합니다.');
+ if(!isAdmin&&!currentWorker)return alert('작업자 또는 관리자 로그인 후 등록할 수 있습니다.');
  if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
 
  const part=$('unregPart')?.value.trim()||'확인 필요';
@@ -4097,7 +4123,7 @@ async function saveErpUnregisteredItem(){
  const spec=$('unregSpec')?.value.trim()||'';
  const qtyRaw=$('unregQty')?.value;
  const loc=$('unregLocation')?.value.trim()||'';
- const worker=$('unregWorker')?.value.trim()||'관리자';
+ const worker=$('unregWorker')?.value.trim()||(currentWorker?.name||'관리자');
  const note=$('unregNote')?.value.trim()||'';
 
  if(!name)return alert('품명을 입력해 주세요.');
@@ -4139,7 +4165,7 @@ async function matchErpUnregistered(id){
 function fillUnregisteredWorker(){
  const workerEl=$('unregWorker');
  const nameEl=$('unregName');
- if(workerEl && isAdmin)workerEl.value='관리자';
+ if(workerEl)workerEl.value=isAdmin?'관리자':(currentWorker?.name||'');
  // 브라우저 자동완성으로 로그인 이름이 품명에 들어가는 현상 방지
  if(nameEl){
    const workerName=(currentWorker?.name||'').trim();
