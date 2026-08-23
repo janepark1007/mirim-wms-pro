@@ -13294,4 +13294,55 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 <script id="admin-inout-total-init-v36">
 window.addEventListener('load',()=>setTimeout(()=>{try{initAdminInOutTotalsV36();}catch(e){}},1300));
 </script>
+
+<script id="admin-bom-force-visible-v43">
+(function(){
+  function ensureAdminBomShortcutV43(){
+    if(!isAdmin)return;
+
+    /* 실제 화면의 관리자 바로가기 */
+    const box=document.getElementById('adminWelcomeShortcutBox');
+    const grid=box?.querySelector('.admin-welcome-shortcut-grid');
+    if(grid && !grid.querySelector('[data-admin-bom-v43]')){
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='admin-welcome-shortcut-btn admin-bom-shortcut';
+      btn.setAttribute('data-admin-bom-v43','1');
+      btn.innerHTML='<span class="ico">👑</span><span>BOM 관리</span><small>VIP BOM 전체 기능</small>';
+      btn.onclick=(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        openAdminBomManagementV42();
+      };
+      grid.appendChild(btn);
+    }
+
+    /* 새 관리자 메인형 화면에도 동일하게 보장 */
+    const ref=document.getElementById('adminReferenceHome');
+    const refGrid=ref?.querySelector('.ar-grid');
+    if(refGrid && !refGrid.querySelector('[data-admin-bom-v43]')){
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='ar-btn bom';
+      btn.setAttribute('data-admin-bom-v43','1');
+      btn.innerHTML='<span class="ico">👑</span><span>BOM 관리</span>';
+      btn.onclick=(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        openAdminBomManagementV42();
+      };
+      refGrid.appendChild(btn);
+    }
+  }
+
+  window.addEventListener('load',()=>{
+    setTimeout(ensureAdminBomShortcutV43,500);
+    setTimeout(ensureAdminBomShortcutV43,1500);
+    setTimeout(ensureAdminBomShortcutV43,2600);
+  });
+  document.addEventListener('click',()=>setTimeout(ensureAdminBomShortcutV43,80),true);
+  new MutationObserver(()=>setTimeout(ensureAdminBomShortcutV43,30))
+    .observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 </body></html>
