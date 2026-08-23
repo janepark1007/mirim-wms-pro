@@ -965,27 +965,6 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 }
 </style>
 
-
-<style id="worker-unregistered-entry-v32">
-/* 작업자모드: ERP 미등록 자재 입력창 표시 */
-body:not(.admin-view):not(.worker-locked) #unregisteredItemCard{
-  display:block!important;
-  visibility:visible!important;
-}
-body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
-  grid-template-columns:repeat(3,minmax(0,1fr))!important;
-}
-@media(max-width:760px){
-  body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-}
-@media(max-width:430px){
-  body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
-    grid-template-columns:1fr!important;
-  }
-}
-</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1998,10 +1977,6 @@ async function submitStandaloneOrder(){
 
 function openMode(m){
  if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
- if(m==='inbound' && !isAdmin && String(currentWorker?.name||'').trim()!=='박향숙'){
-   alert('빠른입고 입력은 박향숙 관리자만 사용할 수 있습니다.');
-   return;
- }
  if(m==='order'){openStandaloneOrder();return;}
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
@@ -3244,7 +3219,6 @@ function adminLogin(){
    alert('관리자 PIN이 맞지 않습니다.');
  }
 }
-try{fillUnregisteredWorker();}catch(e){}
 // 관리자 상태 선언이 완료된 뒤 UI 초기화
 updateAdminUI();
 
@@ -4115,7 +4089,7 @@ function renderErpUnregisteredItems(){
 }
 
 async function saveErpUnregisteredItem(){
- if(!isAdmin&&!currentWorker)return alert('작업자 또는 관리자 로그인 후 등록할 수 있습니다.');
+ if(!isAdmin)return alert('ERP 미등록 자재 등록은 관리자만 가능합니다.');
  if(!sharedReady||!sharedDb)return alert('공용 동기화 연결이 필요합니다.');
 
  const part=$('unregPart')?.value.trim()||'확인 필요';
@@ -4123,7 +4097,7 @@ async function saveErpUnregisteredItem(){
  const spec=$('unregSpec')?.value.trim()||'';
  const qtyRaw=$('unregQty')?.value;
  const loc=$('unregLocation')?.value.trim()||'';
- const worker=$('unregWorker')?.value.trim()||(currentWorker?.name||'관리자');
+ const worker=$('unregWorker')?.value.trim()||'관리자';
  const note=$('unregNote')?.value.trim()||'';
 
  if(!name)return alert('품명을 입력해 주세요.');
@@ -4165,7 +4139,7 @@ async function matchErpUnregistered(id){
 function fillUnregisteredWorker(){
  const workerEl=$('unregWorker');
  const nameEl=$('unregName');
- if(workerEl)workerEl.value=isAdmin?'관리자':(currentWorker?.name||'');
+ if(workerEl && isAdmin)workerEl.value='관리자';
  // 브라우저 자동완성으로 로그인 이름이 품명에 들어가는 현상 방지
  if(nameEl){
    const workerName=(currentWorker?.name||'').trim();
@@ -10208,8 +10182,6 @@ window.addEventListener('load',()=>{
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
   display:none!important;
 }
-body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="outbound"],
-body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="inbound"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="location"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="photo"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="order"],
@@ -12870,28 +12842,17 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
   }
 }
 
-/* 모바일도 PC와 같은 작업 바로가기 사용 */
+/* 모바일은 지금 만든 작업자 핵심 메뉴 유지 */
 @media(max-width:760px){
-  body:not(.admin-view) #mobileWorkerCoreV2{
-    display:none!important;
-    visibility:hidden!important;
-    opacity:0!important;
-  }
-
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2{
     display:block!important;
     visibility:visible!important;
     opacity:1!important;
-    width:100%!important;
-    max-width:100%!important;
-    margin:8px 0 12px!important;
-    box-sizing:border-box!important;
   }
 
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:8px!important;
+  /* 모바일에서는 기존 PC용 작업 바로가기 숨김 */
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+    display:none!important;
   }
 }
 </style>
@@ -12916,15 +12877,13 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
         old.style.setProperty('opacity','1','important');
       }
     }else{
-      if(core){
-        core.style.setProperty('display','none','important');
-        core.style.setProperty('visibility','hidden','important');
-        core.style.setProperty('opacity','0','important');
+      if(core && currentWorker){
+        core.style.setProperty('display','block','important');
+        core.style.setProperty('visibility','visible','important');
+        core.style.setProperty('opacity','1','important');
       }
-      if(old && currentWorker){
-        old.style.setProperty('display','block','important');
-        old.style.setProperty('visibility','visible','important');
-        old.style.setProperty('opacity','1','important');
+      if(old){
+        old.style.setProperty('display','none','important');
       }
     }
   }
