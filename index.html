@@ -13031,4 +13031,40 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-s
   document.addEventListener('click',()=>setTimeout(unifyWorkerMainV24,80),true);
 })();
 </script>
+
+
+<!-- V26: 모바일 작업자 핵심 메뉴 강제 제거 - 이 부분만 적용 -->
+<style id="mobile-worker-core-force-remove-v26">
+@media(max-width:760px){
+  body:not(.admin-view) #mobileWorkerCoreV2{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+  }
+}
+</style>
+<script id="mobile-worker-core-force-remove-v26-js">
+(function(){
+  function removeMobileWorkerCoreV26(){
+    if(window.innerWidth>760)return;
+    if(typeof isAdmin!=='undefined' && isAdmin)return;
+    const core=document.getElementById('mobileWorkerCoreV2');
+    if(core) core.remove();
+  }
+  window.addEventListener('load',()=>setTimeout(removeMobileWorkerCoreV26,300));
+  window.addEventListener('resize',()=>setTimeout(removeMobileWorkerCoreV26,50));
+  document.addEventListener('click',()=>setTimeout(removeMobileWorkerCoreV26,50),true);
+  new MutationObserver(()=>{
+    if(window.innerWidth<=760) setTimeout(removeMobileWorkerCoreV26,0);
+  }).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 </body></html>
