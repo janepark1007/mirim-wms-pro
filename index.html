@@ -12894,4 +12894,83 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 })();
 </script>
 
+
+
+<style id="web-mobile-same-worker-main-v24">
+/* =========================================================
+   웹/모바일 작업자 메인 통일
+   - 두 환경 모두 동일한 #workerMainShortcutCard 사용
+   - 별도 모바일 전용 메인(#mobileWorkerCoreV2)은 숨김
+   - 기능/데이터는 변경하지 않고 메인 표시만 통일
+   ========================================================= */
+body:not(.admin-view) #mobileWorkerCoreV2{
+  display:none!important;
+  visibility:hidden!important;
+}
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:10px 0 14px!important;
+  box-sizing:border-box!important;
+}
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+/* 모바일도 같은 메인/같은 메뉴를 사용하되 화면 폭만 맞춤 */
+@media(max-width:760px){
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+    display:block!important;
+    margin:8px 0 12px!important;
+    padding:10px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
+    min-width:0!important;
+    min-height:76px!important;
+    padding:9px 5px!important;
+    font-size:12px!important;
+    line-height:1.25!important;
+  }
+}
+@media(max-width:390px){
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+    gap:5px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
+    min-height:72px!important;
+    padding:8px 3px!important;
+    font-size:11px!important;
+  }
+}
+</style>
+
+<script id="web-mobile-same-worker-main-v24-js">
+(function(){
+  function unifyWorkerMainV24(){
+    if(typeof isAdmin!=='undefined' && isAdmin)return;
+    const core=document.getElementById('mobileWorkerCoreV2');
+    const mainCard=document.getElementById('workerMainShortcutCard');
+    if(core){
+      core.style.setProperty('display','none','important');
+      core.style.setProperty('visibility','hidden','important');
+    }
+    if(mainCard && typeof currentWorker!=='undefined' && currentWorker){
+      mainCard.style.setProperty('display','block','important');
+      mainCard.style.setProperty('visibility','visible','important');
+      mainCard.style.setProperty('opacity','1','important');
+    }
+  }
+  window.addEventListener('load',()=>setTimeout(unifyWorkerMainV24,800));
+  window.addEventListener('resize',()=>setTimeout(unifyWorkerMainV24,80));
+  document.addEventListener('click',()=>setTimeout(unifyWorkerMainV24,80),true);
+})();
+</script>
 </body></html>
