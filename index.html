@@ -1020,6 +1020,13 @@ body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
   .admin-inout-summary{grid-template-columns:1fr 1fr}
 }
 </style>
+
+<style id="admin-inbound-force-remove-v37">
+/* 관리자모드: 입고(빠른입고) 메뉴 강제 제거 */
+body.admin-view #workerMainShortcutCard [data-worker-main="inbound"]{
+  display:none!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
