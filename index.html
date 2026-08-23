@@ -4620,6 +4620,60 @@ async function shareOrderRequest(x,i){
 
 
 
+
+<!-- V28: 모바일에서도 PC와 동일한 '작업 바로가기' 강제 표시 -->
+<style id="mobile-worker-shortcut-force-visible-v28">
+@media(max-width:760px){
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    width:calc(100% - 12px)!important;
+    margin:8px 6px 12px!important;
+    padding:10px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
+    min-width:0!important;
+  }
+}
+</style>
+<script id="mobile-worker-shortcut-force-visible-v28-js">
+(function(){
+  function showMobileWorkerShortcutV28(){
+    if(window.innerWidth>760)return;
+    if(typeof isAdmin!=='undefined' && isAdmin)return;
+    if(typeof currentWorker==='undefined' || !currentWorker)return;
+
+    let card=document.getElementById('workerMainShortcutCard');
+    if(!card && typeof ensureWorkerMainShortcutCardV43==='function'){
+      try{ card=ensureWorkerMainShortcutCardV43(); }catch(e){}
+    }
+    if(!card)return;
+
+    card.style.setProperty('display','block','important');
+    card.style.setProperty('visibility','visible','important');
+    card.style.setProperty('opacity','1','important');
+    card.style.setProperty('height','auto','important');
+    card.style.setProperty('max-height','none','important');
+    card.style.setProperty('overflow','visible','important');
+  }
+
+  window.addEventListener('load',()=>setTimeout(showMobileWorkerShortcutV28,1200));
+  window.addEventListener('resize',()=>setTimeout(showMobileWorkerShortcutV28,100));
+  document.addEventListener('click',()=>setTimeout(showMobileWorkerShortcutV28,120),true);
+  new MutationObserver(()=>setTimeout(showMobileWorkerShortcutV28,50))
+    .observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>`);
      w.document.close();
    }
@@ -13013,4 +13067,58 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-s
   }).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
+
+<!-- V28: 모바일에서도 PC와 동일한 '작업 바로가기' 강제 표시 -->
+<style id="mobile-worker-shortcut-force-visible-v28">
+@media(max-width:760px){
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    width:calc(100% - 12px)!important;
+    margin:8px 6px 12px!important;
+    padding:10px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
+    min-width:0!important;
+  }
+}
+</style>
+<script id="mobile-worker-shortcut-force-visible-v28-js">
+(function(){
+  function showMobileWorkerShortcutV28(){
+    if(window.innerWidth>760)return;
+    if(typeof isAdmin!=='undefined' && isAdmin)return;
+    if(typeof currentWorker==='undefined' || !currentWorker)return;
+
+    let card=document.getElementById('workerMainShortcutCard');
+    if(!card && typeof ensureWorkerMainShortcutCardV43==='function'){
+      try{ card=ensureWorkerMainShortcutCardV43(); }catch(e){}
+    }
+    if(!card)return;
+
+    card.style.setProperty('display','block','important');
+    card.style.setProperty('visibility','visible','important');
+    card.style.setProperty('opacity','1','important');
+    card.style.setProperty('height','auto','important');
+    card.style.setProperty('max-height','none','important');
+    card.style.setProperty('overflow','visible','important');
+  }
+
+  window.addEventListener('load',()=>setTimeout(showMobileWorkerShortcutV28,1200));
+  window.addEventListener('resize',()=>setTimeout(showMobileWorkerShortcutV28,100));
+  document.addEventListener('click',()=>setTimeout(showMobileWorkerShortcutV28,120),true);
+  new MutationObserver(()=>setTimeout(showMobileWorkerShortcutV28,50))
+    .observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
