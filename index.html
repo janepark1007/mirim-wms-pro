@@ -3163,7 +3163,10 @@ function updateAdminUI(){
      btn.textContent=isAdmin?'관리자 로그아웃':'관리자 로그인';
      btn.classList.toggle('active',isAdmin);
    }
-   document.querySelectorAll('.admin-only').forEach(el=>el.classList.toggle('hidden-admin',!isAdmin));
+   document.querySelectorAll('.admin-only').forEach(el=>{
+     if(el.id==='unregisteredItemCard') return;
+     el.classList.toggle('hidden-admin',!isAdmin);
+   });
    const note=$('roleNote');
    if(note) note.textContent=isAdmin
      ? '관리자 모드: 검색 · 입고 · 출고 · 현창고수량 · 위치 등록/수정 가능'
@@ -3209,8 +3212,14 @@ function updateAdminUI(){
 
  const uc=$('unregisteredItemCard');
  if(uc){
-   uc.classList.toggle('hidden-admin',!isAdmin);
-   uc.style.display=isAdmin?'block':'none';
+   const allowWorkerUnreg=!!currentWorker && !isAdmin;
+   uc.classList.toggle('hidden-admin',!(isAdmin||allowWorkerUnreg));
+   uc.style.display=(isAdmin||allowWorkerUnreg)?'block':'none';
+   if(allowWorkerUnreg){
+     uc.classList.remove('hidden-admin');
+     uc.style.setProperty('display','block','important');
+     uc.style.setProperty('visibility','visible','important');
+   }
  }
 }
 function adminLogin(){
