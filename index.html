@@ -1060,6 +1060,21 @@ body.admin-view #adminReferenceHome button[onclick*="openAdminTaskView('match')"
   display:none!important;
 }
 </style>
+
+<style id="admin-bom-integration-v42">
+/* 관리자모드에서는 별도 VIP 로그인 버튼 대신 관리자 BOM 바로가기 사용 */
+body.admin-view #vipLoginBtn{display:none!important}
+
+/* 관리자에서 BOM을 열었을 때 VIP 로그아웃 버튼은 숨김 */
+body.admin-bom-view #vipBomPanel .vip-bom-actions button[onclick="vipLogout()"]{
+  display:none!important;
+}
+
+/* 관리자 BOM 화면 표시명 */
+body.admin-bom-view #vipBomPanel{
+  border-top:4px solid #087a43;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -6260,6 +6275,7 @@ async function sha256Text(text){
 }
 
 function openVipLogin(){
+ setBomPanelModeV42(false);
  if(currentWorker){alert('일반 작업자 로그인 상태에서는 VIP BOM에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
  if(sessionStorage.getItem('mirim_vip_ok')==='1'){openVipBom();return;}
  $('vipPinInput').value='';$('vipLoginError').textContent='';$('vipLoginError').classList.add('hidden');
@@ -6298,11 +6314,16 @@ function openVipBom(){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function closeVipBom(){
+ const wasAdminBom=document.body.classList.contains('admin-bom-view');
+ document.body.classList.remove('admin-bom-view');
  sessionStorage.removeItem('mirim_vip_view');
  updatePrivilegedAccessUI();
  $('vipBomPanel').classList.add('hidden');$('home').classList.remove('hidden');
  if(isAdmin){$('recentInboundCard')?.classList.remove('hidden');$('recentOutboundCard')?.classList.remove('hidden');}
  if(isAdmin)$('excelExportPanel')?.classList.remove('hidden');
+ if(isAdmin && wasAdminBom){
+   try{ensureAdminReferenceHome();showAdminReferenceHome();}catch(e){}
+ }
 }
 function vipLogout(){
  sessionStorage.removeItem('mirim_vip_ok');sessionStorage.removeItem('mirim_vip_view');
@@ -7783,6 +7804,39 @@ function openAdminInOutStatisticsV39(){
   }
 }
 
+
+function setBomPanelModeV42(adminMode){
+  const panel=document.getElementById('vipBomPanel');
+  if(!panel)return;
+  const title=panel.querySelector('.vip-bom-head h2');
+  const desc=panel.querySelector('.vip-bom-head p');
+  const closeBtn=panel.querySelector('.vip-bom-actions button[onclick="closeVipBom()"]');
+
+  document.body.classList.toggle('admin-bom-view',!!adminMode);
+
+  if(adminMode){
+    if(title)title.textContent='📋 관리자 BOM 관리';
+    if(desc)desc.textContent='BOM 사진·PO 검색·생산수량 계산·자재위치·소요량·ERP 재고·입출고 내역을 통합 관리합니다.';
+    if(closeBtn)closeBtn.textContent='← 관리자 메인';
+  }else{
+    if(title)title.textContent='👑 VIP BOM 사진 계산';
+    if(desc)desc.textContent='BOM 사진 첨부 → 생산수량 입력 → 자재위치·소요량 자동확인';
+    if(closeBtn)closeBtn.textContent='🏠 메인으로';
+  }
+}
+
+function openAdminBomManagementV42(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  try{
+    setBomPanelModeV42(true);
+    openVipBom();
+    setBomPanelModeV42(true);
+  }catch(e){
+    console.error('관리자 BOM 열기 오류',e);
+    alert('BOM 관리 화면을 열지 못했습니다.');
+  }
+}
+
 function openExistingAdminSection(kind){
   if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
   const candidates={
@@ -7839,6 +7893,7 @@ function ensureAdminWelcomeShortcuts(){
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
       <button class="admin-welcome-shortcut-btn admin-io-stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span><small>입고·출고·차이수량·위치·빈도</small></button>
+      <button class="admin-welcome-shortcut-btn admin-bom-shortcut" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span><small>VIP BOM 전체 기능</small></button>
 
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문-입고 자동대조</span></button>
@@ -8835,6 +8890,7 @@ function ensureAdminReferenceHome(){
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
         <button class="ar-btn stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span></button>
+        <button class="ar-btn bom" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span></button>
         <button class="ar-btn order" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
 
         <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
