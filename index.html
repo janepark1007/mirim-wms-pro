@@ -1036,6 +1036,16 @@ body.admin-view #adminReferenceHome .ar-btn.out{
   display:none!important;
 }
 </style>
+
+<style id="admin-shortcut-force-remove-v40">
+/* 관리자 바로가기 메인: 주문·입고 자동대조 / 최근 입출고 기록 강제 제거 */
+body.admin-view #adminWelcomeShortcutBox button[onclick*="openOrderInboundMatch"],
+body.admin-view #adminWelcomeShortcutBox button[onclick*="openAdminRecentHistory"],
+body.admin-view #adminReferenceHome button[onclick*="openOrderInboundMatch"],
+body.admin-view #adminReferenceHome button[onclick*="openAdminRecentHistory"]{
+  display:none!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -10203,9 +10213,7 @@ function wireAdminShortcutButtonsV41(){
     ['알림 확인','alerts'],
     ['입출고 통계','inoutstat'],
     ['주문·문의 통합관리','orders'],
-    ['주문·입고 자동대조','match'],
     ['나중에 확인','later'],
-    ['최근 입출고 기록','history'],
     ['ERP 미등록 자재','unreg']
   ];
   root.querySelectorAll('.ar-btn').forEach(btn=>{
