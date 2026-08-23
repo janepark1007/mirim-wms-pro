@@ -13540,6 +13540,12 @@ function openOtherMaterialStorageV47(adminOpen){
     }
   }
 
+  const adminOrders=document.getElementById('adminWorkerOrdersV2');
+  if(adminOrders){
+    adminOrders.classList.add('hidden');
+    adminOrders.style.setProperty('display','none','important');
+  }
+
   renderOtherMaterialStorageV47();
   setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
@@ -13647,6 +13653,29 @@ body.admin-view #adminMainOrderMatchCard{
     setTimeout(removeSeparateOrderMatchV50,2500);
   });
   new MutationObserver(()=>setTimeout(removeSeparateOrderMatchV50,30))
+    .observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+<style id="other-storage-exclusive-v52">
+body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
+  display:none!important;
+  visibility:hidden!important;
+}
+</style>
+
+<script id="other-storage-exclusive-v52-js">
+(function(){
+  function keepOtherStorageExclusiveV52(){
+    if(!document.body.classList.contains('other-storage-open-v50'))return;
+    const p=document.getElementById('adminWorkerOrdersV2');
+    if(p){
+      p.classList.add('hidden');
+      p.style.setProperty('display','none','important');
+    }
+  }
+  window.addEventListener('load',()=>setTimeout(keepOtherStorageExclusiveV52,700));
+  new MutationObserver(()=>setTimeout(keepOtherStorageExclusiveV52,20))
     .observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
