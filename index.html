@@ -1104,6 +1104,19 @@ body:not(.admin-view) #otherMaterialStorageCard .admin-only-col{display:none!imp
   .other-storage-grid label.wide{grid-column:auto}
 }
 </style>
+
+<style id="other-material-admin-open-fix-v48">
+body.admin-view #otherMaterialStorageCard:not(.hidden){
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body.admin-view #otherMaterialStorageCard:not(.hidden) #otherStorageAdminEntry{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -13433,14 +13446,34 @@ function openOtherMaterialStorageV47(adminOpen){
   const card=document.getElementById('otherMaterialStorageCard');
   if(!card)return alert('기타자재 보관 화면을 찾지 못했습니다.');
 
-  card.classList.remove('hidden');
+  /* 관리자 메인 숨김/포커스 규칙 해제 */
+  if(isAdmin){
+    document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus');
+  }
+
+  card.classList.remove('hidden','hidden-admin','admin-only');
+  card.removeAttribute('hidden');
   card.style.setProperty('display','block','important');
+  card.style.setProperty('visibility','visible','important');
+  card.style.setProperty('opacity','1','important');
+  card.style.setProperty('height','auto','important');
+  card.style.setProperty('overflow','visible','important');
 
   const entry=document.getElementById('otherStorageAdminEntry');
-  if(entry)entry.style.display=isAdmin?'block':'none';
+  if(entry){
+    if(isAdmin){
+      entry.classList.remove('hidden','hidden-admin');
+      entry.removeAttribute('hidden');
+      entry.style.setProperty('display','block','important');
+      entry.style.setProperty('visibility','visible','important');
+      entry.style.setProperty('opacity','1','important');
+    }else{
+      entry.style.setProperty('display','none','important');
+    }
+  }
 
   renderOtherMaterialStorageV47();
-  card.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
 function closeOtherMaterialStorageV47(){
   const card=document.getElementById('otherMaterialStorageCard');
