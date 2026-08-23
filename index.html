@@ -1158,6 +1158,16 @@ body.admin-view #todayOrderCard td:nth-child(7){
 body.admin-view.admin-shortcut-focus #adminShortcutFocusPanel{display:block!important;visibility:visible!important}
 body.admin-view.admin-shortcut-focus #adminShortcutFocusContent #locationOrganizerCard{display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;max-width:100%!important}
 </style>
+
+<style id="admin-orders-main-only-v55">
+body.admin-view.admin-shortcut-focus #adminWorkerOrdersV2,
+body.admin-view.admin-task-focus #adminWorkerOrdersV2,
+body.admin-view.admin-bom-view #adminWorkerOrdersV2,
+body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
+  display:none!important;
+  visibility:hidden!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -11579,8 +11589,12 @@ body.admin-task-focus #locationOrganizerCard button{
   }
 }
 
-/* 관리자: 작업자 주문 전체 */
+/* 관리자: 작업자 주문 전체
+   관리자 메인에서만 표시하고, 위치정리/BOM/기타자재 등 상세화면에서는 숨김 */
 body.admin-view #adminWorkerOrdersV2{
+  display:none!important;
+}
+body.admin-view.admin-reference-home #adminWorkerOrdersV2{
   display:block!important;
   width:min(1760px,calc(100% - 20px));
   margin:12px auto;
