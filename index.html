@@ -7828,9 +7828,16 @@ function setBomPanelModeV42(adminMode){
 function openAdminBomManagementV42(){
   if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
   try{
+    document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus');
     setBomPanelModeV42(true);
     openVipBom();
     setBomPanelModeV42(true);
+    const panel=document.getElementById('vipBomPanel');
+    if(panel){
+      panel.classList.remove('hidden');
+      panel.style.setProperty('display','block','important');
+      panel.style.setProperty('visibility','visible','important');
+    }
   }catch(e){
     console.error('관리자 BOM 열기 오류',e);
     alert('BOM 관리 화면을 열지 못했습니다.');
@@ -7893,7 +7900,7 @@ function ensureAdminWelcomeShortcuts(){
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
       <button class="admin-welcome-shortcut-btn admin-io-stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span><small>입고·출고·차이수량·위치·빈도</small></button>
-      <button class="admin-welcome-shortcut-btn admin-bom-shortcut" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span><small>VIP BOM 전체 기능</small></button>
+      <button class="admin-welcome-shortcut-btn admin-po-tools" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span><small>VIP BOM 전체 기능</small></button>
 
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문-입고 자동대조</span></button>
@@ -8890,7 +8897,7 @@ function ensureAdminReferenceHome(){
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
         <button class="ar-btn stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span></button>
-        <button class="ar-btn bom" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span></button>
+        <button class="ar-btn po-tools" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span></button>
         <button class="ar-btn order" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
 
         <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
@@ -13306,7 +13313,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{initAdminInOutTotalsV36()
     if(grid && !grid.querySelector('[data-admin-bom-v43]')){
       const btn=document.createElement('button');
       btn.type='button';
-      btn.className='admin-welcome-shortcut-btn admin-bom-shortcut';
+      btn.className='admin-welcome-shortcut-btn admin-po-tools';
       btn.setAttribute('data-admin-bom-v43','1');
       btn.innerHTML='<span class="ico">👑</span><span>BOM 관리</span><small>VIP BOM 전체 기능</small>';
       btn.onclick=(e)=>{
@@ -13323,7 +13330,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{initAdminInOutTotalsV36()
     if(refGrid && !refGrid.querySelector('[data-admin-bom-v43]')){
       const btn=document.createElement('button');
       btn.type='button';
-      btn.className='ar-btn bom';
+      btn.className='ar-btn po-tools';
       btn.setAttribute('data-admin-bom-v43','1');
       btn.innerHTML='<span class="ico">👑</span><span>BOM 관리</span>';
       btn.onclick=(e)=>{
