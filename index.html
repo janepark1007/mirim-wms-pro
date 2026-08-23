@@ -4618,61 +4618,7 @@ async function shareOrderRequest(x,i){
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre>
 
-<style id="mobile-worker-main-final-visible-v25">
-/* 모바일 작업자 메인 바로가기 최종 표시 보정 - 다른 기능/화면은 변경하지 않음 */
-@media(max-width:760px){
-  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2{
-    display:none!important;
-    visibility:hidden!important;
-  }
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
-    display:block!important;
-    visibility:visible!important;
-    opacity:1!important;
-    width:100%!important;
-    max-width:100%!important;
-    height:auto!important;
-    max-height:none!important;
-    overflow:visible!important;
-    margin:8px 0 12px!important;
-  }
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
-    display:grid!important;
-    visibility:visible!important;
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-    gap:7px!important;
-  }
-}
-</style>
-<script id="mobile-worker-main-final-visible-v25-js">
-(function(){
-  function forceMobileWorkerMainV25(){
-    if(window.innerWidth>760)return;
-    if(document.body.classList.contains('admin-view') || document.body.classList.contains('worker-locked'))return;
-    const core=document.getElementById('mobileWorkerCoreV2');
-    const card=document.getElementById('workerMainShortcutCard');
-    if(core){
-      core.style.setProperty('display','none','important');
-      core.style.setProperty('visibility','hidden','important');
-    }
-    if(card){
-      card.style.setProperty('display','block','important');
-      card.style.setProperty('visibility','visible','important');
-      card.style.setProperty('opacity','1','important');
-      card.style.setProperty('height','auto','important');
-      card.style.setProperty('max-height','none','important');
-      card.style.setProperty('overflow','visible','important');
-    }
-  }
-  window.addEventListener('load',()=>{setTimeout(forceMobileWorkerMainV25,300);setTimeout(forceMobileWorkerMainV25,900);});
-  window.addEventListener('resize',()=>setTimeout(forceMobileWorkerMainV25,80));
-  document.addEventListener('click',()=>setTimeout(forceMobileWorkerMainV25,120),true);
-  new MutationObserver(()=>{
-    clearTimeout(window.__mobileWorkerMainV25Timer);
-    window.__mobileWorkerMainV25Timer=setTimeout(forceMobileWorkerMainV25,40);
-  }).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
-})();
-</script>
+
 
 </body></html>`);
      w.document.close();
