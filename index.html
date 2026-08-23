@@ -13303,4 +13303,38 @@ window.addEventListener('load',()=>setTimeout(()=>{try{initAdminInOutTotalsV36()
 </script>
 
 
+
+<script id="admin-bom-dedupe-v46">
+(function(){
+  function removeDuplicateBomButtonsV46(){
+    if(typeof isAdmin!=='undefined' && !isAdmin)return;
+
+    const containers=[
+      document.getElementById('adminWelcomeShortcutBox'),
+      document.getElementById('adminReferenceHome')
+    ].filter(Boolean);
+
+    containers.forEach(container=>{
+      const buttons=[...container.querySelectorAll('button')].filter(btn=>{
+        const t=(btn.innerText||btn.textContent||'').replace(/\s+/g,' ').trim();
+        return t.includes('BOM 관리');
+      });
+
+      /* 같은 관리자 바로가기 영역 안에서는 BOM 관리 1개만 유지 */
+      buttons.slice(1).forEach(btn=>btn.remove());
+    });
+  }
+
+  window.addEventListener('load',()=>{
+    setTimeout(removeDuplicateBomButtonsV46,400);
+    setTimeout(removeDuplicateBomButtonsV46,1200);
+    setTimeout(removeDuplicateBomButtonsV46,2200);
+  });
+
+  document.addEventListener('click',()=>setTimeout(removeDuplicateBomButtonsV46,50),true);
+
+  new MutationObserver(()=>setTimeout(removeDuplicateBomButtonsV46,20))
+    .observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 </body></html>
