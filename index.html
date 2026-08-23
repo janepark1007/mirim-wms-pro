@@ -7202,7 +7202,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 let orderInboundDashboardRows=[];
 
 function ensureOrderInboundMatchCard(){
- if(document.getElementById('orderInboundMatchCard'))return;
+ const existing=document.getElementById('orderInboundMatchCard');
+ if(existing){existing.remove();}
+ return;
  const host=document.getElementById('todayOrderCard');
  if(!host)return;
  const sec=document.createElement('section');
@@ -11055,6 +11057,7 @@ body.admin-view.admin-reference-home #adminReferenceHome .ar-footer{
 (function(){
   function cleanAdminMainV46(){
     if(!window.isAdmin && typeof isAdmin!=='undefined' && !isAdmin) return;
+    if(document.body.classList.contains('other-storage-open-v50')) return;
     if(!document.body.classList.contains('admin-reference-home')) return;
 
     const main=document.querySelector('main');
@@ -13488,8 +13491,9 @@ function openOtherMaterialStorageV47(adminOpen){
   const card=document.getElementById('otherMaterialStorageCard');
   if(!card)return alert('기타자재 보관 화면을 찾지 못했습니다.');
 
-  /* 관리자 메인 숨김/포커스 규칙 해제 */
+  /* 관리자 메인 숨김/포커스 규칙 해제 + 기타자재 상세화면 고정 */
   if(isAdmin){
+    document.body.classList.add('other-storage-open-v50');
     document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus');
   }
 
@@ -13522,6 +13526,12 @@ function closeOtherMaterialStorageV47(){
   if(card){
     card.classList.add('hidden');
     card.style.removeProperty('display');
+    card.style.removeProperty('visibility');
+    card.style.removeProperty('opacity');
+  }
+  document.body.classList.remove('other-storage-open-v50');
+  if(isAdmin){
+    try{showAdminReferenceHome();}catch(e){}
   }
 }
 function saveOtherMaterialV47(){
@@ -13582,5 +13592,40 @@ function renderOtherMaterialStorageV47(){
     </tr>
   `).join(''):'<tr><td colspan="6">등록된 기타자재가 없습니다.</td></tr>';
 }
+</script>
+
+<style id="v50-other-storage-and-hide-match">
+/* 기타자재 보관 상세화면은 관리자 메인 자동복귀와 무관하게 계속 표시 */
+body.admin-view.other-storage-open-v50 #otherMaterialStorageCard{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body.admin-view.other-storage-open-v50 #adminReferenceHome{
+  display:none!important;
+}
+
+/* 별도 주문·입고 자동대조 화면은 완전 숨김.
+   주문요청 표 안의 '입고대조' 컬럼은 그대로 유지 */
+body.admin-view #orderInboundMatchCard,
+body.admin-view #adminMainOrderMatchCard{
+  display:none!important;
+}
+</style>
+
+<script id="v50-remove-separate-order-match">
+(function(){
+  function removeSeparateOrderMatchV50(){
+    document.getElementById('orderInboundMatchCard')?.remove();
+    document.getElementById('adminMainOrderMatchCard')?.remove();
+  }
+  window.addEventListener('load',()=>{
+    setTimeout(removeSeparateOrderMatchV50,300);
+    setTimeout(removeSeparateOrderMatchV50,1200);
+    setTimeout(removeSeparateOrderMatchV50,2500);
+  });
+  new MutationObserver(()=>setTimeout(removeSeparateOrderMatchV50,30))
+    .observe(document.documentElement,{childList:true,subtree:true});
+})();
 </script>
 </body></html>
