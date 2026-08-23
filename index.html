@@ -1027,6 +1027,15 @@ body.admin-view #workerMainShortcutCard [data-worker-main="inbound"]{
   display:none!important;
 }
 </style>
+
+<style id="admin-separate-inout-hide-v39">
+body.admin-view #adminWelcomeShortcutBox .admin-io-in,
+body.admin-view #adminWelcomeShortcutBox .admin-io-out,
+body.admin-view #adminReferenceHome .ar-btn.in,
+body.admin-view #adminReferenceHome .ar-btn.out{
+  display:none!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -7732,6 +7741,25 @@ body.admin-view #adminWelcomeShortcutBox{display:block!important}
 </style>
 
 <script>
+
+function openAdminInOutStatisticsV39(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  const card=document.getElementById('adminInOutTotalCard');
+  if(!card)return alert('입출고 통계 화면을 찾지 못했습니다.');
+  try{
+    document.body.classList.remove('admin-shortcut-focus','admin-task-focus');
+    document.getElementById('home')?.classList.remove('hidden');
+    card.classList.remove('hidden-admin','hidden');
+    card.style.setProperty('display','block','important');
+    try{initAdminInOutTotalsV36();}catch(e){}
+    try{loadAdminInOutTotalsV36();}catch(e){}
+    card.scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){
+    console.error(e);
+    alert('입출고 통계 화면을 열지 못했습니다.');
+  }
+}
+
 function openExistingAdminSection(kind){
   if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
   const candidates={
@@ -7787,8 +7815,7 @@ function ensureAdminWelcomeShortcuts(){
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
-      <button class="admin-welcome-shortcut-btn admin-io-in" onclick="openMode('inbound')"><span class="ico">⬇️</span><span>입고 등록</span><small>관리자 입고수량 입력</small></button>
-      <button class="admin-welcome-shortcut-btn admin-io-out" onclick="openMode('outbound')"><span class="ico">⬆️</span><span>출고 등록</span><small>자재 출고수량 입력</small></button>
+      <button class="admin-welcome-shortcut-btn admin-io-stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span><small>입고·출고·차이수량·위치·빈도</small></button>
 
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문-입고 자동대조</span></button>
@@ -8784,9 +8811,7 @@ function ensureAdminReferenceHome(){
         <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
-        <button class="ar-btn in" onclick="openMode('inbound')"><span class="ico">⬇️</span><span>입고 등록</span></button>
-
-        <button class="ar-btn out" onclick="openMode('outbound')"><span class="ico">⬆️</span><span>출고 등록</span></button>
+        <button class="ar-btn stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span></button>
         <button class="ar-btn order" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
         <button class="ar-btn match" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문·입고 자동대조</span></button>
         <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
@@ -10176,8 +10201,7 @@ function wireAdminShortcutButtonsV41(){
     ['NAS 엑셀 연동','nas'],
     ['사용자 관리','users'],
     ['알림 확인','alerts'],
-    ['입고 등록','inbound'],
-    ['출고 등록','outbound'],
+    ['입출고 통계','inoutstat'],
     ['주문·문의 통합관리','orders'],
     ['주문·입고 자동대조','match'],
     ['나중에 확인','later'],
@@ -10192,6 +10216,7 @@ function wireAdminShortcutButtonsV41(){
     btn.onclick=(e)=>{
       e.preventDefault();
       e.stopPropagation();
+      if(kind==='inoutstat'){openAdminInOutStatisticsV39();return;}
       openAdminShortcutListV41(kind);
     };
   });
