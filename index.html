@@ -1117,6 +1117,22 @@ body.admin-view #otherMaterialStorageCard:not(.hidden) #otherStorageAdminEntry{
   opacity:1!important;
 }
 </style>
+
+<style id="order-inbound-match-visible-v49">
+.order-inbound-match{
+  min-width:145px;padding:7px 8px;border-radius:9px;border:1px solid #dce6e0;
+  background:#f7faf8;line-height:1.35
+}
+.order-inbound-match b{display:block;font-size:12px;white-space:nowrap}
+.order-inbound-match small{display:block;margin-top:2px;font-size:10px;font-weight:800;color:#627168;white-space:nowrap}
+.order-inbound-match.wait{background:#fff8e5;border-color:#ead9a8;color:#725600}
+.order-inbound-match.partial{background:#eef5ff;border-color:#c9dbf1;color:#245d93}
+.order-inbound-match.done{background:#eaf8ef;border-color:#bfe1cb;color:#087a43}
+.order-inbound-none{display:inline-block;padding:5px 7px;border-radius:8px;background:#f1f3f2;color:#6d7972;font-weight:800;font-size:11px}
+@media(max-width:760px){
+  .order-inbound-match{min-width:132px}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1541,7 +1557,7 @@ body.admin-view #otherMaterialStorageCard:not(.hidden) #otherStorageAdminEntry{
     <div id="pendingOrderAlert"></div>
     <div class="order-table-wrap">
       <table>
-        <thead><tr><th>요청일시</th><th>품번</th><th>품명</th><th>문의사진</th><th>요청수량</th><th>요청자</th><th>상태</th><th>비고</th><th>본인확인</th><th class="worker-admin-detail">관리자 입고확인</th><th>카톡 재문의</th></tr></thead>
+        <thead><tr><th>요청일시</th><th>품번</th><th>품명</th><th>문의사진</th><th>요청수량</th><th>요청자</th><th>상태</th><th>입고대조</th><th>비고</th><th>본인확인</th><th class="worker-admin-detail">관리자 입고확인</th><th>카톡 재문의</th></tr></thead>
         <tbody id="todayOrderBody"></tbody>
       </table>
     </div>
@@ -4743,6 +4759,19 @@ function renderTodayOrderRequests(){
 
        const confirmedQty=orderReceivedQty(r.note),approvalReq=orderReceiptApprovalRequest(r.note);
        const inboundMatchedQty=(typeof orderInboundMatchedQty==='function')?Number(orderInboundMatchedQty(r.note)||0):0;
+       const inboundLatest=(typeof orderInboundLatestInfoV49==='function')?orderInboundLatestInfoV49(r.note):null;
+       const requestQtyNum=Number(r.request_qty||0);
+       const inboundRemain=Math.max(0,requestQtyNum-inboundMatchedQty);
+       const inboundPct=requestQtyNum>0?Math.min(100,Math.round(inboundMatchedQty/requestQtyNum*100)):0;
+       const inboundMatchHtml=isInquiry
+         ? '<span class="order-inbound-none">문의건</span>'
+         : (inboundMatchedQty>0
+            ? `<div class="order-inbound-match ${inboundRemain<=0?'done':'partial'}">
+                 <b>✅ 입고 ${inboundMatchedQty.toLocaleString()} / 요청 ${requestQtyNum.toLocaleString()}</b>
+                 <small>${inboundRemain<=0?'대조완료':`남음 ${inboundRemain.toLocaleString()}`} · ${inboundPct}%</small>
+                 ${inboundLatest?`<small>최근 +${Number(inboundLatest.added||0).toLocaleString()} · ${esc(inboundLatest.when||'')}</small>`:''}
+               </div>`
+            : `<div class="order-inbound-match wait"><b>⏳ 입고 없음</b><small>요청 ${requestQtyNum.toLocaleString()}</small></div>`);
        const canWorkerConfirmInbound = !isInquiry && !isAdmin && inboundMatchedQty>0 && !confirmedQty && r.status!=='수령승인대기';
        const workerAction = isInquiry ? '' :
          (isAdmin
@@ -4790,13 +4819,14 @@ function renderTodayOrderRequests(){
          <td>${Number(r.request_qty||0).toLocaleString()}</td>
          <td>${esc(r.requester||'')}</td>
          <td><span class="worker-order-state ${st.cls}">${st.label}</span></td>
+         <td>${inboundMatchHtml}</td>
          <td class="${r.status==='미입고'?'worker-order-note-alert':''}"><div class="order-note-compact" title="${esc([baseOrderNote,...replyHistory.map(x=>'받은답변: '+x),...reinquiryHistory.map(x=>'재문의: '+x)].join('\n'))}"><div class="order-note-base">${esc(baseOrderNote)}</div>${latestReply?`<div class="order-note-reply">💬 받은 답변 ${replyHistory.length}회 · 최근: ${esc(orderReplyMessage(latestReply))}</div>`:''}${latestReinquiry?`<div class="order-note-latest">🔁 재문의 ${reinquiryHistory.length}회 · 최근: ${esc(orderReinquiryMessage(latestReinquiry))}</div>`:''}</div></td>
          <td>${workerAction}</td>
          <td class="worker-admin-detail">${adminAction}</td>
          <td><div class="order-reinquiry-grid"><div class="order-reply-capture"><input id="order_received_reply_${r.id}" list="orderReplySuggestions" placeholder="받은 답변·수량 재확인 요청"><button type="button" onclick="saveOrderReceivedReply(${r.id})">답변 저장</button></div><input id="order_reinquiry_note_${r.id}" placeholder="다시 보낼 재문의 내용"><button type="button" class="admin-kakao-inquiry-btn" onclick="adminKakaoOrderInquiry(${r.id})">TALK 재문의</button><input id="order_reinquiry_photo_${r.id}" type="file" accept="image/*"><small>모바일 사진 공유 · PC 사진 다운로드</small></div></td>
        </tr>`;
      }).join('')
-   : '<tr><td colspan="11">미완료 주문·문의가 없습니다. 본인 수령확인·완료 건은 기록조회·엑셀출력에 보관됩니다.</td></tr>';
+   : '<tr><td colspan="12">미완료 주문·문의가 없습니다. 본인 수령확인·완료 건은 기록조회·엑셀출력에 보관됩니다.</td></tr>';
 }
 async function shareOrderRequest(x,i){
  const type=$('inq_type_'+i)?.value||'기타 문의';
@@ -5025,6 +5055,18 @@ function orderInboundMatchedQty(note){
  const m=String(note||'').match(/\[입고대조누계:([0-9.]+)\]/);
  return m?Number(m[1]||0):0;
 }
+function orderInboundLatestInfoV49(note){
+ const s=String(note||'');
+ const m=s.match(/\[입고대조최근:([^\]]+)\]/);
+ if(!m)return null;
+ const parts=String(m[1]||'').split('/').map(v=>v.trim());
+ return {
+   when:parts[0]||'',
+   worker:parts[1]||'',
+   added:Number(String(parts[2]||'').replace('+','').trim()||0)
+ };
+}
+
 function setOrderInboundMatchedQty(note,qty){
  const base=String(note||'').replace(/\[입고대조누계:[^\]]*\]\s*/g,'').trim();
  const stamp=`[입고대조누계:${Number(qty||0)}]`;
