@@ -1153,6 +1153,11 @@ body.admin-view #todayOrderCard td:nth-child(7){
   font-size:9px!important;
 }
 </style>
+
+<style id="admin-location-page-fix-v54">
+body.admin-view.admin-shortcut-focus #adminShortcutFocusPanel{display:block!important;visibility:visible!important}
+body.admin-view.admin-shortcut-focus #adminShortcutFocusContent #locationOrganizerCard{display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;max-width:100%!important}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -3508,6 +3513,11 @@ function adminLogin(){
    updateAdminUI();
    try{updateHomeSummary();}catch(e){}
    try{loadAdminNotifications();}catch(e){}
+   try{
+     if('Notification' in window && Notification.permission==='default'){
+       Notification.requestPermission().catch(()=>{});
+     }
+   }catch(e){}
    updateAdminUI();
    try{showAdminReferenceHome();}catch(e){console.warn('관리자 메인 표시 실패',e);}
    alert('관리자 로그인 완료');
@@ -7992,7 +8002,7 @@ function openExistingAdminSection(kind){
   if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
   const candidates={
     records:['recordsPanel','recordPanel','historyPanel','dailyHistoryPanel'],
-    location:['locationManager','locationPanel','locationEditPanel','locationManagePanel'],
+    location:['locationOrganizerCard','locationManager','locationPanel','locationEditPanel','locationManagePanel'],
     nas:['nasPanel','nasExcelPanel','excelSyncPanel','erpSyncPanel'],
     users:['userManager','userManagePanel','adminUserPanel','workerManagePanel'],
     alerts:['notifPanel','notificationPanel','adminNotifPanel']
@@ -8039,7 +8049,7 @@ function ensureAdminWelcomeShortcuts(){
     <div class="admin-welcome-shortcut-title">📌 관리자 바로가기</div>
     <div class="admin-welcome-shortcut-grid">
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
-      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('location')"><span class="ico">🧹</span><span>위치 정리</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>위치 정리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
@@ -9037,7 +9047,7 @@ function ensureAdminReferenceHome(){
       <div class="ar-title">📌 관리자 바로가기</div>
       <div class="ar-grid">
         <button class="ar-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
-        <button class="ar-btn" onclick="openExistingAdminSection('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
+        <button class="ar-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
@@ -10343,9 +10353,16 @@ async function openAdminShortcutListV41(kind){
   }
   else if(kind==='location'){
     if(title)title.textContent='🧹 기존 위치 정리·수정';
+    document.body.classList.remove('admin-reference-home','admin-task-focus');
+    document.body.classList.add('admin-shortcut-focus');
     const el=document.getElementById('locationOrganizerCard');
+    if(el){
+      el.classList.remove('hidden','hidden-admin');
+      el.style.setProperty('display','block','important');
+      el.style.setProperty('visibility','visible','important');
+    }
     ok=moveToAdminShortcutFocusV41(el);
-    try{if(typeof loadLocationOrganizer==='function')await loadLocationOrganizer();}catch(e){}
+    try{if(typeof loadLocationOrganizer==='function')await loadLocationOrganizer();}catch(e){console.error('위치 정리 불러오기 오류',e);}
   }
   else if(kind==='nas'){
     if(title)title.textContent='📊 NAS 엑셀 연동';
@@ -13677,6 +13694,197 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
   window.addEventListener('load',()=>setTimeout(keepOtherStorageExclusiveV52,700));
   new MutationObserver(()=>setTimeout(keepOtherStorageExclusiveV52,20))
     .observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+<style id="admin-all-worker-push-v53-style">
+#adminLivePushToastV53{
+ position:fixed;right:16px;top:76px;z-index:99999;
+ width:min(400px,calc(100vw - 24px));display:none;
+ padding:12px 14px;border-radius:13px;background:#fff;
+ border:2px solid #0b8a4b;box-shadow:0 10px 28px rgba(0,0,0,.18);
+ color:#173b29;font-weight:900
+}
+#adminLivePushToastV53.show{display:block!important}
+#adminLivePushToastV53 .t{font-size:15px;margin-bottom:4px}
+#adminLivePushToastV53 .m{font-size:12px;line-height:1.45;color:#4f6258}
+#adminLivePushToastV53 .time{font-size:10px;margin-top:5px;color:#7b8981}
+</style>
+
+<div id="adminLivePushToastV53">
+ <div class="t"></div><div class="m"></div><div class="time"></div>
+</div>
+
+<script id="admin-all-worker-push-v53">
+(function(){
+ let lastSeen=sessionStorage.getItem('mirim_admin_push_last_v53')||'';
+
+ async function logEvent(type,title,message,payload){
+   try{
+     if(!sharedReady||!sharedDb)return;
+     await sharedDb.from('wms_admin_notifications').insert({
+       type,title,message,payload:payload||{},created_at:new Date().toISOString()
+     });
+   }catch(e){console.warn('작업자 관리자알림 저장 실패',e);}
+ }
+
+ function workerName(){return currentWorker?.name||''}
+
+ /* 로그인은 기존 WORKER_LOGIN 기록 기능을 그대로 사용 */
+
+ /* 입고/출고/반환 */
+ if(typeof sharedAddMovement==='function' && !sharedAddMovement.__pushV53){
+   const original=sharedAddMovement;
+   const wrapped=async function(type,x,qty,worker){
+     const result=await original.apply(this,arguments);
+     if(currentWorker && !isAdmin){
+       const label=type==='IN'?'입고':(type==='OUT'?'출고':(type==='RETURN'?'반환':type));
+       logEvent('WORKER_MOVEMENT',`📦 작업자 ${label}`,
+         `${worker||workerName()} · ${String(x?.part||'')} · ${x?.name||''} · ${Number(qty||0).toLocaleString()}개`,
+         {event_type:type,worker_name:worker||workerName(),part_no:String(x?.part||''),item_name:x?.name||'',qty:Number(qty||0),location:x?.location||''});
+     }
+     return result;
+   };
+   wrapped.__pushV53=true;
+   window.sharedAddMovement=wrapped;
+   try{sharedAddMovement=wrapped}catch(e){}
+ }
+
+ /* 주문/문의 전체 */
+ if(typeof saveDailyOrderRequest==='function' && !saveDailyOrderRequest.__pushV53){
+   const original=saveDailyOrderRequest;
+   const wrapped=async function(x,qty,worker,note,requestType,photoUrl){
+     const result=await original.apply(this,arguments);
+     if(currentWorker && !isAdmin){
+       const isOrder=(requestType||'자재 주문요청')==='자재 주문요청';
+       logEvent(isOrder?'WORKER_ORDER':'WORKER_INQUIRY',
+         isOrder?'🛒 작업자 주문요청':'💬 작업자 문의',
+         `${worker||workerName()} · ${String(x?.part||'ERP미등록')} · ${x?.name||''}${Number(qty||0)>0?' · '+Number(qty||0).toLocaleString()+'개':''}`,
+         {event_type:isOrder?'ORDER':'INQUIRY',worker_name:worker||workerName(),part_no:String(x?.part||''),item_name:x?.name||'',qty:Number(qty||0),request_type:requestType||'자재 주문요청'});
+     }
+     return result;
+   };
+   wrapped.__pushV53=true;
+   window.saveDailyOrderRequest=wrapped;
+   try{saveDailyOrderRequest=wrapped}catch(e){}
+ }
+
+ /* ERP 미등록 입력 */
+ if(typeof saveErpUnregisteredItem==='function' && !saveErpUnregisteredItem.__pushV53){
+   const original=saveErpUnregisteredItem;
+   const wrapped=async function(){
+     const wasWorker=!!currentWorker&&!isAdmin;
+     const name=workerName();
+     const part=document.getElementById('unregPart')?.value||'확인 필요';
+     const item=document.getElementById('unregName')?.value||'';
+     const qty=Number(document.getElementById('unregQty')?.value||0);
+     const result=await original.apply(this,arguments);
+     if(wasWorker){
+       logEvent('WORKER_UNREGISTERED_ITEM','⚠️ ERP 미등록 자재 입력',
+         `${name} · ${part} · ${item} · ${qty.toLocaleString()}개`,
+         {event_type:'ERP_UNREGISTERED',worker_name:name,part_no:part,item_name:item,qty});
+     }
+     return result;
+   };
+   wrapped.__pushV53=true;
+   window.saveErpUnregisteredItem=wrapped;
+   try{saveErpUnregisteredItem=wrapped}catch(e){}
+   const b=document.getElementById('unregSaveBtn');
+   if(b)b.onclick=wrapped;
+ }
+
+ /* 나중에 확인 */
+ if(typeof addLaterCheck==='function' && !addLaterCheck.__pushV53){
+   const original=addLaterCheck;
+   const wrapped=function(part,name,location){
+     const result=original.apply(this,arguments);
+     if(currentWorker&&!isAdmin){
+       logEvent('WORKER_LATER_CHECK','📌 작업자 나중에 확인',
+         `${workerName()} · ${part||'-'} · ${name||'-'}`,
+         {event_type:'LATER_CHECK',worker_name:workerName(),part_no:String(part||''),item_name:String(name||''),location:String(location||'')});
+     }
+     return result;
+   };
+   wrapped.__pushV53=true;
+   window.addLaterCheck=wrapped;
+   try{addLaterCheck=wrapped}catch(e){}
+ }
+
+ /* 수령확인/승인요청 */
+ if(typeof workerConfirmOrderReceived==='function' && !workerConfirmOrderReceived.__pushV53){
+   const original=workerConfirmOrderReceived;
+   const wrapped=async function(id){
+     const name=workerName();
+     const result=await original.apply(this,arguments);
+     if(currentWorker&&!isAdmin){
+       logEvent('WORKER_RECEIPT_ACTION','✅ 작업자 수령확인 작업',
+         `${name} · 주문번호 ${id}`,
+         {event_type:'RECEIPT_ACTION',worker_name:name,order_id:id});
+     }
+     return result;
+   };
+   wrapped.__pushV53=true;
+   window.workerConfirmOrderReceived=wrapped;
+   try{workerConfirmOrderReceived=wrapped}catch(e){}
+ }
+
+ function toast(row){
+   const b=document.getElementById('adminLivePushToastV53');if(!b)return;
+   b.querySelector('.t').textContent=row.title||'🔔 작업자 활동';
+   b.querySelector('.m').textContent=row.message||'';
+   b.querySelector('.time').textContent=new Date(row.created_at||Date.now()).toLocaleString('ko-KR');
+   b.classList.add('show');clearTimeout(b._timer);
+   b._timer=setTimeout(()=>b.classList.remove('show'),6500);
+ }
+
+ function browserPush(row){
+   try{
+     if('Notification' in window && Notification.permission==='granted'){
+       new Notification(row.title||'미림 작업자 알림',{
+         body:row.message||'',
+         tag:'mirim-worker-'+String(row.id||row.created_at||Date.now())
+       });
+     }
+   }catch(e){}
+ }
+
+ async function poll(){
+   if(!isAdmin||!sharedReady||!sharedDb)return;
+   try{
+     const {data,error}=await sharedDb.from('wms_admin_notifications')
+       .select('id,type,title,message,payload,created_at')
+       .order('created_at',{ascending:false}).limit(50);
+     if(error)throw error;
+
+     const rows=(data||[]).filter(r=>!['WORKER_ATTENDANCE','WORKER_PERSONAL_TASK'].includes(r.type));
+     if(!rows.length)return;
+
+     const newest=String(rows[0].created_at||'');
+     if(!lastSeen){
+       lastSeen=newest;
+       sessionStorage.setItem('mirim_admin_push_last_v53',newest);
+       try{loadAdminNotifications()}catch(e){}
+       return;
+     }
+
+     const fresh=rows.filter(r=>String(r.created_at||'')>lastSeen)
+       .sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||'')));
+
+     fresh.forEach((r,i)=>setTimeout(()=>{toast(r);browserPush(r)},i*450));
+
+     if(fresh.length){
+       lastSeen=newest;
+       sessionStorage.setItem('mirim_admin_push_last_v53',newest);
+       try{loadAdminNotifications()}catch(e){}
+     }
+   }catch(e){console.warn('관리자 실시간 푸시 확인 실패',e);}
+ }
+
+ window.addEventListener('load',()=>{
+   setTimeout(poll,800);
+   setInterval(poll,5000);
+ });
+ document.addEventListener('click',()=>{if(isAdmin)setTimeout(poll,250)},true);
 })();
 </script>
 </body></html>
