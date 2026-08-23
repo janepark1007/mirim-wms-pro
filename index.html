@@ -13525,26 +13525,63 @@ window.addEventListener('load',()=>setTimeout(()=>{try{initAdminInOutTotalsV36()
 })();
 </script>
 
-<script id="other-material-storage-v47-js">
-const OTHER_MATERIAL_STORAGE_KEY_V47='mirim_other_material_storage_v47';
 
-function getOtherMaterialRowsV47(){
+<script id="other-material-storage-v56-js">
+const OTHER_MATERIAL_STORAGE_KEY_V47='mirim_other_material_storage_v47';
+const OTHER_MATERIAL_SHARED_TYPE_V56='OTHER_MATERIAL_STORAGE';
+let otherMaterialRowsV56=[];
+
+function getOtherMaterialLocalV56(){
   try{
     const v=JSON.parse(localStorage.getItem(OTHER_MATERIAL_STORAGE_KEY_V47)||'[]');
     return Array.isArray(v)?v:[];
   }catch(e){return []}
 }
-function setOtherMaterialRowsV47(rows){
-  localStorage.setItem(OTHER_MATERIAL_STORAGE_KEY_V47,JSON.stringify(rows||[]));
+function setOtherMaterialLocalV56(rows){
+  try{localStorage.setItem(OTHER_MATERIAL_STORAGE_KEY_V47,JSON.stringify(rows||[]));}catch(e){}
 }
-function openOtherMaterialStorageV47(adminOpen){
+function normalizeOtherMaterialRowV56(r){
+  const p=r?.payload||r||{};
+  return {
+    id:r?.id??p.id??('other_'+Date.now()),
+    brand:String(p.brand||''),
+    name:String(p.name||p.item_name||''),
+    qty:Number(p.qty||0),
+    location:String(p.location||''),
+    note:String(p.note||''),
+    created_at:r?.created_at||p.created_at||new Date().toISOString(),
+    shared_id:r?.id??null
+  };
+}
+
+async function loadOtherMaterialRowsV56(){
+  if(sharedReady && sharedDb){
+    try{
+      const {data,error}=await sharedDb.from('wms_admin_notifications')
+        .select('id,type,title,message,payload,created_at')
+        .eq('type',OTHER_MATERIAL_SHARED_TYPE_V56)
+        .order('created_at',{ascending:false})
+        .limit(1000);
+      if(error)throw error;
+      otherMaterialRowsV56=(data||[]).map(normalizeOtherMaterialRowV56);
+      setOtherMaterialLocalV56(otherMaterialRowsV56);
+      renderOtherMaterialStorageV47();
+      return;
+    }catch(e){
+      console.warn('기타자재 공용 조회 실패',e);
+    }
+  }
+  otherMaterialRowsV56=getOtherMaterialLocalV56().map(normalizeOtherMaterialRowV56);
+  renderOtherMaterialStorageV47();
+}
+
+async function openOtherMaterialStorageV47(adminOpen){
   if(adminOpen && !isAdmin)return alert('관리자 모드에서만 입력할 수 있습니다.');
   if(!adminOpen && !currentWorker && !isAdmin)return alert('로그인 후 확인할 수 있습니다.');
 
   const card=document.getElementById('otherMaterialStorageCard');
   if(!card)return alert('기타자재 보관 화면을 찾지 못했습니다.');
 
-  /* 관리자 메인 숨김/포커스 규칙 해제 + 기타자재 상세화면 고정 */
   if(isAdmin){
     document.body.classList.add('other-storage-open-v50');
     document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus');
@@ -13577,9 +13614,12 @@ function openOtherMaterialStorageV47(adminOpen){
     adminOrders.style.setProperty('display','none','important');
   }
 
-  renderOtherMaterialStorageV47();
+  const body=document.getElementById('otherStorageBody');
+  if(body)body.innerHTML='<tr><td colspan="6">기타자재 공용 목록을 불러오는 중입니다...</td></tr>';
+  await loadOtherMaterialRowsV56();
   setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
+
 function closeOtherMaterialStorageV47(){
   const card=document.getElementById('otherMaterialStorageCard');
   if(card){
@@ -13593,7 +13633,8 @@ function closeOtherMaterialStorageV47(){
     try{showAdminReferenceHome();}catch(e){}
   }
 }
-function saveOtherMaterialV47(){
+
+async function saveOtherMaterialV47(){
   if(!isAdmin)return alert('기타자재 입력은 관리자만 가능합니다.');
 
   const brand=(document.getElementById('otherStorageBrand')?.value||'').trim();
@@ -13605,37 +13646,67 @@ function saveOtherMaterialV47(){
   if(!name)return alert('품명을 입력해 주세요.');
   if(qtyRaw!=='' && Number(qtyRaw)<0)return alert('수량을 확인해 주세요.');
 
-  const rows=getOtherMaterialRowsV47();
-  rows.unshift({
-    id:'other_'+Date.now(),
-    brand,
-    name,
-    qty:qtyRaw===''?0:Number(qtyRaw),
-    location,
-    note,
+  const payload={
+    brand,name,qty:qtyRaw===''?0:Number(qtyRaw),location,note,
+    registered_by:'관리자',
     created_at:new Date().toISOString()
-  });
-  setOtherMaterialRowsV47(rows);
+  };
+
+  if(sharedReady && sharedDb){
+    try{
+      const {error}=await sharedDb.from('wms_admin_notifications').insert({
+        type:OTHER_MATERIAL_SHARED_TYPE_V56,
+        title:'🧰 기타자재 보관',
+        message:`${brand||'-'} · ${name} · ${Number(payload.qty).toLocaleString()}개 · ${location||'-'}`,
+        payload,
+        created_at:payload.created_at
+      });
+      if(error)throw error;
+    }catch(e){
+      console.error('기타자재 공용 저장 실패',e);
+      return alert('기타자재 공용 저장 실패: '+(e.message||e));
+    }
+  }else{
+    const local=getOtherMaterialLocalV56();
+    local.unshift({id:'local_'+Date.now(),...payload});
+    setOtherMaterialLocalV56(local);
+  }
 
   ['otherStorageBrand','otherStorageName','otherStorageQty','otherStorageLocation','otherStorageNote'].forEach(id=>{
     const el=document.getElementById(id); if(el)el.value='';
   });
-  renderOtherMaterialStorageV47();
-  alert('기타자재를 저장했습니다.');
+
+  await loadOtherMaterialRowsV56();
+  alert('✅ 기타자재를 공용 저장했습니다.\nPC와 모바일에서 같은 목록을 확인할 수 있습니다.');
 }
-function deleteOtherMaterialV47(id){
+
+async function deleteOtherMaterialV47(id){
   if(!isAdmin)return alert('관리자만 삭제할 수 있습니다.');
   if(!confirm('이 기타자재 기록을 삭제할까요?'))return;
-  const rows=getOtherMaterialRowsV47().filter(x=>String(x.id)!==String(id));
-  setOtherMaterialRowsV47(rows);
-  renderOtherMaterialStorageV47();
+
+  const row=otherMaterialRowsV56.find(x=>String(x.id)===String(id));
+  if(row?.shared_id && sharedReady && sharedDb){
+    try{
+      const {error}=await sharedDb.from('wms_admin_notifications')
+        .delete().eq('id',row.shared_id).eq('type',OTHER_MATERIAL_SHARED_TYPE_V56);
+      if(error)throw error;
+    }catch(e){
+      console.error('기타자재 공용 삭제 실패',e);
+      return alert('기타자재 삭제 실패: '+(e.message||e));
+    }
+  }else{
+    const local=getOtherMaterialLocalV56().filter(x=>String(x.id)!==String(id));
+    setOtherMaterialLocalV56(local);
+  }
+  await loadOtherMaterialRowsV56();
 }
+
 function renderOtherMaterialStorageV47(){
   const body=document.getElementById('otherStorageBody');
   if(!body)return;
 
   const q=(document.getElementById('otherStorageSearch')?.value||'').trim().toLowerCase();
-  const rows=getOtherMaterialRowsV47().filter(x=>{
+  const rows=(otherMaterialRowsV56||[]).filter(x=>{
     if(!q)return true;
     return [x.brand,x.name,x.location,x.note].some(v=>String(v||'').toLowerCase().includes(q));
   });
@@ -13651,7 +13722,14 @@ function renderOtherMaterialStorageV47(){
     </tr>
   `).join(''):'<tr><td colspan="6">등록된 기타자재가 없습니다.</td></tr>';
 }
+
+/* 공용 연결이 늦게 잡혀도 기타자재 화면이 열려 있으면 다시 동기화 */
+window.addEventListener('load',()=>setTimeout(()=>{
+  const card=document.getElementById('otherMaterialStorageCard');
+  if(card && !card.classList.contains('hidden'))loadOtherMaterialRowsV56();
+},1800));
 </script>
+
 
 <style id="v50-other-storage-and-hide-match">
 /* 기타자재 보관 상세화면은 관리자 메인 자동복귀와 무관하게 계속 표시 */
