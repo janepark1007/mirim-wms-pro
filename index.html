@@ -1133,6 +1133,26 @@ body.admin-view #otherMaterialStorageCard:not(.hidden) #otherStorageAdminEntry{
   .order-inbound-match{min-width:132px}
 }
 </style>
+
+<style id="inbound-match-inline-v51">
+body.admin-view #todayOrderCard th:nth-child(7),
+body.admin-view #todayOrderCard td:nth-child(7){
+  width:190px!important;
+  min-width:190px!important;
+}
+.order-inbound-inline-v51{margin-top:6px}
+.order-inbound-inline-v51 .order-inbound-match{
+  min-width:0!important;
+  width:auto!important;
+  padding:6px 7px!important;
+}
+.order-inbound-inline-v51 .order-inbound-match b{
+  font-size:11px!important;
+}
+.order-inbound-inline-v51 .order-inbound-match small{
+  font-size:9px!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1557,7 +1577,7 @@ body.admin-view #otherMaterialStorageCard:not(.hidden) #otherStorageAdminEntry{
     <div id="pendingOrderAlert"></div>
     <div class="order-table-wrap">
       <table>
-        <thead><tr><th>요청일시</th><th>품번</th><th>품명</th><th>문의사진</th><th>요청수량</th><th>요청자</th><th>상태</th><th>입고대조</th><th>비고</th><th>본인확인</th><th class="worker-admin-detail">관리자 입고확인</th><th>카톡 재문의</th></tr></thead>
+        <thead><tr><th>요청일시</th><th>품번</th><th>품명</th><th>문의사진</th><th>요청수량</th><th>요청자</th><th>상태 / 입고대조</th><th>비고</th><th>본인확인</th><th class="worker-admin-detail">관리자 입고확인</th><th>카톡 재문의</th></tr></thead>
         <tbody id="todayOrderBody"></tbody>
       </table>
     </div>
@@ -4818,15 +4838,17 @@ function renderTodayOrderRequests(){
          <td>${inquiryPhoto?`<a href="${esc(inquiryPhoto)}" target="_blank" rel="noopener"><img class="order-inquiry-photo" src="${esc(inquiryPhoto)}" alt="문의사진"></a>`:'<span class="order-no-photo">사진 없음</span>'}</td>
          <td>${Number(r.request_qty||0).toLocaleString()}</td>
          <td>${esc(r.requester||'')}</td>
-         <td><span class="worker-order-state ${st.cls}">${st.label}</span></td>
-         <td>${inboundMatchHtml}</td>
+         <td>
+           <span class="worker-order-state ${st.cls}">${st.label}</span>
+           <div class="order-inbound-inline-v51">${inboundMatchHtml}</div>
+         </td>
          <td class="${r.status==='미입고'?'worker-order-note-alert':''}"><div class="order-note-compact" title="${esc([baseOrderNote,...replyHistory.map(x=>'받은답변: '+x),...reinquiryHistory.map(x=>'재문의: '+x)].join('\n'))}"><div class="order-note-base">${esc(baseOrderNote)}</div>${latestReply?`<div class="order-note-reply">💬 받은 답변 ${replyHistory.length}회 · 최근: ${esc(orderReplyMessage(latestReply))}</div>`:''}${latestReinquiry?`<div class="order-note-latest">🔁 재문의 ${reinquiryHistory.length}회 · 최근: ${esc(orderReinquiryMessage(latestReinquiry))}</div>`:''}</div></td>
          <td>${workerAction}</td>
          <td class="worker-admin-detail">${adminAction}</td>
          <td><div class="order-reinquiry-grid"><div class="order-reply-capture"><input id="order_received_reply_${r.id}" list="orderReplySuggestions" placeholder="받은 답변·수량 재확인 요청"><button type="button" onclick="saveOrderReceivedReply(${r.id})">답변 저장</button></div><input id="order_reinquiry_note_${r.id}" placeholder="다시 보낼 재문의 내용"><button type="button" class="admin-kakao-inquiry-btn" onclick="adminKakaoOrderInquiry(${r.id})">TALK 재문의</button><input id="order_reinquiry_photo_${r.id}" type="file" accept="image/*"><small>모바일 사진 공유 · PC 사진 다운로드</small></div></td>
        </tr>`;
      }).join('')
-   : '<tr><td colspan="12">미완료 주문·문의가 없습니다. 본인 수령확인·완료 건은 기록조회·엑셀출력에 보관됩니다.</td></tr>';
+   : '<tr><td colspan="11">미완료 주문·문의가 없습니다. 본인 수령확인·완료 건은 기록조회·엑셀출력에 보관됩니다.</td></tr>';
 }
 async function shareOrderRequest(x,i){
  const type=$('inq_type_'+i)?.value||'기타 문의';
