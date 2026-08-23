@@ -969,6 +969,9 @@ body:not(.admin-view) #homeErpTotalCard{display:none!important}
 <style id="worker-unregistered-entry-v32">
 /* 작업자모드: ERP 미등록 자재 입력창 표시 */
 body:not(.admin-view):not(.worker-locked) #unregisteredItemCard{
+  display:none!important;
+}
+body:not(.admin-view):not(.worker-locked) #unregisteredItemCard.worker-unreg-open{
   display:block!important;
   visibility:visible!important;
 }
@@ -3217,8 +3220,9 @@ function updateAdminUI(){
    uc.style.display=(isAdmin||allowWorkerUnreg)?'block':'none';
    if(allowWorkerUnreg){
      uc.classList.remove('hidden-admin');
-     uc.style.setProperty('display','block','important');
-     uc.style.setProperty('visibility','visible','important');
+     if(!uc.classList.contains('worker-unreg-open')){
+       uc.style.setProperty('display','none','important');
+     }
    }
  }
 }
@@ -10121,6 +10125,9 @@ function ensureWorkerMainShortcutCardV43(){
       <button type="button" class="worker-main-shortcut-btn later" data-worker-main="later">
         <span class="ico">📌</span><span>나중에 확인</span><small>확인할 일</small>
       </button>
+      <button type="button" class="worker-main-shortcut-btn" data-worker-main="unregistered">
+        <span class="ico">⚠️</span><span>ERP 미등록 입력</span><small>ERP에 없는 자재 입력</small>
+      </button>
     </div>
   `;
 
@@ -10197,6 +10204,18 @@ function wireWorkerMainShortcutV43(){
         return;
       }
 
+      if(kind==='unregistered'){
+        const card=document.getElementById('unregisteredItemCard');
+        if(!card)return alert('ERP 미등록 입력창을 찾지 못했습니다.');
+        card.classList.remove('hidden-admin');
+        card.classList.add('worker-unreg-open');
+        card.style.setProperty('display','block','important');
+        card.style.setProperty('visibility','visible','important');
+        try{fillUnregisteredWorker();}catch(e){}
+        card.scrollIntoView({behavior:'smooth',block:'start'});
+        return;
+      }
+
       try{openMode(kind);}catch(err){
         alert('해당 작업 화면을 열지 못했습니다.');
       }
@@ -10224,6 +10243,7 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="order"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="orders"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="later"],
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="unregistered"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="history"]{
   display:flex!important;
 }
