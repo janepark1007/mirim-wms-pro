@@ -1524,11 +1524,12 @@ body.admin-view #workerMainShortcutCard [data-worker-main="inbound"]{
 <div class="admin-history-table-wrap" style="overflow:auto;margin-top:10px"><table><thead><tr><th>시간</th><th>품번</th><th>품명</th><th>수량</th><th>작업자</th><th>위치</th></tr></thead><tbody id="outHist"></tbody></table></div>
 </section>
 
+
 <section class="card admin-only hidden-admin" id="adminInOutTotalCard">
   <div class="admin-inout-total-head">
     <div>
-      <h2>📊 입고·출고 토탈 집계</h2>
-      <div class="admin-inout-total-sub">관리자 입력 기준 · 날짜별 입고/출고 수량과 건수를 한눈에 확인</div>
+      <h2>📊 입출고 통계</h2>
+      <div class="admin-inout-total-sub">입고 · 출고 · 차이수량 · 위치 · 사용빈도를 한눈에 확인</div>
     </div>
     <button type="button" class="primary" id="adminInOutTotalLoadBtn">조회</button>
   </div>
@@ -1550,7 +1551,7 @@ body.admin-view #workerMainShortcutCard [data-worker-main="inbound"]{
   <div class="admin-inout-summary">
     <div class="in"><small>입고 총수량</small><b id="adminInOutInQty">0</b><span id="adminInOutInCount">0건</span></div>
     <div class="out"><small>출고 총수량</small><b id="adminInOutOutQty">0</b><span id="adminInOutOutCount">0건</span></div>
-    <div class="net"><small>입출고 차이</small><b id="adminInOutNetQty">0</b><span>입고 - 출고</span></div>
+    <div class="net"><small>차이수량</small><b id="adminInOutNetQty">0</b><span>입고 - 출고</span></div>
     <div class="total"><small>전체 입력건수</small><b id="adminInOutTotalCount">0건</b><span id="adminInOutRangeLabel">-</span></div>
   </div>
 
@@ -1560,20 +1561,24 @@ body.admin-view #workerMainShortcutCard [data-worker-main="inbound"]{
     <table class="admin-inout-table">
       <thead>
         <tr>
-          <th>날짜</th>
+          <th>품번</th>
+          <th>품명</th>
           <th>입고수량</th>
-          <th>입고건수</th>
           <th>출고수량</th>
+          <th>차이수량</th>
+          <th>위치</th>
+          <th>사용빈도</th>
+          <th>입고건수</th>
           <th>출고건수</th>
-          <th>입출고차이</th>
         </tr>
       </thead>
       <tbody id="adminInOutDailyBody">
-        <tr><td colspan="6">조회된 기록이 없습니다.</td></tr>
+        <tr><td colspan="9">조회된 기록이 없습니다.</td></tr>
       </tbody>
     </table>
   </div>
 </section>
+
 
 
 
@@ -5530,6 +5535,7 @@ async function loadItemMovementHistory(part){
 
 
 
+
 async function loadAdminInOutTotalsV36(){
  if(!isAdmin)return;
  const status=$('adminInOutTotalStatus');
@@ -5550,10 +5556,10 @@ async function loadAdminInOutTotalsV36(){
  }
 
  try{
-   if(status)status.textContent='입고·출고 기록을 집계하는 중입니다...';
+   if(status)status.textContent='입출고 통계를 집계하는 중입니다...';
    const range=recordRangeUtc(from,to);
    const {data,error}=await sharedDb.from('production_movements')
-     .select('movement_type,qty,created_at')
+     .select('movement_type,qty,created_at,part_no,item_name,location')
      .in('movement_type',['IN','OUT'])
      .gte('created_at',range.start)
      .lt('created_at',range.end)
@@ -5563,25 +5569,23 @@ async function loadAdminInOutTotalsV36(){
 
    const rows=data||[];
    let inQty=0,outQty=0,inCount=0,outCount=0;
-   const daily={};
+   const items={};
 
    rows.forEach(r=>{
      const type=String(r.movement_type||'').toUpperCase();
      const qty=Number(r.qty||0);
-     let day='-';
-     try{
-       day=new Intl.DateTimeFormat('en-CA',{
-         timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
-       }).format(new Date(r.created_at));
-     }catch(e){}
-     if(!daily[day])daily[day]={day,inQty:0,outQty:0,inCount:0,outCount:0};
+     const part=String(r.part_no||'').trim()||'-';
+     const name=String(r.item_name||'').trim()||'-';
+     const key=part+'||'+name;
+     if(!items[key])items[key]={part,name,inQty:0,outQty:0,inCount:0,outCount:0,locations:new Set()};
+     if(r.location)items[key].locations.add(String(r.location).trim());
 
      if(type==='IN'){
        inQty+=qty; inCount++;
-       daily[day].inQty+=qty; daily[day].inCount++;
+       items[key].inQty+=qty; items[key].inCount++;
      }else if(type==='OUT'){
        outQty+=qty; outCount++;
-       daily[day].outQty+=qty; daily[day].outCount++;
+       items[key].outQty+=qty; items[key].outCount++;
      }
    });
 
@@ -5592,24 +5596,34 @@ async function loadAdminInOutTotalsV36(){
    $('adminInOutOutCount').textContent=outCount.toLocaleString()+'건';
    $('adminInOutTotalCount').textContent=(inCount+outCount).toLocaleString()+'건';
    $('adminInOutRangeLabel').textContent=`${from} ~ ${to}`;
-   if(status)status.innerHTML=`<b>${from} ~ ${to}</b> · 입고 ${inCount.toLocaleString()}건 / 출고 ${outCount.toLocaleString()}건`;
+   if(status)status.innerHTML=`<b>${from} ~ ${to}</b> · 품목별 입출고 통계`;
 
-   const days=Object.values(daily).sort((a,b)=>b.day.localeCompare(a.day));
+   const arr=Object.values(items).map(x=>{
+     const freq=x.inCount+x.outCount;
+     let freqLabel='낮음';
+     if(freq>=10)freqLabel='높음';
+     else if(freq>=4)freqLabel='보통';
+     return {...x,diff:x.inQty-x.outQty,freq,freqLabel,location:[...x.locations].filter(Boolean).join(' / ')||'-'};
+   }).sort((a,b)=>b.freq-a.freq || Math.abs(b.diff)-Math.abs(a.diff));
+
    if(body){
-     body.innerHTML=days.length?days.map(d=>`
+     body.innerHTML=arr.length?arr.map(x=>`
        <tr>
-        <td>${esc(d.day)}</td>
-        <td>${d.inQty.toLocaleString()}</td>
-        <td>${d.inCount.toLocaleString()}건</td>
-        <td>${d.outQty.toLocaleString()}</td>
-        <td>${d.outCount.toLocaleString()}건</td>
-        <td>${(d.inQty-d.outQty).toLocaleString()}</td>
-       </tr>`).join(''):'<tr><td colspan="6">선택한 기간의 입고·출고 기록이 없습니다.</td></tr>';
+        <td>${esc(x.part)}</td>
+        <td>${esc(x.name)}</td>
+        <td>${x.inQty.toLocaleString()}</td>
+        <td>${x.outQty.toLocaleString()}</td>
+        <td>${x.diff.toLocaleString()}</td>
+        <td>${esc(x.location)}</td>
+        <td><b>${x.freqLabel}</b><br><small>${x.freq.toLocaleString()}회</small></td>
+        <td>${x.inCount.toLocaleString()}건</td>
+        <td>${x.outCount.toLocaleString()}건</td>
+       </tr>`).join(''):'<tr><td colspan="9">선택한 기간의 입출고 기록이 없습니다.</td></tr>';
    }
  }catch(e){
-   console.error('관리자 입출고 토탈 집계 실패',e);
-   if(status)status.textContent='⚠️ 입출고 집계 실패: '+(e.message||e);
-   if(body)body.innerHTML='<tr><td colspan="6">집계 기록을 불러오지 못했습니다.</td></tr>';
+   console.error('관리자 입출고 통계 실패',e);
+   if(status)status.textContent='⚠️ 입출고 통계 실패: '+(e.message||e);
+   if(body)body.innerHTML='<tr><td colspan="9">통계 기록을 불러오지 못했습니다.</td></tr>';
  }
 }
 
