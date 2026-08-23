@@ -1168,6 +1168,61 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
   visibility:hidden!important;
 }
 </style>
+
+<style id="other-storage-mobile-compact-v58">
+@media(max-width:760px){
+  /* 기타자재 화면만 위쪽으로 당기고 세로 공간 절약 */
+  #otherMaterialStorageCard{
+    margin-top:4px!important;
+    padding:10px 8px!important;
+  }
+  #otherMaterialStorageCard .other-storage-head{
+    margin-bottom:4px!important;
+  }
+  #otherMaterialStorageCard .other-storage-head h2,
+  #otherMaterialStorageCard h2{
+    margin:0 0 3px!important;
+    font-size:20px!important;
+    line-height:1.2!important;
+  }
+  #otherMaterialStorageCard .other-storage-head p{
+    margin:0 0 4px!important;
+    line-height:1.25!important;
+  }
+  #otherMaterialStorageCard .other-storage-recovery-v57{
+    margin:5px 0 6px!important;
+    padding:7px 9px!important;
+    font-size:12px!important;
+    line-height:1.35!important;
+  }
+  #otherMaterialStorageCard > button,
+  #otherMaterialStorageCard .other-storage-head button{
+    margin:2px 0 4px!important;
+    padding:5px 14px!important;
+    min-height:0!important;
+  }
+  #otherStorageSearch{
+    margin:5px 0!important;
+    min-height:38px!important;
+    height:38px!important;
+    padding:6px 9px!important;
+  }
+  #otherMaterialStorageCard .table-wrap,
+  #otherMaterialStorageCard .table-scroll{
+    margin-top:4px!important;
+  }
+
+  /* 작업자 조회에서는 관리자 입력영역이 차지하는 공간 완전 제거 */
+  body:not(.admin-view) #otherStorageAdminEntry{
+    display:none!important;
+    height:0!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
