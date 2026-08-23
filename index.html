@@ -13555,6 +13555,8 @@ function normalizeOtherMaterialRowV56(r){
 }
 
 async function loadOtherMaterialRowsV56(){
+  const localRows=getOtherMaterialLocalV56().map(normalizeOtherMaterialRowV56);
+
   if(sharedReady && sharedDb){
     try{
       const {data,error}=await sharedDb.from('wms_admin_notifications')
@@ -13563,24 +13565,106 @@ async function loadOtherMaterialRowsV56(){
         .order('created_at',{ascending:false})
         .limit(1000);
       if(error)throw error;
-      otherMaterialRowsV56=(data||[]).map(normalizeOtherMaterialRowV56);
-      setOtherMaterialLocalV56(otherMaterialRowsV56);
+
+      const sharedRows=(data||[]).map(normalizeOtherMaterialRowV56);
+
+      /* V56 이전에 PC localStorage에만 있던 기존 기타자재 복구 */
+      const sharedKeys=new Set(sharedRows.map(x=>
+        [x.brand,x.name,x.qty,x.location,x.note].map(v=>String(v||'').trim()).join('||')
+      ));
+
+      const localOnly=localRows.filter(x=>{
+        const key=[x.brand,x.name,x.qty,x.location,x.note].map(v=>String(v||'').trim()).join('||');
+        return !sharedKeys.has(key);
+      });
+
+      /* 기존 로컬 자료가 있으면 공용 DB로 자동 이전 */
+      if(localOnly.length){
+        for(const x of localOnly){
+          try{
+            const payload={
+              brand:x.brand||'',
+              name:x.name||'',
+              qty:Number(x.qty||0),
+              location:x.location||'',
+              note:x.note||'',
+              registered_by:'기존 PC 데이터 복구',
+              created_at:x.created_at||new Date().toISOString()
+            };
+            const {error:insertError}=await sharedDb.from('wms_admin_notifications').insert({
+              type:OTHER_MATERIAL_SHARED_TYPE_V56,
+              title:'🧰 기타자재 보관',
+              message:`${payload.brand||'-'} · ${payload.name||'-'} · ${Number(payload.qty).toLocaleString()}개 · ${payload.location||'-'}`,
+              payload,
+              created_at:payload.created_at
+            });
+            if(insertError)throw insertError;
+          }catch(e){
+            console.warn('기존 기타자재 공용 이전 실패',e);
+          }
+        }
+
+        /* 이전 후 공용 데이터 다시 조회 */
+        const {data:again,error:againError}=await sharedDb.from('wms_admin_notifications')
+          .select('id,type,title,message,payload,created_at')
+          .eq('type',OTHER_MATERIAL_SHARED_TYPE_V56)
+          .order('created_at',{ascending:false})
+          .limit(1000);
+
+        if(!againError){
+          otherMaterialRowsV56=(again||[]).map(normalizeOtherMaterialRowV56);
+          setOtherMaterialLocalV56(otherMaterialRowsV56);
+          renderOtherMaterialStorageV47();
+          return;
+        }
+      }
+
+      /* 공용 + 기존 로컬 자료를 합쳐서 표시. 기존 자료가 절대 사라지지 않게 함 */
+      const merged=[...sharedRows];
+      const keys=new Set(merged.map(x=>
+        [x.brand,x.name,x.qty,x.location,x.note].map(v=>String(v||'').trim()).join('||')
+      ));
+
+      for(const x of localRows){
+        const key=[x.brand,x.name,x.qty,x.location,x.note].map(v=>String(v||'').trim()).join('||');
+        if(!keys.has(key)){
+          merged.push(x);
+          keys.add(key);
+        }
+      }
+
+      otherMaterialRowsV56=merged;
+      setOtherMaterialLocalV56(merged);
       renderOtherMaterialStorageV47();
       return;
     }catch(e){
       console.warn('기타자재 공용 조회 실패',e);
     }
   }
-  otherMaterialRowsV56=getOtherMaterialLocalV56().map(normalizeOtherMaterialRowV56);
+
+  /* 공용 연결 실패 시 기존 PC 자료는 그대로 보여줌 */
+  otherMaterialRowsV56=localRows;
   renderOtherMaterialStorageV47();
 }
 
+
+function showOtherMaterialRecoveryNoticeV57(){
+  const card=document.getElementById('otherMaterialStorageCard');
+  if(!card || card.querySelector('.other-storage-recovery-v57'))return;
+  const note=document.createElement('div');
+  note.className='notice other-storage-recovery-v57';
+  note.style.marginTop='10px';
+  note.textContent='기존 PC에 저장돼 있던 기타자재도 함께 불러오며, 공용 DB로 자동 이전합니다.';
+  const head=card.querySelector('.other-storage-head');
+  if(head)head.insertAdjacentElement('afterend',note);
+}
 async function openOtherMaterialStorageV47(adminOpen){
   if(adminOpen && !isAdmin)return alert('관리자 모드에서만 입력할 수 있습니다.');
   if(!adminOpen && !currentWorker && !isAdmin)return alert('로그인 후 확인할 수 있습니다.');
 
   const card=document.getElementById('otherMaterialStorageCard');
   if(!card)return alert('기타자재 보관 화면을 찾지 못했습니다.');
+  showOtherMaterialRecoveryNoticeV57();
 
   if(isAdmin){
     document.body.classList.add('other-storage-open-v50');
