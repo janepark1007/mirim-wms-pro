@@ -989,6 +989,37 @@ body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
   }
 }
 </style>
+
+<style id="admin-inout-total-v36">
+#adminInOutTotalCard{border:2px solid #cfe4d7}
+.admin-inout-total-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.admin-inout-total-head h2{margin:0;font-size:22px}
+.admin-inout-total-sub{margin-top:4px;color:#6b786f;font-size:13px;font-weight:800}
+.admin-inout-filter{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-top:14px}
+.admin-inout-filter label{font-weight:900}
+.admin-inout-filter input{display:block;width:100%;min-height:46px;margin-top:5px;border:1px solid #ccd7d1;border-radius:10px;padding:8px 10px;background:#fff}
+.admin-inout-quick{display:flex;gap:6px;flex-wrap:wrap}
+.admin-inout-quick button{min-height:42px;border:1px solid #cfd9d3;border-radius:9px;background:#fff;padding:0 12px;font-weight:900}
+.admin-inout-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:13px}
+.admin-inout-summary>div{border:1px solid #dfe7e3;border-radius:13px;padding:13px;background:#f8faf9}
+.admin-inout-summary small{display:block;color:#65736b;font-weight:800;margin-bottom:5px}
+.admin-inout-summary b{display:block;font-size:25px;line-height:1.15}
+.admin-inout-summary span{display:block;margin-top:5px;font-size:12px;font-weight:800;color:#65736b}
+.admin-inout-summary .in{background:#edf9f1;border-color:#c8e5d2;color:#087a43}
+.admin-inout-summary .out{background:#fff1ed;border-color:#f0cdc3;color:#b42318}
+.admin-inout-summary .net{background:#eef5ff;border-color:#cfdff3;color:#245d93}
+.admin-inout-summary .total{background:#fff8dd;border-color:#eadb9b;color:#705900}
+.admin-inout-table-wrap{overflow:auto;margin-top:10px;border:1px solid #e0e7e3;border-radius:11px}
+.admin-inout-table{width:100%;border-collapse:collapse;min-width:720px}
+.admin-inout-table th,.admin-inout-table td{padding:10px;border-bottom:1px solid #e7ece9;text-align:right;white-space:nowrap}
+.admin-inout-table th:first-child,.admin-inout-table td:first-child{text-align:left}
+.admin-inout-table th{background:#f5f8f6}
+@media(max-width:760px){
+  .admin-inout-filter{grid-template-columns:1fr 1fr}
+  .admin-inout-quick{grid-column:1/-1}
+  .admin-inout-summary{grid-template-columns:1fr 1fr}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1485,6 +1516,58 @@ body:not(.admin-view):not(.worker-locked) #unregisteredItemCard .unreg-grid{
 <div id="workerOutboundAlert" style="margin-top:10px;padding:11px 12px;border-radius:11px;background:#eef6ff;border:1px solid #cfe0f5;color:#174f82;font-weight:900">📤 최신 출고 알림을 불러오는 중입니다.</div>
 <div class="admin-history-table-wrap" style="overflow:auto;margin-top:10px"><table><thead><tr><th>시간</th><th>품번</th><th>품명</th><th>수량</th><th>작업자</th><th>위치</th></tr></thead><tbody id="outHist"></tbody></table></div>
 </section>
+
+<section class="card admin-only hidden-admin" id="adminInOutTotalCard">
+  <div class="admin-inout-total-head">
+    <div>
+      <h2>📊 입고·출고 토탈 집계</h2>
+      <div class="admin-inout-total-sub">관리자 입력 기준 · 날짜별 입고/출고 수량과 건수를 한눈에 확인</div>
+    </div>
+    <button type="button" class="primary" id="adminInOutTotalLoadBtn">조회</button>
+  </div>
+
+  <div class="admin-inout-filter">
+    <label>시작일
+      <input type="date" id="adminInOutFrom">
+    </label>
+    <label>종료일
+      <input type="date" id="adminInOutTo">
+    </label>
+    <div class="admin-inout-quick">
+      <button type="button" data-admin-inout-range="today">오늘</button>
+      <button type="button" data-admin-inout-range="week">최근 7일</button>
+      <button type="button" data-admin-inout-range="month">이번 달</button>
+    </div>
+  </div>
+
+  <div class="admin-inout-summary">
+    <div class="in"><small>입고 총수량</small><b id="adminInOutInQty">0</b><span id="adminInOutInCount">0건</span></div>
+    <div class="out"><small>출고 총수량</small><b id="adminInOutOutQty">0</b><span id="adminInOutOutCount">0건</span></div>
+    <div class="net"><small>입출고 차이</small><b id="adminInOutNetQty">0</b><span>입고 - 출고</span></div>
+    <div class="total"><small>전체 입력건수</small><b id="adminInOutTotalCount">0건</b><span id="adminInOutRangeLabel">-</span></div>
+  </div>
+
+  <div id="adminInOutTotalStatus" class="notice" style="margin-top:10px">날짜를 선택하고 조회하세요.</div>
+
+  <div class="admin-inout-table-wrap">
+    <table class="admin-inout-table">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>입고수량</th>
+          <th>입고건수</th>
+          <th>출고수량</th>
+          <th>출고건수</th>
+          <th>입출고차이</th>
+        </tr>
+      </thead>
+      <tbody id="adminInOutDailyBody">
+        <tr><td colspan="6">조회된 기록이 없습니다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
 
 
 
@@ -3212,6 +3295,7 @@ function updateAdminUI(){
  updatePrivilegedAccessUI();
 
  try{renderErpUnregisteredItems();fillUnregisteredWorker();}catch(e){}
+ try{initAdminInOutTotalsV36();}catch(e){console.error('입출고 토탈 초기화 오류',e);}
 
  const uc=$('unregisteredItemCard');
  if(uc){
@@ -5437,6 +5521,124 @@ async function loadItemMovementHistory(part){
 }
 
 
+
+
+async function loadAdminInOutTotalsV36(){
+ if(!isAdmin)return;
+ const status=$('adminInOutTotalStatus');
+ const body=$('adminInOutDailyBody');
+ const from=$('adminInOutFrom')?.value||'';
+ const to=$('adminInOutTo')?.value||'';
+ if(!from||!to){
+   if(status)status.textContent='시작일과 종료일을 선택해 주세요.';
+   return;
+ }
+ if(from>to){
+   if(status)status.textContent='시작일이 종료일보다 늦습니다.';
+   return;
+ }
+ if(!sharedReady||!sharedDb){
+   if(status)status.textContent='⚠️ 공용 동기화 연결이 필요합니다.';
+   return;
+ }
+
+ try{
+   if(status)status.textContent='입고·출고 기록을 집계하는 중입니다...';
+   const range=recordRangeUtc(from,to);
+   const {data,error}=await sharedDb.from('production_movements')
+     .select('movement_type,qty,created_at')
+     .in('movement_type',['IN','OUT'])
+     .gte('created_at',range.start)
+     .lt('created_at',range.end)
+     .order('created_at',{ascending:true})
+     .limit(10000);
+   if(error)throw error;
+
+   const rows=data||[];
+   let inQty=0,outQty=0,inCount=0,outCount=0;
+   const daily={};
+
+   rows.forEach(r=>{
+     const type=String(r.movement_type||'').toUpperCase();
+     const qty=Number(r.qty||0);
+     let day='-';
+     try{
+       day=new Intl.DateTimeFormat('en-CA',{
+         timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
+       }).format(new Date(r.created_at));
+     }catch(e){}
+     if(!daily[day])daily[day]={day,inQty:0,outQty:0,inCount:0,outCount:0};
+
+     if(type==='IN'){
+       inQty+=qty; inCount++;
+       daily[day].inQty+=qty; daily[day].inCount++;
+     }else if(type==='OUT'){
+       outQty+=qty; outCount++;
+       daily[day].outQty+=qty; daily[day].outCount++;
+     }
+   });
+
+   $('adminInOutInQty').textContent=inQty.toLocaleString();
+   $('adminInOutOutQty').textContent=outQty.toLocaleString();
+   $('adminInOutNetQty').textContent=(inQty-outQty).toLocaleString();
+   $('adminInOutInCount').textContent=inCount.toLocaleString()+'건';
+   $('adminInOutOutCount').textContent=outCount.toLocaleString()+'건';
+   $('adminInOutTotalCount').textContent=(inCount+outCount).toLocaleString()+'건';
+   $('adminInOutRangeLabel').textContent=`${from} ~ ${to}`;
+   if(status)status.innerHTML=`<b>${from} ~ ${to}</b> · 입고 ${inCount.toLocaleString()}건 / 출고 ${outCount.toLocaleString()}건`;
+
+   const days=Object.values(daily).sort((a,b)=>b.day.localeCompare(a.day));
+   if(body){
+     body.innerHTML=days.length?days.map(d=>`
+       <tr>
+        <td>${esc(d.day)}</td>
+        <td>${d.inQty.toLocaleString()}</td>
+        <td>${d.inCount.toLocaleString()}건</td>
+        <td>${d.outQty.toLocaleString()}</td>
+        <td>${d.outCount.toLocaleString()}건</td>
+        <td>${(d.inQty-d.outQty).toLocaleString()}</td>
+       </tr>`).join(''):'<tr><td colspan="6">선택한 기간의 입고·출고 기록이 없습니다.</td></tr>';
+   }
+ }catch(e){
+   console.error('관리자 입출고 토탈 집계 실패',e);
+   if(status)status.textContent='⚠️ 입출고 집계 실패: '+(e.message||e);
+   if(body)body.innerHTML='<tr><td colspan="6">집계 기록을 불러오지 못했습니다.</td></tr>';
+ }
+}
+
+function setAdminInOutRangeV36(kind){
+ const today=seoulDateString();
+ let from=today,to=today;
+ if(kind==='week'){
+   const d=new Date();
+   d.setDate(d.getDate()-6);
+   from=seoulDateString(d);
+ }else if(kind==='month'){
+   const [y,m]=today.split('-');
+   from=`${y}-${m}-01`;
+ }
+ const f=$('adminInOutFrom'),t=$('adminInOutTo');
+ if(f)f.value=from;
+ if(t)t.value=to;
+ loadAdminInOutTotalsV36();
+}
+
+function initAdminInOutTotalsV36(){
+ const f=$('adminInOutFrom'),t=$('adminInOutTo');
+ if(f&&!f.value)f.value=seoulDateString();
+ if(t&&!t.value)t.value=seoulDateString();
+ const load=$('adminInOutTotalLoadBtn');
+ if(load&&!load.dataset.wiredV36){
+   load.dataset.wiredV36='1';
+   load.onclick=loadAdminInOutTotalsV36;
+ }
+ document.querySelectorAll('[data-admin-inout-range]').forEach(b=>{
+   if(b.dataset.wiredV36)return;
+   b.dataset.wiredV36='1';
+   b.onclick=()=>setAdminInOutRangeV36(b.dataset.adminInoutRange);
+ });
+ if(isAdmin)setTimeout(loadAdminInOutTotalsV36,150);
+}
 
 function recordRangeUtc(fromStr,toStr){
  if(!fromStr||!toStr)throw new Error('시작일과 종료일을 선택해 주세요.');
@@ -12965,4 +13167,8 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
 })();
 </script>
 
+
+<script id="admin-inout-total-init-v36">
+window.addEventListener('load',()=>setTimeout(()=>{try{initAdminInOutTotalsV36();}catch(e){}},1300));
+</script>
 </body></html>
