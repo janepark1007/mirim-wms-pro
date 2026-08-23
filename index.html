@@ -4494,6 +4494,7 @@ function renderTodayOrderRequests(){
  const rangeLabel=$('orderRangeLabel');
  const activeRows=todayOrderRows
    .filter(r=>!['입고완료','문의완료'].includes(r.status))
+   .filter(r=>isAdmin || !currentWorker || String(r.requester||'')===String(currentWorker.name||''))
    .slice()
    .sort((a,b)=>{
      const ageA=Math.max(0,Math.floor((Date.now()-new Date(a.created_at).getTime())/86400000));
@@ -4504,7 +4505,7 @@ function renderTodayOrderRequests(){
      if(bucketA<2)return ageB-ageA;
      return new Date(b.created_at)-new Date(a.created_at);
    });
- if(rangeLabel)rangeLabel.textContent='(미완료 주문·문의 전체)';
+ if(rangeLabel)rangeLabel.textContent=isAdmin?'(미완료 주문·문의 전체)':'(내 미완료 주문·문의)';
  if(count)count.textContent=`${activeRows.length}건`;
  if(!body)return;
 
