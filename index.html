@@ -1046,6 +1046,20 @@ body.admin-view #adminReferenceHome button[onclick*="openAdminRecentHistory"]{
   display:none!important;
 }
 </style>
+
+<style id="admin-shortcut-exact-remove-v41">
+body.admin-view #adminWelcomeShortcutBox button,
+body.admin-view #adminReferenceHome button{
+}
+body.admin-view #adminWelcomeShortcutBox button:has(span:nth-child(2)),
+body.admin-view #adminReferenceHome button:has(span:nth-child(2)){
+}
+body.admin-view #adminWelcomeShortcutBox button[onclick*="openAdminTaskView('history')"],
+body.admin-view #adminReferenceHome button[onclick*="openAdminTaskView('history')"],
+body.admin-view #adminReferenceHome button[onclick*="openAdminTaskView('match')"]{
+  display:none!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -7618,7 +7632,6 @@ function addAdminManagementShortcuts(){
   ['orders','🛒','주문요청&문의건','통합관리','task-orders'],
   ['match','📦','주문요청-입고','자동대조','task-match'],
   ['later','📌','나중에 확인','확인할 일','task-later'],
-  ['history','📋','최근 입출고 기록','입고·출고 확인','task-history'],
   ['unreg','⚠️','ERP 미등록 자재','미등록 자재 관리','task-unreg']
  ];
  defs.forEach(([type,icon,label,sub,cls])=>{
@@ -7830,7 +7843,7 @@ function ensureAdminWelcomeShortcuts(){
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문-입고 자동대조</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
-      <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('history')"><span class="ico">📋</span><span>최근 입출고 기록</span></button>
+
       <button class="admin-welcome-shortcut-btn" onclick="openAdminTaskView('unreg')"><span class="ico">⚠️</span><span>ERP 미등록 자재</span></button>
     </div>`;
   host.appendChild(box);
@@ -8823,9 +8836,9 @@ function ensureAdminReferenceHome(){
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
         <button class="ar-btn stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span></button>
         <button class="ar-btn order" onclick="openAdminTaskView('orders')"><span class="ico">🛒</span><span>주문·문의 통합관리</span></button>
-        <button class="ar-btn match" onclick="openAdminTaskView('match')"><span class="ico">📦</span><span>주문·입고 자동대조</span></button>
+
         <button class="ar-btn later" onclick="openAdminTaskView('later')"><span class="ico">📌</span><span>나중에 확인</span></button>
-        <button class="ar-btn" onclick="openAdminTaskView('history')"><span class="ico">📋</span><span>최근 입출고 기록</span></button>
+
         <button class="ar-btn unreg" onclick="openAdminTaskView('unreg')"><span class="ico">⚠️</span><span>ERP 미등록 자재</span></button>
       </div>
     </section>
