@@ -4616,11 +4616,7 @@ async function shareOrderRequest(x,i){
 
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
-     <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre>
-
-
-
-</body></html>`);
+     <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
      w.document.close();
    }
    alert('문의내용을 복사했습니다. 사진과 함께 「미림 자재 문의」 카톡방으로 보내주세요.');
@@ -10186,6 +10182,8 @@ window.addEventListener('load',()=>{
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
   display:none!important;
 }
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="outbound"],
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="inbound"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="location"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="photo"],
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="order"],
@@ -12846,17 +12844,28 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
   }
 }
 
-/* 모바일은 지금 만든 작업자 핵심 메뉴 유지 */
+/* 모바일도 PC와 같은 작업 바로가기 사용 */
 @media(max-width:760px){
-  body:not(.admin-view):not(.worker-locked) #mobileWorkerCoreV2{
+  body:not(.admin-view) #mobileWorkerCoreV2{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+  }
+
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
     display:block!important;
     visibility:visible!important;
     opacity:1!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:8px 0 12px!important;
+    box-sizing:border-box!important;
   }
 
-  /* 모바일에서는 기존 PC용 작업 바로가기 숨김 */
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
-    display:none!important;
+  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
   }
 }
 </style>
@@ -12881,13 +12890,15 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
         old.style.setProperty('opacity','1','important');
       }
     }else{
-      if(core && currentWorker){
-        core.style.setProperty('display','block','important');
-        core.style.setProperty('visibility','visible','important');
-        core.style.setProperty('opacity','1','important');
+      if(core){
+        core.style.setProperty('display','none','important');
+        core.style.setProperty('visibility','hidden','important');
+        core.style.setProperty('opacity','0','important');
       }
-      if(old){
-        old.style.setProperty('display','none','important');
+      if(old && currentWorker){
+        old.style.setProperty('display','block','important');
+        old.style.setProperty('visibility','visible','important');
+        old.style.setProperty('opacity','1','important');
       }
     }
   }
@@ -12895,204 +12906,6 @@ body:not(.admin-view) #mobileWorkerCoreV2 button[onclick*='openMode("location")'
   window.addEventListener('load',()=>setTimeout(restorePcWorkerMainV23,700));
   window.addEventListener('resize',()=>setTimeout(restorePcWorkerMainV23,80));
   document.addEventListener('click',()=>setTimeout(restorePcWorkerMainV23,60),true);
-})();
-</script>
-
-
-
-<style id="web-mobile-same-worker-main-v24">
-/* =========================================================
-   웹/모바일 작업자 메인 통일
-   - 두 환경 모두 동일한 #workerMainShortcutCard 사용
-   - 별도 모바일 전용 메인(#mobileWorkerCoreV2)은 숨김
-   - 기능/데이터는 변경하지 않고 메인 표시만 통일
-   ========================================================= */
-body:not(.admin-view) #mobileWorkerCoreV2{
-  display:none!important;
-  visibility:hidden!important;
-}
-body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  width:100%!important;
-  max-width:100%!important;
-  margin:10px 0 14px!important;
-  box-sizing:border-box!important;
-}
-body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
-  display:grid!important;
-  grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:9px!important;
-}
-/* 모바일도 같은 메인/같은 메뉴를 사용하되 화면 폭만 맞춤 */
-@media(max-width:760px){
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
-    display:block!important;
-    margin:8px 0 12px!important;
-    padding:10px!important;
-  }
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-    gap:7px!important;
-  }
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
-    min-width:0!important;
-    min-height:76px!important;
-    padding:9px 5px!important;
-    font-size:12px!important;
-    line-height:1.25!important;
-  }
-}
-@media(max-width:390px){
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
-    gap:5px!important;
-  }
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
-    min-height:72px!important;
-    padding:8px 3px!important;
-    font-size:11px!important;
-  }
-}
-</style>
-
-<script id="web-mobile-same-worker-main-v24-js">
-(function(){
-  function unifyWorkerMainV24(){
-    if(typeof isAdmin!=='undefined' && isAdmin)return;
-    const core=document.getElementById('mobileWorkerCoreV2');
-    const mainCard=document.getElementById('workerMainShortcutCard');
-    if(core){
-      core.style.setProperty('display','none','important');
-      core.style.setProperty('visibility','hidden','important');
-    }
-    if(mainCard && typeof currentWorker!=='undefined' && currentWorker){
-      mainCard.style.setProperty('display','block','important');
-      mainCard.style.setProperty('visibility','visible','important');
-      mainCard.style.setProperty('opacity','1','important');
-    }
-  }
-  window.addEventListener('load',()=>setTimeout(unifyWorkerMainV24,800));
-  window.addEventListener('resize',()=>setTimeout(unifyWorkerMainV24,80));
-  document.addEventListener('click',()=>setTimeout(unifyWorkerMainV24,80),true);
-})();
-</script>
-
-
-<!-- V26: 모바일 작업자 핵심 메뉴 강제 제거 - 이 부분만 적용 -->
-<style id="mobile-worker-core-force-remove-v26">
-@media(max-width:760px){
-  body:not(.admin-view) #mobileWorkerCoreV2{
-    display:none!important;
-    visibility:hidden!important;
-    opacity:0!important;
-    height:0!important;
-    min-height:0!important;
-    max-height:0!important;
-    margin:0!important;
-    padding:0!important;
-    border:0!important;
-    overflow:hidden!important;
-    pointer-events:none!important;
-  }
-}
-</style>
-<script id="mobile-worker-core-force-remove-v26-js">
-(function(){
-  function removeMobileWorkerCoreV26(){
-    if(window.innerWidth>760)return;
-    if(typeof isAdmin!=='undefined' && isAdmin)return;
-    const core=document.getElementById('mobileWorkerCoreV2');
-    if(core) core.remove();
-  }
-  window.addEventListener('load',()=>setTimeout(removeMobileWorkerCoreV26,300));
-  window.addEventListener('resize',()=>setTimeout(removeMobileWorkerCoreV26,50));
-  document.addEventListener('click',()=>setTimeout(removeMobileWorkerCoreV26,50),true);
-  new MutationObserver(()=>{
-    if(window.innerWidth<=760) setTimeout(removeMobileWorkerCoreV26,0);
-  }).observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
-
-<!-- V29: 모바일 작업 바로가기 정상 표시 + 빠른입고/빠른출고 추가 -->
-<style id="mobile-worker-shortcut-v29">
-/* 작업자 모드에서 입고/출고 버튼도 표시 */
-body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="inbound"],
-body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="outbound"]{
-  display:flex!important;
-}
-
-/* 모바일에서도 PC용 작업 바로가기를 그대로 표시 */
-@media(max-width:760px){
-  body:not(.admin-view) #mobileWorkerCoreV2{
-    display:none!important;
-    visibility:hidden!important;
-  }
-
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard{
-    display:block!important;
-    visibility:visible!important;
-    opacity:1!important;
-    height:auto!important;
-    min-height:0!important;
-    max-height:none!important;
-    overflow:visible!important;
-    width:100%!important;
-    margin:8px 0 12px!important;
-    padding:10px 8px!important;
-  }
-
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-grid{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:8px!important;
-  }
-
-  body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
-    min-width:0!important;
-    min-height:92px!important;
-    padding:9px 6px!important;
-  }
-}
-</style>
-
-<script id="mobile-worker-shortcut-v29-js">
-(function(){
-  function applyWorkerShortcutV29(){
-    if(typeof isAdmin!=='undefined' && isAdmin)return;
-    if(typeof currentWorker==='undefined' || !currentWorker)return;
-
-    let card=document.getElementById('workerMainShortcutCard');
-    if(!card && typeof ensureWorkerMainShortcutCardV43==='function'){
-      try{ card=ensureWorkerMainShortcutCardV43(); }catch(e){}
-    }
-    if(!card)return;
-
-    const home=document.getElementById('home');
-    const welcome=home?.querySelector('.welcome-row');
-    if(home && welcome && card.previousElementSibling!==welcome){
-      welcome.insertAdjacentElement('afterend',card);
-    }
-
-    card.style.setProperty('display','block','important');
-    card.style.setProperty('visibility','visible','important');
-    card.style.setProperty('opacity','1','important');
-    card.style.setProperty('height','auto','important');
-    card.style.setProperty('max-height','none','important');
-    card.style.setProperty('overflow','visible','important');
-
-    card.querySelectorAll('[data-worker-main="inbound"],[data-worker-main="outbound"]').forEach(btn=>{
-      btn.style.setProperty('display','flex','important');
-    });
-
-    if(typeof wireWorkerMainShortcutV43==='function'){
-      try{wireWorkerMainShortcutV43();}catch(e){}
-    }
-  }
-
-  window.addEventListener('load',()=>setTimeout(applyWorkerShortcutV29,1200));
-  window.addEventListener('resize',()=>setTimeout(applyWorkerShortcutV29,100));
-  document.addEventListener('click',()=>setTimeout(applyWorkerShortcutV29,120),true);
 })();
 </script>
 
