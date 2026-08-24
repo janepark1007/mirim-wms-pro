@@ -1274,6 +1274,33 @@ body.park-location-worker-v63 .erp-only{
   display:inline-flex!important;
 }
 </style>
+
+<style id="park-erp-visible-v64">
+.park-erp-qty-v64{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:10px 0;
+  padding:11px 13px;
+  border:2px solid #1b7f4c;
+  border-radius:12px;
+  background:#edf8f2;
+}
+.park-erp-qty-v64 small{
+  font-size:14px;
+  font-weight:900;
+  color:#315f48;
+}
+.park-erp-qty-v64 b{
+  font-size:23px;
+  color:#087a43;
+}
+@media(max-width:720px){
+  .park-erp-qty-v64{margin:8px 0;padding:9px 11px}
+  .park-erp-qty-v64 b{font-size:21px}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -5163,6 +5190,11 @@ function search(){
           <div class="result-part">${esc(x.part)}</div>
           <div class="result-name">${esc(x.name)}</div>
           ${isAdmin?`<div class="worker-admin-detail" style="color:var(--muted);margin-top:6px">${esc(x.spec||'')}</div>`:''}
+
+          ${parkLocationWorker?`<div class="park-erp-qty-v64">
+            <small>ERP 수량</small>
+            <b>${Number(x.erpQty||0).toLocaleString()}개</b>
+          </div>`:''}
 
           <div class="result-location">
             <small>📍 자재 위치 ${getAllLocations(x.part).length>1?`· 총 ${getAllLocations(x.part).length}곳`:''}</small>
