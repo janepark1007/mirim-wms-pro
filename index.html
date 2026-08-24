@@ -1261,6 +1261,19 @@ body.park-location-worker-v62:not(.admin-view) #results .photo-delete-btn{
   display:none!important;
 }
 </style>
+
+<style id="park-erp-only-v63">
+/* ERP 수량은 박향숙 전용 */
+.erp-qty-badge,.erp-stock,.erp-stock-cell,.erp-only{
+  display:none!important;
+}
+body.park-location-worker-v63 .erp-qty-badge,
+body.park-location-worker-v63 .erp-stock,
+body.park-location-worker-v63 .erp-stock-cell,
+body.park-location-worker-v63 .erp-only{
+  display:inline-flex!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -14282,6 +14295,17 @@ body.admin-view.admin-reference-home #vipCard{
   window.addEventListener('load',()=>setTimeout(syncParkLocationAccessV62,600));
   document.addEventListener('click',()=>setTimeout(syncParkLocationAccessV62,50),true);
   window.syncParkLocationAccessV62=syncParkLocationAccessV62;
+})();
+</script>
+
+<script id="park-erp-only-v63-js">
+(function(){
+  function syncParkERP(){
+    const ok=!isAdmin && String(currentWorker?.name||'').trim()==='박향숙';
+    document.body.classList.toggle('park-location-worker-v63',ok);
+  }
+  window.addEventListener('load',()=>setTimeout(syncParkERP,500));
+  document.addEventListener('click',()=>setTimeout(syncParkERP,50),true);
 })();
 </script>
 </body></html>
