@@ -8115,6 +8115,7 @@ function ensureAdminWelcomeShortcuts(){
     <div class="admin-welcome-shortcut-grid">
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>위치 정리</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openLocationRegistrationV59()"><span class="ico">📍</span><span>위치 등록</span><small>미등록 품목 위치 입력</small></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
@@ -9113,6 +9114,7 @@ function ensureAdminReferenceHome(){
       <div class="ar-grid">
         <button class="ar-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
         <button class="ar-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
+<button class="ar-btn ar-location-register-v59" onclick="openLocationRegistrationV59()"><span class="ico">📍</span><span>위치 등록</span><small>위치 미등록 품목 등록</small></button>
         <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
@@ -14118,4 +14120,44 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
  document.addEventListener('click',()=>{if(isAdmin)setTimeout(poll,250)},true);
 })();
 </script>
+
+<script id="location-registration-restored-v59">
+async function openLocationRegistrationV59(){
+  if(!isAdmin)return alert('위치 등록은 관리자만 가능합니다.');
+
+  await openAdminShortcutListV41('location');
+
+  const title=document.getElementById('adminShortcutFocusTitle');
+  if(title)title.textContent='📍 위치 등록';
+
+  const status=document.getElementById('locationOrganizerStatus');
+  if(status)status.value='UNREGISTERED';
+
+  const keyword=document.getElementById('locationOrganizerKeyword');
+  if(keyword)keyword.value='';
+
+  try{
+    await loadLocationOrganizer();
+    if(typeof renderLocationOrganizer==='function')renderLocationOrganizer();
+  }catch(e){
+    console.error('위치 등록 목록 불러오기 오류',e);
+    alert('위치 등록 목록을 불러오지 못했습니다: '+(e.message||e));
+  }
+
+  const card=document.getElementById('locationOrganizerCard');
+  if(card){
+    card.classList.remove('hidden');
+    card.style.setProperty('display','block','important');
+    card.style.setProperty('visibility','visible','important');
+    setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  }
+}
+</script>
+
+<style id="location-registration-v59-style">
+body.admin-view.admin-shortcut-focus #locationOrganizerCard{
+  display:block!important;
+  visibility:visible!important;
+}
+</style>
 </body></html>
