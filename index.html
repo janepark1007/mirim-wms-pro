@@ -1223,19 +1223,33 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
   }
 }
 </style>
+
+<style id="vip-hard-remove-v61">
+/* VIP 전용 화면/로그인/버튼 완전 비표시 — 관리자 BOM은 대상 아님 */
+#vipCard,#vipPanel,#vipSection,#vipLogin,#vipLoginModal,
+.vip-only,.vip-mode,.vip-view,
+button[onclick*="openVip"],button[onclick*="showVip"],button[onclick*="vipLogin"],button[onclick*="enterVip"],
+a[onclick*="openVip"],a[onclick*="showVip"],a[onclick*="vipLogin"],a[onclick*="enterVip"]{
+ display:none!important;
+ visibility:hidden!important;
+ width:0!important;height:0!important;
+ margin:0!important;padding:0!important;
+ overflow:hidden!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
   <div class="order-modal-card vip-modal-card" role="dialog" aria-modal="true">
     <div class="order-modal-head">
       <div><div class="vip-login-title">👑 VIP 로그인</div><div>BOM 관리 전용 화면입니다.</div></div>
-      <button type="button" class="order-modal-close" onclick="closeVipLogin()">✕</button>
+      
     </div>
     <label class="order-note-label">VIP PIN
       <input id="vipPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="VIP PIN 입력">
     </label>
     <div id="vipLoginError" class="vip-login-error hidden"></div>
-    <button type="button" class="primary" style="width:100%;min-height:50px;margin-top:12px" onclick="submitVipLogin()">VIP BOM 관리 열기</button>
+    
   </div>
 </div>
 <div id="standaloneOrderModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -1302,7 +1316,7 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
       <small>생산 자재관리 · v14.18.2</small>
     </div>
   </div>
-  <div class="top-actions"><button id="vipLoginBtn" class="admin-btn vip-btn" type="button" onclick="openVipLogin()">👑 VIP BOM</button><button id="topExcelExportBtn" class="admin-btn worker-admin-detail" type="button" onclick="goExcelExport()">📊 엑셀출력</button>
+  <div class="top-actions"><button id="topExcelExportBtn" class="admin-btn worker-admin-detail" type="button" onclick="goExcelExport()">📊 엑셀출력</button>
     <div class="worker-auth">
       <span id="workerBadge" class="worker-badge">작업자 미로그인</span>
       <button id="workerLoginBtn" class="admin-btn">작업자 로그인</button>
