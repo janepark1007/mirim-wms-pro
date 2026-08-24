@@ -14115,7 +14115,7 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
 
  window.addEventListener('load',()=>{
    setTimeout(poll,800);
-   setInterval(poll,5000);
+   setInterval(poll,15000);
  });
  document.addEventListener('click',()=>{if(isAdmin)setTimeout(poll,250)},true);
 })();
@@ -14160,4 +14160,63 @@ body.admin-view.admin-shortcut-focus #locationOrganizerCard{
   visibility:visible!important;
 }
 </style>
+<style id="admin-speed-v60-style">
+/* 관리자 메인에서는 상세 기능 DOM의 레이아웃/페인트 비용 최소화 */
+body.admin-view.admin-reference-home #locationOrganizerCard,
+body.admin-view.admin-reference-home #otherMaterialStorageCard,
+body.admin-view.admin-reference-home #adminShortcutFocusPanel,
+body.admin-view.admin-reference-home #adminTaskFocusPanel,
+body.admin-view.admin-reference-home #bomCard,
+body.admin-view.admin-reference-home #vipCard{
+  display:none!important;
+}
+</style>
+
+<script id="admin-speed-v60">
+(function(){
+  let adminHomeLoadedV60=false;
+  let lastAdminRefreshV60=0;
+
+  /* 관리자 메인은 한 번만 기본 구성.
+     상세 데이터는 기존 버튼을 눌렀을 때 기존 함수가 불러오도록 유지 */
+  function optimizeAdminHomeV60(){
+    if(!isAdmin)return;
+    if(!document.body.classList.contains('admin-reference-home'))return;
+
+    const now=Date.now();
+    if(adminHomeLoadedV60 && now-lastAdminRefreshV60<30000)return;
+    adminHomeLoadedV60=true;
+    lastAdminRefreshV60=now;
+
+    /* 메인에 필요 없는 상세영역은 렌더링 대상에서 제외 */
+    ['locationOrganizerCard','otherMaterialStorageCard','adminShortcutFocusPanel','adminTaskFocusPanel']
+      .forEach(id=>{
+        const el=document.getElementById(id);
+        if(el && !el.contains(document.activeElement)){
+          el.style.contentVisibility='auto';
+          el.style.containIntrinsicSize='1px 500px';
+        }
+      });
+  }
+
+  /* 백그라운드에서는 화면 렌더링/새로고침을 최소화 */
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible' && isAdmin){
+      setTimeout(optimizeAdminHomeV60,100);
+      try{loadAdminNotifications();}catch(e){}
+    }
+  });
+
+  window.addEventListener('load',()=>setTimeout(optimizeAdminHomeV60,900));
+
+  /* 관리자 홈으로 돌아올 때도 과도한 반복 초기화 방지 */
+  document.addEventListener('click',e=>{
+    if(!isAdmin)return;
+    const btn=e.target.closest('button');
+    if(!btn)return;
+    setTimeout(optimizeAdminHomeV60,120);
+  },true);
+})();
+</script>
+
 </body></html>
