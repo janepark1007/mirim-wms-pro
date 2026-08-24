@@ -1237,6 +1237,30 @@ a[onclick*="openVip"],a[onclick*="showVip"],a[onclick*="vipLogin"],a[onclick*="e
  overflow:hidden!important;
 }
 </style>
+
+<style id="park-worker-location-access-v62">
+/* 박향숙 작업자 로그인 시 위치확인 결과의 위치 편집/저장만 허용 */
+body.park-location-worker-v62:not(.admin-view) #results .loc-editor,
+body.park-location-worker-v62:not(.admin-view) #results .location-edit-actions,
+body.park-location-worker-v62:not(.admin-view) #results .multi-loc-actions,
+body.park-location-worker-v62:not(.admin-view) #results button[onclick*="saveLocation"],
+body.park-location-worker-v62:not(.admin-view) #results button[onclick*="editLocation"],
+body.park-location-worker-v62:not(.admin-view) #results button[onclick*="saveMultiLocation"]{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body.park-location-worker-v62:not(.admin-view) #results .loc-buttons{
+  display:grid!important;
+}
+/* 삭제/사진수정 등 다른 관리자 기능은 작업자에게 계속 숨김 */
+body.park-location-worker-v62:not(.admin-view) #results button[onclick*="deleteLocation"],
+body.park-location-worker-v62:not(.admin-view) #results .photo-actions,
+body.park-location-worker-v62:not(.admin-view) #results .photo-change-btn,
+body.park-location-worker-v62:not(.admin-view) #results .photo-delete-btn{
+  display:none!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -2778,7 +2802,21 @@ function editMultiLocation(part,e,i){
 }
 
 async function saveLocation(part,i){
- if(!isAdmin){alert('위치 등록/수정은 관리자만 가능합니다.');return;}
+ const parkLocationWorker=(!isAdmin && String(currentWorker?.name||'').trim()==='박향숙');
+ if(!isAdmin && !parkLocationWorker){
+   alert('위치 등록/수정은 관리자 또는 승인된 작업자만 가능합니다.');
+   return;
+ }
+ if(parkLocationWorker){
+   const cfg=window.MIRIM_CONFIG||window.MIRIM_SUPABASE||{};
+   const correct=String(cfg.adminPin||'2589');
+   const pin=prompt('🔐 위치 저장 관리자 승인\n\n박향숙 작업자 위치 저장은 관리자 PIN이 필요합니다.\n관리자 PIN을 입력하세요.');
+   if(pin===null)return;
+   if(String(pin)!==correct){
+     alert('관리자 PIN이 맞지 않습니다. 위치는 저장되지 않았습니다.');
+     return;
+   }
+ }
  const customDetail=($('ld_custom_'+i)?.value||'').trim();
  const e={
   room:$('lr_'+i)?.value||'',zone:$('lz_'+i)?.value||'',level:$('ll_'+i)?.value||'',
@@ -5073,7 +5111,8 @@ function search(){
           <button type="button" onclick="choosePhoto('${esc(x.part)}')">📷 사진 등록</button>
         </div>`;
 
-   const locEdit=isAdmin?locationEditor(x,i):'';
+   const parkLocationWorker=(!isAdmin && String(currentWorker?.name||'').trim()==='박향숙');
+   const locEdit=(isAdmin||parkLocationWorker)?locationEditor(x,i):'';
    const inbound=mode==='inbound'
      ? `<div class="outgrid">
           <input id="in_worker_${i}" value="${esc(currentWorker?.name||(isAdmin?'관리자':''))}" readonly placeholder="등록자">
@@ -14233,4 +14272,16 @@ body.admin-view.admin-reference-home #vipCard{
 })();
 </script>
 
+
+<script id="park-worker-location-access-v62-js">
+(function(){
+  function syncParkLocationAccessV62(){
+    const allowed=!isAdmin && String(currentWorker?.name||'').trim()==='박향숙';
+    document.body.classList.toggle('park-location-worker-v62',allowed);
+  }
+  window.addEventListener('load',()=>setTimeout(syncParkLocationAccessV62,600));
+  document.addEventListener('click',()=>setTimeout(syncParkLocationAccessV62,50),true);
+  window.syncParkLocationAccessV62=syncParkLocationAccessV62;
+})();
+</script>
 </body></html>
