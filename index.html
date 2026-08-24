@@ -9211,7 +9211,8 @@ function ensureAdminReferenceHome(){
       <div class="ar-title">📌 관리자 바로가기</div>
       <div class="ar-grid">
         <button class="ar-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
-        <button class="ar-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
+        <button class="ar-btn ar-location-check-v66" onclick="openAdminLocationCheckV66()"><span class="ico">🔎</span><span>위치 확인</span><small>검색 후 바로 위치 수정·등록</small></button>
+<button class="ar-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
 <button class="ar-btn ar-location-register-v59" onclick="openLocationRegistrationV59()"><span class="ico">📍</span><span>위치 등록</span><small>위치 미등록 품목 등록</small></button>
         <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
@@ -14340,4 +14341,43 @@ body.admin-view.admin-reference-home #vipCard{
   document.addEventListener('click',()=>setTimeout(syncParkERP,50),true);
 })();
 </script>
+
+<script id="admin-location-check-v66">
+function openAdminLocationCheckV66(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+  /* 관리자 메인의 상세화면 숨김 상태 해제 */
+  document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus','other-storage-open-v50');
+
+  /* 기존 메인 검색 화면을 위치확인 모드로 사용 */
+  try{ setMode('search'); }catch(e){}
+
+  const q=document.getElementById('q');
+  const results=document.getElementById('results');
+  const count=document.getElementById('count');
+
+  if(q){
+    q.value='';
+    q.placeholder='품번 또는 품명을 입력하세요';
+  }
+  if(results)results.innerHTML='';
+  if(count)count.textContent='품번 또는 품명을 검색하면 위치 확인과 위치 수정·등록을 바로 할 수 있습니다.';
+
+  /* 검색 영역으로 바로 이동 */
+  const searchBox=q?.closest('.search-box') || q?.parentElement || q;
+  setTimeout(()=>{
+    try{(searchBox||q)?.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}
+    try{q?.focus();}catch(e){}
+  },80);
+}
+</script>
+
+<style id="admin-location-check-v66-style">
+/* 관리자 위치확인 검색결과의 위치편집기는 항상 표시 */
+body.admin-view #results .loc-editor{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+</style>
 </body></html>
