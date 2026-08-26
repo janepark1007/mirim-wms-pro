@@ -14337,4 +14337,110 @@ body:not(.admin-view):not(.worker-locked) #results .multi-loc-actions button{
 })();
 </script>
 
+
+<style id="worker-unregistered-open-v2">
+/* 작업자 ERP 미등록 입력창 표시 */
+body:not(.admin-view):not(.worker-locked) #unregisteredItemCard.worker-unreg-open{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+</style>
+
+<script id="worker-unregistered-open-v2-js">
+(function(){
+  function openWorkerUnregisteredV2(){
+    if(isAdmin)return;
+    if(!currentWorker){
+      try{showWorkerLogin();}catch(e){}
+      alert('작업자 로그인 후 사용할 수 있습니다.');
+      return;
+    }
+
+    const card=document.getElementById('unregisteredItemCard');
+    if(!card){
+      alert('ERP 미등록 입력창을 찾지 못했습니다.');
+      return;
+    }
+
+    /* 다른 작업화면은 닫고 ERP 미등록 입력창만 표시 */
+    try{document.getElementById('work')?.classList.add('hidden');}catch(e){}
+    try{document.getElementById('photoSearchPanel')?.classList.add('hidden');}catch(e){}
+    try{document.getElementById('home')?.classList.remove('hidden');}catch(e){}
+
+    card.classList.remove('hidden','hidden-admin');
+    card.classList.add('worker-unreg-open');
+
+    card.style.setProperty('display','block','important');
+    card.style.setProperty('visibility','visible','important');
+    card.style.setProperty('opacity','1','important');
+    card.style.setProperty('pointer-events','auto','important');
+
+    /* 작업자명 자동 입력 */
+    try{
+      const workerInput=document.getElementById('unregWorker');
+      if(workerInput){
+        workerInput.value=currentWorker?.name||'';
+        workerInput.readOnly=true;
+      }
+      if(typeof fillUnregisteredWorker==='function')fillUnregisteredWorker();
+    }catch(e){}
+
+    setTimeout(()=>{
+      try{card.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}
+      try{document.getElementById('unregPart')?.focus();}catch(e){}
+    },80);
+  }
+
+  window.openWorkerUnregisteredV2=openWorkerUnregisteredV2;
+
+  function rewireWorkerUnregisteredV2(){
+    if(isAdmin || !currentWorker)return;
+
+    const mainCard=document.getElementById('workerMainShortcutCard');
+    if(mainCard){
+      mainCard.querySelectorAll('[data-worker-main="unregistered"]').forEach(btn=>{
+        btn.onclick=(e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          openWorkerUnregisteredV2();
+        };
+      });
+    }
+
+    /* 텍스트 기준 버튼도 보완 */
+    document.querySelectorAll('button').forEach(btn=>{
+      const txt=(btn.innerText||'').replace(/\s+/g,' ').trim();
+      if(txt.includes('ERP 미등록') && !btn.closest('#unregisteredItemCard') && !isAdmin){
+        if(btn.closest('#workerMainShortcutCard') || btn.dataset.workerMain==='unregistered'){
+          btn.onclick=(e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            openWorkerUnregisteredV2();
+          };
+        }
+      }
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(rewireWorkerUnregisteredV2,1600));
+
+  document.addEventListener('click',()=>{
+    if(!isAdmin && currentWorker){
+      setTimeout(rewireWorkerUnregisteredV2,60);
+    }
+  },true);
+
+  const obs=new MutationObserver(()=>{
+    if(isAdmin || !currentWorker)return;
+    clearTimeout(window.__workerUnregV2);
+    window.__workerUnregV2=setTimeout(rewireWorkerUnregisteredV2,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
