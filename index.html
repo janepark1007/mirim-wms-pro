@@ -17974,4 +17974,90 @@ body.admin-view.admin-location-center-v76 #work #count{
 }
 </style>
 
+
+<script id="worker-search-term-log-v78">
+(function(){
+  let lastSearchV78={q:'',at:0};
+
+  async function logWorkerSearchV78(q){
+    q=String(q||'').trim();
+    if(!q || isAdmin || !currentWorker?.name || !sharedReady || !sharedDb)return;
+
+    /* 같은 검색어 연속 입력 시 알림 폭주 방지 */
+    if(lastSearchV78.q===q && Date.now()-lastSearchV78.at<5000)return;
+    lastSearchV78={q,at:Date.now()};
+
+    try{
+      await sharedDb.from('wms_admin_notifications').insert({
+        type:'worker_search',
+        title:'🔎 작업자 검색',
+        message:`${currentWorker.name} · 검색어: ${q}`,
+        payload:{
+          worker_name:currentWorker.name,
+          action:'search',
+          search_query:q,
+          query:q,
+          source:'location_search'
+        },
+        created_at:new Date().toISOString()
+      });
+    }catch(e){
+      console.warn('작업자 검색어 기록 실패',e);
+    }
+  }
+
+  function wireSearchV78(){
+    const q=document.getElementById('q');
+    if(!q || q.dataset.searchLogV78==='1')return;
+    q.dataset.searchLogV78='1';
+
+    /* 엔터 검색 */
+    q.addEventListener('keydown',e=>{
+      if(e.key==='Enter')setTimeout(()=>logWorkerSearchV78(q.value),20);
+    });
+
+    /* 검색어 입력 후 실제 검색 결과가 갱신될 때 대비 */
+    q.addEventListener('change',()=>logWorkerSearchV78(q.value));
+  }
+
+  /* 검색 버튼 클릭 시 검색어 기록 */
+  document.addEventListener('click',e=>{
+    if(isAdmin)return;
+    const btn=e.target.closest('button');
+    if(!btn)return;
+    const t=(btn.innerText||'').replace(/\s+/g,' ').trim();
+    if(/검색|위치확인|위치 확인/.test(t)){
+      const q=document.getElementById('q');
+      if(q?.value?.trim())setTimeout(()=>logWorkerSearchV78(q.value),30);
+    }
+  },true);
+
+  /* 작업자 이력 창에 검색어가 눈에 잘 보이도록 내용 보강 */
+  const oldLoadV78=window.loadWorkerActivityV73;
+  if(typeof oldLoadV78==='function'){
+    window.loadWorkerActivityV73=async function(){
+      const r=await oldLoadV78.apply(this,arguments);
+      const body=document.getElementById('workerActivityBodyV73');
+      if(body){
+        body.querySelectorAll('tr').forEach(tr=>{
+          const cells=tr.querySelectorAll('td');
+          if(cells.length<3)return;
+          const txt=cells[2].textContent||'';
+          if(txt.includes('검색어:'))cells[1].innerHTML='<b>🔎 품목검색</b>';
+        });
+      }
+      return r;
+    };
+    try{loadWorkerActivityV73=window.loadWorkerActivityV73;}catch(e){}
+  }
+
+  window.addEventListener('load',()=>setTimeout(wireSearchV78,800));
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__wireSearchV78);
+    window.__wireSearchV78=setTimeout(wireSearchV78,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
