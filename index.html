@@ -16422,48 +16422,12 @@ body:not(.admin-view):not(.worker-locked) #results .loc-editor{
 </script>
 
 
-<style id="remove-excel-dedicated-shortcut-v12">
-/* 작업자 메인의 엑셀리스트 전용주문하기 버튼 강제 삭제 */
+<style id="remove-excel-dedicated-shortcut-clean-v13">
+/* 작업자 메인에서 엑셀리스트 전용주문 버튼만 안전하게 숨김 */
 body:not(.admin-view) #workerMainShortcutCard .excel-direct-order-v7,
 body:not(.admin-view) #workerMainShortcutCard button[onclick*="openExcelDirectOrderV7"],
 body:not(.admin-view) #workerMainShortcutCard button[onclick*="openExcelDirectOrderV8"]{
   display:none!important;
 }
 </style>
-
-<script id="remove-excel-dedicated-shortcut-v12-js">
-(function(){
-  function removeExcelDedicatedShortcutV12(){
-    if(isAdmin)return;
-
-    const card=document.getElementById('workerMainShortcutCard');
-    if(!card)return;
-
-    card.querySelectorAll(
-      '.excel-direct-order-v7,' +
-      'button[onclick*="openExcelDirectOrderV7"],' +
-      'button[onclick*="openExcelDirectOrderV8"]'
-    ).forEach(btn=>btn.remove());
-
-    /* 텍스트 기준으로 남아 있는 전용 버튼까지 제거 */
-    [...card.querySelectorAll('button')].forEach(btn=>{
-      const txt=(btn.innerText||'').replace(/\s+/g,' ').trim();
-      if(txt.includes('엑셀리스트 전용주문') || txt.includes('엑셀전용주문하기')){
-        btn.remove();
-      }
-    });
-  }
-
-  window.addEventListener('load',()=>setTimeout(removeExcelDedicatedShortcutV12,900));
-
-  const obs=new MutationObserver(()=>{
-    if(isAdmin)return;
-    clearTimeout(window.__removeExcelDedicatedV12);
-    window.__removeExcelDedicatedV12=setTimeout(removeExcelDedicatedShortcutV12,60);
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
-
 </body></html>
-<style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
