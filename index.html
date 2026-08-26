@@ -1294,21 +1294,16 @@ body.admin-view *:has(> :only-child) { }
   <input id="simpleOrderCategoryV2" type="hidden"/>
 
   <div id="simpleOrderFieldsV2" class="simple-order-fields-v2 hidden">
-    <label>품명 <b class="req">(필수)</b>
-      <input id="simpleOrderNameV2" autocomplete="off" placeholder="품명을 입력하세요"/>
-    </label>
+    <div class="multi-order-required-guide-v4">
+      ⚠️ 하단 <b>품명 · 사이즈 · 주문수량</b>을 꼭 넣어주세요.
+    </div>
 
-    <label>사이즈 <b class="req">(필수)</b>
-      <input id="simpleOrderSizeV2" autocomplete="off" placeholder="사이즈 또는 규격을 입력하세요"/>
-    </label>
+    <div class="multi-order-head-v4">
+      <b>주문 입력</b>
+      <button type="button" onclick="addSimpleOrderRowV4()">＋ 주문 추가</button>
+    </div>
 
-    <label>주문수량 <b class="req">(필수)</b>
-      <input id="simpleOrderQtyV2" type="number" min="1" inputmode="numeric" placeholder="주문수량을 입력하세요"/>
-    </label>
-
-    <label>비고
-      <textarea id="simpleOrderNoteV2" rows="3" placeholder="사용처, 긴급 여부 등 필요한 내용을 입력하세요"></textarea>
-    </label>
+    <div id="simpleOrderRowsV4" class="simple-order-rows-v4"></div>
   </div>
 </section>
 
@@ -14779,6 +14774,390 @@ body:not(.admin-view):not(.worker-locked) #unregisteredItemCard.worker-unreg-ope
               document.querySelector('#excelOrderPanel input');
       try{q?.focus();}catch(e){}
     },50);
+  };
+})();
+</script>
+
+
+<style id="simple-multi-order-v4-style">
+.simple-order-fields-v2{
+  display:block!important;
+}
+.simple-order-fields-v2.hidden{
+  display:none!important;
+}
+
+.multi-order-required-guide-v4{
+  margin:0 0 10px;
+  padding:11px 13px;
+  border:1px solid #efcf67;
+  border-radius:10px;
+  background:#fff7d8;
+  color:#735800;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.45;
+}
+
+.multi-order-head-v4{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 8px;
+}
+
+.multi-order-head-v4>b{
+  font-size:17px;
+  color:#214b35;
+}
+
+.multi-order-head-v4 button{
+  min-height:42px;
+  padding:0 14px;
+  border:0;
+  border-radius:10px;
+  background:#087a43;
+  color:#fff;
+  font-weight:1000;
+}
+
+.simple-order-rows-v4{
+  display:grid;
+  gap:10px;
+}
+
+.simple-order-row-v4{
+  position:relative;
+  display:grid;
+  grid-template-columns:54px minmax(150px,1.2fr) minmax(120px,1fr) 110px minmax(180px,1.4fr) auto;
+  gap:7px;
+  align-items:end;
+  padding:10px;
+  border:1px solid #d8e3dc;
+  border-radius:12px;
+  background:#fbfdfc;
+}
+
+.simple-order-row-no-v4{
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:#e8f5ed;
+  color:#075f35;
+  font-size:18px;
+  font-weight:1000;
+}
+
+.simple-order-row-v4 label{
+  display:block;
+  margin:0;
+  font-size:12px;
+  font-weight:900;
+  color:#4d5b53;
+}
+
+.simple-order-row-v4 input,
+.simple-order-row-v4 textarea{
+  display:block;
+  width:100%;
+  min-height:46px;
+  margin-top:5px;
+  padding:9px 10px;
+  border:1px solid #cfd8d2;
+  border-radius:9px;
+  background:#fff;
+  font:inherit;
+  box-sizing:border-box;
+}
+
+.simple-order-row-v4 textarea{
+  min-height:46px;
+  height:46px;
+  resize:vertical;
+}
+
+.simple-order-row-v4 .remove-order-row-v4{
+  min-height:42px;
+  padding:0 10px;
+  border:0;
+  border-radius:9px;
+  background:#fff0ee;
+  color:#ae251e;
+  font-weight:1000;
+}
+
+@media(max-width:760px){
+  .simple-order-row-v4{
+    grid-template-columns:42px 1fr 1fr;
+  }
+  .simple-order-row-v4 .order-row-note-v4{
+    grid-column:2/4;
+  }
+  .simple-order-row-v4 .remove-order-row-v4{
+    grid-column:2/4;
+    width:100%;
+  }
+}
+
+@media(max-width:480px){
+  .simple-order-row-v4{
+    grid-template-columns:38px 1fr;
+  }
+  .simple-order-row-v4 label,
+  .simple-order-row-v4 .order-row-note-v4,
+  .simple-order-row-v4 .remove-order-row-v4{
+    grid-column:2;
+  }
+}
+</style>
+
+<script id="simple-multi-order-v4-js">
+(function(){
+  function escAttrV4(v){
+    return String(v??'')
+      .replace(/&/g,'&amp;')
+      .replace(/"/g,'&quot;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  window.addSimpleOrderRowV4=function(prefill={}){
+    const box=document.getElementById('simpleOrderRowsV4');
+    if(!box)return;
+
+    const row=document.createElement('div');
+    row.className='simple-order-row-v4';
+
+    row.innerHTML=`
+      <div class="simple-order-row-no-v4"></div>
+
+      <label>품명 <b class="req">*</b>
+        <input class="order-row-name-v4" autocomplete="off"
+          value="${escAttrV4(prefill.name||'')}" placeholder="품명">
+      </label>
+
+      <label>사이즈 <b class="req">*</b>
+        <input class="order-row-size-v4" autocomplete="off"
+          value="${escAttrV4(prefill.size||'')}" placeholder="사이즈">
+      </label>
+
+      <label>주문수량 <b class="req">*</b>
+        <input class="order-row-qty-v4" type="number" min="1" inputmode="numeric"
+          value="${prefill.qty||''}" placeholder="수량">
+      </label>
+
+      <label class="order-row-note-v4">주문란
+        <textarea class="order-row-note-input-v4" rows="1"
+          placeholder="주문내용 입력">${String(prefill.note||'')}</textarea>
+      </label>
+
+      <button type="button" class="remove-order-row-v4"
+        onclick="removeSimpleOrderRowV4(this)">삭제</button>
+    `;
+
+    box.appendChild(row);
+    renumberSimpleOrderRowsV4();
+  };
+
+  window.removeSimpleOrderRowV4=function(btn){
+    const box=document.getElementById('simpleOrderRowsV4');
+    if(!box)return;
+
+    const rows=box.querySelectorAll('.simple-order-row-v4');
+    if(rows.length<=1){
+      rows[0]?.querySelectorAll('input,textarea').forEach(el=>el.value='');
+      return;
+    }
+
+    btn.closest('.simple-order-row-v4')?.remove();
+    renumberSimpleOrderRowsV4();
+  };
+
+  window.renumberSimpleOrderRowsV4=function(){
+    document.querySelectorAll('#simpleOrderRowsV4 .simple-order-row-v4')
+      .forEach((row,i)=>{
+        const no=row.querySelector('.simple-order-row-no-v4');
+        if(no)no.textContent=(i+1)+'.';
+      });
+  };
+
+  function resetSimpleOrderRowsV4(){
+    const box=document.getElementById('simpleOrderRowsV4');
+    if(!box)return;
+    box.innerHTML='';
+    addSimpleOrderRowV4();
+  }
+
+  /* 카테고리 선택 시 첫 주문줄 생성 */
+  const oldSelect=window.selectSimpleKakaoCategoryV2;
+  window.selectSimpleKakaoCategoryV2=function(category,btn){
+    if(typeof oldSelect==='function')oldSelect(category,btn);
+
+    const box=document.getElementById('simpleOrderRowsV4');
+    if(box && !box.children.length)resetSimpleOrderRowsV4();
+
+    document.getElementById('standaloneOrderSendBtn')?.classList.remove('hidden');
+    setTimeout(()=>box?.querySelector('.order-row-name-v4')?.focus(),50);
+  };
+
+  /* 주문창 새로 열 때 수동 주문줄 초기화 */
+  const oldOpen=window.openStandaloneOrder;
+  window.openStandaloneOrder=function(){
+    if(typeof oldOpen==='function')oldOpen.apply(this,arguments);
+
+    setTimeout(()=>{
+      const box=document.getElementById('simpleOrderRowsV4');
+      if(box)box.innerHTML='';
+    },0);
+  };
+
+  /* 기존 단일 수동주문 submit을 다중 주문 방식으로 교체 */
+  window.submitStandaloneOrder=async function(){
+    const category=(document.getElementById('simpleOrderCategoryV2')?.value||'').trim();
+
+    /* 엑셀주문이면 기존 엑셀 주문 로직을 그대로 사용 */
+    const excelPanel=document.getElementById('excelOrderPanel');
+    const excelOpen=excelPanel?.classList.contains('excel-core-open-v3');
+    if(excelOpen){
+      try{
+        if(typeof submitExcelStandaloneOrderV3==='function'){
+          return await submitExcelStandaloneOrderV3();
+        }
+      }catch(e){
+        console.error(e);
+      }
+
+      alert('엑셀주문은 기존 엑셀 주문 입력 후 전송해 주세요.');
+      return;
+    }
+
+    if(!category){
+      alert('주문 종류를 선택해 주세요.');
+      return;
+    }
+
+    const rows=[...document.querySelectorAll('#simpleOrderRowsV4 .simple-order-row-v4')];
+
+    if(!rows.length){
+      alert('주문 내용을 입력해 주세요.');
+      addSimpleOrderRowV4();
+      return;
+    }
+
+    const items=rows.map((row,i)=>({
+      no:i+1,
+      name:(row.querySelector('.order-row-name-v4')?.value||'').trim(),
+      size:(row.querySelector('.order-row-size-v4')?.value||'').trim(),
+      qty:Number(row.querySelector('.order-row-qty-v4')?.value||0),
+      note:(row.querySelector('.order-row-note-input-v4')?.value||'').trim()
+    }));
+
+    for(const item of items){
+      if(!item.name){
+        alert(item.no+'번 품명을 입력해 주세요.');
+        rows[item.no-1]?.querySelector('.order-row-name-v4')?.focus();
+        return;
+      }
+      if(!item.size){
+        alert(item.no+'번 사이즈를 입력해 주세요.');
+        rows[item.no-1]?.querySelector('.order-row-size-v4')?.focus();
+        return;
+      }
+      if(!item.qty || item.qty<=0){
+        alert(item.no+'번 주문수량을 입력해 주세요.');
+        rows[item.no-1]?.querySelector('.order-row-qty-v4')?.focus();
+        return;
+      }
+    }
+
+    const worker=(document.getElementById('standaloneOrderWorker')?.value||currentWorker?.name||'').trim();
+    if(!worker){
+      alert('작업자 로그인 정보가 없습니다.');
+      return;
+    }
+
+    if(!sharedReady||!sharedDb){
+      alert('공용 동기화 연결 후 주문기록을 저장할 수 있습니다.');
+      return;
+    }
+
+    const send=document.getElementById('standaloneOrderSendBtn');
+    if(send){
+      send.disabled=true;
+      send.textContent='저장 중...';
+    }
+
+    try{
+      /* 각 주문줄을 웹 주문기록에 개별 저장 */
+      for(const item of items){
+        const savedNote=`[주문분류:${category}][주문번호:${item.no}]${item.note?'\n주문란: '+item.note:''}`;
+
+        await saveDailyOrderRequest(
+          {part:category,name:item.name,spec:item.size},
+          item.qty,
+          worker,
+          savedNote,
+          '자재 주문요청',
+          ''
+        );
+      }
+
+      /* 카톡에는 1,2,3 순서대로 한 번에 전송 */
+      const lines=[
+        '🛒 미림 카톡 주문',
+        '',
+        '📌 주문종류 : '+category,
+        ''
+      ];
+
+      items.forEach(item=>{
+        lines.push(
+          item.no+'. 품명 : '+item.name,
+          '   사이즈 : '+item.size,
+          '   주문수량 : '+item.qty.toLocaleString()+'개',
+          '   주문란 : '+(item.note||'-'),
+          ''
+        );
+      });
+
+      lines.push(
+        '👤 요청자 : '+worker,
+        '🕒 요청일시 : '+new Date().toLocaleString('ko-KR')
+      );
+
+      const msg=lines.join('\n');
+
+      closeStandaloneOrder();
+
+      if(navigator.share){
+        try{
+          await navigator.share({title:'미림 '+category,text:msg});
+          return;
+        }catch(e){
+          if(e && e.name==='AbortError'){
+            alert('☑ 주문기록은 웹에 저장되었습니다.\n카톡 공유는 취소되었습니다.');
+            return;
+          }
+          console.warn('공유창 열기 실패',e);
+        }
+      }
+
+      try{await navigator.clipboard.writeText(msg);}catch(e){}
+      window.open(MIRIM_KAKAO_OPEN_URL,'_blank','noopener');
+      alert('☑ 주문기록을 저장했습니다.\n주문내용을 복사했으니 카톡에 붙여넣어 주세요.');
+
+    }catch(e){
+      console.error('다중 카톡 주문 저장 실패',e);
+      alert('주문기록 저장 실패: '+(e.message||e));
+    }finally{
+      if(send){
+        send.disabled=false;
+        send.innerHTML='TALK&nbsp;&nbsp; 입력내용 저장 후 카톡으로 보내기';
+      }
+    }
   };
 })();
 </script>
