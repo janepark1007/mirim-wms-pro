@@ -1282,6 +1282,7 @@ body.admin-view *:has(> :only-child) { }
   <div class="simple-order-guide-v2">주문 종류를 선택한 후 내용을 입력하세요.</div>
 
   <div class="simple-order-category-grid-v2">
+    <button type="button" class="excel-order-core-v3" onclick="openExcelOrderCoreV3(this)">📋 엑셀주문</button>
     <button type="button" data-order-category-v2="넘버링주문" onclick="selectSimpleKakaoCategoryV2('넘버링주문',this)">🔢 넘버링주문</button>
     <button type="button" data-order-category-v2="튜브주문" onclick="selectSimpleKakaoCategoryV2('튜브주문',this)">🧪 튜브주문</button>
     <button type="button" data-order-category-v2="러그주문" onclick="selectSimpleKakaoCategoryV2('러그주문',this)">🔩 러그주문</button>
@@ -14728,4 +14729,59 @@ body:not(.admin-view):not(.worker-locked) #unregisteredItemCard.worker-unreg-ope
 })();
 </script>
 
+
+<style id="excel-order-core-v3-style">
+.simple-order-category-grid-v2 .excel-order-core-v3{
+  background:#dff3ff!important;
+  border-color:#9acbe6!important;
+  color:#0d4f75!important;
+  font-weight:1000!important;
+}
+.simple-order-category-grid-v2 .excel-order-core-v3.active{
+  background:#bfe7ff!important;
+  border-color:#5eaed9!important;
+  color:#073b58!important;
+}
+</style>
+
+<script id="excel-order-core-v3-js">
+(function(){
+  window.openExcelOrderCoreV3=function(btn){
+    document.querySelectorAll('[data-order-category-v2],.excel-order-core-v3')
+      .forEach(b=>b.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+
+    /* 새 6종 입력칸은 숨기고 기존 엑셀 주문 화면 표시 */
+    document.getElementById('simpleOrderFieldsV2')?.classList.add('hidden');
+    const hidden=document.getElementById('simpleOrderCategoryV2');
+    if(hidden)hidden.value='';
+
+    const excelPanel=document.getElementById('excelOrderPanel');
+    const otherPanel=document.getElementById('otherOrderPanel');
+    if(excelPanel){
+      excelPanel.classList.remove('hidden');
+      excelPanel.classList.add('excel-core-open-v3');
+    }
+    if(otherPanel){
+      otherPanel.classList.add('hidden');
+    }
+
+    /* 기존 엑셀주문 선택 로직도 함께 실행 */
+    try{
+      if(typeof selectOrderType==='function')selectOrderType('excel');
+    }catch(e){console.warn(e);}
+
+    const send=document.getElementById('standaloneOrderSendBtn');
+    if(send)send.classList.remove('hidden');
+
+    setTimeout(()=>{
+      const q=document.getElementById('standaloneOrderSearch') ||
+              document.querySelector('#excelOrderPanel input');
+      try{q?.focus();}catch(e){}
+    },50);
+  };
+})();
+</script>
+
 </body></html>
+<style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
