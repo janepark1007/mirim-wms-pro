@@ -20540,4 +20540,57 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
 })();
 </script>
 
+
+<style id="kakao-recipient-link-v91-style">
+#orderRecipientV88{
+  background:#fffdf0!important;
+  color:#3b3300!important;
+  font-weight:900!important;
+}
+</style>
+<script id="kakao-recipient-link-v91-js">
+(function(){
+  const KAKAO_RECIPIENT_LINK_V91='https://open.kakao.com/o/gWZ1pbJi';
+
+  function applyKakaoRecipientLinkV91(){
+    const el=document.getElementById('orderRecipientV88');
+    if(!el)return;
+    el.value=KAKAO_RECIPIENT_LINK_V91;
+    el.readOnly=true;
+    el.placeholder='카카오톡 링크 자동입력';
+    el.title='카카오톡 전송 링크';
+  }
+
+  const oldOpen=window.openStandaloneOrder;
+  if(typeof oldOpen==='function'){
+    window.openStandaloneOrder=function(){
+      const r=oldOpen.apply(this,arguments);
+      setTimeout(applyKakaoRecipientLinkV91,30);
+      setTimeout(applyKakaoRecipientLinkV91,150);
+      return r;
+    };
+    try{openStandaloneOrder=window.openStandaloneOrder;}catch(e){}
+  }
+
+  function forceLink(){
+    const el=document.getElementById('orderRecipientV88');
+    if(el){
+      el.value=KAKAO_RECIPIENT_LINK_V91;
+      el.readOnly=true;
+    }
+  }
+
+  const oldSubmit=window.submitStandaloneOrder;
+  if(typeof oldSubmit==='function'){
+    window.submitStandaloneOrder=async function(){
+      forceLink();
+      return await oldSubmit.apply(this,arguments);
+    };
+    try{submitStandaloneOrder=window.submitStandaloneOrder;}catch(e){}
+  }
+
+  window.addEventListener('load',()=>setTimeout(applyKakaoRecipientLinkV91,700));
+})();
+</script>
+
 </body></html>
