@@ -19460,4 +19460,173 @@ body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
 })();
 </script>
 
+
+<style id="mobile-photo-below-search-v85">
+@media(max-width:760px){
+  /* 모바일 위치검색 결과: 사진 영역을 검색 바로 아래에 독립 배치 */
+  body #results .result{
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto 10px!important;
+  }
+
+  body #results .result-card-main{
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+  }
+
+  /* 사진 + 변경/삭제 버튼을 맨 위 중앙 */
+  body #results .result-photo-box{
+    order:-100!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto 10px!important;
+    padding:8px!important;
+    display:grid!important;
+    grid-template-columns:92px 1fr!important;
+    grid-template-rows:auto auto!important;
+    gap:6px 8px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    background:#f7fbf8!important;
+    border:1px solid #d9e6de!important;
+    border-radius:12px!important;
+    box-sizing:border-box!important;
+  }
+
+  body #results .result-photo-box img,
+  body #results .result-photo-empty{
+    grid-column:1!important;
+    grid-row:1 / span 2!important;
+    width:92px!important;
+    height:92px!important;
+    max-width:92px!important;
+    margin:0 auto!important;
+    object-fit:contain!important;
+    border-radius:9px!important;
+  }
+
+  body #results .result-photo-box button{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:40px!important;
+    margin:0!important;
+    font-size:12px!important;
+    padding:6px 8px!important;
+  }
+
+  body #results .result-photo-box button:first-of-type{
+    grid-column:2!important;
+    grid-row:1!important;
+  }
+
+  body #results .result-photo-box button:nth-of-type(2){
+    grid-column:2!important;
+    grid-row:2!important;
+  }
+
+  /* 사진영역 아래부터는 완전 전체 폭 */
+  body #results .result-card-main > :not(.result-photo-box),
+  body #results .result-part,
+  body #results .result-name,
+  body #results .result-spec,
+  body #results .result-location,
+  body #results .later-check-direct-wrap,
+  body #results .meta,
+  body #results .qty-compare,
+  body #results .loc-editor,
+  body #results .order-share{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+  }
+
+  body #results .result-part,
+  body #results .result-name,
+  body #results .result-spec{
+    text-align:center!important;
+  }
+
+  body #results .result-location{
+    margin-top:8px!important;
+  }
+
+  /* 위치카드는 화면 전체 폭 */
+  body #results .location-cards-v17,
+  body #results .location-summary-grid,
+  body #results .multi-location-summary{
+    width:100%!important;
+    max-width:100%!important;
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+  }
+
+  body #results .location-card-v17,
+  body #results .loc-slot,
+  body #results .location-slot,
+  body #results .location-summary-item,
+  body #results .location-box,
+  body #results .stock-total-box{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+
+  /* 모바일 위치검색 화면 좌우 여백 최소화 */
+  body.mobile-location-v80 main,
+  body.admin-view.admin-location-center-v76 main,
+  body.mobile-location-v80 #work,
+  body.admin-view.admin-location-center-v76 #work{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+<script id="mobile-photo-below-search-v85-js">
+(function(){
+  function movePhotoToTopV85(){
+    if(window.innerWidth>760)return;
+
+    const results=document.getElementById('results');
+    if(!results)return;
+
+    results.querySelectorAll('.result').forEach(result=>{
+      const main=result.querySelector('.result-card-main');
+      const photo=result.querySelector('.result-photo-box');
+      if(!main || !photo)return;
+
+      /* 사진영역을 각 검색결과의 첫 요소로 강제 이동 */
+      if(main.firstElementChild!==photo){
+        main.insertBefore(photo,main.firstElementChild);
+      }
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(movePhotoToTopV85,700));
+  window.addEventListener('resize',movePhotoToTopV85);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__photoTopV85);
+    window.__photoTopV85=setTimeout(movePhotoToTopV85,60);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
