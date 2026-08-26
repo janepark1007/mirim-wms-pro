@@ -14262,4 +14262,79 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-readon
 })();
 </script>
 
+
+<style id="worker-location-edit-enabled-v1">
+/* 작업자 위치확인 결과에서 위치 편집기 표시 */
+body:not(.admin-view):not(.worker-locked) #results .loc-editor{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+
+/* 위치 입력/선택/저장 버튼 사용 가능 */
+body:not(.admin-view):not(.worker-locked) #results .loc-editor input,
+body:not(.admin-view):not(.worker-locked) #results .loc-editor select,
+body:not(.admin-view):not(.worker-locked) #results .loc-editor button{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+
+/* 위치 리스트의 수정 버튼도 표시 */
+body:not(.admin-view):not(.worker-locked) #results .multi-loc-actions{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body:not(.admin-view):not(.worker-locked) #results .multi-loc-actions button{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+</style>
+
+<script id="worker-location-edit-enabled-v1-js">
+(function(){
+  function enableWorkerLocationEditV1(){
+    if(isAdmin || !currentWorker)return;
+
+    const results=document.getElementById('results');
+    if(!results)return;
+
+    results.querySelectorAll('.loc-editor').forEach(el=>{
+      el.style.setProperty('display','block','important');
+      el.style.setProperty('visibility','visible','important');
+      el.style.setProperty('opacity','1','important');
+      el.style.setProperty('pointer-events','auto','important');
+    });
+
+    results.querySelectorAll('.loc-editor input,.loc-editor select,.loc-editor button,.multi-loc-actions button').forEach(el=>{
+      el.disabled=false;
+      el.removeAttribute('disabled');
+      el.style.setProperty('pointer-events','auto','important');
+      el.style.setProperty('opacity','1','important');
+      el.style.setProperty('visibility','visible','important');
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(enableWorkerLocationEditV1,900));
+
+  document.addEventListener('click',()=>{
+    if(!isAdmin && currentWorker){
+      setTimeout(enableWorkerLocationEditV1,80);
+    }
+  },true);
+
+  const obs=new MutationObserver(()=>{
+    if(isAdmin || !currentWorker)return;
+    clearTimeout(window.__workerLocEditV1);
+    window.__workerLocEditV1=setTimeout(enableWorkerLocationEditV1,60);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
