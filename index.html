@@ -15337,5 +15337,111 @@ window.submitExcelStandaloneOrderV3 = async function(){
 };
 </script>
 
+
+<script id="kakao-order-open-fix-v6">
+(function(){
+  /* 최종 주문창 열기 함수:
+     이전 단일 주문 입력칸(simpleOrderNameV2 등)을 더 이상 참조하지 않음 */
+  window.openStandaloneOrder=function(){
+    if(!currentWorker){
+      try{showWorkerLogin();}catch(e){}
+      alert('작업자 로그인 후 사용할 수 있습니다.');
+      return;
+    }
+
+    const modal=document.getElementById('standaloneOrderModal');
+    if(!modal){
+      alert('카톡 주문창을 찾지 못했습니다.');
+      return;
+    }
+
+    /* 주문 분류/선택상태 초기화 */
+    const cat=document.getElementById('simpleOrderCategoryV2');
+    if(cat)cat.value='';
+
+    document.querySelectorAll('[data-order-category-v2],.excel-order-core-v3')
+      .forEach(btn=>btn.classList.remove('active'));
+
+    /* 다중 주문 입력영역 초기화 */
+    const fields=document.getElementById('simpleOrderFieldsV2');
+    if(fields)fields.classList.add('hidden');
+
+    const rows=document.getElementById('simpleOrderRowsV4');
+    if(rows)rows.innerHTML='';
+
+    /* 엑셀 주문영역 초기화 */
+    const excelPanel=document.getElementById('excelOrderPanel');
+    if(excelPanel){
+      excelPanel.classList.add('hidden');
+      excelPanel.classList.remove('excel-core-open-v3');
+    }
+
+    const otherPanel=document.getElementById('otherOrderPanel');
+    if(otherPanel)otherPanel.classList.add('hidden');
+
+    /* 기존 엑셀 입력값 안전하게 초기화 */
+    const ids=[
+      'standaloneOrderSearch','standaloneOrderPart','standaloneOrderSpec',
+      'standaloneOrderName','standaloneOrderQty','standaloneOrderNote'
+    ];
+    ids.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.value='';
+    });
+
+    const searchList=document.getElementById('standaloneOrderSearchList');
+    if(searchList){
+      searchList.innerHTML='';
+      searchList.classList.add('hidden');
+    }
+
+    const picked=document.getElementById('standaloneOrderPicked');
+    if(picked){
+      picked.innerHTML='';
+      picked.classList.add('hidden');
+    }
+
+    /* 작업자 자동 표시 */
+    const worker=document.getElementById('standaloneOrderWorker');
+    if(worker)worker.value=currentWorker?.name||'';
+
+    /* 전송 버튼은 주문종류 선택 전까지 숨김 */
+    const send=document.getElementById('standaloneOrderSendBtn');
+    if(send){
+      send.classList.add('hidden');
+      send.disabled=false;
+      send.innerHTML='TALK&nbsp;&nbsp; 입력내용 저장 후 카톡으로 보내기';
+    }
+
+    /* 주문창 표시 */
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden','false');
+
+    setTimeout(()=>{
+      const first=document.querySelector('.excel-order-core-v3') ||
+                  document.querySelector('[data-order-category-v2]');
+      try{first?.focus();}catch(e){}
+    },80);
+  };
+
+  /* 닫을 때 엑셀 강제표시 클래스도 제거 */
+  const oldCloseV6=window.closeStandaloneOrder;
+  window.closeStandaloneOrder=function(){
+    const excelPanel=document.getElementById('excelOrderPanel');
+    if(excelPanel)excelPanel.classList.remove('excel-core-open-v3');
+
+    if(typeof oldCloseV6==='function'){
+      return oldCloseV6.apply(this,arguments);
+    }
+
+    const modal=document.getElementById('standaloneOrderModal');
+    if(modal){
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden','true');
+    }
+  };
+})();
+</script>
+
 </body></html>
 <style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
