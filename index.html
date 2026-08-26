@@ -17688,4 +17688,103 @@ body.admin-view.admin-inout-v75 #work .card{
 })();
 </script>
 
+
+<style id="admin-location-perfect-center-v76">
+/* 관리자 위치검색 화면: PC에서 정중앙 고정 */
+body.admin-view.admin-location-center-v76 #work{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:min(1180px,calc(100% - 40px))!important;
+  max-width:1180px!important;
+  margin:24px auto 50px!important;
+  padding:0!important;
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  float:none!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-view.admin-location-center-v76 #work > .card,
+body.admin-view.admin-location-center-v76 #work .card{
+  width:100%!important;
+  max-width:100%!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  float:none!important;
+  box-sizing:border-box!important;
+}
+
+/* 검색 입력부와 결과도 가운데 기준으로 통일 */
+body.admin-view.admin-location-center-v76 #work #q,
+body.admin-view.admin-location-center-v76 #work #results,
+body.admin-view.admin-location-center-v76 #work #count{
+  box-sizing:border-box!important;
+}
+
+@media(max-width:700px){
+  body.admin-view.admin-location-center-v76 #work{
+    width:calc(100% - 20px)!important;
+    margin:12px auto 30px!important;
+  }
+}
+</style>
+
+<script id="admin-location-perfect-center-v76-js">
+(function(){
+  const oldLocationV76=window.openAdminLocationFixedV72;
+
+  window.openAdminLocationFixedV72=function(){
+    document.body.classList.remove('admin-inout-v75');
+    document.body.classList.add('admin-location-center-v76');
+
+    const r=typeof oldLocationV76==='function'
+      ? oldLocationV76.apply(this,arguments)
+      : undefined;
+
+    setTimeout(()=>{
+      const work=document.getElementById('work');
+      if(work){
+        work.style.setProperty('display','block','important');
+        work.style.setProperty('width','min(1180px, calc(100% - 40px))','important');
+        work.style.setProperty('max-width','1180px','important');
+        work.style.setProperty('margin-left','auto','important');
+        work.style.setProperty('margin-right','auto','important');
+        work.style.setProperty('left','auto','important');
+        work.style.setProperty('right','auto','important');
+        work.style.setProperty('transform','none','important');
+      }
+    },40);
+
+    return r;
+  };
+  try{openAdminLocationFixedV72=window.openAdminLocationFixedV72;}catch(e){}
+
+  window.openAdminLocationCheckV66=function(){
+    return window.openAdminLocationFixedV72();
+  };
+  try{openAdminLocationCheckV66=window.openAdminLocationCheckV66;}catch(e){}
+
+  /* 다른 관리자 화면으로 이동하면 위치검색 전용 중앙 클래스 해제 */
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('button');
+    if(!btn)return;
+    const t=(btn.innerText||'').replace(/\s+/g,' ').trim();
+    if(!t.includes('위치확인') && !t.includes('위치 확인') && !t.includes('위치검색')){
+      if(
+        t.includes('입고') || t.includes('출고') || t.includes('사용자') ||
+        t.includes('기록') || t.includes('주문') || t.includes('관리자 메인')
+      ){
+        document.body.classList.remove('admin-location-center-v76');
+      }
+    }
+  },true);
+})();
+</script>
+
 </body></html>
