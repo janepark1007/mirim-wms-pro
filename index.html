@@ -16220,5 +16220,171 @@ body:not(.admin-view):not(.worker-locked) #results .loc-editor{
 })();
 </script>
 
+
+<style id="housing-hood-order-v10-style">
+/* 일반 주문창: 하우징/후드 버튼은 기존 주문버튼과 동일 스타일 */
+.simple-order-category-grid-v2 [data-order-category-v2="하우징주문"],
+.simple-order-category-grid-v2 [data-order-category-v2="후드주문"]{
+  background:#f8fbf9;
+  border-color:#d8e2dc;
+}
+
+/* 엑셀리스트 전용 주문용 보조 선택 */
+.excel-subcategory-v10{
+  display:none;
+  margin:10px 0 12px;
+  padding:10px;
+  border:1px solid #e4cf5c;
+  border-radius:11px;
+  background:#fff8cf;
+}
+#standaloneOrderModal.excel-list-dedicated-v8 .excel-subcategory-v10{
+  display:block!important;
+}
+.excel-subcategory-v10 .excel-subcategory-title-v10{
+  font-size:13px;
+  font-weight:1000;
+  color:#645000;
+  margin-bottom:7px;
+}
+.excel-subcategory-v10 .excel-subcategory-grid-v10{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.excel-subcategory-v10 button{
+  min-height:46px;
+  border:1px solid #d5bd42;
+  border-radius:10px;
+  background:#fff;
+  color:#5d4a00;
+  font-weight:1000;
+}
+.excel-subcategory-v10 button.active{
+  background:#fee500;
+  border-color:#caaa00;
+  color:#1f1a00;
+}
+</style>
+
+<script id="housing-hood-order-v10-js">
+(function(){
+  function ensureHousingHoodDefaultV10(){
+    /* 관리자 공용 카테고리 목록의 기본값에도 추가 */
+    try{
+      if(typeof DEFAULT_ORDER_CATS_V9!=='undefined'){
+        if(!DEFAULT_ORDER_CATS_V9.includes('하우징주문'))DEFAULT_ORDER_CATS_V9.push('하우징주문');
+        if(!DEFAULT_ORDER_CATS_V9.includes('후드주문'))DEFAULT_ORDER_CATS_V9.push('후드주문');
+      }
+    }catch(e){}
+  }
+
+  async function addHousingHoodButtonsV10(){
+    const grid=document.querySelector('#standaloneOrderModal .simple-order-category-grid-v2');
+    if(!grid)return;
+
+    /* 기존 렌더 함수가 있다면 먼저 실행 */
+    try{
+      if(typeof renderOrderCategoryButtonsV9==='function'){
+        await renderOrderCategoryButtonsV9();
+      }
+    }catch(e){}
+
+    const defs=[
+      ['하우징주문','🏠'],
+      ['후드주문','🧢']
+    ];
+
+    defs.forEach(([name,icon])=>{
+      if(grid.querySelector(`[data-order-category-v2="${name}"]`))return;
+
+      const b=document.createElement('button');
+      b.type='button';
+      b.dataset.orderCategoryV2=name;
+      b.innerHTML=icon+' '+name;
+      b.onclick=()=>selectSimpleKakaoCategoryV2(name,b);
+
+      /* 기타주문하기 바로 앞에 삽입 */
+      const etc=grid.querySelector('[data-order-category-v2="기타주문하기"],[data-order-category-v2="기타주문"]');
+      if(etc)grid.insertBefore(b,etc);
+      else grid.appendChild(b);
+    });
+  }
+
+  function ensureExcelSubcategoryV10(){
+    const panel=document.getElementById('excelOrderPanel');
+    if(!panel || panel.querySelector('.excel-subcategory-v10'))return;
+
+    const box=document.createElement('div');
+    box.className='excel-subcategory-v10';
+    box.innerHTML=`
+      <div class="excel-subcategory-title-v10">📌 엑셀리스트 주문 구분</div>
+      <div class="excel-subcategory-grid-v10">
+        <button type="button" data-excel-subcat-v10="하우징" onclick="selectExcelSubcategoryV10('하우징',this)">🏠 하우징</button>
+        <button type="button" data-excel-subcat-v10="후드" onclick="selectExcelSubcategoryV10('후드',this)">🧢 후드</button>
+      </div>
+      <input type="hidden" id="excelSubcategoryV10">
+    `;
+
+    panel.insertBefore(box,panel.firstChild);
+  }
+
+  window.selectExcelSubcategoryV10=function(name,btn){
+    const hidden=document.getElementById('excelSubcategoryV10');
+    if(hidden)hidden.value=name||'';
+
+    document.querySelectorAll('[data-excel-subcat-v10]').forEach(b=>b.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+  };
+
+  /* 엑셀 주문 전송에 하우징/후드 구분을 메모로 포함 */
+  const oldExcelSubmitV10=window.submitExcelStandaloneOrderV3;
+  window.submitExcelStandaloneOrderV3=async function(){
+    const sub=(document.getElementById('excelSubcategoryV10')?.value||'').trim();
+
+    if(sub){
+      const note=document.getElementById('standaloneOrderNote');
+      if(note && !String(note.value||'').includes('[주문구분:'+sub+']')){
+        note.value='[주문구분:'+sub+'] '+String(note.value||'').trim();
+      }
+    }
+
+    return await oldExcelSubmitV10.apply(this,arguments);
+  };
+
+  /* 일반 주문창 열릴 때 하우징/후드 버튼 유지 */
+  const oldOpenV10=window.openStandaloneOrder;
+  window.openStandaloneOrder=function(){
+    const result=oldOpenV10.apply(this,arguments);
+    setTimeout(()=>{
+      addHousingHoodButtonsV10();
+      ensureExcelSubcategoryV10();
+
+      const hidden=document.getElementById('excelSubcategoryV10');
+      if(hidden)hidden.value='';
+      document.querySelectorAll('[data-excel-subcat-v10]').forEach(b=>b.classList.remove('active'));
+    },80);
+    return result;
+  };
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      ensureHousingHoodDefaultV10();
+      ensureExcelSubcategoryV10();
+      addHousingHoodButtonsV10();
+    },1500);
+  });
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__housingHoodV10);
+    window.__housingHoodV10=setTimeout(()=>{
+      addHousingHoodButtonsV10();
+      ensureExcelSubcategoryV10();
+    },80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
 <style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
