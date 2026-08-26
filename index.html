@@ -16687,4 +16687,187 @@ body.admin-view #todayOrderCard #workerOrderFullHistoryV15{
 })();
 </script>
 
+
+<script id="admin-8h-park-admin-only-v70">
+(function(){
+  const ADMIN_SESSION_KEY_V70='mirim_admin_session_v70';
+  const ADMIN_SESSION_MS_V70=8*60*60*1000;
+  const PARK_NAME_V70='박향숙';
+
+  function getAdminSessionV70(){
+    try{
+      const raw=localStorage.getItem(ADMIN_SESSION_KEY_V70);
+      if(!raw)return null;
+      const s=JSON.parse(raw);
+      if(!s || !s.expiresAt || Date.now()>=Number(s.expiresAt)){
+        localStorage.removeItem(ADMIN_SESSION_KEY_V70);
+        return null;
+      }
+      return s;
+    }catch(e){
+      localStorage.removeItem(ADMIN_SESSION_KEY_V70);
+      return null;
+    }
+  }
+
+  function saveAdminSessionV70(){
+    try{
+      localStorage.setItem(ADMIN_SESSION_KEY_V70,JSON.stringify({
+        loggedInAt:Date.now(),
+        expiresAt:Date.now()+ADMIN_SESSION_MS_V70
+      }));
+    }catch(e){}
+  }
+
+  function clearAdminSessionV70(){
+    try{localStorage.removeItem(ADMIN_SESSION_KEY_V70);}catch(e){}
+  }
+
+  function isParkWorkerV70(){
+    return String(currentWorker?.name||'').trim()===PARK_NAME_V70;
+  }
+
+  /* 박향숙은 작업자 세션을 사용할 수 없게 즉시 정리 */
+  function enforceParkAdminOnlyV70(){
+    if(typeof isAdmin==='undefined')return;
+
+    if(!isAdmin && isParkWorkerV70()){
+      try{
+        currentWorker=null;
+        sessionStorage.removeItem('mirim_worker_session');
+        localStorage.removeItem('mirim_worker_session');
+      }catch(e){}
+
+      try{updateWorkerUI();}catch(e){}
+      try{updateAdminUI();}catch(e){}
+      try{showWorkerLogin();}catch(e){}
+
+      alert('박향숙 계정은 관리자 모드 전용입니다. 관리자 로그인을 이용해 주세요.');
+    }
+  }
+
+  /* 관리자 세션이 8시간 안이면 새로고침 후에도 복원 */
+  function restoreAdminSessionV70(){
+    const s=getAdminSessionV70();
+    if(!s)return false;
+
+    try{
+      isAdmin=true;
+      sessionStorage.setItem('mirim_prod_admin','1');
+
+      /* 관리자 모드에서는 작업자 세션과 분리 */
+      currentWorker=null;
+      sessionStorage.removeItem('mirim_worker_session');
+
+      document.body.classList.remove('worker-locked');
+      try{updateAdminUI();}catch(e){}
+      try{updateWorkerUI();}catch(e){}
+      setTimeout(()=>{
+        try{showAdminReferenceHome();}catch(e){}
+      },100);
+      return true;
+    }catch(e){
+      console.warn('관리자 8시간 세션 복원 실패',e);
+      return false;
+    }
+  }
+
+  /* 기존 관리자 로그인 성공 여부를 감지하여 8시간 세션 저장 */
+  const originalAdminLoginV70=window.adminLogin;
+  if(typeof originalAdminLoginV70==='function'){
+    window.adminLogin=async function(){
+      const before=!!isAdmin;
+      const result=await originalAdminLoginV70.apply(this,arguments);
+
+      setTimeout(()=>{
+        if(isAdmin){
+          saveAdminSessionV70();
+          currentWorker=null;
+          sessionStorage.removeItem('mirim_worker_session');
+          try{updateWorkerUI();}catch(e){}
+          try{updateAdminUI();}catch(e){}
+        }else if(before && !isAdmin){
+          clearAdminSessionV70();
+        }
+      },50);
+
+      return result;
+    };
+
+    try{adminLogin=window.adminLogin;}catch(e){}
+  }
+
+  /* 명시적 관리자 로그아웃 계열 버튼/상태 변화 시 세션 삭제 */
+  document.addEventListener('click',(e)=>{
+    const btn=e.target.closest('button');
+    if(!btn)return;
+    const txt=(btn.innerText||'').replace(/\s+/g,' ').trim();
+    if(/관리자\s*로그아웃|로그아웃/.test(txt) && isAdmin){
+      setTimeout(()=>{
+        if(!isAdmin)clearAdminSessionV70();
+      },100);
+    }
+  },true);
+
+  /* 작업자 로그인 후 박향숙이면 작업자 모드 진입 차단 */
+  function monitorWorkerLoginV70(){
+    if(typeof isAdmin==='undefined')return;
+    if(!isAdmin && isParkWorkerV70())enforceParkAdminOnlyV70();
+  }
+
+  window.addEventListener('load',()=>{
+    const restored=restoreAdminSessionV70();
+    if(!restored)setTimeout(monitorWorkerLoginV70,600);
+  });
+
+  document.addEventListener('click',()=>{
+    if(!isAdmin)setTimeout(monitorWorkerLoginV70,80);
+  },true);
+
+  /* 세션 만료 감시: 1분 단위 */
+  setInterval(()=>{
+    if(!isAdmin)return;
+    const s=getAdminSessionV70();
+    if(s)return;
+
+    try{
+      isAdmin=false;
+      sessionStorage.removeItem('mirim_prod_admin');
+      clearAdminSessionV70();
+      try{updateAdminUI();}catch(e){}
+      try{updateWorkerUI();}catch(e){}
+      alert('관리자 로그인 8시간이 만료되었습니다. 다시 로그인해 주세요.');
+    }catch(e){}
+  },60000);
+
+  window.getAdminSessionV70=getAdminSessionV70;
+})();
+</script>
+
+
+<script id="park-worker-login-hard-block-v71">
+(function(){
+  const PARK_ADMIN_ONLY_NAME_V71='박향숙';
+  const originalWorkerLoginV71=window.workerLogin;
+
+  if(typeof originalWorkerLoginV71==='function'){
+    window.workerLogin=async function(){
+      const name=(document.getElementById('workerNameInput')?.value||'').trim();
+
+      if(name===PARK_ADMIN_ONLY_NAME_V71){
+        alert('박향숙 계정은 관리자 모드 전용입니다. 작업자 로그인은 사용할 수 없습니다.');
+        try{
+          document.getElementById('workerPinInput').value='';
+        }catch(e){}
+        return;
+      }
+
+      return await originalWorkerLoginV71.apply(this,arguments);
+    };
+
+    try{workerLogin=window.workerLogin;}catch(e){}
+  }
+})();
+</script>
+
 </body></html>
