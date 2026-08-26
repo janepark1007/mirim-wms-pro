@@ -19621,11 +19621,7 @@ body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
   window.addEventListener('load',()=>setTimeout(movePhotoToTopV85,700));
   window.addEventListener('resize',movePhotoToTopV85);
 
-  const obs=new MutationObserver(()=>{
-    clearTimeout(window.__photoTopV85);
-    window.__photoTopV85=setTimeout(movePhotoToTopV85,60);
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true});
+  /* v87: 반복 DOM 감시 제거 - 화면 떨림 방지 */
 })();
 </script>
 
@@ -19790,17 +19786,20 @@ body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
       const main=result.querySelector(':scope > .result-card-main');
       if(!main)return;
 
-      /* 원래 main 안에 있는 사진을 실제로 밖으로 꺼냄 */
+      /* 이미 정리된 결과는 다시 건드리지 않음 */
+      if(result.dataset.photoLayoutV87==='1')return;
+
       let photo=main.querySelector(':scope > .result-photo-box');
       if(photo){
         result.insertBefore(photo,main);
       }
 
-      /* 이미 밖으로 나온 경우도 항상 맨 첫번째 위치 유지 */
       photo=result.querySelector(':scope > .result-photo-box');
       if(photo && result.firstElementChild!==photo){
         result.insertBefore(photo,result.firstElementChild);
       }
+
+      result.dataset.photoLayoutV87='1';
     });
   }
 
@@ -19830,12 +19829,58 @@ body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
   window.addEventListener('load',()=>setTimeout(rearrangeLocationPhotoV86,700));
   window.addEventListener('resize',rearrangeLocationPhotoV86);
 
-  const obs=new MutationObserver(()=>{
-    if(!isLocationModeV86())return;
-    clearTimeout(window.__photoRealTopV86);
-    window.__photoRealTopV86=setTimeout(rearrangeLocationPhotoV86,40);
-  });
-  obs.observe(document.documentElement,{childList:true,subtree:true});
+  /* v87: 반복 DOM 감시 제거 - 관리자 모바일 위치확인 떨림 방지 */
+})();
+</script>
+
+
+<style id="mobile-admin-location-stable-v87">
+@media(max-width:760px){
+  body.admin-view.admin-location-center-v76 #work,
+  body.admin-view.admin-location-center-v76 #results,
+  body.admin-view.admin-location-center-v76 #results .result,
+  body.admin-view.admin-location-center-v76 #results .result-card-main,
+  body.admin-view.admin-location-center-v76 #results .result-photo-box{
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+    will-change:auto!important;
+  }
+}
+</style>
+
+<script id="mobile-admin-location-stable-v87-js">
+(function(){
+  /* 검색 결과가 바뀐 경우에만 마커 초기화 후 한 번 재배치 */
+  const results=document.getElementById('results');
+  if(results){
+    let lastHtmlLength=results.innerHTML.length;
+
+    const observer=new MutationObserver(()=>{
+      if(window.innerWidth>760)return;
+
+      const currentLength=results.innerHTML.length;
+      if(currentLength===lastHtmlLength)return;
+      lastHtmlLength=currentLength;
+
+      results.querySelectorAll('.result').forEach(r=>{
+        if(!r.querySelector(':scope > .result-photo-box')){
+          r.removeAttribute('data-photo-layout-v87');
+        }
+      });
+
+      clearTimeout(window.__stableLocationV87);
+      window.__stableLocationV87=setTimeout(()=>{
+        try{
+          if(typeof rearrangeLocationPhotoV86==='function'){
+            rearrangeLocationPhotoV86();
+          }
+        }catch(e){}
+      },120);
+    });
+
+    observer.observe(results,{childList:true,subtree:false});
+  }
 })();
 </script>
 
