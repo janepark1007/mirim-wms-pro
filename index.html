@@ -17391,4 +17391,102 @@ body.admin-view.admin-records-v72 #adminRecordLookupPanelV72{
 })();
 </script>
 
+
+<style id="worker-name-click-fixed-v74-style">
+#loginLogPanel tbody td.worker-name-cell-v74{
+  cursor:pointer!important;
+  color:#075f35!important;
+  font-weight:1000!important;
+  text-decoration:underline!important;
+}
+#loginLogPanel tbody td.worker-name-cell-v74:hover{
+  background:#eef8f2!important;
+}
+</style>
+
+<script id="worker-name-click-fixed-v74-js">
+(function(){
+  function getWorkerNameFromRowV74(tr){
+    const cells=[...tr.querySelectorAll('td')];
+    if(!cells.length)return '';
+
+    /* 사용자관리 표에서 이름일 가능성이 높은 셀을 우선 탐색 */
+    for(const td of cells){
+      const t=(td.textContent||'').trim();
+      if(!t)continue;
+      if(t.includes('@'))continue;
+      if(/^\d+$/.test(t))continue;
+      if(/\d{4}[-./]\d{1,2}/.test(t))continue;
+      if(/로그인|로그아웃|관리자|작업자|성공|실패/.test(t))continue;
+      if(t.length>20)continue;
+      return t;
+    }
+    return '';
+  }
+
+  function wireWorkerNameClickV74(){
+    if(!isAdmin)return;
+
+    const panel=document.getElementById('loginLogPanel');
+    if(!panel)return;
+
+    const rows=panel.querySelectorAll('tbody tr');
+    rows.forEach(tr=>{
+      const name=getWorkerNameFromRowV74(tr);
+      if(!name)return;
+
+      const cells=[...tr.querySelectorAll('td')];
+      const nameCell=cells.find(td=>(td.textContent||'').trim()===name);
+      if(!nameCell)return;
+
+      nameCell.classList.add('worker-name-cell-v74');
+      nameCell.title='클릭하면 누적 작업이력을 확인합니다.';
+
+      nameCell.onclick=(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof openWorkerActivityV73==='function'){
+          openWorkerActivityV73(name);
+        }else{
+          alert('작업이력 화면을 찾지 못했습니다.');
+        }
+      };
+    });
+  }
+
+  /* 사용자관리 화면을 열 때마다 재연결 */
+  const oldOpenUsersV74=window.openAdminUsersFixedV72;
+  if(typeof oldOpenUsersV74==='function'){
+    window.openAdminUsersFixedV72=async function(){
+      const result=await oldOpenUsersV74.apply(this,arguments);
+      setTimeout(wireWorkerNameClickV74,300);
+      setTimeout(wireWorkerNameClickV74,900);
+      return result;
+    };
+    try{openAdminUsersFixedV72=window.openAdminUsersFixedV72;}catch(e){}
+  }
+
+  /* 사용자 목록 데이터가 다시 그려져도 이름 클릭 유지 */
+  const obs=new MutationObserver(()=>{
+    if(!isAdmin)return;
+    const panel=document.getElementById('loginLogPanel');
+    if(!panel || panel.classList.contains('hidden'))return;
+    clearTimeout(window.__workerNameClickV74);
+    window.__workerNameClickV74=setTimeout(wireWorkerNameClickV74,100);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+
+  document.addEventListener('click',e=>{
+    if(!isAdmin)return;
+    const txt=(e.target.closest('button')?.innerText||'');
+    if(txt.includes('사용자 관리')){
+      setTimeout(wireWorkerNameClickV74,400);
+      setTimeout(wireWorkerNameClickV74,1000);
+    }
+  },true);
+
+  window.addEventListener('load',()=>setTimeout(wireWorkerNameClickV74,1200));
+})();
+</script>
+
 </body></html>
