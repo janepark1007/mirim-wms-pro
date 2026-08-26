@@ -15162,5 +15162,180 @@ body:not(.admin-view):not(.worker-locked) #unregisteredItemCard.worker-unreg-ope
 })();
 </script>
 
+
+<script id="excel-order-image-restore-v5">
+/* =========================================================
+   엑셀주문 전용 전송
+   - 저장된 품목 이미지 다시 첨부
+   - 웹 주문기록에도 이미지 URL 저장
+   - 모바일: 텍스트 + 이미지 공유
+   - PC: 텍스트 복사 + 이미지 다운로드 + 카톡방 열기
+   ========================================================= */
+window.submitExcelStandaloneOrderV3 = async function(){
+  const part=(document.getElementById('standaloneOrderPart')?.value||'').trim();
+  const spec=(document.getElementById('standaloneOrderSpec')?.value||'').trim();
+  const name=(document.getElementById('standaloneOrderName')?.value||'').trim();
+  const qtyRaw=(document.getElementById('standaloneOrderQty')?.value||'').trim();
+  const note=(document.getElementById('standaloneOrderNote')?.value||'').trim();
+  const worker=(document.getElementById('standaloneOrderWorker')?.value||currentWorker?.name||'').trim();
+
+  if(!worker){
+    alert('작업자 로그인 정보가 없습니다. 다시 로그인해 주세요.');
+    return;
+  }
+
+  if(!part){
+    alert('ERP 품번 또는 품명을 검색한 후 제품을 선택해 주세요.');
+    document.getElementById('standaloneOrderSearch')?.focus();
+    return;
+  }
+
+  if(qtyRaw && Number(qtyRaw)<=0){
+    alert('요청수량은 1개 이상으로 입력해 주세요.');
+    document.getElementById('standaloneOrderQty')?.focus();
+    return;
+  }
+
+  if(!note){
+    alert('추가주문내용은 필수입니다.');
+    document.getElementById('standaloneOrderNote')?.focus();
+    return;
+  }
+
+  if(!sharedReady||!sharedDb){
+    alert('공용 동기화 연결 후 주문기록을 저장할 수 있습니다.');
+    return;
+  }
+
+  const btn=document.getElementById('standaloneOrderSendBtn');
+  if(btn){
+    btn.disabled=true;
+    btn.textContent='저장 중...';
+  }
+
+  try{
+    /* 품목에 저장된 이미지 가져오기 */
+    const photoUrl=(typeof getPhoto==='function' ? (getPhoto(part)||'') : '');
+
+    /* 웹 주문기록에 이미지까지 함께 저장 */
+    await saveDailyOrderRequest(
+      {part:part,name:name,spec:spec},
+      qtyRaw?Number(qtyRaw):0,
+      worker,
+      note,
+      '자재 주문요청',
+      photoUrl
+    );
+
+    const lines=[
+      '🛒 미림 엑셀 자재 주문요청',
+      '',
+      '🔹 품번 : '+part,
+      '🔹 품명 : '+name,
+      '🔹 규격 : '+(spec||'-')
+    ];
+
+    if(qtyRaw){
+      lines.push('🔹 요청수량 : '+Number(qtyRaw).toLocaleString()+'개');
+    }
+
+    lines.push(
+      '📷 제품사진 : '+(photoUrl?'첨부':'등록된 사진 없음'),
+      '📝 추가주문내용 : '+note,
+      '',
+      '👤 요청자 : '+worker,
+      '🕒 요청일시 : '+new Date().toLocaleString('ko-KR')
+    );
+
+    const msg=lines.join('\n');
+
+    /* 저장된 이미지 URL을 실제 공유 파일로 변환 */
+    let photoFile=null;
+    if(photoUrl){
+      try{
+        const res=await fetch(photoUrl,{cache:'no-store'});
+        if(!res.ok)throw new Error('사진 불러오기 실패');
+        const blob=await res.blob();
+
+        let ext='jpg';
+        if((blob.type||'').includes('png'))ext='png';
+        else if((blob.type||'').includes('webp'))ext='webp';
+
+        photoFile=new File(
+          [blob],
+          '미림_'+String(part).replace(/[^a-zA-Z0-9가-힣._-]/g,'_')+'.'+ext,
+          {type:blob.type||'image/jpeg'}
+        );
+      }catch(e){
+        console.warn('저장 제품사진 파일 변환 실패',e);
+      }
+    }
+
+    closeStandaloneOrder();
+
+    /* 모바일 공유: 이미지가 있으면 이미지 + 주문문구 동시 공유 */
+    if(navigator.share){
+      try{
+        const shareData={
+          title:'미림 엑셀 자재 주문요청',
+          text:msg
+        };
+
+        if(photoFile && navigator.canShare && navigator.canShare({files:[photoFile]})){
+          shareData.files=[photoFile];
+        }
+
+        await navigator.share(shareData);
+        return;
+      }catch(e){
+        if(e && e.name==='AbortError'){
+          alert('☑ 주문기록은 웹에 저장되었습니다.\n카톡 공유는 취소되었습니다.');
+          return;
+        }
+        console.warn('모바일 공유 실패',e);
+      }
+    }
+
+    /* PC/공유미지원: 주문내용 복사 */
+    try{
+      await navigator.clipboard.writeText(msg);
+    }catch(e){}
+
+    /* 저장 이미지가 있으면 PC에서 자동 다운로드 */
+    if(photoFile){
+      try{
+        const url=URL.createObjectURL(photoFile);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download=photoFile.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),3000);
+      }catch(e){
+        console.warn('제품사진 다운로드 실패',e);
+      }
+    }
+
+    window.open(MIRIM_KAKAO_OPEN_URL,'_blank','noopener');
+
+    if(photoUrl){
+      alert('☑ 주문기록을 저장했습니다.\n주문내용을 복사했고 저장된 제품사진도 준비했습니다.\n카톡에 주문내용과 사진을 함께 전송해 주세요.');
+    }else{
+      alert('☑ 주문기록을 저장했습니다.\n등록된 제품사진은 없습니다.\n주문내용을 복사했으니 카톡에 붙여넣어 주세요.');
+    }
+
+  }catch(e){
+    console.error('엑셀 카톡 주문 저장 실패',e);
+    alert('주문기록 저장 실패: '+(e.message||e));
+  }finally{
+    if(btn){
+      btn.disabled=false;
+      btn.innerHTML='TALK&nbsp;&nbsp; 입력내용 저장 후 카톡으로 보내기';
+    }
+  }
+};
+</script>
+
 </body></html>
 <style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
