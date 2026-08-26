@@ -18061,158 +18061,380 @@ body.admin-view.admin-location-center-v76 #work #count{
 </script>
 
 
-<style id="mobile-location-true-center-v79">
-@media (max-width:760px){
-  html,body{
-    width:100%!important;
-    max-width:100%!important;
-    overflow-x:hidden!important;
-  }
+<style id="mobile-location-compact-true-center-v80">
+@media(max-width:760px){
 
-  /* 모바일 위치검색 화면의 기준점을 뷰포트 정중앙으로 강제 */
-  body #work,
+  /* ★ 이전 left:50% / translateX 중앙정렬을 완전히 무효화 */
+  body.mobile-location-v80 #work,
   body.admin-view.admin-location-center-v76 #work{
-    position:relative!important;
-    left:50%!important;
-    right:auto!important;
-    transform:translateX(-50%)!important;
-    width:calc(100vw - 16px)!important;
-    max-width:calc(100vw - 16px)!important;
-    margin:8px 0 30px!important;
-    padding:0!important;
-    box-sizing:border-box!important;
-    float:none!important;
-  }
-
-  body #work > .card,
-  body #work .card{
-    width:100%!important;
-    max-width:100%!important;
-    margin:0!important;
-    padding:10px!important;
-    box-sizing:border-box!important;
+    position:static!important;
     left:auto!important;
     right:auto!important;
     transform:none!important;
-  }
+    float:none!important;
 
-  body #results{
     width:100%!important;
     max-width:100%!important;
-    margin:0!important;
+    min-width:0!important;
+
+    margin:0 auto 24px!important;
     padding:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v80 main,
+  body.admin-view.admin-location-center-v76 main{
+    width:100vw!important;
+    max-width:100vw!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:6px!important;
     box-sizing:border-box!important;
     overflow-x:hidden!important;
   }
 
-  /* 검색 결과의 최상위 카드들을 화면 안에 강제 수용 */
-  body #results > *,
-  body #results .result,
-  body #results [class*="result-"],
-  body #results [class*="location"],
-  body #results [class*="stock"],
-  body #results [class*="meta"]{
-    max-width:100%!important;
-    box-sizing:border-box!important;
-  }
-
-  /* 데스크톱용 고정폭/좌측 여백이 모바일에 남지 않도록 제거 */
-  body #results .result,
-  body #results .result-card-main,
-  body #results .result-main,
-  body #results .result-content,
-  body #results .result-location,
-  body #results .location-summary-grid,
-  body #results .multi-location-summary,
-  body #results .meta-grid,
-  body #results .qty-compare{
+  body.mobile-location-v80 #work > .card,
+  body.admin-view.admin-location-center-v76 #work > .card{
     width:100%!important;
+    max-width:100%!important;
     min-width:0!important;
-    margin-left:0!important;
-    margin-right:0!important;
-    padding-left:0!important;
-    padding-right:0!important;
-    left:auto!important;
-    right:auto!important;
-    transform:none!important;
-  }
-
-  /* 실제 색상 위치카드는 좌우 8px 안쪽 */
-  body #results .loc-slot,
-  body #results .location-slot,
-  body #results .location-summary-item,
-  body #results .location-box,
-  body #results .stock-total-box{
-    width:calc(100% - 16px)!important;
-    max-width:calc(100% - 16px)!important;
-    min-width:0!important;
-    margin:6px auto!important;
-    padding:11px!important;
+    margin:0 auto!important;
+    padding:8px!important;
     box-sizing:border-box!important;
     overflow:hidden!important;
   }
 
-  body #results .loc-slot *,
-  body #results .location-slot *,
-  body #results .location-summary-item *,
-  body #results .location-box *,
-  body #results .stock-total-box *{
+  body.mobile-location-v80 #results,
+  body.admin-view.admin-location-center-v76 #results{
+    width:100%!important;
     max-width:100%!important;
+    min-width:0!important;
+    margin:8px auto 0!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+  }
+
+  body.mobile-location-v80 #results .result,
+  body.admin-view.admin-location-center-v76 #results .result{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto 10px!important;
+    padding:8px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* ★ 사진 + 품번/품명은 위쪽에서 컴팩트하게 */
+  body.mobile-location-v80 #results .result-card-main,
+  body.admin-view.admin-location-center-v76 #results .result-card-main{
+    display:grid!important;
+    grid-template-columns:92px minmax(0,1fr)!important;
+    gap:8px!important;
+    align-items:start!important;
+
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  body.mobile-location-v80 #results .result-card-main > div:last-child,
+  body.admin-view.admin-location-center-v76 #results .result-card-main > div:last-child{
+    min-width:0!important;
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v80 #results .result-photo-box,
+  body.admin-view.admin-location-center-v76 #results .result-photo-box{
+    width:92px!important;
+    min-width:92px!important;
+    max-width:92px!important;
+    margin:0!important;
+  }
+
+  body.mobile-location-v80 #results .result-photo-box img,
+  body.mobile-location-v80 #results .result-photo-empty,
+  body.admin-view.admin-location-center-v76 #results .result-photo-box img,
+  body.admin-view.admin-location-center-v76 #results .result-photo-empty{
+    width:92px!important;
+    height:92px!important;
+    max-width:92px!important;
+    object-fit:contain!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v80 #results .result-photo-box button,
+  body.admin-view.admin-location-center-v76 #results .result-photo-box button{
+    width:92px!important;
+    min-height:34px!important;
+    padding:4px!important;
+    font-size:11px!important;
+    margin-top:5px!important;
+  }
+
+  body.mobile-location-v80 #results .result-part,
+  body.admin-view.admin-location-center-v76 #results .result-part{
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:left!important;
+    font-size:20px!important;
+    line-height:1.2!important;
+    white-space:normal!important;
+    word-break:break-all!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body.mobile-location-v80 #results .result-name,
+  body.admin-view.admin-location-center-v76 #results .result-name{
+    width:100%!important;
+    min-width:0!important;
+    margin:4px 0 0!important;
+    padding:0!important;
+    text-align:left!important;
+    font-size:14px!important;
+    line-height:1.3!important;
     white-space:normal!important;
     word-break:break-word!important;
     overflow-wrap:anywhere!important;
   }
 
-  body #results button,
-  body #results input,
-  body #results select,
-  body #results textarea{
+  /* ★ 위치/총수량부터는 사진 열을 무시하고 카드 전체 폭 사용 */
+  body.mobile-location-v80 #results .result-location,
+  body.mobile-location-v80 #results .later-check-direct-wrap,
+  body.mobile-location-v80 #results .meta,
+  body.mobile-location-v80 #results .qty-compare,
+  body.mobile-location-v80 #results .loc-editor,
+  body.mobile-location-v80 #results .order-share,
+  body.mobile-location-v80 #results .item-movement-history,
+  body.mobile-location-v80 #results .search-inbound-history,
+  body.admin-view.admin-location-center-v76 #results .result-location,
+  body.admin-view.admin-location-center-v76 #results .later-check-direct-wrap,
+  body.admin-view.admin-location-center-v76 #results .meta,
+  body.admin-view.admin-location-center-v76 #results .qty-compare,
+  body.admin-view.admin-location-center-v76 #results .loc-editor,
+  body.admin-view.admin-location-center-v76 #results .order-share,
+  body.admin-view.admin-location-center-v76 #results .item-movement-history,
+  body.admin-view.admin-location-center-v76 #results .search-inbound-history{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v80 #results .result-location,
+  body.admin-view.admin-location-center-v76 #results .result-location{
+    margin-top:8px!important;
+    padding:8px!important;
+    overflow:hidden!important;
+  }
+
+  /* 위치 1 / 위치 2 / 총수량은 한 줄씩 = 절대 잘리지 않음 */
+  body.mobile-location-v80 #results .location-cards-v17,
+  body.admin-view.admin-location-center-v76 #results .location-cards-v17{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  body.mobile-location-v80 #results .location-card-v17,
+  body.admin-view.admin-location-center-v76 #results .location-card-v17{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:8px 10px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  body.mobile-location-v80 #results .location-label-v17,
+  body.admin-view.admin-location-center-v76 #results .location-label-v17{
+    font-size:11px!important;
+    margin-bottom:3px!important;
+  }
+
+  body.mobile-location-v80 #results .location-value-v17,
+  body.admin-view.admin-location-center-v76 #results .location-value-v17{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    font-size:15px!important;
+    line-height:1.25!important;
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body.mobile-location-v80 #results .location-card-v17.stock-total .location-value-v17,
+  body.admin-view.admin-location-center-v76 #results .location-card-v17.stock-total .location-value-v17{
+    font-size:19px!important;
+  }
+
+  /* 나중에 확인 */
+  body.mobile-location-v80 #results .later-check-direct-wrap,
+  body.admin-view.admin-location-center-v76 #results .later-check-direct-wrap{
+    margin-top:7px!important;
+    padding:7px!important;
+  }
+
+  body.mobile-location-v80 #results .later-check-direct-wrap button,
+  body.admin-view.admin-location-center-v76 #results .later-check-direct-wrap button{
+    width:100%!important;
+    min-height:42px!important;
+    max-width:100%!important;
+    font-size:14px!important;
+    margin:0!important;
+  }
+
+  body.mobile-location-v80 #results .later-check-direct-wrap small,
+  body.admin-view.admin-location-center-v76 #results .later-check-direct-wrap small{
+    display:block!important;
+    font-size:9px!important;
+    line-height:1.25!important;
+    margin-top:4px!important;
+    white-space:normal!important;
+  }
+
+  /* 구분/규격/ERP 정보는 2열로 압축 */
+  body.mobile-location-v80 #results .meta,
+  body.admin-view.admin-location-center-v76 #results .meta{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:6px!important;
+    margin-top:7px!important;
+  }
+
+  body.mobile-location-v80 #results .meta > div,
+  body.admin-view.admin-location-center-v76 #results .meta > div{
+    width:100%!important;
+    min-width:0!important;
+    padding:8px!important;
+    font-size:12px!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v80 #results .meta > div:last-child,
+  body.admin-view.admin-location-center-v76 #results .meta > div:last-child{
+    grid-column:1 / -1!important;
+  }
+
+  /* ERP/수량 비교 카드도 1열로 안전하게 */
+  body.mobile-location-v80 #results .qty-compare,
+  body.admin-view.admin-location-center-v76 #results .qty-compare{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+    margin-top:7px!important;
+  }
+
+  body.mobile-location-v80 #results .qty-compare > *,
+  body.admin-view.admin-location-center-v76 #results .qty-compare > *{
+    width:100%!important;
+    min-width:0!important;
     max-width:100%!important;
     box-sizing:border-box!important;
+  }
+
+  /* 폼 요소가 폭을 넘지 않게 */
+  body.mobile-location-v80 #results input,
+  body.mobile-location-v80 #results select,
+  body.mobile-location-v80 #results textarea,
+  body.mobile-location-v80 #results button,
+  body.admin-view.admin-location-center-v76 #results input,
+  body.admin-view.admin-location-center-v76 #results select,
+  body.admin-view.admin-location-center-v76 #results textarea,
+  body.admin-view.admin-location-center-v76 #results button{
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  html,body{
+    overflow-x:hidden!important;
   }
 }
 </style>
 
-<script id="mobile-location-true-center-v79-js">
+<script id="mobile-location-compact-true-center-v80-js">
 (function(){
-  function forceMobileLocationCenterV79(){
-    if(window.innerWidth>760)return;
-    const work=document.getElementById('work');
-    if(!work || work.classList.contains('hidden'))return;
+  function syncMobileLocationModeV80(){
+    if(window.innerWidth>760){
+      document.body.classList.remove('mobile-location-v80');
+      return;
+    }
 
-    work.style.setProperty('position','relative','important');
-    work.style.setProperty('left','50%','important');
-    work.style.setProperty('right','auto','important');
-    work.style.setProperty('transform','translateX(-50%)','important');
-    work.style.setProperty('width','calc(100vw - 16px)','important');
-    work.style.setProperty('max-width','calc(100vw - 16px)','important');
-    work.style.setProperty('margin-left','0','important');
-    work.style.setProperty('margin-right','0','important');
+    let isLocation=false;
+    try{
+      isLocation = (typeof mode!=='undefined' && mode==='location');
+    }catch(e){}
 
-    const results=document.getElementById('results');
-    if(results){
-      results.style.setProperty('width','100%','important');
-      results.style.setProperty('max-width','100%','important');
-      results.style.setProperty('margin','0','important');
-      results.style.setProperty('padding','0','important');
-      results.style.setProperty('overflow-x','hidden','important');
+    if(document.body.classList.contains('admin-location-center-v76'))isLocation=true;
+
+    document.body.classList.toggle('mobile-location-v80',!!isLocation);
+
+    /* 이전 v79에서 남긴 inline transform을 실제로 제거 */
+    if(isLocation){
+      const work=document.getElementById('work');
+      if(work){
+        work.style.removeProperty('position');
+        work.style.removeProperty('left');
+        work.style.removeProperty('right');
+        work.style.removeProperty('transform');
+        work.style.removeProperty('margin-left');
+        work.style.removeProperty('margin-right');
+        work.style.setProperty('width','100%','important');
+        work.style.setProperty('max-width','100%','important');
+      }
+
+      const results=document.getElementById('results');
+      if(results){
+        results.style.setProperty('width','100%','important');
+        results.style.setProperty('max-width','100%','important');
+        results.style.setProperty('margin','0','important');
+        results.style.setProperty('padding','0','important');
+        results.style.setProperty('overflow-x','hidden','important');
+      }
     }
   }
 
-  window.addEventListener('load',()=>setTimeout(forceMobileLocationCenterV79,700));
-  window.addEventListener('resize',forceMobileLocationCenterV79);
-
-  const q=document.getElementById('q');
-  if(q){
-    q.addEventListener('input',()=>setTimeout(forceMobileLocationCenterV79,50));
-    q.addEventListener('keydown',e=>{
-      if(e.key==='Enter')setTimeout(forceMobileLocationCenterV79,150);
-    });
+  /* openMode 최종 래핑: 모바일 위치확인일 때만 전용 클래스 */
+  const oldOpenModeV80=window.openMode;
+  if(typeof oldOpenModeV80==='function'){
+    window.openMode=function(m){
+      const r=oldOpenModeV80.apply(this,arguments);
+      setTimeout(syncMobileLocationModeV80,40);
+      setTimeout(syncMobileLocationModeV80,180);
+      return r;
+    };
+    try{openMode=window.openMode;}catch(e){}
   }
 
+  window.addEventListener('load',()=>setTimeout(syncMobileLocationModeV80,700));
+  window.addEventListener('resize',syncMobileLocationModeV80);
+
   const obs=new MutationObserver(()=>{
-    clearTimeout(window.__mobileCenterV79);
-    window.__mobileCenterV79=setTimeout(forceMobileLocationCenterV79,60);
+    clearTimeout(window.__mobileLocV80);
+    window.__mobileLocV80=setTimeout(syncMobileLocationModeV80,60);
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
