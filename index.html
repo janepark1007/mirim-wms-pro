@@ -19884,4 +19884,422 @@ body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
 })();
 </script>
 
+
+<style id="admin-location-reset-v88-style">
+/* =========================================================
+   관리자 위치확인: 기존 꼬인 중앙정렬/모바일 강제폭 클래스 무효화
+   ========================================================= */
+body.admin-view.admin-location-clean-v88 main{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow-x:hidden!important;
+}
+
+body.admin-view.admin-location-clean-v88 #work{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+
+  position:static!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  float:none!important;
+
+  width:min(1180px,calc(100% - 24px))!important;
+  max-width:1180px!important;
+  min-width:0!important;
+
+  margin:16px auto 40px!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+}
+
+body.admin-view.admin-location-clean-v88 #work>.card{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0 auto!important;
+  padding:14px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+
+body.admin-view.admin-location-clean-v88 #results{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:8px auto 0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+  overflow-x:hidden!important;
+}
+
+body.admin-view.admin-location-clean-v88 #results .result,
+body.admin-view.admin-location-clean-v88 #results .result-card-main,
+body.admin-view.admin-location-clean-v88 #results .result-main,
+body.admin-view.admin-location-clean-v88 #results .result-content{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  float:none!important;
+  box-sizing:border-box!important;
+}
+
+@media(max-width:760px){
+  body.admin-view.admin-location-clean-v88 main{
+    padding:4px!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #work{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #work>.card{
+    padding:8px!important;
+    border-radius:10px!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #results .result{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 0 8px!important;
+    padding:6px!important;
+  }
+
+  /* 모바일 관리자 위치확인에서는 결과를 한 칼럼으로 */
+  body.admin-view.admin-location-clean-v88 #results .result-card-main{
+    display:block!important;
+    grid-template-columns:none!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #results .result-card-main>*{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #results .result-photo-box{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto 8px!important;
+    display:grid!important;
+    grid-template-columns:96px minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    gap:6px 8px!important;
+    align-items:center!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #results .result-photo-box img,
+  body.admin-view.admin-location-clean-v88 #results .result-photo-empty{
+    grid-column:1!important;
+    grid-row:1 / span 2!important;
+    width:96px!important;
+    height:96px!important;
+    max-width:96px!important;
+    object-fit:contain!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #results .result-photo-box button{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:40px!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #results .result-part,
+  body.admin-view.admin-location-clean-v88 #results .result-name,
+  body.admin-view.admin-location-clean-v88 #results .result-spec,
+  body.admin-view.admin-location-clean-v88 #results .result-location,
+  body.admin-view.admin-location-clean-v88 #results .later-check-direct-wrap,
+  body.admin-view.admin-location-clean-v88 #results .meta,
+  body.admin-view.admin-location-clean-v88 #results .qty-compare,
+  body.admin-view.admin-location-clean-v88 #results .loc-editor,
+  body.admin-view.admin-location-clean-v88 #results .order-share{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+  }
+
+  body.admin-view.admin-location-clean-v88 #results .location-cards-v17,
+  body.admin-view.admin-location-clean-v88 #results .location-summary-grid,
+  body.admin-view.admin-location-clean-v88 #results .multi-location-summary{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+    width:100%!important;
+  }
+}
+</style>
+
+<script id="order-recipient-and-location-reset-v88-js">
+(function(){
+  const RECIPIENT_NOTE_TAG_V88='[전송대상:';
+
+  /* =========================================================
+     1) 일반 카톡주문: 전송 대상자 입력칸 보강
+     ========================================================= */
+  function ensureOrderRecipientFieldV88(){
+    const modal=document.getElementById('standaloneOrderModal');
+    if(!modal)return;
+
+    if(document.getElementById('orderRecipientV88'))return;
+
+    const worker=document.getElementById('standaloneOrderWorker');
+    const host=worker?.closest('label')?.parentElement ||
+               worker?.parentElement ||
+               modal.querySelector('.order-modal-card');
+
+    if(!host)return;
+
+    const wrap=document.createElement('label');
+    wrap.id='orderRecipientWrapV88';
+    wrap.innerHTML=`
+      전송 대상자 <b class="req">(필수)</b>
+      <input id="orderRecipientV88" autocomplete="off" placeholder="예: 김OO / 자재담당 / 거래처명">
+    `;
+
+    if(worker?.closest('label')){
+      worker.closest('label').insertAdjacentElement('afterend',wrap);
+    }else{
+      host.appendChild(wrap);
+    }
+  }
+
+  function getOrderRecipientV88(){
+    return (document.getElementById('orderRecipientV88')?.value||'').trim();
+  }
+
+  function appendRecipientToNoteV88(note,recipient){
+    const raw=String(note||'');
+    if(!recipient)return raw;
+    if(raw.includes(RECIPIENT_NOTE_TAG_V88))return raw;
+    return `${raw}${raw?'\n':''}[전송대상:${recipient}]`;
+  }
+
+  function extractRecipientV88(note){
+    const m=String(note||'').match(/\[전송대상:([^\]]+)\]/);
+    return m ? String(m[1]||'').trim() : '';
+  }
+
+  /* 주문창 열릴 때 대상자 입력칸 초기화 */
+  const oldOpenOrderV88=window.openStandaloneOrder;
+  if(typeof oldOpenOrderV88==='function'){
+    window.openStandaloneOrder=function(){
+      const r=oldOpenOrderV88.apply(this,arguments);
+      setTimeout(()=>{
+        ensureOrderRecipientFieldV88();
+        const el=document.getElementById('orderRecipientV88');
+        if(el)el.value='';
+      },20);
+      return r;
+    };
+    try{openStandaloneOrder=window.openStandaloneOrder;}catch(e){}
+  }
+
+  /* 일반 수동 주문 submit 앞에서 대상자 필수 체크 */
+  const oldSubmitV88=window.submitStandaloneOrder;
+  if(typeof oldSubmitV88==='function'){
+    window.submitStandaloneOrder=async function(){
+      const modal=document.getElementById('standaloneOrderModal');
+      const excelMode=modal?.classList.contains('excel-list-dedicated-v8');
+      if(!excelMode){
+        const recipient=getOrderRecipientV88();
+        if(!recipient){
+          alert('전송 대상자를 입력해 주세요.');
+          document.getElementById('orderRecipientV88')?.focus();
+          return;
+        }
+
+        /* 현재 수동 주문 줄들의 주문란에 전송대상 태그 삽입 */
+        document.querySelectorAll('#simpleOrderRowsV4 .order-row-note-input-v4').forEach((el,i)=>{
+          if(i===0 && !String(el.value||'').includes(RECIPIENT_NOTE_TAG_V88)){
+            el.value=appendRecipientToNoteV88(el.value,recipient);
+          }
+        });
+      }
+      return await oldSubmitV88.apply(this,arguments);
+    };
+    try{submitStandaloneOrder=window.submitStandaloneOrder;}catch(e){}
+  }
+
+  /* 엑셀/ERP 기반 주문도 대상자 기록 */
+  const oldExcelSubmitV88=window.submitExcelStandaloneOrderV3;
+  if(typeof oldExcelSubmitV88==='function'){
+    window.submitExcelStandaloneOrderV3=async function(){
+      const recipient=getOrderRecipientV88();
+      if(!recipient){
+        alert('전송 대상자를 입력해 주세요.');
+        document.getElementById('orderRecipientV88')?.focus();
+        return;
+      }
+
+      const note=document.getElementById('standaloneOrderNote');
+      if(note){
+        note.value=appendRecipientToNoteV88(note.value,recipient);
+      }
+
+      return await oldExcelSubmitV88.apply(this,arguments);
+    };
+    try{submitExcelStandaloneOrderV3=window.submitExcelStandaloneOrderV3;}catch(e){}
+  }
+
+  /* 주문 저장 로그에 recipient를 payload로도 남김 */
+  const oldSaveDailyV88=window.saveDailyOrderRequest;
+  if(typeof oldSaveDailyV88==='function'){
+    window.saveDailyOrderRequest=async function(x,qty,worker,note,requestType,photoUrl){
+      const recipient=getOrderRecipientV88() || extractRecipientV88(note);
+      const taggedNote=appendRecipientToNoteV88(note,recipient);
+
+      const result=await oldSaveDailyV88.call(this,x,qty,worker,taggedNote,requestType,photoUrl);
+
+      if(currentWorker && !isAdmin && recipient && sharedReady && sharedDb){
+        try{
+          await sharedDb.from('wms_admin_notifications').insert({
+            type:'WORKER_ORDER_RECIPIENT',
+            title:'📨 작업자 카톡 전송',
+            message:`${worker||currentWorker.name} → ${recipient} · ${String(x?.part||'')} · ${x?.name||''}`,
+            payload:{
+              worker_name:worker||currentWorker.name,
+              recipient_name:recipient,
+              part_no:String(x?.part||''),
+              item_name:x?.name||'',
+              qty:Number(qty||0),
+              request_type:requestType||'자재 주문요청'
+            },
+            created_at:new Date().toISOString()
+          });
+        }catch(e){
+          console.warn('전송 대상 관리자 알림 저장 실패',e);
+        }
+      }
+
+      return result;
+    };
+    try{saveDailyOrderRequest=window.saveDailyOrderRequest;}catch(e){}
+  }
+
+  /* 관리자 주문표에 전송대상 표시 */
+  function enhanceAdminOrderRecipientV88(){
+    if(!isAdmin)return;
+    const cards=[
+      document.getElementById('todayOrderCard'),
+      document.getElementById('adminWorkerOrderHistoryCardV69')
+    ].filter(Boolean);
+
+    cards.forEach(card=>{
+      card.querySelectorAll('tbody tr').forEach(tr=>{
+        const text=tr.textContent||'';
+        if(text.includes('전송대상:'))return;
+
+        const noteCell=[...tr.querySelectorAll('td')].find(td=>{
+          const t=td.textContent||'';
+          return t.includes('[전송대상:');
+        });
+        if(!noteCell)return;
+
+        const recipient=extractRecipientV88(noteCell.textContent);
+        if(!recipient)return;
+
+        const badge=document.createElement('div');
+        badge.className='order-recipient-badge-v88';
+        badge.textContent='📨 전송대상: '+recipient;
+        badge.style.cssText='margin-top:4px;font-weight:1000;color:#7a4b00;background:#fff3bf;padding:4px 6px;border-radius:7px;display:inline-block';
+        noteCell.appendChild(badge);
+      });
+    });
+  }
+
+  /* =========================================================
+     2) 관리자 위치확인: 모든 기존 위치관련 클래스 초기화 후 깨끗한 레이아웃
+     ========================================================= */
+  function resetAdminLocationLayoutV88(){
+    document.body.classList.remove(
+      'admin-location-center-v76',
+      'mobile-location-v80',
+      'mobile-location-v86',
+      'admin-inout-v75',
+      'admin-shortcut-focus',
+      'admin-task-focus',
+      'admin-records-v72'
+    );
+    document.body.classList.add('admin-location-clean-v88');
+
+    const work=document.getElementById('work');
+    if(work){
+      ['position','left','right','transform','float','margin-left','margin-right','width','max-width']
+        .forEach(p=>work.style.removeProperty(p));
+    }
+
+    const results=document.getElementById('results');
+    if(results){
+      ['width','max-width','margin','padding','overflow-x']
+        .forEach(p=>results.style.removeProperty(p));
+    }
+  }
+
+  const oldAdminLocationV88=window.openAdminLocationFixedV72;
+  window.openAdminLocationFixedV72=function(){
+    resetAdminLocationLayoutV88();
+
+    const r=typeof oldAdminLocationV88==='function'
+      ? oldAdminLocationV88.apply(this,arguments)
+      : undefined;
+
+    setTimeout(resetAdminLocationLayoutV88,0);
+    setTimeout(resetAdminLocationLayoutV88,80);
+    return r;
+  };
+  try{openAdminLocationFixedV72=window.openAdminLocationFixedV72;}catch(e){}
+
+  window.openAdminLocationCheckV66=function(){
+    return window.openAdminLocationFixedV72();
+  };
+  try{openAdminLocationCheckV66=window.openAdminLocationCheckV66;}catch(e){}
+
+  /* 다른 관리자 화면으로 갈 때 clean class 해제 */
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('button');
+    if(!btn)return;
+    const t=(btn.innerText||'').replace(/\s+/g,' ').trim();
+    if(
+      !/위치확인|위치 확인|위치검색/.test(t) &&
+      /입고|출고|사용자|기록|주문|알림|관리자 메인|나중에/.test(t)
+    ){
+      document.body.classList.remove('admin-location-clean-v88');
+    }
+  },true);
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      ensureOrderRecipientFieldV88();
+      enhanceAdminOrderRecipientV88();
+    },1000);
+  });
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__orderRecipientV88);
+    window.__orderRecipientV88=setTimeout(()=>{
+      ensureOrderRecipientFieldV88();
+      enhanceAdminOrderRecipientV88();
+    },120);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
