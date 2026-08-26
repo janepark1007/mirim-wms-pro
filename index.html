@@ -15837,231 +15837,384 @@ body:not(.admin-view):not(.worker-locked) #results .loc-editor{
 </script>
 
 
-<style id="excel-list-dedicated-yellow-v8-style">
-/* =========================================================
-   엑셀리스트 전용 주문 모드
-   - 일반 주문 카테고리 완전 숨김
-   - 엑셀 주문 입력만 표시
-   - 노란색 전용 테마
-   ========================================================= */
-#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-card{
-  border:3px solid #e6c800!important;
-  background:#fffdf2!important;
-  box-shadow:0 18px 55px rgba(130,105,0,.24)!important;
-}
-
-#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head{
-  background:#fff3a6!important;
-  margin:-18px -18px 14px!important;
-  padding:16px 18px!important;
-  border-bottom:2px solid #e5cd45!important;
-  border-radius:17px 17px 0 0!important;
-}
-
-#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head h2{
-  color:#5a4600!important;
-}
-
-#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head h2::after{
-  content:'엑셀리스트 전용 주문';
-  font-size:0;
-}
-
-#standaloneOrderModal.excel-list-dedicated-v8 #standaloneOrderTitleV8{
-  display:block!important;
-  font-size:24px!important;
-  font-weight:1000!important;
-  color:#5a4600!important;
-}
-
-/* 일반 주문 종류와 수동 주문은 전용창에서 완전히 숨김 */
-#standaloneOrderModal.excel-list-dedicated-v8 .simple-kakao-order-v2,
-#standaloneOrderModal.excel-list-dedicated-v8 .order-type-buttons,
-#standaloneOrderModal.excel-list-dedicated-v8 #otherOrderPanel{
+<style id="manual-order-category-admin-v9-style">
+/* 일반 카톡 주문창에서는 엑셀주문 버튼 완전 제거 */
+#standaloneOrderModal:not(.excel-list-dedicated-v8) .excel-order-core-v3{
   display:none!important;
 }
 
-/* 엑셀 주문 패널만 표시 */
-#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  background:#fffbea!important;
-  border:2px solid #ead66a!important;
+/* 관리자 주문품목 관리 모달 */
+#orderCategoryAdminModalV9{
+  position:fixed;
+  inset:0;
+  z-index:10050;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  background:rgba(0,0,0,.45);
+}
+#orderCategoryAdminModalV9.hidden{display:none!important}
+.order-category-admin-card-v9{
+  width:min(560px,100%);
+  max-height:calc(100vh - 30px);
+  overflow:auto;
+  background:#fff;
+  border:2px solid #cfe2d6;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.24);
+}
+.order-category-admin-head-v9{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.order-category-admin-head-v9 h2{
+  margin:0;
+  font-size:21px;
+  color:#075f35;
+}
+.order-category-admin-close-v9{
+  width:40px;
+  height:40px;
+  border:1px solid #d6dfda;
+  border-radius:10px;
+  background:#fff;
+  font-weight:1000;
+}
+.order-category-add-row-v9{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+.order-category-add-row-v9 input{
+  min-height:48px;
+}
+.order-category-add-row-v9 button{
+  min-width:110px;
+  border:0;
+  border-radius:10px;
+  background:#087a43;
+  color:#fff;
+  font-weight:1000;
+}
+.order-category-admin-guide-v9{
+  margin:10px 0;
+  padding:9px 11px;
+  border-radius:10px;
+  background:#fff8d9;
+  color:#6d5700;
+  font-size:12px;
+  font-weight:800;
+}
+.order-category-admin-list-v9{
+  display:grid;
+  gap:7px;
+}
+.order-category-admin-item-v9{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:10px 11px;
+  border:1px solid #dfe7e3;
+  border-radius:10px;
+  background:#f8fbf9;
+}
+.order-category-admin-item-v9 b{font-size:15px}
+.order-category-admin-item-v9 button{
+  min-height:34px;
+  border:1px solid #efc6c0;
+  border-radius:8px;
+  background:#fff0ee;
+  color:#a72920;
+  font-weight:900;
+  padding:0 10px;
+}
+.order-category-admin-empty-v9{
+  padding:18px;
+  text-align:center;
+  color:#6c7871;
+  font-weight:800;
 }
 
-/* 입력칸 노란 테마 */
-#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel input,
-#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel textarea{
-  border:2px solid #ddc85a!important;
-  background:#fff!important;
-}
-
-#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel input:focus,
-#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel textarea:focus{
-  outline:3px solid rgba(254,229,0,.25)!important;
-  border-color:#c6a900!important;
-}
-
-/* 검색결과 선택 영역도 노란 톤 */
-#standaloneOrderModal.excel-list-dedicated-v8 .standalone-order-search-list{
-  border-color:#e2cc5e!important;
-}
-#standaloneOrderModal.excel-list-dedicated-v8 .standalone-order-search-item:hover{
-  background:#fff8c9!important;
-}
-
-/* 전송 버튼 */
-#standaloneOrderModal.excel-list-dedicated-v8 #standaloneOrderSendBtn{
-  background:#fee500!important;
-  color:#191919!important;
-  border:2px solid #d8bf00!important;
-  box-shadow:0 4px 10px rgba(156,131,0,.22)!important;
-}
-
-/* 전용 안내 */
-.excel-dedicated-guide-v8{
-  display:none;
-}
-#standaloneOrderModal.excel-list-dedicated-v8 .excel-dedicated-guide-v8{
-  display:block!important;
-  margin:0 0 12px!important;
-  padding:11px 13px!important;
-  border-radius:11px!important;
-  background:#fff1a8!important;
-  border:1px solid #e5c942!important;
-  color:#604b00!important;
-  font-weight:1000!important;
-  line-height:1.45!important;
+/* 관리자 바로가기 추가 버튼 */
+.order-category-admin-shortcut-v9{
+  background:#fff4c8!important;
+  border-color:#ead77c!important;
+  color:#6c5300!important;
 }
 
 @media(max-width:560px){
-  #standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head{
-    margin:-14px -14px 12px!important;
-    padding:14px!important;
-  }
+  .order-category-add-row-v9{grid-template-columns:1fr}
+  .order-category-add-row-v9 button{min-height:46px}
 }
 </style>
 
-<script id="excel-list-dedicated-yellow-v8-js">
+<script id="manual-order-category-admin-v9-js">
 (function(){
-  function ensureExcelDedicatedGuideV8(){
-    const panel=document.getElementById('excelOrderPanel');
-    if(!panel || panel.querySelector('.excel-dedicated-guide-v8'))return;
+  const ORDER_CAT_PREFIX_V9='ORDER-CATEGORY-';
+  const DEFAULT_ORDER_CATS_V9=['넘버링주문','튜브주문','러그주문','페놀주문','코아주문','기타주문하기'];
 
-    const guide=document.createElement('div');
-    guide.className='excel-dedicated-guide-v8';
-    guide.innerHTML='📋 <b>엑셀리스트 전용 주문</b><br>ERP 품번·품명을 검색해 품목을 선택하세요. 저장된 제품 이미지가 있으면 주문과 함께 자동 전송됩니다.';
-    panel.insertBefore(guide,panel.firstChild);
+  function normalizeOrderCategoryV9(v){
+    return String(v||'').trim().replace(/\s+/g,' ');
   }
 
-  window.openExcelDirectOrderV8=function(){
-    if(!currentWorker){
-      try{showWorkerLogin();}catch(e){}
-      alert('작업자 로그인 후 사용할 수 있습니다.');
-      return;
-    }
-
-    const modal=document.getElementById('standaloneOrderModal');
-    if(!modal){
-      alert('엑셀리스트 주문창을 찾지 못했습니다.');
-      return;
-    }
-
-    /* 기존 주문창 기본 초기화 */
-    try{openStandaloneOrder();}catch(e){
-      console.error(e);
-      alert('엑셀리스트 주문창을 열지 못했습니다.');
-      return;
-    }
-
-    modal.classList.add('excel-list-dedicated-v8');
-
-    /* 제목을 전용 주문으로 변경 */
-    const h2=modal.querySelector('.order-modal-head h2');
-    if(h2){
-      h2.dataset.originalTitleV8=h2.dataset.originalTitleV8||h2.textContent;
-      h2.textContent='📋 엑셀리스트 전용 주문';
-    }
-
-    ensureExcelDedicatedGuideV8();
-
-    /* 엑셀 패널만 강제 표시 */
-    const excelPanel=document.getElementById('excelOrderPanel');
-    if(excelPanel){
-      excelPanel.classList.remove('hidden');
-      excelPanel.classList.add('excel-core-open-v3');
-      excelPanel.style.removeProperty('display');
-    }
-
-    /* 일반 주문 선택 상태 제거 */
-    const cat=document.getElementById('simpleOrderCategoryV2');
-    if(cat)cat.value='';
-    document.querySelectorAll('[data-order-category-v2],.excel-order-core-v3')
-      .forEach(b=>b.classList.remove('active'));
-
-    /* 기존 엑셀 주문 타입 초기화 */
-    try{
-      if(typeof selectOrderType==='function')selectOrderType('excel');
-    }catch(e){}
-
-    /* 전송 버튼 표시 */
-    const send=document.getElementById('standaloneOrderSendBtn');
-    if(send)send.classList.remove('hidden');
-
-    setTimeout(()=>{
-      const q=document.getElementById('standaloneOrderSearch') ||
-              document.querySelector('#excelOrderPanel input');
-      try{q?.focus();}catch(e){}
-    },80);
-  };
-
-  /* 기존 메인 엑셀전용주문 버튼은 전용 함수로 교체 */
-  function wireExcelDedicatedShortcutV8(){
-    if(isAdmin)return;
-    document.querySelectorAll('.excel-direct-order-v7').forEach(btn=>{
-      btn.onclick=(e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-        openExcelDirectOrderV8();
-      };
-
-      const label=btn.querySelector('span:nth-child(2)');
-      if(label)label.textContent='엑셀리스트 전용주문';
-      const small=btn.querySelector('small');
-      if(small)small.textContent='ERP·엑셀 품목 + 기존 이미지 자동첨부';
-    });
+  function categoryButtonHtmlV9(name){
+    const icons={
+      '넘버링주문':'🔢',
+      '튜브주문':'🧪',
+      '러그주문':'🔩',
+      '페놀주문':'🟫',
+      '코아주문':'🧲',
+      '기타주문하기':'📦'
+    };
+    const icon=icons[name]||'🛒';
+    const safe=String(name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return `<button type="button" data-order-category-v2="${safe}" onclick="selectSimpleKakaoCategoryV2('${String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}',this)">${icon} ${safe}</button>`;
   }
 
-  /* 닫을 때 전용모드 해제 → 일반 카톡 주문은 기존 화면 유지 */
-  const closeBeforeV8=window.closeStandaloneOrder;
-  window.closeStandaloneOrder=function(){
-    const modal=document.getElementById('standaloneOrderModal');
-    if(modal){
-      modal.classList.remove('excel-list-dedicated-v8');
+  async function loadSharedOrderCategoriesV9(){
+    const names=[...DEFAULT_ORDER_CATS_V9];
 
-      const h2=modal.querySelector('.order-modal-head h2');
-      if(h2 && h2.dataset.originalTitleV8){
-        h2.textContent=h2.dataset.originalTitleV8;
+    if(sharedReady&&sharedDb){
+      try{
+        const {data,error}=await sharedDb
+          .from('production_item_meta')
+          .select('part_no,usage,updated_at')
+          .like('part_no',ORDER_CAT_PREFIX_V9+'%')
+          .order('updated_at',{ascending:true});
+        if(error)throw error;
+
+        (data||[]).forEach(r=>{
+          const n=normalizeOrderCategoryV9(r.usage);
+          if(n && !names.includes(n))names.push(n);
+        });
+      }catch(e){
+        console.warn('주문품목 불러오기 실패',e);
       }
     }
 
-    if(typeof closeBeforeV8==='function'){
-      return closeBeforeV8.apply(this,arguments);
+    return names;
+  }
+
+  async function renderOrderCategoryButtonsV9(){
+    const grid=document.querySelector('#standaloneOrderModal .simple-order-category-grid-v2');
+    if(!grid)return;
+
+    const names=await loadSharedOrderCategoriesV9();
+
+    /* 엑셀주문은 일반창에서 제외하고 주문품목만 재구성 */
+    grid.innerHTML=names.map(categoryButtonHtmlV9).join('');
+  }
+
+  function ensureOrderCategoryAdminModalV9(){
+    let modal=document.getElementById('orderCategoryAdminModalV9');
+    if(modal)return modal;
+
+    modal=document.createElement('div');
+    modal.id='orderCategoryAdminModalV9';
+    modal.className='hidden';
+    modal.innerHTML=`
+      <div class="order-category-admin-card-v9">
+        <div class="order-category-admin-head-v9">
+          <h2>🛒 카톡 주문품목 관리</h2>
+          <button type="button" class="order-category-admin-close-v9" onclick="closeOrderCategoryAdminV9()">✕</button>
+        </div>
+
+        <div class="order-category-admin-guide-v9">
+          관리자만 주문 품목을 추가·삭제할 수 있습니다. 등록한 품목은 작업자 카톡 주문창에 공용으로 표시됩니다.
+        </div>
+
+        <div class="order-category-add-row-v9">
+          <input id="orderCategoryNameInputV9" placeholder="추가할 주문 품목명 입력 (예: 케이블주문)">
+          <button type="button" onclick="saveOrderCategoryV9()">＋ 품목 추가</button>
+        </div>
+
+        <div id="orderCategoryAdminListV9" class="order-category-admin-list-v9"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  window.openOrderCategoryAdminV9=async function(){
+    if(!isAdmin){
+      alert('관리자 모드에서만 주문품목을 추가할 수 있습니다.');
+      return;
     }
+
+    const modal=ensureOrderCategoryAdminModalV9();
+    modal.classList.remove('hidden');
+    await renderOrderCategoryAdminListV9();
+    setTimeout(()=>document.getElementById('orderCategoryNameInputV9')?.focus(),50);
+  };
+
+  window.closeOrderCategoryAdminV9=function(){
+    document.getElementById('orderCategoryAdminModalV9')?.classList.add('hidden');
+  };
+
+  window.saveOrderCategoryV9=async function(){
+    if(!isAdmin){
+      alert('관리자만 추가할 수 있습니다.');
+      return;
+    }
+    if(!sharedReady||!sharedDb){
+      alert('공용 DB 연결 후 추가할 수 있습니다.');
+      return;
+    }
+
+    const input=document.getElementById('orderCategoryNameInputV9');
+    const name=normalizeOrderCategoryV9(input?.value);
+    if(!name){
+      alert('추가할 주문 품목명을 입력해 주세요.');
+      input?.focus();
+      return;
+    }
+
+    const existing=await loadSharedOrderCategoriesV9();
+    if(existing.includes(name)){
+      alert('이미 등록된 주문 품목입니다.');
+      return;
+    }
+
+    const key=ORDER_CAT_PREFIX_V9+Date.now()+'-'+Math.random().toString(36).slice(2,7);
+    const {error}=await sharedDb.from('production_item_meta').upsert({
+      part_no:key,
+      usage:name,
+      min_qty:null,
+      updated_at:new Date().toISOString()
+    },{onConflict:'part_no'});
+
+    if(error){
+      alert('주문 품목 추가 실패: '+(error.message||error));
+      return;
+    }
+
+    if(input)input.value='';
+    await renderOrderCategoryAdminListV9();
+    await renderOrderCategoryButtonsV9();
+    alert('✅ 주문 품목을 추가했습니다.');
+  };
+
+  window.deleteOrderCategoryV9=async function(partNo){
+    if(!isAdmin)return;
+    if(!sharedReady||!sharedDb)return alert('공용 DB 연결이 필요합니다.');
+
+    if(!confirm('이 추가 주문 품목을 삭제할까요?'))return;
+
+    const {error}=await sharedDb
+      .from('production_item_meta')
+      .delete()
+      .eq('part_no',partNo);
+
+    if(error){
+      alert('삭제 실패: '+(error.message||error));
+      return;
+    }
+
+    await renderOrderCategoryAdminListV9();
+    await renderOrderCategoryButtonsV9();
+  };
+
+  window.renderOrderCategoryAdminListV9=async function(){
+    const list=document.getElementById('orderCategoryAdminListV9');
+    if(!list)return;
+
+    if(!sharedReady||!sharedDb){
+      list.innerHTML='<div class="order-category-admin-empty-v9">공용 DB 연결 후 관리할 수 있습니다.</div>';
+      return;
+    }
+
+    try{
+      const {data,error}=await sharedDb
+        .from('production_item_meta')
+        .select('part_no,usage,updated_at')
+        .like('part_no',ORDER_CAT_PREFIX_V9+'%')
+        .order('updated_at',{ascending:true});
+
+      if(error)throw error;
+      const rows=(data||[]).filter(r=>normalizeOrderCategoryV9(r.usage));
+
+      const defaults=DEFAULT_ORDER_CATS_V9.map(name=>`
+        <div class="order-category-admin-item-v9">
+          <b>${name}</b>
+          <span style="font-size:12px;color:#6d7972;font-weight:800">기본 품목</span>
+        </div>
+      `).join('');
+
+      const custom=rows.map(r=>`
+        <div class="order-category-admin-item-v9">
+          <b>${String(r.usage||'')}</b>
+          <button type="button" onclick="deleteOrderCategoryV9('${String(r.part_no).replace(/'/g,"\\'")}')">삭제</button>
+        </div>
+      `).join('');
+
+      list.innerHTML=defaults+(custom||'<div class="order-category-admin-empty-v9">추가 주문 품목이 없습니다.</div>');
+    }catch(e){
+      list.innerHTML='<div class="order-category-admin-empty-v9">주문 품목을 불러오지 못했습니다.</div>';
+    }
+  };
+
+  function ensureAdminOrderCategoryShortcutV9(){
+    if(!isAdmin)return;
+
+    const root=document.getElementById('adminReferenceHome');
+    const grid=root?.querySelector('.ar-grid');
+    if(grid && !grid.querySelector('.order-category-admin-shortcut-v9')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='ar-btn order-category-admin-shortcut-v9';
+      b.innerHTML='<span class="ico">🛒</span><span>카톡 주문품목 관리</span><small>작업자 주문 품목 추가</small>';
+      b.onclick=openOrderCategoryAdminV9;
+      grid.appendChild(b);
+    }
+
+    const welcome=document.querySelector('#adminWelcomeShortcutBox .admin-welcome-shortcut-grid');
+    if(welcome && !welcome.querySelector('.order-category-admin-shortcut-v9')){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='admin-welcome-shortcut-btn order-category-admin-shortcut-v9';
+      b.innerHTML='<span class="ico">🛒</span><span>카톡 주문품목 관리</span><small>작업자 주문 품목 추가</small>';
+      b.onclick=openOrderCategoryAdminV9;
+      welcome.appendChild(b);
+    }
+  }
+
+  /* 일반 카톡주문 열릴 때 공용 주문품목 최신화 */
+  const openBeforeV9=window.openStandaloneOrder;
+  window.openStandaloneOrder=function(){
+    const result=typeof openBeforeV9==='function' ? openBeforeV9.apply(this,arguments) : undefined;
+
+    setTimeout(()=>{
+      const modal=document.getElementById('standaloneOrderModal');
+      if(!modal || modal.classList.contains('excel-list-dedicated-v8'))return;
+      renderOrderCategoryButtonsV9();
+    },60);
+
+    return result;
   };
 
   window.addEventListener('load',()=>{
     setTimeout(()=>{
-      ensureExcelDedicatedGuideV8();
-      wireExcelDedicatedShortcutV8();
-    },1500);
+      ensureOrderCategoryAdminModalV9();
+      renderOrderCategoryButtonsV9();
+      ensureAdminOrderCategoryShortcutV9();
+    },1400);
   });
 
+  document.addEventListener('click',()=>{
+    if(isAdmin)setTimeout(ensureAdminOrderCategoryShortcutV9,80);
+  },true);
+
   const obs=new MutationObserver(()=>{
-    if(isAdmin)return;
-    clearTimeout(window.__excelDedicatedV8);
-    window.__excelDedicatedV8=setTimeout(wireExcelDedicatedShortcutV8,70);
+    clearTimeout(window.__orderCatV9);
+    window.__orderCatV9=setTimeout(()=>{
+      if(isAdmin)ensureAdminOrderCategoryShortcutV9();
+    },80);
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
