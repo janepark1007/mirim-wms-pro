@@ -18440,4 +18440,162 @@ body.admin-view.admin-location-center-v76 #work #count{
 })();
 </script>
 
+
+<style id="admin-inout-buttons-force-v81-style">
+/* 관리자 메인의 입고/출고 버튼은 반드시 표시 */
+body.admin-view #adminReferenceHome .ar-grid .admin-in-v81,
+body.admin-view #adminReferenceHome .ar-grid .admin-out-v81,
+body.admin-view #adminWelcomeShortcutBox .admin-in-v81,
+body.admin-view #adminWelcomeShortcutBox .admin-out-v81{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+
+/* 색상 */
+body.admin-view #adminReferenceHome .admin-in-v81{
+  background:#e2f6e9!important;
+  border-color:#b7dec5!important;
+  color:#17633d!important;
+}
+body.admin-view #adminReferenceHome .admin-out-v81{
+  background:#fde7e5!important;
+  border-color:#efbeb9!important;
+  color:#a12a24!important;
+}
+
+/* 작업자 모드에서는 입고/출고 관련 버튼 계속 강제 숨김 */
+body:not(.admin-view) #workerMainShortcutCard [data-worker-main="inbound"],
+body:not(.admin-view) #workerMainShortcutCard [data-worker-main="outbound"],
+body:not(.admin-view) #workerMainShortcutCard .admin-in-v81,
+body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
+  display:none!important;
+}
+</style>
+
+<script id="admin-inout-buttons-force-v81-js">
+(function(){
+  function openAdminInV81(){
+    if(!isAdmin)return alert('관리자 모드에서만 입고 등록할 수 있습니다.');
+
+    document.body.classList.remove(
+      'admin-reference-home','admin-shortcut-focus','admin-task-focus',
+      'admin-records-v72','admin-location-center-v76','mobile-location-v80'
+    );
+
+    const ref=document.getElementById('adminReferenceHome');
+    if(ref)ref.style.setProperty('display','none','important');
+
+    try{
+      openMode('inbound');
+    }catch(e){
+      console.error(e);
+      alert('입고 등록 화면을 열지 못했습니다.');
+    }
+  }
+
+  function openAdminOutV81(){
+    if(!isAdmin)return alert('관리자 모드에서만 출고 등록할 수 있습니다.');
+
+    document.body.classList.remove(
+      'admin-reference-home','admin-shortcut-focus','admin-task-focus',
+      'admin-records-v72','admin-location-center-v76','mobile-location-v80'
+    );
+
+    const ref=document.getElementById('adminReferenceHome');
+    if(ref)ref.style.setProperty('display','none','important');
+
+    try{
+      openMode('outbound');
+    }catch(e){
+      console.error(e);
+      alert('출고 등록 화면을 열지 못했습니다.');
+    }
+  }
+
+  window.openAdminInV81=openAdminInV81;
+  window.openAdminOutV81=openAdminOutV81;
+
+  function ensureAdminInOutButtonsV81(){
+    if(!isAdmin)return;
+
+    /* 신형 관리자 메인 */
+    const grid=document.querySelector('#adminReferenceHome .ar-grid');
+    if(grid){
+      let inBtn=grid.querySelector('.admin-in-v81');
+      let outBtn=grid.querySelector('.admin-out-v81');
+
+      if(!inBtn){
+        inBtn=document.createElement('button');
+        inBtn.type='button';
+        inBtn.className='ar-btn admin-in-v81';
+        inBtn.innerHTML='<span class="ico">⬇️</span><span>입고 등록</span><small>관리자 전용</small>';
+        inBtn.onclick=openAdminInV81;
+        grid.insertBefore(inBtn,grid.firstChild);
+      }else{
+        inBtn.onclick=openAdminInV81;
+      }
+
+      if(!outBtn){
+        outBtn=document.createElement('button');
+        outBtn.type='button';
+        outBtn.className='ar-btn admin-out-v81';
+        outBtn.innerHTML='<span class="ico">⬆️</span><span>출고 등록</span><small>관리자 전용</small>';
+        outBtn.onclick=openAdminOutV81;
+        grid.insertBefore(outBtn,inBtn.nextSibling);
+      }else{
+        outBtn.onclick=openAdminOutV81;
+      }
+    }
+
+    /* 구형 관리자 바로가기 영역도 존재하면 함께 추가 */
+    const oldGrid=document.querySelector('#adminWelcomeShortcutBox .admin-welcome-shortcut-grid');
+    if(oldGrid){
+      if(!oldGrid.querySelector('.admin-in-v81')){
+        const b=document.createElement('button');
+        b.type='button';
+        b.className='admin-welcome-shortcut-btn admin-in-v81';
+        b.innerHTML='<span class="ico">⬇️</span><span>입고 등록</span><small>관리자 전용</small>';
+        b.onclick=openAdminInV81;
+        oldGrid.insertBefore(b,oldGrid.firstChild);
+      }
+      if(!oldGrid.querySelector('.admin-out-v81')){
+        const b=document.createElement('button');
+        b.type='button';
+        b.className='admin-welcome-shortcut-btn admin-out-v81';
+        b.innerHTML='<span class="ico">⬆️</span><span>출고 등록</span><small>관리자 전용</small>';
+        b.onclick=openAdminOutV81;
+        const first=oldGrid.querySelector('.admin-in-v81');
+        oldGrid.insertBefore(b,first?.nextSibling||oldGrid.firstChild);
+      }
+    }
+  }
+
+  /* 관리자 메인 표시 함수 뒤에 항상 버튼 재생성 */
+  const oldShowAdminHomeV81=window.showAdminReferenceHome;
+  if(typeof oldShowAdminHomeV81==='function'){
+    window.showAdminReferenceHome=function(){
+      const r=oldShowAdminHomeV81.apply(this,arguments);
+      setTimeout(ensureAdminInOutButtonsV81,80);
+      return r;
+    };
+    try{showAdminReferenceHome=window.showAdminReferenceHome;}catch(e){}
+  }
+
+  window.addEventListener('load',()=>setTimeout(ensureAdminInOutButtonsV81,900));
+
+  document.addEventListener('click',()=>{
+    if(isAdmin)setTimeout(ensureAdminInOutButtonsV81,80);
+  },true);
+
+  const obs=new MutationObserver(()=>{
+    if(!isAdmin)return;
+    clearTimeout(window.__adminInOutV81);
+    window.__adminInOutV81=setTimeout(ensureAdminInOutButtonsV81,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
