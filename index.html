@@ -15836,5 +15836,236 @@ body:not(.admin-view):not(.worker-locked) #results .loc-editor{
 })();
 </script>
 
+
+<style id="excel-list-dedicated-yellow-v8-style">
+/* =========================================================
+   엑셀리스트 전용 주문 모드
+   - 일반 주문 카테고리 완전 숨김
+   - 엑셀 주문 입력만 표시
+   - 노란색 전용 테마
+   ========================================================= */
+#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-card{
+  border:3px solid #e6c800!important;
+  background:#fffdf2!important;
+  box-shadow:0 18px 55px rgba(130,105,0,.24)!important;
+}
+
+#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head{
+  background:#fff3a6!important;
+  margin:-18px -18px 14px!important;
+  padding:16px 18px!important;
+  border-bottom:2px solid #e5cd45!important;
+  border-radius:17px 17px 0 0!important;
+}
+
+#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head h2{
+  color:#5a4600!important;
+}
+
+#standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head h2::after{
+  content:'엑셀리스트 전용 주문';
+  font-size:0;
+}
+
+#standaloneOrderModal.excel-list-dedicated-v8 #standaloneOrderTitleV8{
+  display:block!important;
+  font-size:24px!important;
+  font-weight:1000!important;
+  color:#5a4600!important;
+}
+
+/* 일반 주문 종류와 수동 주문은 전용창에서 완전히 숨김 */
+#standaloneOrderModal.excel-list-dedicated-v8 .simple-kakao-order-v2,
+#standaloneOrderModal.excel-list-dedicated-v8 .order-type-buttons,
+#standaloneOrderModal.excel-list-dedicated-v8 #otherOrderPanel{
+  display:none!important;
+}
+
+/* 엑셀 주문 패널만 표시 */
+#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  background:#fffbea!important;
+  border:2px solid #ead66a!important;
+}
+
+/* 입력칸 노란 테마 */
+#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel input,
+#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel textarea{
+  border:2px solid #ddc85a!important;
+  background:#fff!important;
+}
+
+#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel input:focus,
+#standaloneOrderModal.excel-list-dedicated-v8 #excelOrderPanel textarea:focus{
+  outline:3px solid rgba(254,229,0,.25)!important;
+  border-color:#c6a900!important;
+}
+
+/* 검색결과 선택 영역도 노란 톤 */
+#standaloneOrderModal.excel-list-dedicated-v8 .standalone-order-search-list{
+  border-color:#e2cc5e!important;
+}
+#standaloneOrderModal.excel-list-dedicated-v8 .standalone-order-search-item:hover{
+  background:#fff8c9!important;
+}
+
+/* 전송 버튼 */
+#standaloneOrderModal.excel-list-dedicated-v8 #standaloneOrderSendBtn{
+  background:#fee500!important;
+  color:#191919!important;
+  border:2px solid #d8bf00!important;
+  box-shadow:0 4px 10px rgba(156,131,0,.22)!important;
+}
+
+/* 전용 안내 */
+.excel-dedicated-guide-v8{
+  display:none;
+}
+#standaloneOrderModal.excel-list-dedicated-v8 .excel-dedicated-guide-v8{
+  display:block!important;
+  margin:0 0 12px!important;
+  padding:11px 13px!important;
+  border-radius:11px!important;
+  background:#fff1a8!important;
+  border:1px solid #e5c942!important;
+  color:#604b00!important;
+  font-weight:1000!important;
+  line-height:1.45!important;
+}
+
+@media(max-width:560px){
+  #standaloneOrderModal.excel-list-dedicated-v8 .order-modal-head{
+    margin:-14px -14px 12px!important;
+    padding:14px!important;
+  }
+}
+</style>
+
+<script id="excel-list-dedicated-yellow-v8-js">
+(function(){
+  function ensureExcelDedicatedGuideV8(){
+    const panel=document.getElementById('excelOrderPanel');
+    if(!panel || panel.querySelector('.excel-dedicated-guide-v8'))return;
+
+    const guide=document.createElement('div');
+    guide.className='excel-dedicated-guide-v8';
+    guide.innerHTML='📋 <b>엑셀리스트 전용 주문</b><br>ERP 품번·품명을 검색해 품목을 선택하세요. 저장된 제품 이미지가 있으면 주문과 함께 자동 전송됩니다.';
+    panel.insertBefore(guide,panel.firstChild);
+  }
+
+  window.openExcelDirectOrderV8=function(){
+    if(!currentWorker){
+      try{showWorkerLogin();}catch(e){}
+      alert('작업자 로그인 후 사용할 수 있습니다.');
+      return;
+    }
+
+    const modal=document.getElementById('standaloneOrderModal');
+    if(!modal){
+      alert('엑셀리스트 주문창을 찾지 못했습니다.');
+      return;
+    }
+
+    /* 기존 주문창 기본 초기화 */
+    try{openStandaloneOrder();}catch(e){
+      console.error(e);
+      alert('엑셀리스트 주문창을 열지 못했습니다.');
+      return;
+    }
+
+    modal.classList.add('excel-list-dedicated-v8');
+
+    /* 제목을 전용 주문으로 변경 */
+    const h2=modal.querySelector('.order-modal-head h2');
+    if(h2){
+      h2.dataset.originalTitleV8=h2.dataset.originalTitleV8||h2.textContent;
+      h2.textContent='📋 엑셀리스트 전용 주문';
+    }
+
+    ensureExcelDedicatedGuideV8();
+
+    /* 엑셀 패널만 강제 표시 */
+    const excelPanel=document.getElementById('excelOrderPanel');
+    if(excelPanel){
+      excelPanel.classList.remove('hidden');
+      excelPanel.classList.add('excel-core-open-v3');
+      excelPanel.style.removeProperty('display');
+    }
+
+    /* 일반 주문 선택 상태 제거 */
+    const cat=document.getElementById('simpleOrderCategoryV2');
+    if(cat)cat.value='';
+    document.querySelectorAll('[data-order-category-v2],.excel-order-core-v3')
+      .forEach(b=>b.classList.remove('active'));
+
+    /* 기존 엑셀 주문 타입 초기화 */
+    try{
+      if(typeof selectOrderType==='function')selectOrderType('excel');
+    }catch(e){}
+
+    /* 전송 버튼 표시 */
+    const send=document.getElementById('standaloneOrderSendBtn');
+    if(send)send.classList.remove('hidden');
+
+    setTimeout(()=>{
+      const q=document.getElementById('standaloneOrderSearch') ||
+              document.querySelector('#excelOrderPanel input');
+      try{q?.focus();}catch(e){}
+    },80);
+  };
+
+  /* 기존 메인 엑셀전용주문 버튼은 전용 함수로 교체 */
+  function wireExcelDedicatedShortcutV8(){
+    if(isAdmin)return;
+    document.querySelectorAll('.excel-direct-order-v7').forEach(btn=>{
+      btn.onclick=(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        openExcelDirectOrderV8();
+      };
+
+      const label=btn.querySelector('span:nth-child(2)');
+      if(label)label.textContent='엑셀리스트 전용주문';
+      const small=btn.querySelector('small');
+      if(small)small.textContent='ERP·엑셀 품목 + 기존 이미지 자동첨부';
+    });
+  }
+
+  /* 닫을 때 전용모드 해제 → 일반 카톡 주문은 기존 화면 유지 */
+  const closeBeforeV8=window.closeStandaloneOrder;
+  window.closeStandaloneOrder=function(){
+    const modal=document.getElementById('standaloneOrderModal');
+    if(modal){
+      modal.classList.remove('excel-list-dedicated-v8');
+
+      const h2=modal.querySelector('.order-modal-head h2');
+      if(h2 && h2.dataset.originalTitleV8){
+        h2.textContent=h2.dataset.originalTitleV8;
+      }
+    }
+
+    if(typeof closeBeforeV8==='function'){
+      return closeBeforeV8.apply(this,arguments);
+    }
+  };
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      ensureExcelDedicatedGuideV8();
+      wireExcelDedicatedShortcutV8();
+    },1500);
+  });
+
+  const obs=new MutationObserver(()=>{
+    if(isAdmin)return;
+    clearTimeout(window.__excelDedicatedV8);
+    window.__excelDedicatedV8=setTimeout(wireExcelDedicatedShortcutV8,70);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
 <style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
