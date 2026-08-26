@@ -1278,6 +1278,39 @@ body.admin-view *:has(> :only-child) { }
 <button id="excelOrderTypeBtn" onclick="selectOrderType('excel')" type="button">📋 엑셀리스트 카톡 주문하기</button>
 <button id="otherOrderTypeBtn" onclick="selectOrderType('other')" type="button">📷 기타 주문하기</button>
 </div>
+<section id="simpleKakaoOrderV2" class="simple-kakao-order-v2">
+  <div class="simple-order-guide-v2">주문 종류를 선택한 후 내용을 입력하세요.</div>
+
+  <div class="simple-order-category-grid-v2">
+    <button type="button" data-order-category-v2="넘버링주문" onclick="selectSimpleKakaoCategoryV2('넘버링주문',this)">🔢 넘버링주문</button>
+    <button type="button" data-order-category-v2="튜브주문" onclick="selectSimpleKakaoCategoryV2('튜브주문',this)">🧪 튜브주문</button>
+    <button type="button" data-order-category-v2="러그주문" onclick="selectSimpleKakaoCategoryV2('러그주문',this)">🔩 러그주문</button>
+    <button type="button" data-order-category-v2="페놀주문" onclick="selectSimpleKakaoCategoryV2('페놀주문',this)">🟫 페놀주문</button>
+    <button type="button" data-order-category-v2="코아주문" onclick="selectSimpleKakaoCategoryV2('코아주문',this)">🧲 코아주문</button>
+    <button type="button" data-order-category-v2="기타주문" onclick="selectSimpleKakaoCategoryV2('기타주문',this)">📦 기타주문</button>
+  </div>
+
+  <input id="simpleOrderCategoryV2" type="hidden"/>
+
+  <div id="simpleOrderFieldsV2" class="simple-order-fields-v2 hidden">
+    <label>품명 <b class="req">(필수)</b>
+      <input id="simpleOrderNameV2" autocomplete="off" placeholder="품명을 입력하세요"/>
+    </label>
+
+    <label>사이즈 <b class="req">(필수)</b>
+      <input id="simpleOrderSizeV2" autocomplete="off" placeholder="사이즈 또는 규격을 입력하세요"/>
+    </label>
+
+    <label>주문수량 <b class="req">(필수)</b>
+      <input id="simpleOrderQtyV2" type="number" min="1" inputmode="numeric" placeholder="주문수량을 입력하세요"/>
+    </label>
+
+    <label>비고
+      <textarea id="simpleOrderNoteV2" rows="3" placeholder="사용처, 긴급 여부 등 필요한 내용을 입력하세요"></textarea>
+    </label>
+  </div>
+</section>
+
 <section class="order-type-panel hidden" id="excelOrderPanel">
 <label>ERP 품번·품명 검색 <b class="req">(필수)</b>
 <input autocomplete="off" id="standaloneOrderSearch" oninput="renderStandaloneOrderSearch()" placeholder="ERP 품번 또는 품명으로 검색하세요"/>
@@ -14440,6 +14473,258 @@ body:not(.admin-view):not(.worker-locked) #unregisteredItemCard.worker-unreg-ope
     window.__workerUnregV2=setTimeout(rewireWorkerUnregisteredV2,80);
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<style id="simple-kakao-order-v2-style">
+/* 기존 엑셀/기타 주문 UI는 숨기고 새 6종 주문 UI만 사용 */
+#standaloneOrderModal .order-type-buttons,
+#standaloneOrderModal #excelOrderPanel,
+#standaloneOrderModal #otherOrderPanel{
+  display:none!important;
+}
+
+.simple-kakao-order-v2{
+  margin-top:14px;
+}
+
+.simple-order-guide-v2{
+  padding:10px 12px;
+  border-radius:10px;
+  background:#fff8d9;
+  color:#645100;
+  font-size:13px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.simple-order-category-grid-v2{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+
+.simple-order-category-grid-v2 button{
+  min-height:58px;
+  padding:8px 6px;
+  border:2px solid #d8e2dc;
+  border-radius:12px;
+  background:#f8fbf9;
+  color:#24513a;
+  font-size:14px;
+  font-weight:1000;
+  cursor:pointer;
+  white-space:normal;
+  word-break:keep-all;
+}
+
+.simple-order-category-grid-v2 button.active{
+  background:#fee500;
+  border-color:#d7bd00;
+  color:#2b2200;
+  box-shadow:0 3px 9px rgba(160,135,0,.20);
+}
+
+.simple-order-fields-v2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+.simple-order-fields-v2 label{
+  display:block;
+  font-weight:900;
+  color:#2d342f;
+}
+
+.simple-order-fields-v2 input,
+.simple-order-fields-v2 textarea{
+  display:block;
+  width:100%;
+  margin-top:6px;
+  border:1px solid #cfd8d2;
+  border-radius:11px;
+  padding:11px 12px;
+  background:#fff;
+  font:inherit;
+  box-sizing:border-box;
+}
+
+.simple-order-fields-v2 textarea{
+  min-height:96px;
+  resize:vertical;
+}
+
+.simple-order-fields-v2 label:last-child{
+  grid-column:1/-1;
+}
+
+@media(max-width:560px){
+  .simple-order-category-grid-v2{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .simple-order-category-grid-v2 button{
+    min-height:62px;
+    font-size:14px;
+  }
+  .simple-order-fields-v2{
+    grid-template-columns:1fr;
+  }
+  .simple-order-fields-v2 label:last-child{
+    grid-column:auto;
+  }
+}
+</style>
+
+<script id="simple-kakao-order-v2-js">
+(function(){
+  window.selectSimpleKakaoCategoryV2=function(category,btn){
+    const hidden=document.getElementById('simpleOrderCategoryV2');
+    const fields=document.getElementById('simpleOrderFieldsV2');
+    const send=document.getElementById('standaloneOrderSendBtn');
+
+    if(hidden)hidden.value=category||'';
+    document.querySelectorAll('[data-order-category-v2]').forEach(b=>b.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+
+    if(fields)fields.classList.remove('hidden');
+    if(send)send.classList.remove('hidden');
+
+    setTimeout(()=>document.getElementById('simpleOrderNameV2')?.focus(),50);
+  };
+
+  const originalOpenStandaloneOrderV2=window.openStandaloneOrder;
+
+  window.openStandaloneOrder=function(){
+    if(!currentWorker){
+      try{showWorkerLogin();}catch(e){}
+      alert('작업자 로그인 후 사용할 수 있습니다.');
+      return;
+    }
+
+    const m=document.getElementById('standaloneOrderModal');
+    if(!m)return;
+
+    document.getElementById('simpleOrderCategoryV2').value='';
+    document.getElementById('simpleOrderNameV2').value='';
+    document.getElementById('simpleOrderSizeV2').value='';
+    document.getElementById('simpleOrderQtyV2').value='';
+    document.getElementById('simpleOrderNoteV2').value='';
+
+    document.querySelectorAll('[data-order-category-v2]').forEach(b=>b.classList.remove('active'));
+    document.getElementById('simpleOrderFieldsV2')?.classList.add('hidden');
+    document.getElementById('standaloneOrderSendBtn')?.classList.add('hidden');
+
+    const worker=document.getElementById('standaloneOrderWorker');
+    if(worker)worker.value=currentWorker?.name||'';
+
+    m.classList.remove('hidden');
+    m.setAttribute('aria-hidden','false');
+
+    setTimeout(()=>document.querySelector('[data-order-category-v2]')?.focus(),70);
+  };
+
+  window.submitStandaloneOrder=async function(){
+    const category=(document.getElementById('simpleOrderCategoryV2')?.value||'').trim();
+    const name=(document.getElementById('simpleOrderNameV2')?.value||'').trim();
+    const size=(document.getElementById('simpleOrderSizeV2')?.value||'').trim();
+    const qtyRaw=(document.getElementById('simpleOrderQtyV2')?.value||'').trim();
+    const note=(document.getElementById('simpleOrderNoteV2')?.value||'').trim();
+    const worker=(document.getElementById('standaloneOrderWorker')?.value||currentWorker?.name||'').trim();
+
+    if(!category){
+      alert('주문 종류를 선택해 주세요.');
+      return;
+    }
+    if(!name){
+      alert('품명을 입력해 주세요.');
+      document.getElementById('simpleOrderNameV2')?.focus();
+      return;
+    }
+    if(!size){
+      alert('사이즈를 입력해 주세요.');
+      document.getElementById('simpleOrderSizeV2')?.focus();
+      return;
+    }
+    if(!qtyRaw || Number(qtyRaw)<=0){
+      alert('주문수량을 1개 이상 입력해 주세요.');
+      document.getElementById('simpleOrderQtyV2')?.focus();
+      return;
+    }
+    if(!worker){
+      alert('작업자 로그인 정보가 없습니다.');
+      return;
+    }
+    if(!sharedReady||!sharedDb){
+      alert('공용 동기화 연결 후 주문기록을 저장할 수 있습니다.');
+      return;
+    }
+
+    const btn=document.getElementById('standaloneOrderSendBtn');
+    if(btn){
+      btn.disabled=true;
+      btn.textContent='저장 중...';
+    }
+
+    try{
+      const qty=Number(qtyRaw);
+      const savedNote=`[주문분류:${category}]${note?'\n'+note:''}`;
+
+      /* 품번 없이 주문하는 전용 주문: 주문분류를 part_no에 넣어 관리자 목록에서 식별 */
+      await saveDailyOrderRequest(
+        {part:category,name:name,spec:size},
+        qty,
+        worker,
+        savedNote,
+        '자재 주문요청',
+        ''
+      );
+
+      const lines=[
+        '🛒 미림 카톡 주문',
+        '',
+        '📌 주문종류 : '+category,
+        '🔹 품명 : '+name,
+        '🔹 사이즈 : '+size,
+        '🔹 주문수량 : '+qty.toLocaleString()+'개',
+        '🔹 비고 : '+(note||'-'),
+        '',
+        '👤 요청자 : '+worker,
+        '🕒 요청일시 : '+new Date().toLocaleString('ko-KR')
+      ];
+      const msg=lines.join('\n');
+
+      closeStandaloneOrder();
+
+      if(navigator.share){
+        try{
+          await navigator.share({title:'미림 '+category,text:msg});
+          return;
+        }catch(e){
+          if(e && e.name==='AbortError'){
+            alert('☑ 주문기록은 웹에 저장되었습니다.\n카톡 공유는 취소되었습니다.');
+            return;
+          }
+          console.warn('카톡 공유창 열기 실패',e);
+        }
+      }
+
+      try{await navigator.clipboard.writeText(msg);}catch(e){}
+      window.open(MIRIM_KAKAO_OPEN_URL,'_blank','noopener');
+      alert('☑ 주문기록을 저장했습니다.\n주문내용을 복사했으니 카톡에 붙여넣어 주세요.');
+
+    }catch(e){
+      console.error('카톡 주문 저장 실패',e);
+      alert('주문기록 저장 실패: '+(e.message||e));
+    }finally{
+      if(btn){
+        btn.disabled=false;
+        btn.innerHTML='TALK&nbsp;&nbsp; 입력내용 저장 후 카톡으로 보내기';
+      }
+    }
+  };
 })();
 </script>
 
