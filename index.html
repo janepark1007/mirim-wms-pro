@@ -17489,4 +17489,203 @@ body.admin-view.admin-records-v72 #adminRecordLookupPanelV72{
 })();
 </script>
 
+
+<style id="admin-only-inout-v75-style">
+/* 작업자 모드에서는 입고/출고 관련 바로가기 강제 숨김 */
+body:not(.admin-view) #workerMainShortcutCard [data-worker-main="inbound"],
+body:not(.admin-view) #workerMainShortcutCard [data-worker-main="outbound"],
+body:not(.admin-view) #workerMainShortcutCard button[onclick*="openMode('inbound')"],
+body:not(.admin-view) #workerMainShortcutCard button[onclick*="openMode('outbound')"],
+body:not(.admin-view) #quickInboundBtn,
+body:not(.admin-view) #quickOutboundBtn{
+  display:none!important;
+}
+
+/* 관리자 입출고 화면은 작업자 화면과 동일하게 정상 표시 */
+body.admin-view.admin-inout-v75 #work{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:min(1050px,calc(100% - 20px))!important;
+  margin:12px auto!important;
+}
+body.admin-view.admin-inout-v75 #work .card{
+  display:block!important;
+}
+</style>
+
+<script id="admin-only-inout-v75-js">
+(function(){
+  function removeWorkerInOutButtonsV75(){
+    if(isAdmin)return;
+
+    const roots=[
+      document.getElementById('workerMainShortcutCard'),
+      document.getElementById('home')
+    ].filter(Boolean);
+
+    roots.forEach(root=>{
+      [...root.querySelectorAll('button')].forEach(btn=>{
+        const txt=(btn.innerText||btn.textContent||'').replace(/\s+/g,' ').trim();
+        const kind=btn.dataset.workerMain||'';
+
+        if(
+          kind==='inbound' || kind==='outbound' ||
+          txt.includes('빠른입고') || txt.includes('빠른출고') ||
+          txt==='입고등록' || txt==='출고등록'
+        ){
+          btn.style.setProperty('display','none','important');
+          btn.setAttribute('aria-hidden','true');
+        }
+      });
+    });
+  }
+
+  function leaveAdminHomeForInOutV75(){
+    document.body.classList.remove(
+      'admin-reference-home','admin-shortcut-focus','admin-task-focus',
+      'admin-records-v72','other-storage-open-v50'
+    );
+    document.body.classList.add('admin-inout-v75');
+
+    const ref=document.getElementById('adminReferenceHome');
+    if(ref)ref.style.setProperty('display','none','important');
+
+    const sf=document.getElementById('adminShortcutFocusPanel');
+    if(sf)sf.style.display='none';
+
+    const tf=document.getElementById('adminTaskFocusPanel');
+    if(tf)tf.classList.add('hidden');
+
+    document.getElementById('home')?.classList.add('hidden');
+    document.getElementById('photoSearchPanel')?.classList.add('hidden');
+
+    const work=document.getElementById('work');
+    if(work){
+      work.classList.remove('hidden');
+      work.style.removeProperty('display');
+    }
+  }
+
+  window.openAdminInboundV75=function(){
+    if(!isAdmin)return alert('관리자 모드에서만 입고 등록할 수 있습니다.');
+    leaveAdminHomeForInOutV75();
+    try{
+      openMode('inbound');
+    }catch(e){
+      console.error(e);
+      alert('입고 등록 화면을 열지 못했습니다.');
+    }
+  };
+
+  window.openAdminOutboundV75=function(){
+    if(!isAdmin)return alert('관리자 모드에서만 출고 등록할 수 있습니다.');
+    leaveAdminHomeForInOutV75();
+    try{
+      openMode('outbound');
+    }catch(e){
+      console.error(e);
+      alert('출고 등록 화면을 열지 못했습니다.');
+    }
+  };
+
+  /* openMode 자체도 작업자 입고/출고 접근 차단 */
+  const oldOpenModeV75=window.openMode;
+  if(typeof oldOpenModeV75==='function'){
+    window.openMode=function(m){
+      if((m==='inbound'||m==='outbound') && !isAdmin){
+        alert('입고·출고 등록은 관리자 모드에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      if(isAdmin && (m==='inbound'||m==='outbound')){
+        leaveAdminHomeForInOutV75();
+      }else{
+        document.body.classList.remove('admin-inout-v75');
+      }
+
+      return oldOpenModeV75.apply(this,arguments);
+    };
+    try{openMode=window.openMode;}catch(e){}
+  }
+
+  /* 관리자 메인에 입고/출고 버튼 추가 또는 기존 버튼 재연결 */
+  function ensureAdminInOutButtonsV75(){
+    if(!isAdmin)return;
+
+    const grids=[
+      document.querySelector('#adminReferenceHome .ar-grid'),
+      document.querySelector('#adminWelcomeShortcutBox .admin-welcome-shortcut-grid')
+    ].filter(Boolean);
+
+    grids.forEach(grid=>{
+      let inBtn=[...grid.querySelectorAll('button')].find(b=>(b.innerText||'').includes('입고 등록'));
+      let outBtn=[...grid.querySelectorAll('button')].find(b=>(b.innerText||'').includes('출고 등록'));
+
+      if(!inBtn){
+        inBtn=document.createElement('button');
+        inBtn.type='button';
+        inBtn.className=grid.classList.contains('ar-grid')?'ar-btn in':'admin-welcome-shortcut-btn';
+        inBtn.innerHTML='<span class="ico">⬇️</span><span>입고 등록</span><small>관리자 전용</small>';
+        grid.insertBefore(inBtn,grid.firstChild);
+      }
+
+      if(!outBtn){
+        outBtn=document.createElement('button');
+        outBtn.type='button';
+        outBtn.className=grid.classList.contains('ar-grid')?'ar-btn out':'admin-welcome-shortcut-btn';
+        outBtn.innerHTML='<span class="ico">⬆️</span><span>출고 등록</span><small>관리자 전용</small>';
+        grid.insertBefore(outBtn,inBtn.nextSibling);
+      }
+
+      inBtn.onclick=(e)=>{
+        e.preventDefault();e.stopPropagation();
+        openAdminInboundV75();
+      };
+
+      outBtn.onclick=(e)=>{
+        e.preventDefault();e.stopPropagation();
+        openAdminOutboundV75();
+      };
+    });
+  }
+
+  /* 관리자 입출고 화면의 홈 버튼은 관리자 메인으로 */
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('#homeBtn');
+    if(!btn || !isAdmin || !document.body.classList.contains('admin-inout-v75'))return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    document.body.classList.remove('admin-inout-v75');
+    document.getElementById('work')?.classList.add('hidden');
+    try{showAdminReferenceHome();}catch(err){}
+  },true);
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      removeWorkerInOutButtonsV75();
+      ensureAdminInOutButtonsV75();
+    },1100);
+  });
+
+  document.addEventListener('click',()=>{
+    setTimeout(()=>{
+      removeWorkerInOutButtonsV75();
+      ensureAdminInOutButtonsV75();
+    },80);
+  },true);
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__adminOnlyInOutV75);
+    window.__adminOnlyInOutV75=setTimeout(()=>{
+      removeWorkerInOutButtonsV75();
+      ensureAdminInOutButtonsV75();
+    },100);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
