@@ -16430,4 +16430,116 @@ body:not(.admin-view) #workerMainShortcutCard button[onclick*="openExcelDirectOr
   display:none!important;
 }
 </style>
+
+<script id="kakao-image-half-size-v13">
+(function(){
+  async function resizeKakaoImageHalfV13(file){
+    if(!file || !String(file.type||'').startsWith('image/')) return file;
+
+    return await new Promise((resolve)=>{
+      const img=new Image();
+      const url=URL.createObjectURL(file);
+
+      img.onload=()=>{
+        try{
+          const canvas=document.createElement('canvas');
+          canvas.width=Math.max(1,Math.round(img.naturalWidth*0.5));
+          canvas.height=Math.max(1,Math.round(img.naturalHeight*0.5));
+
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+          canvas.toBlob((blob)=>{
+            URL.revokeObjectURL(url);
+            if(!blob)return resolve(file);
+
+            const ext=(blob.type||'image/jpeg').includes('png')?'png':
+                      (blob.type||'').includes('webp')?'webp':'jpg';
+            const base=String(file.name||'주문이미지').replace(/\.[^.]+$/,'');
+            resolve(new File([blob],base+'_50pct.'+ext,{
+              type:blob.type||'image/jpeg',
+              lastModified:Date.now()
+            }));
+          }, file.type==='image/png'?'image/png':'image/jpeg', 0.86);
+        }catch(e){
+          URL.revokeObjectURL(url);
+          resolve(file);
+        }
+      };
+
+      img.onerror=()=>{
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src=url;
+    });
+  }
+
+  window.resizeKakaoImageHalfV13=resizeKakaoImageHalfV13;
+
+  /* navigator.share 직전에 이미지 파일 크기를 가로/세로 50%로 축소 */
+  if(navigator.share && !window.__kakaoHalfShareWrappedV13){
+    window.__kakaoHalfShareWrappedV13=true;
+    const originalShare=navigator.share.bind(navigator);
+
+    navigator.share=async function(data){
+      try{
+        if(data && Array.isArray(data.files) && data.files.length){
+          const resized=[];
+          for(const f of data.files){
+            resized.push(await resizeKakaoImageHalfV13(f));
+          }
+          data=Object.assign({},data,{files:resized});
+        }
+      }catch(e){
+        console.warn('카톡 전송 이미지 50% 축소 실패 - 원본 사용',e);
+      }
+      return originalShare(data);
+    };
+  }
+})();
+</script>
+
+
+<style id="force-remove-excel-order-shortcut-v14">
+/* 작업자 메인: 엑셀전용/엑셀전용주문하기 버튼 강제 비표시 */
+#workerMainShortcutCard .excel-direct-order-v7,
+#workerMainShortcutCard .excel-direct-order-v8,
+#workerMainShortcutCard [data-action="excel-order"],
+#workerMainShortcutCard button[onclick*="openExcelDirectOrder"],
+#workerMainShortcutCard button[onclick*="openExcelOrder"]{
+  display:none!important;
+}
+</style>
+
+<script id="force-remove-excel-order-shortcut-v14-js">
+(function(){
+  function forceRemoveExcelOrderShortcutV14(){
+    const root=document.getElementById('workerMainShortcutCard');
+    if(!root)return;
+
+    [...root.querySelectorAll('button,a,.worker-main-shortcut-btn')].forEach(el=>{
+      const t=(el.innerText||el.textContent||'').replace(/\s+/g,'').trim();
+      if(
+        t.includes('엑셀전용주문하기') ||
+        t.includes('엑셀리스트전용주문') ||
+        t.includes('엑셀전용주문')
+      ){
+        el.style.setProperty('display','none','important');
+        el.setAttribute('aria-hidden','true');
+      }
+    });
+  }
+
+  window.addEventListener('load',()=>setTimeout(forceRemoveExcelOrderShortcutV14,700));
+
+  /* 화면이 다시 그려져도 해당 버튼만 숨김 */
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__forceRemoveExcelV14);
+    window.__forceRemoveExcelV14=setTimeout(forceRemoveExcelOrderShortcutV14,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
