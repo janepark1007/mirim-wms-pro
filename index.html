@@ -20593,4 +20593,94 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
 })();
 </script>
 
+
+<style id="kakao-openchat-connect-v92-style">
+#orderRecipientV88{
+  background:#fff8c9!important;
+  color:#3d3300!important;
+  font-weight:1000!important;
+}
+#kakaoOpenChatDirectBtnV92{
+  width:100%;
+  min-height:46px;
+  margin-top:8px;
+  border:1px solid #d8be00;
+  border-radius:10px;
+  background:#fee500;
+  color:#191919;
+  font-weight:1000;
+}
+</style>
+
+<script id="kakao-openchat-connect-v92-js">
+(function(){
+  const KAKAO_OPENCHAT_URL_V92='https://open.kakao.com/o/gWZ1pbJi';
+
+  function applyKakaoOpenChatV92(){
+    const recipient=document.getElementById('orderRecipientV88');
+    if(recipient){
+      recipient.value=KAKAO_OPENCHAT_URL_V92;
+      recipient.readOnly=true;
+      recipient.placeholder='카카오톡 오픈채팅 링크';
+      recipient.title=KAKAO_OPENCHAT_URL_V92;
+    }
+
+    const modal=document.getElementById('standaloneOrderModal');
+    if(!modal)return;
+
+    if(!document.getElementById('kakaoOpenChatDirectBtnV92')){
+      const send=document.getElementById('standaloneOrderSendBtn');
+      if(send){
+        const b=document.createElement('button');
+        b.type='button';
+        b.id='kakaoOpenChatDirectBtnV92';
+        b.textContent='💬 카카오톡 오픈채팅 바로 열기';
+        b.onclick=()=>window.open(KAKAO_OPENCHAT_URL_V92,'_blank','noopener');
+        send.insertAdjacentElement('beforebegin',b);
+      }
+    }
+  }
+
+  /* 기존 설정값도 이 링크로 통일 */
+  try{ window.MIRIM_KAKAO_OPEN_URL=KAKAO_OPENCHAT_URL_V92; }catch(e){}
+
+  const oldOpenV92=window.openStandaloneOrder;
+  if(typeof oldOpenV92==='function'){
+    window.openStandaloneOrder=function(){
+      const r=oldOpenV92.apply(this,arguments);
+      setTimeout(applyKakaoOpenChatV92,30);
+      setTimeout(applyKakaoOpenChatV92,150);
+      return r;
+    };
+    try{openStandaloneOrder=window.openStandaloneOrder;}catch(e){}
+  }
+
+  /*
+    전송 완료 후 navigator.share가 성공하면 카톡 선택창에서 전송.
+    navigator.share를 지원하지 않거나 실패하면 지정 오픈채팅을 직접 연다.
+  */
+  const oldSubmitV92=window.submitStandaloneOrder;
+  if(typeof oldSubmitV92==='function'){
+    window.submitStandaloneOrder=async function(){
+      applyKakaoOpenChatV92();
+
+      const beforeUrl=window.MIRIM_KAKAO_OPEN_URL;
+      window.MIRIM_KAKAO_OPEN_URL=KAKAO_OPENCHAT_URL_V92;
+
+      try{
+        return await oldSubmitV92.apply(this,arguments);
+      }finally{
+        window.MIRIM_KAKAO_OPEN_URL=KAKAO_OPENCHAT_URL_V92;
+      }
+    };
+    try{submitStandaloneOrder=window.submitStandaloneOrder;}catch(e){}
+  }
+
+  /* 기존 전송 함수가 window.open(MIRIM_KAKAO_OPEN_URL...)를 쓰면 전역 식별자도 맞춤 */
+  try{ MIRIM_KAKAO_OPEN_URL=KAKAO_OPENCHAT_URL_V92; }catch(e){}
+
+  window.addEventListener('load',()=>setTimeout(applyKakaoOpenChatV92,700));
+})();
+</script>
+
 </body></html>
