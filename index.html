@@ -20683,4 +20683,84 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
 })();
 </script>
 
+
+<script id="talk-direct-openchat-v93-js">
+(function(){
+  const KAKAO_OPENCHAT_DIRECT_V93='https://open.kakao.com/o/gWZ1pbJi';
+
+  let directOpenWindowV93=null;
+  let directOpenAtV93=0;
+
+  function openKakaoDirectV93(){
+    try{
+      directOpenWindowV93=window.open(KAKAO_OPENCHAT_DIRECT_V93,'_blank','noopener');
+      directOpenAtV93=Date.now();
+      if(!directOpenWindowV93){
+        /* 팝업이 막힌 경우 현재 창에서 바로 이동 */
+        window.location.href=KAKAO_OPENCHAT_DIRECT_V93;
+      }
+    }catch(e){
+      try{window.location.href=KAKAO_OPENCHAT_DIRECT_V93;}catch(err){}
+    }
+  }
+
+  /* TALK 버튼 클릭 순간 직접 오픈챗 연결.
+     사용자 클릭 이벤트 안에서 열어 팝업 차단을 최소화 */
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest('#standaloneOrderSendBtn');
+    if(!btn)return;
+
+    /* 중복 클릭 방지 */
+    if(Date.now()-directOpenAtV93<1200)return;
+
+    openKakaoDirectV93();
+  },true);
+
+  /* 기존 submit은 주문 저장만 수행하도록 navigator.share를 임시 우회 */
+  const oldSubmitV93=window.submitStandaloneOrder;
+  if(typeof oldSubmitV93==='function'){
+    window.submitStandaloneOrder=async function(){
+      const originalShare=navigator.share;
+
+      try{
+        /* 기존 코드가 공유창을 호출하더라도 즉시 성공 처리하여
+           별도 공유 선택창은 열지 않음 */
+        if(originalShare){
+          try{
+            navigator.share=async function(){ return Promise.resolve(); };
+          }catch(e){}
+        }
+
+        return await oldSubmitV93.apply(this,arguments);
+      }finally{
+        if(originalShare){
+          try{navigator.share=originalShare;}catch(e){}
+        }
+      }
+    };
+    try{submitStandaloneOrder=window.submitStandaloneOrder;}catch(e){}
+  }
+
+  /* 하단 보조 버튼도 동일 오픈챗으로 즉시 연결 */
+  function wireDirectButtonV93(){
+    const b=document.getElementById('kakaoOpenChatDirectBtnV92');
+    if(b){
+      b.onclick=function(e){
+        e.preventDefault();
+        openKakaoDirectV93();
+      };
+      b.textContent='💬 카카오톡 오픈채팅 바로 연결';
+    }
+  }
+
+  window.addEventListener('load',()=>setTimeout(wireDirectButtonV93,700));
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__talkDirectV93);
+    window.__talkDirectV93=setTimeout(wireDirectButtonV93,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
