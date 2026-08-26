@@ -19629,4 +19629,214 @@ body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
 })();
 </script>
 
+
+<style id="mobile-location-photo-real-top-v86">
+@media(max-width:760px){
+  /* 위치확인에서 사진을 result-card-main 밖으로 꺼낸 뒤 상단 독립영역으로 표시 */
+  body.mobile-location-v86 #results .result{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 0 10px!important;
+    padding:6px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  body.mobile-location-v86 #results .result > .result-photo-box{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto 8px!important;
+    padding:8px!important;
+    display:grid!important;
+    grid-template-columns:100px minmax(0,1fr)!important;
+    grid-template-rows:1fr 1fr!important;
+    gap:6px 8px!important;
+    align-items:center!important;
+    background:#f7fbf8!important;
+    border:1px solid #d7e5dc!important;
+    border-radius:12px!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v86 #results .result > .result-photo-box img,
+  body.mobile-location-v86 #results .result > .result-photo-box .result-photo-empty{
+    grid-column:1!important;
+    grid-row:1 / span 2!important;
+    width:100px!important;
+    height:100px!important;
+    max-width:100px!important;
+    margin:0 auto!important;
+    object-fit:contain!important;
+    border-radius:9px!important;
+  }
+
+  body.mobile-location-v86 #results .result > .result-photo-box button{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:42px!important;
+    margin:0!important;
+    padding:6px 8px!important;
+    font-size:12px!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v86 #results .result > .result-photo-box button:first-of-type{
+    grid-column:2!important;
+    grid-row:1!important;
+  }
+
+  body.mobile-location-v86 #results .result > .result-photo-box button:nth-of-type(2){
+    grid-column:2!important;
+    grid-row:2!important;
+  }
+
+  /* 사진을 빼낸 후 본문은 완전 한 칼럼/전체폭 */
+  body.mobile-location-v86 #results .result-card-main{
+    display:block!important;
+    grid-template-columns:none!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v86 #results .result-card-main > div{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v86 #results .result-part,
+  body.mobile-location-v86 #results .result-name,
+  body.mobile-location-v86 #results .result-spec{
+    width:100%!important;
+    max-width:100%!important;
+    text-align:center!important;
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body.mobile-location-v86 #results .result-location,
+  body.mobile-location-v86 #results .later-check-direct-wrap,
+  body.mobile-location-v86 #results .meta,
+  body.mobile-location-v86 #results .qty-compare,
+  body.mobile-location-v86 #results .loc-editor,
+  body.mobile-location-v86 #results .order-share{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body.mobile-location-v86 #results .location-cards-v17,
+  body.mobile-location-v86 #results .location-summary-grid,
+  body.mobile-location-v86 #results .multi-location-summary{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    width:100%!important;
+    max-width:100%!important;
+    gap:6px!important;
+  }
+
+  body.mobile-location-v86 #results .location-card-v17,
+  body.mobile-location-v86 #results .loc-slot,
+  body.mobile-location-v86 #results .location-slot,
+  body.mobile-location-v86 #results .location-summary-item,
+  body.mobile-location-v86 #results .location-box,
+  body.mobile-location-v86 #results .stock-total-box{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+<script id="mobile-location-photo-real-top-v86-js">
+(function(){
+  function isLocationModeV86(){
+    if(window.innerWidth>760)return false;
+
+    let location=false;
+    try{
+      location=(typeof mode!=='undefined' && mode==='location');
+    }catch(e){}
+
+    if(document.body.classList.contains('admin-location-center-v76'))location=true;
+    return location;
+  }
+
+  function rearrangeLocationPhotoV86(){
+    const active=isLocationModeV86();
+    document.body.classList.toggle('mobile-location-v86',active);
+    if(!active)return;
+
+    const results=document.getElementById('results');
+    if(!results)return;
+
+    results.querySelectorAll('.result').forEach(result=>{
+      const main=result.querySelector(':scope > .result-card-main');
+      if(!main)return;
+
+      /* 원래 main 안에 있는 사진을 실제로 밖으로 꺼냄 */
+      let photo=main.querySelector(':scope > .result-photo-box');
+      if(photo){
+        result.insertBefore(photo,main);
+      }
+
+      /* 이미 밖으로 나온 경우도 항상 맨 첫번째 위치 유지 */
+      photo=result.querySelector(':scope > .result-photo-box');
+      if(photo && result.firstElementChild!==photo){
+        result.insertBefore(photo,result.firstElementChild);
+      }
+    });
+  }
+
+  /* search 함수 자체를 감싸서 검색 결과 렌더 직후 구조 재배치 */
+  const oldSearchV86=window.search;
+  if(typeof oldSearchV86==='function'){
+    window.search=function(){
+      const r=oldSearchV86.apply(this,arguments);
+      setTimeout(rearrangeLocationPhotoV86,0);
+      setTimeout(rearrangeLocationPhotoV86,80);
+      return r;
+    };
+    try{search=window.search;}catch(e){}
+  }
+
+  /* openMode으로 위치확인을 연 직후에도 적용 */
+  const oldOpenModeV86=window.openMode;
+  if(typeof oldOpenModeV86==='function'){
+    window.openMode=function(m){
+      const r=oldOpenModeV86.apply(this,arguments);
+      setTimeout(rearrangeLocationPhotoV86,40);
+      return r;
+    };
+    try{openMode=window.openMode;}catch(e){}
+  }
+
+  window.addEventListener('load',()=>setTimeout(rearrangeLocationPhotoV86,700));
+  window.addEventListener('resize',rearrangeLocationPhotoV86);
+
+  const obs=new MutationObserver(()=>{
+    if(!isLocationModeV86())return;
+    clearTimeout(window.__photoRealTopV86);
+    window.__photoRealTopV86=setTimeout(rearrangeLocationPhotoV86,40);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
