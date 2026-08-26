@@ -15483,5 +15483,358 @@ body:not(.admin-view):not(.worker-locked) #results .loc-editor{
 })();
 </script>
 
+
+<style id="excel-direct-and-order-images-v7-style">
+/* 작업자 메인에 엑셀전용주문 버튼 추가 */
+#workerMainShortcutCard .worker-main-shortcut-grid .excel-direct-order-v7{
+  background:#e8f4ff!important;
+  border-color:#b9d8ef!important;
+  color:#124f77!important;
+}
+#workerMainShortcutCard .worker-main-shortcut-grid .excel-direct-order-v7 .ico{
+  font-size:28px!important;
+}
+
+/* 수동 주문 이미지 첨부 */
+.simple-order-row-v4 .order-row-photo-v7{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:8px;
+  border:1px solid #d7e2dc;
+  border-radius:10px;
+  background:#f8fbf9;
+}
+.simple-order-row-v4 .order-row-photo-v7 input[type=file]{
+  margin:0!important;
+  min-height:38px!important;
+  padding:4px!important;
+}
+.simple-order-row-photo-preview-v7{
+  width:58px;
+  height:52px;
+  object-fit:cover;
+  border:1px solid #d4dfd9;
+  border-radius:8px;
+  background:#fff;
+  display:none;
+}
+.simple-order-row-photo-preview-v7.show{display:block}
+.order-row-photo-guide-v7{
+  font-size:11px;
+  color:#637168;
+  font-weight:800;
+}
+@media(max-width:560px){
+  .simple-order-row-v4 .order-row-photo-v7{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+<script id="excel-direct-and-order-images-v7-js">
+(function(){
+  /* ============================
+     1) 메인: 엑셀전용주문하기 추가
+     ============================ */
+  function ensureExcelDirectOrderShortcutV7(){
+    if(isAdmin)return;
+
+    const card=document.getElementById('workerMainShortcutCard');
+    if(!card)return;
+
+    const grid=card.querySelector('.worker-main-shortcut-grid') ||
+               card.querySelector('.today-task-grid') ||
+               card.querySelector('.worker-main-grid') ||
+               card.querySelector('div');
+
+    if(!grid || grid.querySelector('.excel-direct-order-v7'))return;
+
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='worker-main-shortcut-btn excel-direct-order-v7';
+    btn.innerHTML='<span class="ico">📋</span><span>엑셀전용주문하기</span><small>ERP·엑셀 품목 + 기존 이미지 자동첨부</small>';
+    btn.onclick=(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      openExcelDirectOrderV7();
+    };
+
+    /* 카톡 주문하기 버튼 바로 옆/뒤에 배치 */
+    const kakao=[...grid.querySelectorAll('button')].find(b=>(b.innerText||'').includes('카톡 주문하기'));
+    if(kakao?.nextSibling)grid.insertBefore(btn,kakao.nextSibling);
+    else grid.appendChild(btn);
+  }
+
+  window.openExcelDirectOrderV7=function(){
+    if(!currentWorker){
+      try{showWorkerLogin();}catch(e){}
+      alert('작업자 로그인 후 사용할 수 있습니다.');
+      return;
+    }
+
+    try{openStandaloneOrder();}catch(e){
+      console.error(e);
+      alert('주문창을 열지 못했습니다.');
+      return;
+    }
+
+    /* 주문창이 뜬 뒤 엑셀주문을 자동 선택 */
+    setTimeout(()=>{
+      const excelBtn=document.querySelector('.excel-order-core-v3');
+      if(excelBtn && typeof openExcelOrderCoreV3==='function'){
+        openExcelOrderCoreV3(excelBtn);
+      }else{
+        try{if(typeof selectOrderType==='function')selectOrderType('excel');}catch(e){}
+        const excelPanel=document.getElementById('excelOrderPanel');
+        if(excelPanel){
+          excelPanel.classList.remove('hidden');
+          excelPanel.classList.add('excel-core-open-v3');
+        }
+      }
+    },100);
+  };
+
+  /* ============================
+     2) 수동주문 각 줄 이미지 첨부
+     ============================ */
+  const oldAddRowV7=window.addSimpleOrderRowV4;
+  window.addSimpleOrderRowV4=function(prefill={}){
+    if(typeof oldAddRowV7==='function')oldAddRowV7(prefill);
+
+    const box=document.getElementById('simpleOrderRowsV4');
+    if(!box)return;
+    const row=box.lastElementChild;
+    if(!row || row.querySelector('.order-row-photo-v7'))return;
+
+    const photo=document.createElement('div');
+    photo.className='order-row-photo-v7';
+    photo.innerHTML=`
+      <div>
+        <b>📷 이미지 첨부</b>
+        <div class="order-row-photo-guide-v7">선택사항 · 필요한 주문만 첨부하세요.</div>
+      </div>
+      <input class="order-row-photo-input-v7" type="file" accept="image/*" capture="environment">
+      <img class="simple-order-row-photo-preview-v7" alt="첨부 이미지 미리보기">
+    `;
+    row.appendChild(photo);
+
+    const input=photo.querySelector('.order-row-photo-input-v7');
+    const preview=photo.querySelector('.simple-order-row-photo-preview-v7');
+
+    input?.addEventListener('change',()=>{
+      const file=input.files?.[0];
+      if(!file){
+        preview.removeAttribute('src');
+        preview.classList.remove('show');
+        return;
+      }
+      const url=URL.createObjectURL(file);
+      preview.src=url;
+      preview.classList.add('show');
+    });
+  };
+
+  async function fileToDataUrlV7(file){
+    if(!file)return '';
+    return await new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(String(r.result||''));
+      r.onerror=reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  /* ============================
+     3) 수동 다중주문: 이미지도 저장/공유
+     ============================ */
+  const priorSubmitV7=window.submitStandaloneOrder;
+
+  window.submitStandaloneOrder=async function(){
+    const excelPanel=document.getElementById('excelOrderPanel');
+    const excelOpen=excelPanel?.classList.contains('excel-core-open-v3');
+
+    /* 엑셀주문은 기존 전용 함수 사용:
+       저장된 품목 이미지를 자동으로 함께 공유 */
+    if(excelOpen){
+      if(typeof submitExcelStandaloneOrderV3==='function'){
+        return await submitExcelStandaloneOrderV3();
+      }
+      if(typeof priorSubmitV7==='function'){
+        return await priorSubmitV7.apply(this,arguments);
+      }
+      return;
+    }
+
+    const category=(document.getElementById('simpleOrderCategoryV2')?.value||'').trim();
+    if(!category){
+      alert('주문 종류를 선택해 주세요.');
+      return;
+    }
+
+    const rows=[...document.querySelectorAll('#simpleOrderRowsV4 .simple-order-row-v4')];
+    if(!rows.length){
+      alert('주문 내용을 입력해 주세요.');
+      if(typeof addSimpleOrderRowV4==='function')addSimpleOrderRowV4();
+      return;
+    }
+
+    const items=[];
+    for(let i=0;i<rows.length;i++){
+      const row=rows[i];
+      const name=(row.querySelector('.order-row-name-v4')?.value||'').trim();
+      const size=(row.querySelector('.order-row-size-v4')?.value||'').trim();
+      const qty=Number(row.querySelector('.order-row-qty-v4')?.value||0);
+      const note=(row.querySelector('.order-row-note-input-v4')?.value||'').trim();
+      const file=row.querySelector('.order-row-photo-input-v7')?.files?.[0]||null;
+
+      if(!name){
+        alert((i+1)+'번 품명을 입력해 주세요.');
+        row.querySelector('.order-row-name-v4')?.focus();
+        return;
+      }
+      if(!size){
+        alert((i+1)+'번 사이즈를 입력해 주세요.');
+        row.querySelector('.order-row-size-v4')?.focus();
+        return;
+      }
+      if(!qty || qty<=0){
+        alert((i+1)+'번 주문수량을 입력해 주세요.');
+        row.querySelector('.order-row-qty-v4')?.focus();
+        return;
+      }
+
+      items.push({no:i+1,name,size,qty,note,file});
+    }
+
+    const worker=(document.getElementById('standaloneOrderWorker')?.value||currentWorker?.name||'').trim();
+    if(!worker){
+      alert('작업자 로그인 정보가 없습니다.');
+      return;
+    }
+    if(!sharedReady||!sharedDb){
+      alert('공용 동기화 연결 후 주문기록을 저장할 수 있습니다.');
+      return;
+    }
+
+    const send=document.getElementById('standaloneOrderSendBtn');
+    if(send){
+      send.disabled=true;
+      send.textContent='저장 중...';
+    }
+
+    try{
+      /* 주문기록 저장.
+         수동 첨부 이미지는 일단 data URL로 주문 기록 photo_url에 저장 시도 */
+      for(const item of items){
+        let photoData='';
+        if(item.file){
+          try{photoData=await fileToDataUrlV7(item.file);}catch(e){console.warn(e);}
+        }
+
+        const savedNote=`[주문분류:${category}][주문번호:${item.no}]${item.note?'\n주문란: '+item.note:''}`;
+
+        await saveDailyOrderRequest(
+          {part:category,name:item.name,spec:item.size},
+          item.qty,
+          worker,
+          savedNote,
+          '자재 주문요청',
+          photoData
+        );
+      }
+
+      const lines=[
+        '🛒 미림 카톡 주문',
+        '',
+        '📌 주문종류 : '+category,
+        ''
+      ];
+
+      items.forEach(item=>{
+        lines.push(
+          item.no+'. 품명 : '+item.name,
+          '   사이즈 : '+item.size,
+          '   주문수량 : '+item.qty.toLocaleString()+'개',
+          '   주문란 : '+(item.note||'-'),
+          '   이미지 : '+(item.file?'첨부':'없음'),
+          ''
+        );
+      });
+
+      lines.push(
+        '👤 요청자 : '+worker,
+        '🕒 요청일시 : '+new Date().toLocaleString('ko-KR')
+      );
+
+      const msg=lines.join('\n');
+      const files=items.map(x=>x.file).filter(Boolean);
+
+      closeStandaloneOrder();
+
+      /* 모바일 공유: 사용자가 첨부한 이미지들을 가능한 만큼 함께 공유 */
+      if(navigator.share){
+        try{
+          const shareData={title:'미림 '+category,text:msg};
+          if(files.length && navigator.canShare && navigator.canShare({files})){
+            shareData.files=files;
+          }
+          await navigator.share(shareData);
+          return;
+        }catch(e){
+          if(e?.name==='AbortError'){
+            alert('☑ 주문기록은 웹에 저장되었습니다.\n카톡 공유는 취소되었습니다.');
+            return;
+          }
+          console.warn('수동 주문 공유 실패',e);
+        }
+      }
+
+      /* PC: 문구 복사 + 첨부이미지 다운로드 */
+      try{await navigator.clipboard.writeText(msg);}catch(e){}
+
+      for(const file of files){
+        try{
+          const url=URL.createObjectURL(file);
+          const a=document.createElement('a');
+          a.href=url;
+          a.download=file.name||'주문이미지.jpg';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(()=>URL.revokeObjectURL(url),2000);
+        }catch(e){}
+      }
+
+      window.open(MIRIM_KAKAO_OPEN_URL,'_blank','noopener');
+
+      alert(files.length
+        ? '☑ 주문기록을 저장했습니다.\n주문내용과 첨부 이미지를 카톡으로 보내주세요.'
+        : '☑ 주문기록을 저장했습니다.\n주문내용을 카톡에 붙여넣어 주세요.');
+
+    }catch(e){
+      console.error('수동 주문 저장 실패',e);
+      alert('주문기록 저장 실패: '+(e.message||e));
+    }finally{
+      if(send){
+        send.disabled=false;
+        send.innerHTML='TALK&nbsp;&nbsp; 입력내용 저장 후 카톡으로 보내기';
+      }
+    }
+  };
+
+  window.addEventListener('load',()=>setTimeout(ensureExcelDirectOrderShortcutV7,1200));
+
+  const obs=new MutationObserver(()=>{
+    if(isAdmin)return;
+    clearTimeout(window.__excelDirectOrderV7);
+    window.__excelDirectOrderV7=setTimeout(ensureExcelDirectOrderShortcutV7,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
 <style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
