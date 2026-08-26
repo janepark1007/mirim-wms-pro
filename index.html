@@ -20302,4 +20302,242 @@ body.admin-view.admin-location-clean-v88 #results .result-content{
 })();
 </script>
 
+
+<style id="worker-login-admin-push-v89-style">
+/* 관리자 미확인 알림 배지 */
+#adminWorkerLoginPushBadgeV89{
+  display:none;
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:12000;
+  max-width:min(360px,calc(100vw - 24px));
+  padding:11px 14px;
+  border:2px solid #f0cc52;
+  border-radius:12px;
+  background:#fff7cf;
+  color:#5a4600;
+  font-weight:1000;
+  box-shadow:0 8px 28px rgba(0,0,0,.18);
+}
+body.admin-view #adminWorkerLoginPushBadgeV89.show{
+  display:block!important;
+}
+</style>
+
+<script id="worker-login-admin-push-v89-js">
+(function(){
+  let lastLoginPushV89='';
+
+  function ensureAdminWorkerLoginPushBadgeV89(){
+    let badge=document.getElementById('adminWorkerLoginPushBadgeV89');
+    if(badge)return badge;
+
+    badge=document.createElement('div');
+    badge.id='adminWorkerLoginPushBadgeV89';
+    badge.innerHTML='🔔 작업자 로그인 알림';
+    badge.onclick=()=>{
+      badge.classList.remove('show');
+      try{
+        if(typeof loadAdminNotifications==='function')loadAdminNotifications();
+      }catch(e){}
+    };
+    document.body.appendChild(badge);
+    return badge;
+  }
+
+  async function saveWorkerLoginPushV89(workerName){
+    workerName=String(workerName||'').trim();
+    if(!workerName || !sharedReady || !sharedDb)return;
+
+    const now=new Date();
+
+    try{
+      await sharedDb.from('wms_admin_notifications').insert({
+        type:'WORKER_LOGIN',
+        title:'🔔 작업자 로그인',
+        message:`${workerName}님이 작업자 모드에 로그인했습니다.`,
+        payload:{
+          worker_name:workerName,
+          action:'login',
+          source:'worker_login',
+          logged_in_at:now.toISOString()
+        },
+        created_at:now.toISOString()
+      });
+    }catch(e){
+      console.warn('작업자 로그인 관리자 알림 저장 실패',e);
+    }
+  }
+
+  /* 작업자 로그인 성공을 감지해 관리자 알림 DB에 저장 */
+  const originalWorkerLoginV89=window.workerLogin;
+  if(typeof originalWorkerLoginV89==='function'){
+    window.workerLogin=async function(){
+      const beforeName=String(currentWorker?.name||'').trim();
+
+      const result=await originalWorkerLoginV89.apply(this,arguments);
+
+      setTimeout(async()=>{
+        const afterName=String(currentWorker?.name||'').trim();
+
+        /* 로그인 성공으로 currentWorker가 새로 생긴 경우에만 기록 */
+        if(afterName && afterName!==beforeName && !isAdmin){
+          const key=afterName+'|'+new Date().toISOString().slice(0,16);
+          if(lastLoginPushV89!==key){
+            lastLoginPushV89=key;
+            await saveWorkerLoginPushV89(afterName);
+          }
+        }
+      },80);
+
+      return result;
+    };
+    try{workerLogin=window.workerLogin;}catch(e){}
+  }
+
+  /* 관리자 모드: 새 작업자 로그인 알림 주기적 확인 */
+  async function pollWorkerLoginPushV89(){
+    if(!isAdmin || !sharedReady || !sharedDb)return;
+
+    try{
+      const since=new Date(Date.now()-10*60*1000).toISOString();
+      const {data,error}=await sharedDb
+        .from('wms_admin_notifications')
+        .select('id,type,title,message,payload,created_at')
+        .eq('type','WORKER_LOGIN')
+        .gte('created_at',since)
+        .order('created_at',{ascending:false})
+        .limit(1);
+
+      if(error)throw error;
+      const row=data?.[0];
+      if(!row)return;
+
+      const seenKey='mirim_seen_worker_login_push_v89';
+      const seen=localStorage.getItem(seenKey)||'';
+      const rowKey=String(row.id||row.created_at||'');
+
+      if(rowKey && rowKey!==seen){
+        localStorage.setItem(seenKey,rowKey);
+
+        const badge=ensureAdminWorkerLoginPushBadgeV89();
+        badge.textContent='🔔 '+(row.message||'새 작업자 로그인이 있습니다.');
+        badge.classList.add('show');
+
+        /* 기존 관리자 알림 목록도 즉시 새로고침 */
+        try{
+          if(typeof loadAdminNotifications==='function'){
+            await loadAdminNotifications();
+          }
+        }catch(e){}
+
+        /* 브라우저 알림 권한이 허용된 경우 OS 알림도 표시 */
+        try{
+          if('Notification' in window && Notification.permission==='granted'){
+            new Notification('미림 자재관리 · 작업자 로그인',{
+              body:row.message||'새 작업자 로그인이 있습니다.'
+            });
+          }
+        }catch(e){}
+      }
+    }catch(e){
+      console.warn('관리자 작업자 로그인 알림 확인 실패',e);
+    }
+  }
+
+  window.addEventListener('load',()=>{
+    ensureAdminWorkerLoginPushBadgeV89();
+    setTimeout(pollWorkerLoginPushV89,1200);
+  });
+
+  /* 5초마다 관리자 로그인 알림 확인 */
+  setInterval(pollWorkerLoginPushV89,5000);
+
+  /* 관리자 모드 진입/화면 이동 시도 즉시 확인 */
+  document.addEventListener('click',()=>{
+    if(isAdmin)setTimeout(pollWorkerLoginPushV89,80);
+  },true);
+})();
+</script>
+
+
+<style id="order-recipient-login-user-v90-style">
+#orderRecipientV88[readonly]{
+  background:#f3f7f4!important;
+  color:#123d2c!important;
+  font-weight:900!important;
+  cursor:default!important;
+}
+</style>
+
+<script id="order-recipient-login-user-v90-js">
+(function(){
+  function loggedInNameV90(){
+    try{
+      if(currentWorker && currentWorker.name) return String(currentWorker.name).trim();
+    }catch(e){}
+    try{
+      if(isAdmin) return '박향숙';
+    }catch(e){}
+    return '';
+  }
+
+  function setRecipientToLoginUserV90(){
+    const el=document.getElementById('orderRecipientV88');
+    if(!el)return;
+
+    const name=loggedInNameV90();
+    if(name){
+      el.value=name;
+      el.readOnly=true;
+      el.placeholder='로그인 사용자 자동입력';
+      el.setAttribute('title','현재 로그인한 사용자로 자동 저장됩니다.');
+    }
+  }
+
+  /* 기존 주문창 열기 후 로그인 사용자 자동입력 */
+  const oldOpenV90=window.openStandaloneOrder;
+  if(typeof oldOpenV90==='function'){
+    window.openStandaloneOrder=function(){
+      const r=oldOpenV90.apply(this,arguments);
+      setTimeout(setRecipientToLoginUserV90,30);
+      setTimeout(setRecipientToLoginUserV90,120);
+      return r;
+    };
+    try{openStandaloneOrder=window.openStandaloneOrder;}catch(e){}
+  }
+
+  /* 주문 제출 직전에도 강제로 로그인 사용자로 확정 */
+  function forceRecipientV90(){
+    const el=document.getElementById('orderRecipientV88');
+    const name=loggedInNameV90();
+    if(el && name){
+      el.value=name;
+      el.readOnly=true;
+    }
+  }
+
+  const oldSubmitV90=window.submitStandaloneOrder;
+  if(typeof oldSubmitV90==='function'){
+    window.submitStandaloneOrder=async function(){
+      forceRecipientV90();
+      return await oldSubmitV90.apply(this,arguments);
+    };
+    try{submitStandaloneOrder=window.submitStandaloneOrder;}catch(e){}
+  }
+
+  const oldExcelSubmitV90=window.submitExcelStandaloneOrderV3;
+  if(typeof oldExcelSubmitV90==='function'){
+    window.submitExcelStandaloneOrderV3=async function(){
+      forceRecipientV90();
+      return await oldExcelSubmitV90.apply(this,arguments);
+    };
+    try{submitExcelStandaloneOrderV3=window.submitExcelStandaloneOrderV3;}catch(e){}
+  }
+
+  window.addEventListener('load',()=>setTimeout(setRecipientToLoginUserV90,700));
+})();
+</script>
+
 </body></html>
