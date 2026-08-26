@@ -16542,4 +16542,149 @@ body:not(.admin-view) #workerMainShortcutCard button[onclick*="openExcelDirectOr
 })();
 </script>
 
+
+<style id="worker-order-history-admin-v15-style">
+#workerOrderFullHistoryV15{display:none}
+body.admin-view #todayOrderCard #workerOrderFullHistoryV15{
+ display:block!important;margin:14px 0 0;padding:12px;border:1px solid #cfe2d6;border-radius:12px;background:#f7fbf8
+}
+#workerOrderFullHistoryV15 .woh-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+#workerOrderFullHistoryV15 .woh-title{font-size:17px;font-weight:1000;color:#075f35}
+#workerOrderFullHistoryV15 .woh-count{padding:4px 9px;border-radius:999px;background:#e1f3e8;color:#087a43;font-weight:1000;font-size:12px}
+#workerOrderFullHistoryV15 .woh-wrap{overflow:auto;max-height:420px}
+#workerOrderFullHistoryV15 table{width:100%;min-width:920px;border-collapse:collapse;background:#fff}
+#workerOrderFullHistoryV15 th,#workerOrderFullHistoryV15 td{padding:8px 9px;border-bottom:1px solid #e5ece8;font-size:12px;text-align:left;vertical-align:middle}
+#workerOrderFullHistoryV15 th{position:sticky;top:0;background:#eaf6ef;color:#315b45;font-weight:1000;z-index:1}
+#workerOrderFullHistoryV15 .woh-status{display:inline-block;padding:3px 7px;border-radius:999px;background:#edf4ff;color:#285a8c;font-weight:900}
+#workerOrderFullHistoryV15 .woh-empty{text-align:center!important;padding:18px!important;color:#6d7872;font-weight:900}
+</style>
+<script id="worker-order-history-admin-v15-js">
+(function(){
+  function e15(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+  function ensureWorkerOrderFullHistoryV15(){
+    const card=document.getElementById('todayOrderCard');
+    if(!card)return null;
+    let box=document.getElementById('workerOrderFullHistoryV15');
+    if(box)return box;
+    box=document.createElement('section');
+    box.id='workerOrderFullHistoryV15';
+    box.innerHTML=`
+      <div class="woh-head">
+        <div class="woh-title">📚 작업자 주문·문의 전체 이력</div>
+        <span id="workerOrderHistoryCountV15" class="woh-count">0건</span>
+      </div>
+      <div class="woh-wrap">
+        <table>
+          <thead><tr><th>주문일시</th><th>작업자</th><th>품번</th><th>품명</th><th>수량</th><th>상태</th><th>주문/문의 내용</th></tr></thead>
+          <tbody id="workerOrderHistoryBodyV15"><tr><td colspan="7" class="woh-empty">이력을 불러오는 중...</td></tr></tbody>
+        </table>
+      </div>`;
+    card.appendChild(box);
+    return box;
+  }
+
+  window.loadWorkerOrderFullHistoryV15=async function(){
+    if(!isAdmin||!sharedReady||!sharedDb)return;
+    ensureWorkerOrderFullHistoryV15();
+    const body=document.getElementById('workerOrderHistoryBodyV15');
+    const count=document.getElementById('workerOrderHistoryCountV15');
+    if(!body)return;
+    try{
+      const {data,error}=await sharedDb.from('production_order_requests')
+        .select('*').order('created_at',{ascending:false}).limit(500);
+      if(error)throw error;
+      const rows=data||[];
+      if(count)count.textContent=rows.length+'건';
+      body.innerHTML=rows.length?rows.map(r=>{
+        const dt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'-';
+        let note=String(r.note||'');
+        try{if(typeof cleanOrderNote==='function')note=cleanOrderNote(note)}catch(e){}
+        const type=(String(r.note||'').match(/\[문의종류:([^\]]+)\]/)||[])[1]||'자재 주문요청';
+        return `<tr>
+          <td>${e15(dt)}</td><td><b>${e15(r.requester||'-')}</b></td><td>${e15(r.part_no||'-')}</td>
+          <td>${e15(r.item_name||'-')}</td><td>${Number(r.request_qty||0).toLocaleString()}</td>
+          <td><span class="woh-status">${e15(r.status||'요청')}</span></td>
+          <td><b>${e15(type)}</b>${note?' · '+e15(note):''}</td>
+        </tr>`;
+      }).join(''):'<tr><td colspan="7" class="woh-empty">작업자 주문·문의 이력이 없습니다.</td></tr>';
+    }catch(e){
+      console.warn('작업자 주문이력 조회 실패',e);
+      body.innerHTML='<tr><td colspan="7" class="woh-empty">주문·문의 이력을 불러오지 못했습니다.</td></tr>';
+    }
+  };
+
+  const oldLoadTodayV15=window.loadTodayOrderRequests;
+  if(typeof oldLoadTodayV15==='function'){
+    window.loadTodayOrderRequests=async function(){
+      const r=await oldLoadTodayV15.apply(this,arguments);
+      if(isAdmin){try{await loadWorkerOrderFullHistoryV15()}catch(e){}}
+      return r;
+    };
+    try{loadTodayOrderRequests=window.loadTodayOrderRequests}catch(e){}
+  }
+
+  window.addEventListener('load',()=>setTimeout(()=>{if(isAdmin){ensureWorkerOrderFullHistoryV15();loadWorkerOrderFullHistoryV15()}},1400));
+})();
+</script>
+
+<script id="worker-all-actions-admin-notify-v15">
+(function(){
+  const recent=new Map();
+  function workerNameV15(){return String(currentWorker?.name||'').trim()}
+  async function notifyV15(type,title,message,payload={}){
+    if(isAdmin||!currentWorker||!sharedReady||!sharedDb)return;
+    const who=workerNameV15(); if(!who)return;
+    const key=type+'|'+title+'|'+message;
+    const now=Date.now();
+    if(now-(recent.get(key)||0)<1800)return;
+    recent.set(key,now);
+    try{
+      await sharedDb.from('wms_admin_notifications').insert({
+        type,title,message,payload:{worker_name:who,...payload},created_at:new Date().toISOString()
+      });
+    }catch(e){console.warn('작업자 전체사용 관리자 알림 실패',e)}
+  }
+  window.notifyWorkerActionV15=notifyV15;
+
+  function meaningfulLabelV15(el){
+    const txt=(el.innerText||el.textContent||el.getAttribute('aria-label')||el.title||'').replace(/\s+/g,' ').trim();
+    if(!txt)return '';
+    if(['×','✕','닫기','취소'].includes(txt))return '';
+    return txt.slice(0,80);
+  }
+
+  document.addEventListener('click',e=>{
+    if(isAdmin||!currentWorker)return;
+    const btn=e.target.closest('button,a,[role="button"]');
+    if(!btn)return;
+    const label=meaningfulLabelV15(btn); if(!label)return;
+    const part=btn.closest('.result')?.querySelector('.result-part')?.textContent?.trim()||'';
+    notifyV15('WORKER_ACTION','🔔 작업자 기능 사용',`${workerNameV15()} · ${label}${part?' · '+part:''}`,{event_type:'CLICK',action:label,part_no:part});
+  },true);
+
+  document.addEventListener('change',e=>{
+    if(isAdmin||!currentWorker)return;
+    const el=e.target;
+    if(el?.matches('input[type=file]')){
+      const label=el.closest('label,.photo-actions,.order-row-photo-v7')?.innerText?.replace(/\s+/g,' ').trim()||'이미지 첨부';
+      notifyV15('WORKER_PHOTO_ACTION','📷 작업자 이미지 사용',`${workerNameV15()} · ${label}`,{event_type:'FILE_SELECT'});
+    }
+  },true);
+
+  /* 위치 저장 함수가 있으면 성공 후 별도 알림 */
+  ['saveLocation','saveMultiLocation','saveLocationEditor','saveLocationRow'].forEach(name=>{
+    const fn=window[name];
+    if(typeof fn!=='function'||fn.__notifyV15)return;
+    const wrapped=async function(){
+      const result=await fn.apply(this,arguments);
+      notifyV15('WORKER_LOCATION_ACTION','📍 작업자 위치 수정',`${workerNameV15()} · 자재 위치 저장/수정`,{event_type:'LOCATION_SAVE'});
+      return result;
+    };
+    wrapped.__notifyV15=true; window[name]=wrapped;
+    try{eval(name+'=window[name]')}catch(e){}
+  });
+})();
+</script>
+
 </body></html>
