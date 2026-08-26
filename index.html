@@ -14133,4 +14133,133 @@ body.admin-view #results .loc-editor{
   };
 })();
 </script>
+
+<style id="worker-all-open-except-inbound-v1">
+/* =========================================================
+   작업자 모드:
+   - 빠른입고 입력 제한은 기존 정책 유지
+   - 그 외 작업 바로가기 전체 표시/사용
+   ========================================================= */
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-main-shortcut-btn{
+  display:flex!important;
+  pointer-events:auto!important;
+  opacity:1!important;
+}
+
+/* 반환 포함 모든 작업자 메뉴 표시 */
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main]{
+  display:flex!important;
+}
+
+/* 기존 '조회 전용' 안내는 제거 */
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard .worker-readonly-note{
+  display:none!important;
+}
+</style>
+
+<script id="worker-all-open-except-inbound-v1-js">
+(function(){
+  function wireWorkerAllOpenExceptInboundV1(){
+    if(isAdmin || !currentWorker)return;
+
+    const card=document.getElementById('workerMainShortcutCard');
+    if(!card)return;
+
+    card.querySelectorAll('[data-worker-main]').forEach(btn=>{
+      const kind=btn.dataset.workerMain;
+
+      btn.onclick=(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(!currentWorker){
+          try{showWorkerLogin();}catch(err){}
+          alert('작업자 로그인 후 사용할 수 있습니다.');
+          return;
+        }
+
+        /* 빠른입고는 기존 권한 정책 그대로 유지 */
+        if(kind==='inbound'){
+          try{openMode('inbound');}
+          catch(err){alert('입고 화면을 열지 못했습니다.');}
+          return;
+        }
+
+        if(kind==='photo'){
+          try{openPhotoSearch();}
+          catch(err){alert('사진검색 화면을 열지 못했습니다.');}
+          return;
+        }
+
+        if(kind==='orders'){
+          if(typeof openWorkerOrdersV43==='function')openWorkerOrdersV43();
+          else if(typeof openWorkerOrdersReadonlyV44==='function')openWorkerOrdersReadonlyV44();
+          return;
+        }
+
+        if(kind==='later'){
+          if(typeof openWorkerLaterV43==='function')openWorkerLaterV43();
+          else if(typeof openWorkerLaterReadonlyV44==='function')openWorkerLaterReadonlyV44();
+          return;
+        }
+
+        if(kind==='history'){
+          if(typeof openWorkerHistoryReadonlyV44==='function')openWorkerHistoryReadonlyV44();
+          return;
+        }
+
+        if(kind==='unregistered'){
+          const unreg=document.getElementById('unregisteredItemCard');
+          if(!unreg)return alert('ERP 미등록 입력창을 찾지 못했습니다.');
+          unreg.classList.remove('hidden','hidden-admin');
+          unreg.classList.add('worker-unreg-open');
+          unreg.style.setProperty('display','block','important');
+          unreg.style.setProperty('visibility','visible','important');
+          try{fillUnregisteredWorker();}catch(err){}
+          unreg.scrollIntoView({behavior:'smooth',block:'start'});
+          return;
+        }
+
+        if(kind==='otherstorage'){
+          try{openOtherMaterialStorageV47(false);}
+          catch(err){alert('기타자재 보관 화면을 열지 못했습니다.');}
+          return;
+        }
+
+        if(kind==='order'){
+          try{openMode('order');}
+          catch(err){alert('카톡 주문 화면을 열지 못했습니다.');}
+          return;
+        }
+
+        /* 빠른출고 / 위치확인 / 자재반환 등 */
+        try{openMode(kind);}
+        catch(err){
+          console.error(err);
+          alert('해당 작업 화면을 열지 못했습니다.');
+        }
+      };
+    });
+  }
+
+  /* 기존 조회전용 재배선이 실행된 뒤 마지막에 다시 연결 */
+  window.addEventListener('load',()=>{
+    setTimeout(wireWorkerAllOpenExceptInboundV1,1800);
+  });
+
+  document.addEventListener('click',()=>{
+    if(!isAdmin && currentWorker){
+      setTimeout(wireWorkerAllOpenExceptInboundV1,60);
+    }
+  },true);
+
+  const obs=new MutationObserver(()=>{
+    if(isAdmin || !currentWorker)return;
+    clearTimeout(window.__workerAllOpenV1);
+    window.__workerAllOpenV1=setTimeout(wireWorkerAllOpenExceptInboundV1,80);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
