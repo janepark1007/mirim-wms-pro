@@ -17787,4 +17787,191 @@ body.admin-view.admin-location-center-v76 #work #count{
 })();
 </script>
 
+
+<style id="mobile-location-result-center-v77">
+@media(max-width:760px){
+  /* 위치검색 결과 전체 폭/중앙 정렬 */
+  body #results{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    padding:0 8px!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+  }
+
+  body #results .result,
+  body #results .result-card-main,
+  body #results .result-main,
+  body #results .result-content{
+    width:100%!important;
+    max-width:100%!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* 품번/품명 중앙 */
+  body #results .result-part,
+  body #results .result-name,
+  body #results .result-spec{
+    width:100%!important;
+    max-width:100%!important;
+    text-align:center!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body #results .result-part{
+    font-size:24px!important;
+    font-weight:1000!important;
+  }
+
+  body #results .result-name{
+    font-size:18px!important;
+    line-height:1.35!important;
+  }
+
+  /* 자재 위치 영역 */
+  body #results .result-location{
+    width:100%!important;
+    max-width:100%!important;
+    margin:10px auto!important;
+    padding:10px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  body #results .location-summary-grid,
+  body #results .location-cards,
+  body #results .multi-location-summary{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  body #results .location-summary-grid > *,
+  body #results .location-cards > *,
+  body #results .multi-location-summary > *{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 1위치/2위치/총수량 카드 */
+  body #results .loc-slot,
+  body #results .location-slot,
+  body #results .location-summary-item,
+  body #results .location-box,
+  body #results .stock-total-box{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    padding:12px!important;
+    box-sizing:border-box!important;
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body #results .loc-slot *,
+  body #results .location-slot *,
+  body #results .location-summary-item *,
+  body #results .location-box *{
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* 나중에 확인 버튼 */
+  body #results .later-check-direct-wrap,
+  body #results .later-check-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    margin:10px auto!important;
+    box-sizing:border-box!important;
+  }
+
+  body #results .later-check-direct-wrap button,
+  body #results .later-check-wrap button{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:50px!important;
+    margin:0 auto!important;
+    white-space:normal!important;
+  }
+
+  /* 구분/규격/ERP 등 정보카드 */
+  body #results .result-meta,
+  body #results .meta-grid,
+  body #results .worker-admin-detail,
+  body #results .qty-compare,
+  body #results .stock-summary{
+    width:100%!important;
+    max-width:100%!important;
+    margin:8px auto!important;
+    box-sizing:border-box!important;
+  }
+
+  body #results .meta-grid,
+  body #results .worker-admin-detail,
+  body #results .qty-compare{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+  }
+
+  body #results .meta-grid > *,
+  body #results .worker-admin-detail > *,
+  body #results .qty-compare > *{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 가로 스크롤 유발 요소 차단 */
+  body #results table,
+  body #results input,
+  body #results select,
+  body #results textarea,
+  body #results button{
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  body #results table{
+    width:100%!important;
+    table-layout:fixed!important;
+  }
+
+  /* 모바일 위치확인 전용일 때 카드 좌우 여백 최소화 */
+  body.admin-location-center-v76 #work{
+    width:100%!important;
+    max-width:100%!important;
+    margin:8px auto 30px!important;
+    padding:0 6px!important;
+    box-sizing:border-box!important;
+  }
+
+  body.admin-location-center-v76 #work > .card{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    padding:10px!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
 </body></html>
