@@ -18060,4 +18060,162 @@ body.admin-view.admin-location-center-v76 #work #count{
 })();
 </script>
 
+
+<style id="mobile-location-true-center-v79">
+@media (max-width:760px){
+  html,body{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  /* 모바일 위치검색 화면의 기준점을 뷰포트 정중앙으로 강제 */
+  body #work,
+  body.admin-view.admin-location-center-v76 #work{
+    position:relative!important;
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%)!important;
+    width:calc(100vw - 16px)!important;
+    max-width:calc(100vw - 16px)!important;
+    margin:8px 0 30px!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+    float:none!important;
+  }
+
+  body #work > .card,
+  body #work .card{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:10px!important;
+    box-sizing:border-box!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+  }
+
+  body #results{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+  }
+
+  /* 검색 결과의 최상위 카드들을 화면 안에 강제 수용 */
+  body #results > *,
+  body #results .result,
+  body #results [class*="result-"],
+  body #results [class*="location"],
+  body #results [class*="stock"],
+  body #results [class*="meta"]{
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 데스크톱용 고정폭/좌측 여백이 모바일에 남지 않도록 제거 */
+  body #results .result,
+  body #results .result-card-main,
+  body #results .result-main,
+  body #results .result-content,
+  body #results .result-location,
+  body #results .location-summary-grid,
+  body #results .multi-location-summary,
+  body #results .meta-grid,
+  body #results .qty-compare{
+    width:100%!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    padding-left:0!important;
+    padding-right:0!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+  }
+
+  /* 실제 색상 위치카드는 좌우 8px 안쪽 */
+  body #results .loc-slot,
+  body #results .location-slot,
+  body #results .location-summary-item,
+  body #results .location-box,
+  body #results .stock-total-box{
+    width:calc(100% - 16px)!important;
+    max-width:calc(100% - 16px)!important;
+    min-width:0!important;
+    margin:6px auto!important;
+    padding:11px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  body #results .loc-slot *,
+  body #results .location-slot *,
+  body #results .location-summary-item *,
+  body #results .location-box *,
+  body #results .stock-total-box *{
+    max-width:100%!important;
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body #results button,
+  body #results input,
+  body #results select,
+  body #results textarea{
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+<script id="mobile-location-true-center-v79-js">
+(function(){
+  function forceMobileLocationCenterV79(){
+    if(window.innerWidth>760)return;
+    const work=document.getElementById('work');
+    if(!work || work.classList.contains('hidden'))return;
+
+    work.style.setProperty('position','relative','important');
+    work.style.setProperty('left','50%','important');
+    work.style.setProperty('right','auto','important');
+    work.style.setProperty('transform','translateX(-50%)','important');
+    work.style.setProperty('width','calc(100vw - 16px)','important');
+    work.style.setProperty('max-width','calc(100vw - 16px)','important');
+    work.style.setProperty('margin-left','0','important');
+    work.style.setProperty('margin-right','0','important');
+
+    const results=document.getElementById('results');
+    if(results){
+      results.style.setProperty('width','100%','important');
+      results.style.setProperty('max-width','100%','important');
+      results.style.setProperty('margin','0','important');
+      results.style.setProperty('padding','0','important');
+      results.style.setProperty('overflow-x','hidden','important');
+    }
+  }
+
+  window.addEventListener('load',()=>setTimeout(forceMobileLocationCenterV79,700));
+  window.addEventListener('resize',forceMobileLocationCenterV79);
+
+  const q=document.getElementById('q');
+  if(q){
+    q.addEventListener('input',()=>setTimeout(forceMobileLocationCenterV79,50));
+    q.addEventListener('keydown',e=>{
+      if(e.key==='Enter')setTimeout(forceMobileLocationCenterV79,150);
+    });
+  }
+
+  const obs=new MutationObserver(()=>{
+    clearTimeout(window.__mobileCenterV79);
+    window.__mobileCenterV79=setTimeout(forceMobileLocationCenterV79,60);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
