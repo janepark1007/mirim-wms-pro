@@ -18782,4 +18782,415 @@ body:not(.admin-view) #workerMainShortcutCard .admin-out-v81{
 }
 </style>
 
+
+<style id="mobile-all-screens-center-fullwidth-v83">
+@media(max-width:760px){
+
+  /* =========================================================
+     모바일 전체 공통: 화면 정중앙 + 가로 넘침 차단
+     ========================================================= */
+  html, body{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow-x:hidden!important;
+    box-sizing:border-box!important;
+  }
+
+  body *{
+    box-sizing:border-box!important;
+  }
+
+  main{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    padding:6px!important;
+    overflow-x:hidden!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+  }
+
+  /* 모든 주요 화면 패널 */
+  #home,
+  #work,
+  #photoSearchPanel,
+  #notifPanel,
+  #loginLogPanel,
+  #adminReferenceHome,
+  #adminTaskFocusPanel,
+  #adminShortcutFocusPanel,
+  #adminRecordLookupPanelV72,
+  #vipBomPanel,
+  #otherMaterialStorageCard,
+  #locationOrganizerCard,
+  #unregisteredItemCard,
+  #recentInboundCard,
+  #recentOutboundCard{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+    float:none!important;
+    overflow-x:hidden!important;
+  }
+
+  /* 주요 카드 전부 */
+  .card,
+  .ar-card,
+  .admin-record-v72-card,
+  .worker-activity-card-v73,
+  .order-modal-card,
+  .admin-shortcut-focus-panel,
+  .admin-task-focus-panel{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+    float:none!important;
+  }
+
+  /* =========================================================
+     작업자 메인 / 관리자 메인 버튼 영역
+     ========================================================= */
+  #workerMainShortcutCard,
+  #adminReferenceHome,
+  #adminWelcomeShortcutBox{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+  }
+
+  .worker-main-shortcut-grid,
+  .today-task-grid,
+  .admin-shortcuts,
+  .admin-welcome-shortcut-grid,
+  #adminReferenceHome .ar-grid{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+
+  .worker-main-shortcut-grid > *,
+  .today-task-grid > *,
+  .admin-shortcuts > *,
+  .admin-welcome-shortcut-grid > *,
+  #adminReferenceHome .ar-grid > *{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+
+  /* =========================================================
+     관리자 상단 통계
+     ========================================================= */
+  #adminReferenceHome .ar-stats,
+  .admin-stat-strip,
+  .home-summary{
+    width:100%!important;
+    max-width:100%!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:6px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  #adminReferenceHome .ar-stat,
+  .admin-stat-strip > *,
+  .home-summary > *{
+    min-width:0!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+
+  /* =========================================================
+     검색/입력 화면
+     ========================================================= */
+  #work,
+  #work > .card{
+    padding-left:6px!important;
+    padding-right:6px!important;
+  }
+
+  #work .division-search-row,
+  #work .search-box,
+  #work form,
+  #results{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  input,
+  select,
+  textarea,
+  button{
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  /* =========================================================
+     검색 결과
+     ========================================================= */
+  #results,
+  #results .result,
+  #results .result-card-main,
+  #results .result-main,
+  #results .result-content{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+    overflow-x:hidden!important;
+  }
+
+  #results .result{
+    padding:6px!important;
+  }
+
+  #results .result-card-main{
+    display:grid!important;
+    grid-template-columns:78px minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+
+  #results .result-photo-box{
+    width:78px!important;
+    min-width:78px!important;
+    max-width:78px!important;
+  }
+
+  #results .result-photo-box img,
+  #results .result-photo-empty{
+    width:78px!important;
+    height:78px!important;
+    max-width:78px!important;
+    object-fit:contain!important;
+  }
+
+  #results .result-photo-box button{
+    width:78px!important;
+    max-width:78px!important;
+    font-size:10px!important;
+    padding:3px!important;
+  }
+
+  #results .result-part{
+    font-size:19px!important;
+    text-align:left!important;
+    word-break:break-all!important;
+  }
+
+  #results .result-name{
+    font-size:13px!important;
+    text-align:left!important;
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  #results .result-location,
+  #results .later-check-direct-wrap,
+  #results .meta,
+  #results .qty-compare,
+  #results .loc-editor,
+  #results .order-share,
+  #results .item-movement-history,
+  #results .search-inbound-history{
+    grid-column:1/-1!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  #results .location-cards-v17,
+  #results .location-summary-grid,
+  #results .multi-location-summary{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:5px!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+
+  #results .location-card-v17,
+  #results .loc-slot,
+  #results .location-slot,
+  #results .location-summary-item,
+  #results .location-box,
+  #results .stock-total-box{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:8px!important;
+  }
+
+  /* =========================================================
+     주문창 / 모달 전체
+     ========================================================= */
+  #standaloneOrderModal,
+  #orderCategoryAdminModalV9,
+  #workerActivityModalV73{
+    padding:6px!important;
+    align-items:flex-start!important;
+    overflow-y:auto!important;
+  }
+
+  #standaloneOrderModal .order-modal-card,
+  #orderCategoryAdminModalV9 .order-category-admin-card-v9,
+  #workerActivityModalV73 .worker-activity-card-v73{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:8px auto!important;
+    max-height:none!important;
+  }
+
+  .simple-order-category-grid-v2{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  .simple-order-row-v4{
+    grid-template-columns:38px minmax(0,1fr)!important;
+  }
+
+  .simple-order-row-v4 label,
+  .simple-order-row-v4 .order-row-note-v4,
+  .simple-order-row-v4 .order-row-photo-v7,
+  .simple-order-row-v4 .remove-order-row-v4{
+    grid-column:2!important;
+    width:100%!important;
+  }
+
+  /* =========================================================
+     사용자관리 / 기록조회 / 작업이력 표
+     모바일에서 가로스크롤 대신 카드식
+     ========================================================= */
+  #loginLogPanel table,
+  #adminRecordLookupPanelV72 table,
+  #workerActivityModalV73 table{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    table-layout:fixed!important;
+  }
+
+  #loginLogPanel th,
+  #loginLogPanel td,
+  #adminRecordLookupPanelV72 th,
+  #adminRecordLookupPanelV72 td,
+  #workerActivityModalV73 th,
+  #workerActivityModalV73 td{
+    white-space:normal!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+    font-size:11px!important;
+    padding:6px!important;
+  }
+
+  .admin-record-v72-filters{
+    grid-template-columns:1fr!important;
+  }
+
+  .worker-activity-filter-v73{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  /* =========================================================
+     관리자 위치정리 / 기타자재 / 입출고 등
+     ========================================================= */
+  #locationOrganizerCard,
+  #otherMaterialStorageCard,
+  #unregisteredItemCard,
+  #recentInboundCard,
+  #recentOutboundCard{
+    padding-left:6px!important;
+    padding-right:6px!important;
+  }
+
+  #locationOrganizerCard table,
+  #otherMaterialStorageCard table,
+  #recentInboundCard table,
+  #recentOutboundCard table{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+  }
+
+  /* =========================================================
+     절대적인 가로 밀림 방지
+     ========================================================= */
+  [style*="left:"],
+  [style*="right:"],
+  [style*="transform:"]{
+    max-width:100%!important;
+  }
+
+  body,
+  main,
+  #home,
+  #work,
+  #results,
+  #adminReferenceHome{
+    overflow-x:hidden!important;
+  }
+}
+
+@media(max-width:390px){
+  .worker-main-shortcut-grid,
+  .today-task-grid,
+  .admin-shortcuts,
+  .admin-welcome-shortcut-grid,
+  #adminReferenceHome .ar-grid{
+    grid-template-columns:1fr 1fr!important;
+    gap:5px!important;
+  }
+
+  #results .result-card-main{
+    grid-template-columns:70px minmax(0,1fr)!important;
+  }
+
+  #results .result-photo-box,
+  #results .result-photo-box img,
+  #results .result-photo-empty,
+  #results .result-photo-box button{
+    width:70px!important;
+    max-width:70px!important;
+  }
+
+  #results .result-photo-box img,
+  #results .result-photo-empty{
+    height:70px!important;
+  }
+}
+</style>
+
 </body></html>
