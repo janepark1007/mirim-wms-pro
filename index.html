@@ -17135,4 +17135,260 @@ body.admin-view.admin-records-v72 #adminRecordLookupPanelV72{
 })();
 </script>
 
+
+<style id="admin-worker-activity-v73-style">
+#workerActivityModalV73{
+  position:fixed;inset:0;z-index:11000;
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;background:rgba(0,0,0,.48)
+}
+#workerActivityModalV73.hidden{display:none!important}
+.worker-activity-card-v73{
+  width:min(1100px,100%);
+  max-height:calc(100vh - 30px);
+  overflow:auto;
+  background:#fff;border-radius:18px;
+  border:2px solid #cfe2d6;
+  padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.28)
+}
+.worker-activity-head-v73{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px
+}
+.worker-activity-head-v73 h2{margin:0;color:#075f35}
+.worker-activity-close-v73{
+  width:42px;height:42px;border:1px solid #d3ddd7;border-radius:10px;background:#fff;font-weight:1000
+}
+.worker-activity-filter-v73{
+  display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px
+}
+.worker-activity-filter-v73 button{
+  min-height:38px;padding:0 12px;border:1px solid #cddad2;border-radius:9px;background:#f7faf8;font-weight:900
+}
+.worker-activity-filter-v73 button.active{
+  background:#087a43;color:#fff;border-color:#087a43
+}
+.worker-activity-summary-v73{
+  padding:10px 12px;background:#eef8f2;border-radius:10px;font-weight:900;margin-bottom:10px
+}
+.worker-activity-table-wrap-v73{overflow:auto}
+.worker-activity-table-v73{width:100%;min-width:900px;border-collapse:collapse}
+.worker-activity-table-v73 th,.worker-activity-table-v73 td{
+  padding:9px;border-bottom:1px solid #e5ece8;text-align:left;font-size:12px;vertical-align:top
+}
+.worker-activity-table-v73 th{background:#f3f8f5;color:#365448}
+.worker-name-link-v73{
+  border:0;background:transparent;color:#075f35;font-weight:1000;text-decoration:underline;cursor:pointer;padding:0
+}
+.worker-activity-empty-v73{padding:22px;text-align:center;color:#6b7770;font-weight:900}
+</style>
+
+<script id="admin-worker-activity-v73-js">
+(function(){
+  const WORKER_ACTIVITY_TABLE_V73='wms_admin_notifications';
+
+  function ensureWorkerActivityModalV73(){
+    let modal=document.getElementById('workerActivityModalV73');
+    if(modal)return modal;
+
+    modal=document.createElement('div');
+    modal.id='workerActivityModalV73';
+    modal.className='hidden';
+    modal.innerHTML=`
+      <div class="worker-activity-card-v73">
+        <div class="worker-activity-head-v73">
+          <h2 id="workerActivityTitleV73">👤 작업자 누적 작업이력</h2>
+          <button type="button" class="worker-activity-close-v73" onclick="closeWorkerActivityV73()">✕</button>
+        </div>
+
+        <div class="worker-activity-filter-v73">
+          <button type="button" data-range-v73="today" onclick="setWorkerActivityRangeV73('today',this)">오늘</button>
+          <button type="button" data-range-v73="7" onclick="setWorkerActivityRangeV73('7',this)">최근 7일</button>
+          <button type="button" data-range-v73="30" onclick="setWorkerActivityRangeV73('30',this)">최근 30일</button>
+          <button type="button" data-range-v73="all" onclick="setWorkerActivityRangeV73('all',this)">전체</button>
+        </div>
+
+        <div id="workerActivitySummaryV73" class="worker-activity-summary-v73">불러오는 중...</div>
+
+        <div class="worker-activity-table-wrap-v73">
+          <table class="worker-activity-table-v73">
+            <thead>
+              <tr>
+                <th>일시</th>
+                <th>작업구분</th>
+                <th>내용</th>
+                <th>품번</th>
+                <th>품명</th>
+                <th>수량</th>
+                <th>위치</th>
+              </tr>
+            </thead>
+            <tbody id="workerActivityBodyV73">
+              <tr><td colspan="7" class="worker-activity-empty-v73">불러오는 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  function getRangeStartV73(range){
+    const now=new Date();
+    if(range==='all')return null;
+    if(range==='today'){
+      const d=new Date(now);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    const days=Number(range||7);
+    return new Date(now.getTime()-days*24*60*60*1000);
+  }
+
+  function payloadObjV73(p){
+    if(!p)return {};
+    if(typeof p==='object')return p;
+    try{return JSON.parse(p)}catch(e){return {}}
+  }
+
+  window.closeWorkerActivityV73=function(){
+    document.getElementById('workerActivityModalV73')?.classList.add('hidden');
+  };
+
+  window.setWorkerActivityRangeV73=function(range,btn){
+    document.querySelectorAll('[data-range-v73]').forEach(b=>b.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+
+    const modal=document.getElementById('workerActivityModalV73');
+    const worker=modal?.dataset.worker||'';
+    loadWorkerActivityV73(worker,range);
+  };
+
+  window.openWorkerActivityV73=function(workerName){
+    if(!isAdmin)return alert('관리자 모드에서만 확인할 수 있습니다.');
+
+    const modal=ensureWorkerActivityModalV73();
+    modal.dataset.worker=workerName||'';
+    modal.classList.remove('hidden');
+
+    const title=document.getElementById('workerActivityTitleV73');
+    if(title)title.textContent='👤 '+(workerName||'작업자')+' 누적 작업이력';
+
+    const btn=modal.querySelector('[data-range-v73="7"]');
+    modal.querySelectorAll('[data-range-v73]').forEach(b=>b.classList.remove('active'));
+    btn?.classList.add('active');
+
+    loadWorkerActivityV73(workerName,'7');
+  };
+
+  window.loadWorkerActivityV73=async function(workerName,range='7'){
+    const body=document.getElementById('workerActivityBodyV73');
+    const summary=document.getElementById('workerActivitySummaryV73');
+    if(!body||!summary)return;
+
+    body.innerHTML='<tr><td colspan="7" class="worker-activity-empty-v73">불러오는 중...</td></tr>';
+    summary.textContent='불러오는 중...';
+
+    if(!sharedReady||!sharedDb){
+      body.innerHTML='<tr><td colspan="7" class="worker-activity-empty-v73">공용 DB 연결이 필요합니다.</td></tr>';
+      summary.textContent='공용 DB 연결 필요';
+      return;
+    }
+
+    try{
+      let q=sharedDb
+        .from(WORKER_ACTIVITY_TABLE_V73)
+        .select('id,type,title,message,payload,created_at')
+        .order('created_at',{ascending:false})
+        .limit(1000);
+
+      const start=getRangeStartV73(range);
+      if(start)q=q.gte('created_at',start.toISOString());
+
+      const {data,error}=await q;
+      if(error)throw error;
+
+      const rows=(data||[]).filter(r=>{
+        const p=payloadObjV73(r.payload);
+        const n=String(p.worker_name||'').trim();
+        const msg=String(r.message||'');
+        return n===String(workerName||'').trim() || msg.includes(String(workerName||'').trim());
+      });
+
+      summary.textContent=`${workerName||'작업자'} · ${range==='today'?'오늘':range==='all'?'전체':('최근 '+range+'일')} · 총 ${rows.length.toLocaleString()}건`;
+
+      if(!rows.length){
+        body.innerHTML='<tr><td colspan="7" class="worker-activity-empty-v73">해당 기간 작업이력이 없습니다.</td></tr>';
+        return;
+      }
+
+      body.innerHTML=rows.map(r=>{
+        const p=payloadObjV73(r.payload);
+        const dt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'';
+        const qty=Number(p.qty||0);
+        return `<tr>
+          <td>${esc(dt)}</td>
+          <td><b>${esc(r.title||r.type||'-')}</b></td>
+          <td>${esc(r.message||'-')}</td>
+          <td>${esc(p.part_no||'-')}</td>
+          <td>${esc(p.item_name||'-')}</td>
+          <td>${qty?qty.toLocaleString():'-'}</td>
+          <td>${esc(p.location||'-')}</td>
+        </tr>`;
+      }).join('');
+    }catch(e){
+      console.error('작업자 누적 작업이력 조회 실패',e);
+      summary.textContent='조회 실패';
+      body.innerHTML='<tr><td colspan="7" class="worker-activity-empty-v73">작업이력을 불러오지 못했습니다.</td></tr>';
+    }
+  };
+
+  /* 사용자 관리 테이블의 작업자 이름을 클릭 가능하게 */
+  function wireWorkerNamesV73(){
+    if(!isAdmin)return;
+
+    const panel=document.getElementById('loginLogPanel');
+    if(!panel)return;
+
+    const rows=panel.querySelectorAll('tbody tr');
+    rows.forEach(tr=>{
+      const cells=[...tr.querySelectorAll('td')];
+      if(!cells.length)return;
+
+      /* 이름처럼 보이는 셀 탐색 */
+      const nameCell=cells.find(td=>{
+        const t=(td.textContent||'').trim();
+        return t && !/^\d+$/.test(t) && !t.includes('@') && t.length<=20;
+      });
+      if(!nameCell || nameCell.querySelector('.worker-name-link-v73'))return;
+
+      const name=(nameCell.textContent||'').trim();
+      if(!name)return;
+
+      nameCell.innerHTML=`<button type="button" class="worker-name-link-v73" onclick="openWorkerActivityV73('${name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${name}</button>`;
+    });
+  }
+
+  /* 사용자관리 열 때마다 이름 링크 보강 */
+  const oldUsersV73=window.openAdminUsersFixedV72;
+  if(typeof oldUsersV73==='function'){
+    window.openAdminUsersFixedV72=async function(){
+      const r=await oldUsersV73.apply(this,arguments);
+      setTimeout(wireWorkerNamesV73,250);
+      return r;
+    };
+    try{openAdminUsersFixedV72=window.openAdminUsersFixedV72;}catch(e){}
+  }
+
+  const obs=new MutationObserver(()=>{
+    if(!isAdmin)return;
+    clearTimeout(window.__workerNamesV73);
+    window.__workerNamesV73=setTimeout(wireWorkerNamesV73,100);
+  });
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+
+  window.addEventListener('load',()=>setTimeout(ensureWorkerActivityModalV73,700));
+})();
+</script>
+
 </body></html>
