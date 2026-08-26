@@ -14106,4 +14106,31 @@ body.admin-view #results .loc-editor{
   opacity:1!important;
 }
 </style>
+
+<script id="admin-click-repair-v67">
+(function(){
+  function prep(){
+    document.body.classList.remove('admin-reference-home','admin-task-focus','admin-shortcut-focus');
+    const root=document.getElementById('adminReferenceHome');
+    if(root) root.style.display='none';
+  }
+  window.openExistingAdminSection=function(kind){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+    prep();
+    if(typeof openAdminShortcutListV41==='function' && ['records','location','nas','users','alerts'].includes(kind)){
+      return openAdminShortcutListV41(kind);
+    }
+    alert('해당 관리창을 찾지 못했습니다.');
+  };
+  const oldTask=window.openAdminTaskView;
+  window.openAdminTaskView=async function(type){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+    prep();
+    if(typeof openAdminShortcutListV41==='function' && ['orders','match','later','history','unreg'].includes(type)){
+      return await openAdminShortcutListV41(type);
+    }
+    if(typeof oldTask==='function')return await oldTask(type);
+  };
+})();
+</script>
 </body></html>
