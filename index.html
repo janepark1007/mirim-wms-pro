@@ -16386,5 +16386,40 @@ body:not(.admin-view):not(.worker-locked) #results .loc-editor{
 })();
 </script>
 
+
+<script id="excel-latest-auto-photo-v11">
+(function(){
+  const previousExcelSubmitV11 = window.submitExcelStandaloneOrderV3;
+
+  window.submitExcelStandaloneOrderV3 = async function(){
+    const part=(document.getElementById('standaloneOrderPart')?.value||'').trim();
+
+    /* 전송 직전에 DB에서 최신 등록 이미지를 다시 조회하여 캐시 갱신 */
+    if(part && sharedReady && sharedDb){
+      try{
+        const {data,error}=await sharedDb
+          .from('production_item_meta')
+          .select('part_no,photo_url,updated_at')
+          .eq('part_no',part)
+          .maybeSingle();
+
+        if(error)throw error;
+
+        if(data && data.photo_url){
+          sharedCache.photo[String(part)]=String(data.photo_url);
+        }
+      }catch(e){
+        console.warn('엑셀리스트 최신 이미지 조회 실패 - 기존 캐시 이미지 사용',e);
+      }
+    }
+
+    /* 기존 엑셀 주문 전송 로직 사용:
+       getPhoto(part)가 방금 갱신한 최신 이미지를 가져오므로
+       웹 주문기록 + 모바일 공유 이미지에 동일하게 반영 */
+    return await previousExcelSubmitV11.apply(this,arguments);
+  };
+})();
+</script>
+
 </body></html>
 <style id='excel-order-panel-override-v3'>#standaloneOrderModal #excelOrderPanel{display:none!important} #standaloneOrderModal #excelOrderPanel.excel-core-open-v3{display:block!important}</style>
