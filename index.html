@@ -4111,54 +4111,75 @@ async function sharedSaveItemMeta(part,usage,minQty){
  return true;
 }
 async function sharedUploadPhoto(part,file){
- if(!sharedDb) throw new Error('공용 동기화 연결이 없습니다.');
- file=await optimizeItemPhoto(file);
- const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
- let ext='jpg';
- if(file.type==='image/png') ext='png';
- else if(file.type==='image/webp') ext='webp';
- else if(file.type==='image/heic'||file.type==='image/heif') ext='heic';
- else if(file.name&&file.name.includes('.')) ext=file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+  if(!sharedDb) throw new Error('공용 동기화 연결이 없습니다.');
 
- const path=`items/${safe}.${ext}`;
- const bucket=sharedDb.storage.from('production-item-photos');
+  file=await optimizeItemPhoto(file);
 
- const {error:upErr}=await bucket.upload(path,file,{
-   upsert:true,
-   contentType:file.type||'image/jpeg',
-   cacheControl:'31536000'
- });
- if(upErr){
-   console.error('사진 Storage 업로드 오류',upErr);
-   if(/row-level security|policy|permission|unauthorized|403/i.test(upErr.message||'')){
-     throw new Error('사진 저장 권한이 없습니다. Supabase 사진 저장 권한 SQL을 먼저 실행해 주세요.');
-   }
-   if(/bucket|not found/i.test(upErr.message||'')){
-     throw new Error('사진 저장소(production-item-photos)가 없습니다. Supabase 사진 저장 권한 SQL을 실행해 주세요.');
-   }
-   throw upErr;
- }
+  const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
+  let ext='jpg';
+  if(file.type==='image/png') ext='png';
+  else if(file.type==='image/webp') ext='webp';
+  else if(file.type==='image/heic'||file.type==='image/heif') ext='heic';
+  else if(file.name&&file.name.includes('.')) ext=file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
 
- const {data}=bucket.getPublicUrl(path);
- const baseUrl=(data&&data.publicUrl)?data.publicUrl:'';
- if(!baseUrl) throw new Error('사진 주소 생성에 실패했습니다.');
- const url=baseUrl+'?v='+Date.now();
+  /*
+    같은 파일명 덮어쓰기(upsert:true)를 사용하지 않는다.
+    Supabase Storage UPDATE 권한이 없어도 INSERT 권한만 있으면 저장 가능하도록
+    매번 고유 파일명으로 새 업로드한다.
+  */
+  const unique=`${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  const path=`items/${safe}_${unique}.${ext}`;
+  const bucket=sharedDb.storage.from('production-item-photos');
 
- const current=sharedCache.meta[String(part)]||{usage:'',minQty:''};
- const {error:metaErr}=await sharedDb.from('production_item_meta').upsert({
-   part_no:String(part),
-   usage:current.usage||'',
-   min_qty:current.minQty===''?null:Number(current.minQty),
-   photo_url:url,
-   updated_at:new Date().toISOString()
- },{onConflict:'part_no'});
- if(metaErr){
-   console.error('사진 메타 저장 오류',metaErr);
-   throw new Error('사진은 업로드됐지만 품목 연결 저장에 실패했습니다: '+(metaErr.message||metaErr));
- }
+  const {error:upErr}=await bucket.upload(path,file,{
+    upsert:false,
+    contentType:file.type||'image/jpeg',
+    cacheControl:'31536000'
+  });
 
- sharedCache.photo[String(part)]=url;
- return url;
+  if(upErr){
+    console.error('사진 Storage 업로드 오류',upErr);
+
+    if(/row-level security|policy|permission|unauthorized|403/i.test(upErr.message||'')){
+      throw new Error(
+        '사진 저장 권한이 없습니다. Supabase Storage의 production-item-photos 버킷에 INSERT 권한이 필요합니다.\n\n'+
+        (upErr.message||'')
+      );
+    }
+
+    if(/bucket|not found/i.test(upErr.message||'')){
+      throw new Error('사진 저장소(production-item-photos)가 없습니다.');
+    }
+
+    throw new Error('사진 업로드 실패: '+(upErr.message||upErr));
+  }
+
+  const {data}=bucket.getPublicUrl(path);
+  const baseUrl=(data&&data.publicUrl)?data.publicUrl:'';
+  if(!baseUrl) throw new Error('사진 주소 생성에 실패했습니다.');
+
+  const url=baseUrl+'?v='+Date.now();
+
+  const current=sharedCache.meta[String(part)]||{usage:'',minQty:''};
+
+  const {error:metaErr}=await sharedDb.from('production_item_meta').upsert({
+    part_no:String(part),
+    usage:current.usage||'',
+    min_qty:current.minQty===''?null:Number(current.minQty),
+    photo_url:url,
+    updated_at:new Date().toISOString()
+  },{onConflict:'part_no'});
+
+  if(metaErr){
+    console.error('사진 메타 저장 오류',metaErr);
+    throw new Error('사진은 업로드됐지만 품목 연결 저장에 실패했습니다: '+(metaErr.message||metaErr));
+  }
+
+  sharedCache.photo[String(part)]=url;
+  if(!sharedCache.meta[String(part)]) sharedCache.meta[String(part)]={usage:'',minQty:''};
+  sharedCache.meta[String(part)].photoUrl=url;
+
+  return url;
 }
 async function sharedUploadOrderPhoto(file){
  if(!sharedDb||!file)throw new Error('공용 동기화 연결 또는 사진이 없습니다.');
@@ -20760,6 +20781,308 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
     window.__talkDirectV93=setTimeout(wireDirectButtonV93,80);
   });
   obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<script id="mobile-photo-registration-ios-v94">
+(function(){
+  let pendingPhotoPartV94='';
+
+  function ensurePhotoInputV94(){
+    let input=document.getElementById('itemPhotoInputV94');
+    if(input)return input;
+
+    input=document.createElement('input');
+    input.id='itemPhotoInputV94';
+    input.type='file';
+    input.accept='image/*';
+    /* iPhone에서 카메라 강제 대신 카메라/사진보관함 선택 가능 */
+    input.style.cssText='position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+    document.body.appendChild(input);
+
+    input.addEventListener('change',async function(){
+      const file=input.files?.[0];
+      const part=pendingPhotoPartV94;
+      input.value='';
+      if(!file || !part)return;
+
+      if(file.size>25*1024*1024){
+        alert('사진은 25MB 이하로 선택해 주세요.');
+        return;
+      }
+
+      const p=String(part);
+      let previewUrl='';
+
+      try{
+        /* 모바일에서 DB 초기화가 늦을 때 잠깐 기다림 */
+        const started=Date.now();
+        while((!sharedReady || !sharedDb) && Date.now()-started<5000){
+          await new Promise(r=>setTimeout(r,150));
+        }
+
+        if(!sharedReady || !sharedDb){
+          throw new Error('공용 동기화 연결이 아직 준비되지 않았습니다. 잠시 후 다시 사진등록을 눌러 주세요.');
+        }
+
+        previewUrl=URL.createObjectURL(file);
+        sharedCache.photo[p]=previewUrl;
+        try{ search(); }catch(e){}
+
+        const uploadFile=await optimizeItemPhoto(file);
+        const savedUrl=await sharedUploadPhoto(part,uploadFile);
+
+        sharedCache.photo[p]=savedUrl;
+        try{ search(); }catch(e){}
+
+        if(previewUrl)setTimeout(()=>URL.revokeObjectURL(previewUrl),1200);
+        alert('✅ 사진 저장 완료\n\n모바일·PC에서 같은 사진이 보입니다.');
+      }catch(e){
+        if(previewUrl){
+          if(sharedCache.photo[p]===previewUrl)delete sharedCache.photo[p];
+          try{URL.revokeObjectURL(previewUrl);}catch(err){}
+        }
+        try{ search(); }catch(err){}
+        console.error('모바일 사진 저장 실패',e);
+        alert('⚠️ 사진 저장 실패\n\n'+(e.message||e));
+      }
+    });
+
+    return input;
+  }
+
+  /* 최종 사진등록 함수: 관리자 + 로그인 작업자 모두 허용 */
+  window.choosePhoto=function(part){
+    if(!isAdmin && !currentWorker){
+      alert('작업자 로그인 후 사진을 등록할 수 있습니다.');
+      return;
+    }
+
+    pendingPhotoPartV94=String(part||'');
+    if(!pendingPhotoPartV94)return;
+
+    const input=ensurePhotoInputV94();
+
+    /* 동일 파일 재선택도 change 발생하도록 초기화 */
+    input.value='';
+
+    try{
+      input.click();
+    }catch(e){
+      console.error('사진 선택창 열기 실패',e);
+      alert('사진 선택창을 열지 못했습니다. 다시 눌러 주세요.');
+    }
+  };
+
+  try{choosePhoto=window.choosePhoto;}catch(e){}
+
+  window.addEventListener('load',()=>setTimeout(ensurePhotoInputV94,300));
+})();
+</script>
+
+
+<script id="photo-save-reload-v95">
+(function(){
+  const oldChoosePhotoV95=window.choosePhoto;
+
+  /* 사진 저장 후 다른 화면에서도 바로 보이도록 공용 캐시 재조회 보강 */
+  async function refreshPhotoCacheV95(){
+    try{
+      if(typeof loadSharedCache==='function') await loadSharedCache();
+    }catch(e){
+      console.warn('사진 공용 캐시 새로고침 생략',e);
+    }
+  }
+
+  /* sharedUploadPhoto 성공 후 캐시 재조회 */
+  const oldSharedUploadPhotoV95=window.sharedUploadPhoto;
+  if(typeof oldSharedUploadPhotoV95==='function'){
+    window.sharedUploadPhoto=async function(part,file){
+      const url=await oldSharedUploadPhotoV95.apply(this,arguments);
+      await refreshPhotoCacheV95();
+      return url;
+    };
+    try{sharedUploadPhoto=window.sharedUploadPhoto;}catch(e){}
+  }
+})();
+</script>
+
+
+<style id="mobile-photo-save-v96-style">
+#mobilePhotoSaveStatusV96{
+  position:fixed;left:50%;top:18px;transform:translateX(-50%);
+  z-index:20000;display:none;min-width:220px;max-width:calc(100vw - 28px);
+  padding:12px 16px;border-radius:12px;background:#173b2c;color:#fff;
+  font-weight:900;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.22)
+}
+#mobilePhotoSaveStatusV96.show{display:block}
+</style>
+
+<script id="mobile-camera-photo-save-v96">
+(function(){
+  let pendingPartV96='';
+
+  function statusV96(msg,autoHide){
+    let el=document.getElementById('mobilePhotoSaveStatusV96');
+    if(!el){
+      el=document.createElement('div');
+      el.id='mobilePhotoSaveStatusV96';
+      document.body.appendChild(el);
+    }
+    el.textContent=msg||'';
+    el.classList.add('show');
+    if(autoHide){
+      clearTimeout(window.__photoStatusV96);
+      window.__photoStatusV96=setTimeout(()=>el.classList.remove('show'),autoHide);
+    }
+  }
+
+  function hideStatusV96(){
+    document.getElementById('mobilePhotoSaveStatusV96')?.classList.remove('show');
+  }
+
+  function ensureInputV96(){
+    let input=document.getElementById('itemPhotoInputV96');
+    if(input)return input;
+
+    input=document.createElement('input');
+    input.type='file';
+    input.id='itemPhotoInputV96';
+    input.accept='image/*';
+    input.style.position='fixed';
+    input.style.left='-10000px';
+    input.style.top='0';
+    input.style.width='1px';
+    input.style.height='1px';
+    input.style.opacity='0';
+    document.body.appendChild(input);
+
+    input.addEventListener('change', async function(){
+      const raw=input.files && input.files[0];
+      const part=pendingPartV96;
+      input.value='';
+      if(!raw || !part)return;
+
+      try{
+        statusV96('📷 사진 처리 중...');
+
+        if(raw.size>40*1024*1024){
+          throw new Error('사진 용량이 너무 큽니다. 40MB 이하 사진을 사용해 주세요.');
+        }
+
+        const jpg=await mobilePhotoToJpegV96(raw);
+        statusV96('☁️ 사진 저장 중...');
+
+        const started=Date.now();
+        while((!window.sharedDb || !window.sharedReady) && Date.now()-started<8000){
+          await new Promise(r=>setTimeout(r,200));
+        }
+
+        if(!window.sharedDb){
+          throw new Error('사진 서버 연결이 되지 않았습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
+        }
+
+        const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path=`items/${safe}_${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
+        const bucket=window.sharedDb.storage.from('production-item-photos');
+
+        const up=await bucket.upload(path,jpg,{
+          upsert:false,
+          contentType:'image/jpeg',
+          cacheControl:'31536000'
+        });
+
+        if(up.error)throw new Error('사진 업로드 실패: '+(up.error.message||up.error));
+
+        const pub=bucket.getPublicUrl(path);
+        const base=pub?.data?.publicUrl||'';
+        if(!base)throw new Error('사진 주소 생성에 실패했습니다.');
+        const url=base+'?v='+Date.now();
+
+        const meta=(window.sharedCache?.meta||{})[String(part)]||{};
+        const save=await window.sharedDb.from('production_item_meta').upsert({
+          part_no:String(part),
+          usage:meta.usage||'',
+          min_qty:meta.minQty===''||meta.minQty==null?null:Number(meta.minQty),
+          photo_url:url,
+          updated_at:new Date().toISOString()
+        },{onConflict:'part_no'});
+
+        if(save.error)throw new Error('사진 연결 저장 실패: '+(save.error.message||save.error));
+
+        if(window.sharedCache){
+          window.sharedCache.photo=window.sharedCache.photo||{};
+          window.sharedCache.photo[String(part)]=url;
+        }
+
+        try{ if(typeof window.loadSharedCache==='function')await window.loadSharedCache(); }catch(e){}
+        try{ if(typeof window.search==='function')window.search(); }catch(e){}
+
+        statusV96('✅ 사진 저장 완료',1800);
+      }catch(e){
+        console.error('모바일 사진 저장 v96 실패',e);
+        hideStatusV96();
+        alert('⚠️ 사진 저장 실패\n\n'+(e?.message||e));
+      }
+    });
+
+    return input;
+  }
+
+  async function mobilePhotoToJpegV96(file){
+    if(/^image\/jpe?g$/i.test(file.type||'') && file.size<=1200*1024){
+      return file;
+    }
+
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const fr=new FileReader();
+      fr.onload=()=>resolve(fr.result);
+      fr.onerror=()=>reject(new Error('휴대폰 사진을 읽지 못했습니다.'));
+      fr.readAsDataURL(file);
+    });
+
+    const img=await new Promise((resolve,reject)=>{
+      const i=new Image();
+      i.onload=()=>resolve(i);
+      i.onerror=()=>reject(new Error('촬영한 사진을 열지 못했습니다. 다른 사진으로 다시 시도해 주세요.'));
+      i.src=dataUrl;
+    });
+
+    let w=Number(img.naturalWidth||img.width||0), h=Number(img.naturalHeight||img.height||0);
+    if(!w||!h)throw new Error('사진 크기를 확인하지 못했습니다.');
+
+    const scale=Math.min(1,1600/Math.max(w,h));
+    w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
+
+    const c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    const ctx=c.getContext('2d',{alpha:false});
+    ctx.fillStyle='#fff';
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
+
+    const blob=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',0.8));
+    if(!blob)throw new Error('사진 JPG 변환에 실패했습니다.');
+
+    return new File([blob],`mirim_${Date.now()}.jpg`,{type:'image/jpeg',lastModified:Date.now()});
+  }
+
+  window.choosePhoto=function(part){
+    if(!window.isAdmin && !window.currentWorker){
+      alert('로그인 후 사진을 등록할 수 있습니다.');
+      return;
+    }
+    pendingPartV96=String(part||'');
+    if(!pendingPartV96)return;
+    const input=ensureInputV96();
+    input.value='';
+    try{ input.click(); }
+    catch(e){ alert('사진 선택창을 열지 못했습니다. 다시 눌러 주세요.'); }
+  };
+
+  try{choosePhoto=window.choosePhoto;}catch(e){}
+  window.addEventListener('load',()=>setTimeout(ensureInputV96,300));
 })();
 </script>
 
