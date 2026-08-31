@@ -1252,6 +1252,49 @@ body.park-location-worker-v63 .erp-only{
 <style id="admin-record-load-removed-v67">
 body.admin-view *:has(> :only-child) { }
 </style>
+
+<script id="mirim-touch-performance-v98">
+(function(){
+  /* 누적 패치에서 생성된 지속적 DOM 감시가 모바일 메인 스레드를 과점유하는 문제 방지 */
+  const NativeMutationObserver=window.MutationObserver;
+  window.__MIRIM_NATIVE_MUTATION_OBSERVER__=NativeMutationObserver;
+
+  window.MutationObserver=function(callback){
+    this.observe=function(){};
+    this.disconnect=function(){};
+    this.takeRecords=function(){return[];};
+  };
+
+  /* 버튼 자체 onclick / input change / 전용 addEventListener는 그대로 둔다.
+     document 전체에 걸려 클릭마다 다시 UI를 보정하는 레거시 핸들러만 건너뛴다. */
+  const nativeAdd=EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener=function(type,handler,options){
+    try{
+      if(this===document && type==='click' && typeof handler==='function'){
+        const s=Function.prototype.toString.call(handler);
+
+        const legacyMaintenance =
+          /setTimeout\s*\(/.test(s) &&
+          /(force|restore|enhance|ensure|wire|sync|remove|rearrange|optimize|monitor|poll|location|confirm|shortcut|admin)/i.test(s);
+
+        if(legacyMaintenance){
+          return;
+        }
+      }
+    }catch(e){}
+    return nativeAdd.call(this,type,handler,options);
+  };
+
+  /* 300ms 계열 모바일 탭 지연 방지 */
+  try{
+    const st=document.createElement('style');
+    st.id='mirim-touch-action-v98';
+    st.textContent='button,a,input,select,textarea,[onclick]{touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,.06)}';
+    document.documentElement.appendChild(st);
+  }catch(e){}
+})();
+</script>
+
 </head>
 <body>
 <div aria-hidden="true" class="order-modal-backdrop hidden" id="vipLoginModal">
@@ -21083,6 +21126,40 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
 
   try{choosePhoto=window.choosePhoto;}catch(e){}
   window.addEventListener('load',()=>setTimeout(ensureInputV96,300));
+})();
+</script>
+
+
+<script id="mobile-photo-touch-fast-v97">
+(function(){
+ let partV97='';
+ function inputV97(){
+  let x=document.getElementById('photoFastV97');
+  if(x)return x;
+  x=document.createElement('input');x.id='photoFastV97';x.type='file';x.accept='image/*';
+  x.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
+  document.body.appendChild(x);
+  x.addEventListener('change',async()=>{
+   const f=x.files?.[0],part=partV97;x.value='';if(!f||!part)return;
+   try{
+    let u=f;
+    if(typeof mobilePhotoToJpegV96==='function'){try{u=await mobilePhotoToJpegV96(f)}catch(e){}}
+    if(!window.sharedDb)throw new Error('사진 서버 연결이 아직 준비되지 않았습니다.');
+    const url=await window.sharedUploadPhoto(part,u);
+    if(window.sharedCache){window.sharedCache.photo=window.sharedCache.photo||{};window.sharedCache.photo[String(part)]=url}
+    try{window.search?.()}catch(e){}
+    alert('✅ 사진 저장 완료');
+   }catch(e){console.error(e);alert('⚠️ 사진 저장 실패\n\n'+(e?.message||e))}
+  });
+  return x;
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inputV97,{once:true});else inputV97();
+ window.choosePhoto=function(part){
+  if(!window.isAdmin&&!window.currentWorker){alert('로그인 후 사진을 등록할 수 있습니다.');return}
+  partV97=String(part||'');if(!partV97)return;
+  const x=inputV97();x.value='';x.click();
+ };
+ try{choosePhoto=window.choosePhoto}catch(e){}
 })();
 </script>
 
