@@ -1252,49 +1252,6 @@ body.park-location-worker-v63 .erp-only{
 <style id="admin-record-load-removed-v67">
 body.admin-view *:has(> :only-child) { }
 </style>
-
-<script id="mirim-touch-performance-v98">
-(function(){
-  /* 누적 패치에서 생성된 지속적 DOM 감시가 모바일 메인 스레드를 과점유하는 문제 방지 */
-  const NativeMutationObserver=window.MutationObserver;
-  window.__MIRIM_NATIVE_MUTATION_OBSERVER__=NativeMutationObserver;
-
-  window.MutationObserver=function(callback){
-    this.observe=function(){};
-    this.disconnect=function(){};
-    this.takeRecords=function(){return[];};
-  };
-
-  /* 버튼 자체 onclick / input change / 전용 addEventListener는 그대로 둔다.
-     document 전체에 걸려 클릭마다 다시 UI를 보정하는 레거시 핸들러만 건너뛴다. */
-  const nativeAdd=EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener=function(type,handler,options){
-    try{
-      if(this===document && type==='click' && typeof handler==='function'){
-        const s=Function.prototype.toString.call(handler);
-
-        const legacyMaintenance =
-          /setTimeout\s*\(/.test(s) &&
-          /(force|restore|enhance|ensure|wire|sync|remove|rearrange|optimize|monitor|poll|location|confirm|shortcut|admin)/i.test(s);
-
-        if(legacyMaintenance){
-          return;
-        }
-      }
-    }catch(e){}
-    return nativeAdd.call(this,type,handler,options);
-  };
-
-  /* 300ms 계열 모바일 탭 지연 방지 */
-  try{
-    const st=document.createElement('style');
-    st.id='mirim-touch-action-v98';
-    st.textContent='button,a,input,select,textarea,[onclick]{touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,.06)}';
-    document.documentElement.appendChild(st);
-  }catch(e){}
-})();
-</script>
-
 </head>
 <body>
 <div aria-hidden="true" class="order-modal-backdrop hidden" id="vipLoginModal">
@@ -11497,9 +11454,9 @@ body.admin-task-focus #locationOrganizerCard button{
       if(window.__mirimSharedRealtimeFallbackV1)clearInterval(window.__mirimSharedRealtimeFallbackV1);
       window.__mirimSharedRealtimeFallbackV1=setInterval(()=>{
         if(document.visibilityState==='visible'){
-          refreshAllSharedV1('fallback-5s');
+          refreshAllSharedV1('fallback-30s');
         }
-      },5000);
+      }, 30000);
     }else{
       setRealtimeBadgeV1(false,'공용 DB 연결 안됨');
     }
@@ -11989,7 +11946,7 @@ body.admin-view.admin-reference-home #adminWorkerOrdersV2{
       if(document.visibilityState!=='visible')return;
       if(currentWorker)loadMyOrdersV2();
       if(isAdmin)loadAdminWorkerOrdersV2();
-    },5000);
+    }, 15000);
   }
 
   /* 관리자/작업자 모드가 나중에 전환되어도 패널 생성 */
@@ -14033,7 +13990,7 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
    setTimeout(poll,800);
    setInterval(poll,15000);
  });
- document.addEventListener('click',()=>{if(isAdmin)setTimeout(poll,250)},true);
+ /* v99: 터치 시 관리자 알림 DB 재조회 제거 - 정기 폴링만 사용 */
 })();
 </script>
 <script id="location-registration-restored-v59">
@@ -20516,12 +20473,10 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
   });
 
   /* 5초마다 관리자 로그인 알림 확인 */
-  setInterval(pollWorkerLoginPushV89,5000);
+  setInterval(pollWorkerLoginPushV89,15000);
 
   /* 관리자 모드 진입/화면 이동 시도 즉시 확인 */
-  document.addEventListener('click',()=>{
-    if(isAdmin)setTimeout(pollWorkerLoginPushV89,80);
-  },true);
+  /* v99: 모든 터치마다 로그인 알림 DB 조회하던 코드 제거 */
 })();
 </script>
 
@@ -21160,6 +21115,59 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
   const x=inputV97();x.value='';x.click();
  };
  try{choosePhoto=window.choosePhoto}catch(e){}
+})();
+</script>
+
+
+<style id="mobile-fasttap-v99-style">
+button,a,[role="button"],[onclick]{
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:rgba(0,0,0,.05);
+}
+</style>
+<script id="mobile-fasttap-v99">
+(function(){
+  if(!('ontouchstart' in window)) return;
+
+  let startX=0,startY=0,startT=0,target=null;
+  let syntheticTarget=null, syntheticAt=0;
+
+  document.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1)return;
+    const t=e.target.closest('button,a,[role="button"],[onclick]');
+    if(!t || t.disabled)return;
+    target=t;
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    startT=Date.now();
+  },{passive:true,capture:true});
+
+  document.addEventListener('touchend',function(e){
+    if(!target)return;
+    const t=target; target=null;
+    const ch=e.changedTouches&&e.changedTouches[0];
+    if(!ch)return;
+    if(Math.abs(ch.clientX-startX)>12 || Math.abs(ch.clientY-startY)>12)return;
+    if(Date.now()-startT>800)return;
+
+    /* 스크롤이 아닌 짧은 탭이면 브라우저의 늦은 click을 기다리지 않고 즉시 실행 */
+    syntheticTarget=t;
+    syntheticAt=Date.now();
+    try{ t.click(); }catch(err){}
+  },{passive:true,capture:true});
+
+  /* 같은 탭에서 나중에 들어오는 실제 click 중복만 차단 */
+  document.addEventListener('click',function(e){
+    if(!syntheticTarget)return;
+    if(e.isTrusted && Date.now()-syntheticAt<900 &&
+       (e.target===syntheticTarget || syntheticTarget.contains(e.target))){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      syntheticTarget=null;
+    }else if(Date.now()-syntheticAt>=900){
+      syntheticTarget=null;
+    }
+  },true);
 })();
 </script>
 
