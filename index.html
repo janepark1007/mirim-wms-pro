@@ -9,7 +9,7 @@
 *{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:var(--bg);color:#17211c}
 header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;z-index:10}
 header b{font-size:20px}header small{display:block;color:var(--muted);margin-top:2px}main{max-width:1050px;margin:auto;padding:16px}
-.hero{background:linear-gradient(135deg,#0b7a45,#145b3d);color:#fff;border-radius:18px;padding:22px;margin-bottom:14px}
+.hero{background:linear-gradient(135deg,#0b7a45,#145b3d);color:#fff;border-radius:a18px;padding:22px;margin-bottom:14px}
 .hero h1{margin:0 0 7px;font-size:28px}.hero p{margin:0;opacity:.92}
 .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
 .quick button{min-height:110px;border:1px solid var(--line);background:#fff;border-radius:16px;font-size:28px;font-weight:800}
@@ -1252,6 +1252,16 @@ body.park-location-worker-v63 .erp-only{
 <style id="admin-record-load-removed-v67">
 body.admin-view *:has(> :only-child) { }
 </style>
+
+<style id="original-touch-speed-v103">
+button,a,[role="button"],[onclick]{
+  touch-action:manipulation;
+}
+input,textarea,select{
+  touch-action:auto;
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" class="order-modal-backdrop hidden" id="vipLoginModal">
@@ -7691,19 +7701,10 @@ function updateAdminIdleBadge(){
   badge.textContent=`관리자 자동로그아웃 ${min}분`;
 }
 
-/* v102 모바일 성능: 관리자 활동 체크를 매 글자/매 터치마다 실행하지 않음 */
-let __adminActivityLastV102=0;
-function markAdminActivityFastV102(){
-  if(!isAdmin)return;
-  const now=Date.now();
-  if(now-__adminActivityLastV102<15000)return;
-  __adminActivityLastV102=now;
-  sessionStorage.setItem(ADMIN_IDLE_KEY,String(now));
-  scheduleAdminIdleLogout();
-  /* 상단 남은시간 표시는 1분 타이머에서만 갱신 */
-}
-['pointerdown','keydown'].forEach(evt=>{
-  window.addEventListener(evt,markAdminActivityFastV102,{passive:true});
+['click','keydown','input','change','touchstart','pointerdown','scroll'].forEach(evt=>{
+  window.addEventListener(evt,()=>{
+    if(isAdmin)markAdminActivity();
+  },{passive:true});
 });
 
 window.addEventListener('load',()=>{
@@ -11463,9 +11464,9 @@ body.admin-task-focus #locationOrganizerCard button{
       if(window.__mirimSharedRealtimeFallbackV1)clearInterval(window.__mirimSharedRealtimeFallbackV1);
       window.__mirimSharedRealtimeFallbackV1=setInterval(()=>{
         if(document.visibilityState==='visible'){
-          refreshAllSharedV1('fallback-30s');
+          refreshAllSharedV1('fallback-5s');
         }
-      }, 30000);
+      },5000);
     }else{
       setRealtimeBadgeV1(false,'공용 DB 연결 안됨');
     }
@@ -11955,7 +11956,7 @@ body.admin-view.admin-reference-home #adminWorkerOrdersV2{
       if(document.visibilityState!=='visible')return;
       if(currentWorker)loadMyOrdersV2();
       if(isAdmin)loadAdminWorkerOrdersV2();
-    }, 15000);
+    },5000);
   }
 
   /* 관리자/작업자 모드가 나중에 전환되어도 패널 생성 */
@@ -13999,7 +14000,7 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
    setTimeout(poll,800);
    setInterval(poll,15000);
  });
- /* v99: 터치 시 관리자 알림 DB 재조회 제거 - 정기 폴링만 사용 */
+ document.addEventListener('click',()=>{if(isAdmin)setTimeout(poll,250)},true);
 })();
 </script>
 <script id="location-registration-restored-v59">
@@ -20482,10 +20483,12 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
   });
 
   /* 5초마다 관리자 로그인 알림 확인 */
-  setInterval(pollWorkerLoginPushV89,15000);
+  setInterval(pollWorkerLoginPushV89,5000);
 
   /* 관리자 모드 진입/화면 이동 시도 즉시 확인 */
-  /* v99: 모든 터치마다 로그인 알림 DB 조회하던 코드 제거 */
+  document.addEventListener('click',()=>{
+    if(isAdmin)setTimeout(pollWorkerLoginPushV89,80);
+  },true);
 })();
 </script>
 
@@ -20912,259 +20915,6 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
     };
     try{sharedUploadPhoto=window.sharedUploadPhoto;}catch(e){}
   }
-})();
-</script>
-
-
-<style id="mobile-photo-save-v96-style">
-#mobilePhotoSaveStatusV96{
-  position:fixed;left:50%;top:18px;transform:translateX(-50%);
-  z-index:20000;display:none;min-width:220px;max-width:calc(100vw - 28px);
-  padding:12px 16px;border-radius:12px;background:#173b2c;color:#fff;
-  font-weight:900;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.22)
-}
-#mobilePhotoSaveStatusV96.show{display:block}
-</style>
-
-<script id="mobile-camera-photo-save-v96">
-(function(){
-  let pendingPartV96='';
-
-  function statusV96(msg,autoHide){
-    let el=document.getElementById('mobilePhotoSaveStatusV96');
-    if(!el){
-      el=document.createElement('div');
-      el.id='mobilePhotoSaveStatusV96';
-      document.body.appendChild(el);
-    }
-    el.textContent=msg||'';
-    el.classList.add('show');
-    if(autoHide){
-      clearTimeout(window.__photoStatusV96);
-      window.__photoStatusV96=setTimeout(()=>el.classList.remove('show'),autoHide);
-    }
-  }
-
-  function hideStatusV96(){
-    document.getElementById('mobilePhotoSaveStatusV96')?.classList.remove('show');
-  }
-
-  function ensureInputV96(){
-    let input=document.getElementById('itemPhotoInputV96');
-    if(input)return input;
-
-    input=document.createElement('input');
-    input.type='file';
-    input.id='itemPhotoInputV96';
-    input.accept='image/*';
-    input.style.position='fixed';
-    input.style.left='-10000px';
-    input.style.top='0';
-    input.style.width='1px';
-    input.style.height='1px';
-    input.style.opacity='0';
-    document.body.appendChild(input);
-
-    input.addEventListener('change', async function(){
-      const raw=input.files && input.files[0];
-      const part=pendingPartV96;
-      input.value='';
-      if(!raw || !part)return;
-
-      try{
-        statusV96('📷 사진 처리 중...');
-
-        if(raw.size>40*1024*1024){
-          throw new Error('사진 용량이 너무 큽니다. 40MB 이하 사진을 사용해 주세요.');
-        }
-
-        const jpg=await mobilePhotoToJpegV96(raw);
-        statusV96('☁️ 사진 저장 중...');
-
-        const started=Date.now();
-        while((!window.sharedDb || !window.sharedReady) && Date.now()-started<8000){
-          await new Promise(r=>setTimeout(r,200));
-        }
-
-        if(!window.sharedDb){
-          throw new Error('사진 서버 연결이 되지 않았습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
-        }
-
-        const safe=String(part).replace(/[^a-zA-Z0-9._-]/g,'_');
-        const path=`items/${safe}_${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
-        const bucket=window.sharedDb.storage.from('production-item-photos');
-
-        const up=await bucket.upload(path,jpg,{
-          upsert:false,
-          contentType:'image/jpeg',
-          cacheControl:'31536000'
-        });
-
-        if(up.error)throw new Error('사진 업로드 실패: '+(up.error.message||up.error));
-
-        const pub=bucket.getPublicUrl(path);
-        const base=pub?.data?.publicUrl||'';
-        if(!base)throw new Error('사진 주소 생성에 실패했습니다.');
-        const url=base+'?v='+Date.now();
-
-        const meta=(window.sharedCache?.meta||{})[String(part)]||{};
-        const save=await window.sharedDb.from('production_item_meta').upsert({
-          part_no:String(part),
-          usage:meta.usage||'',
-          min_qty:meta.minQty===''||meta.minQty==null?null:Number(meta.minQty),
-          photo_url:url,
-          updated_at:new Date().toISOString()
-        },{onConflict:'part_no'});
-
-        if(save.error)throw new Error('사진 연결 저장 실패: '+(save.error.message||save.error));
-
-        if(window.sharedCache){
-          window.sharedCache.photo=window.sharedCache.photo||{};
-          window.sharedCache.photo[String(part)]=url;
-        }
-
-        try{ if(typeof window.loadSharedCache==='function')await window.loadSharedCache(); }catch(e){}
-        try{ if(typeof window.search==='function')window.search(); }catch(e){}
-
-        statusV96('✅ 사진 저장 완료',1800);
-      }catch(e){
-        console.error('모바일 사진 저장 v96 실패',e);
-        hideStatusV96();
-        alert('⚠️ 사진 저장 실패\n\n'+(e?.message||e));
-      }
-    });
-
-    return input;
-  }
-
-  async function mobilePhotoToJpegV96(file){
-    if(/^image\/jpe?g$/i.test(file.type||'') && file.size<=1200*1024){
-      return file;
-    }
-
-    const dataUrl=await new Promise((resolve,reject)=>{
-      const fr=new FileReader();
-      fr.onload=()=>resolve(fr.result);
-      fr.onerror=()=>reject(new Error('휴대폰 사진을 읽지 못했습니다.'));
-      fr.readAsDataURL(file);
-    });
-
-    const img=await new Promise((resolve,reject)=>{
-      const i=new Image();
-      i.onload=()=>resolve(i);
-      i.onerror=()=>reject(new Error('촬영한 사진을 열지 못했습니다. 다른 사진으로 다시 시도해 주세요.'));
-      i.src=dataUrl;
-    });
-
-    let w=Number(img.naturalWidth||img.width||0), h=Number(img.naturalHeight||img.height||0);
-    if(!w||!h)throw new Error('사진 크기를 확인하지 못했습니다.');
-
-    const scale=Math.min(1,1600/Math.max(w,h));
-    w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
-
-    const c=document.createElement('canvas');
-    c.width=w;c.height=h;
-    const ctx=c.getContext('2d',{alpha:false});
-    ctx.fillStyle='#fff';
-    ctx.fillRect(0,0,w,h);
-    ctx.drawImage(img,0,0,w,h);
-
-    const blob=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',0.8));
-    if(!blob)throw new Error('사진 JPG 변환에 실패했습니다.');
-
-    return new File([blob],`mirim_${Date.now()}.jpg`,{type:'image/jpeg',lastModified:Date.now()});
-  }
-
-  window.choosePhoto=function(part){
-    if(!window.isAdmin && !window.currentWorker){
-      alert('로그인 후 사진을 등록할 수 있습니다.');
-      return;
-    }
-    pendingPartV96=String(part||'');
-    if(!pendingPartV96)return;
-    const input=ensureInputV96();
-    input.value='';
-    try{ input.click(); }
-    catch(e){ alert('사진 선택창을 열지 못했습니다. 다시 눌러 주세요.'); }
-  };
-
-  try{choosePhoto=window.choosePhoto;}catch(e){}
-  window.addEventListener('load',()=>setTimeout(ensureInputV96,300));
-})();
-</script>
-
-
-<script id="mobile-photo-touch-fast-v97">
-(function(){
- let partV97='';
- function inputV97(){
-  let x=document.getElementById('photoFastV97');
-  if(x)return x;
-  x=document.createElement('input');x.id='photoFastV97';x.type='file';x.accept='image/*';
-  x.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
-  document.body.appendChild(x);
-  x.addEventListener('change',async()=>{
-   const f=x.files?.[0],part=partV97;x.value='';if(!f||!part)return;
-   try{
-    let u=f;
-    if(typeof mobilePhotoToJpegV96==='function'){try{u=await mobilePhotoToJpegV96(f)}catch(e){}}
-    if(!window.sharedDb)throw new Error('사진 서버 연결이 아직 준비되지 않았습니다.');
-    const url=await window.sharedUploadPhoto(part,u);
-    if(window.sharedCache){window.sharedCache.photo=window.sharedCache.photo||{};window.sharedCache.photo[String(part)]=url}
-    try{window.search?.()}catch(e){}
-    alert('✅ 사진 저장 완료');
-   }catch(e){console.error(e);alert('⚠️ 사진 저장 실패\n\n'+(e?.message||e))}
-  });
-  return x;
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inputV97,{once:true});else inputV97();
- window.choosePhoto=function(part){
-  if(!window.isAdmin&&!window.currentWorker){alert('로그인 후 사진을 등록할 수 있습니다.');return}
-  partV97=String(part||'');if(!partV97)return;
-  const x=inputV97();x.value='';x.click();
- };
- try{choosePhoto=window.choosePhoto}catch(e){}
-})();
-</script>
-
-
-
-
-<style id="mobile-touch-typing-v102-style">
-@media(max-width:760px){
-  input:not([type="file"]),textarea,select{
-    position:relative!important;
-    z-index:50!important;
-    pointer-events:auto!important;
-    touch-action:auto!important;
-    -webkit-user-select:text!important;
-    user-select:text!important;
-    -webkit-touch-callout:default!important;
-  }
-  #searchInput,#query,#workerTaskText,
-  input[type="text"],input[type="search"],input[type="number"],textarea{
-    cursor:text!important;
-  }
-}
-</style>
-<script id="mobile-touch-typing-v102">
-(function(){
-  if(!('ontouchstart' in window))return;
-
-  /* 사용자가 입력칸을 직접 누른 그 터치 이벤트 안에서 즉시 포커스.
-     preventDefault/stopPropagation은 하지 않아 모바일 키보드 기본 동작 유지. */
-  document.addEventListener('touchstart',function(e){
-    const el=e.target?.closest?.('input:not([type="file"]),textarea,select');
-    if(!el || el.disabled || el.readOnly)return;
-    try{el.focus()}catch(err){}
-  },{capture:true,passive:true});
-
-  document.addEventListener('pointerdown',function(e){
-    if(e.pointerType!=='touch')return;
-    const el=e.target?.closest?.('input:not([type="file"]),textarea,select');
-    if(!el || el.disabled || el.readOnly)return;
-    try{el.focus()}catch(err){}
-  },{capture:true,passive:true});
 })();
 </script>
 
