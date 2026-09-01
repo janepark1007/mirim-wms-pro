@@ -7691,10 +7691,19 @@ function updateAdminIdleBadge(){
   badge.textContent=`관리자 자동로그아웃 ${min}분`;
 }
 
-['click','keydown','input','change','touchstart','pointerdown','scroll'].forEach(evt=>{
-  window.addEventListener(evt,()=>{
-    if(isAdmin)markAdminActivity();
-  },{passive:true});
+/* v102 모바일 성능: 관리자 활동 체크를 매 글자/매 터치마다 실행하지 않음 */
+let __adminActivityLastV102=0;
+function markAdminActivityFastV102(){
+  if(!isAdmin)return;
+  const now=Date.now();
+  if(now-__adminActivityLastV102<15000)return;
+  __adminActivityLastV102=now;
+  sessionStorage.setItem(ADMIN_IDLE_KEY,String(now));
+  scheduleAdminIdleLogout();
+  /* 상단 남은시간 표시는 1분 타이머에서만 갱신 */
+}
+['pointerdown','keydown'].forEach(evt=>{
+  window.addEventListener(evt,markAdminActivityFastV102,{passive:true});
 });
 
 window.addEventListener('load',()=>{
@@ -21120,28 +21129,42 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
 
 
 
-<style id="mobile-input-fast-v101-style">
-input,textarea,select{
- touch-action:auto!important;
- -webkit-user-select:text!important;
- user-select:text!important;
- pointer-events:auto!important;
+
+<style id="mobile-touch-typing-v102-style">
+@media(max-width:760px){
+  input:not([type="file"]),textarea,select{
+    position:relative!important;
+    z-index:50!important;
+    pointer-events:auto!important;
+    touch-action:auto!important;
+    -webkit-user-select:text!important;
+    user-select:text!important;
+    -webkit-touch-callout:default!important;
+  }
+  #searchInput,#query,#workerTaskText,
+  input[type="text"],input[type="search"],input[type="number"],textarea{
+    cursor:text!important;
+  }
 }
 </style>
-<script id="mobile-input-fast-v101">
+<script id="mobile-touch-typing-v102">
 (function(){
- /* 모바일 입력창은 브라우저 기본 터치/포커스를 그대로 사용 */
- document.addEventListener('touchstart',function(e){
-   const el=e.target?.closest?.('input,textarea,select');
-   if(!el)return;
- },{passive:true,capture:true});
+  if(!('ontouchstart' in window))return;
 
- window.focusMobileInputFastV101=function(el){
-   if(!el)return;
-   requestAnimationFrame(function(){
-     try{el.focus({preventScroll:true})}catch(e){try{el.focus()}catch(_){}}
-   });
- };
+  /* 사용자가 입력칸을 직접 누른 그 터치 이벤트 안에서 즉시 포커스.
+     preventDefault/stopPropagation은 하지 않아 모바일 키보드 기본 동작 유지. */
+  document.addEventListener('touchstart',function(e){
+    const el=e.target?.closest?.('input:not([type="file"]),textarea,select');
+    if(!el || el.disabled || el.readOnly)return;
+    try{el.focus()}catch(err){}
+  },{capture:true,passive:true});
+
+  document.addEventListener('pointerdown',function(e){
+    if(e.pointerType!=='touch')return;
+    const el=e.target?.closest?.('input:not([type="file"]),textarea,select');
+    if(!el || el.disabled || el.readOnly)return;
+    try{el.focus()}catch(err){}
+  },{capture:true,passive:true});
 })();
 </script>
 
