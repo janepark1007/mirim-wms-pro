@@ -21119,55 +21119,29 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
 </script>
 
 
-<style id="mobile-fasttap-v99-style">
-button,a,[role="button"],[onclick]{
-  touch-action:manipulation!important;
-  -webkit-tap-highlight-color:rgba(0,0,0,.05);
+
+<style id="mobile-input-fast-v101-style">
+input,textarea,select{
+ touch-action:auto!important;
+ -webkit-user-select:text!important;
+ user-select:text!important;
+ pointer-events:auto!important;
 }
 </style>
-<script id="mobile-fasttap-v99">
+<script id="mobile-input-fast-v101">
 (function(){
-  if(!('ontouchstart' in window)) return;
+ /* 모바일 입력창은 브라우저 기본 터치/포커스를 그대로 사용 */
+ document.addEventListener('touchstart',function(e){
+   const el=e.target?.closest?.('input,textarea,select');
+   if(!el)return;
+ },{passive:true,capture:true});
 
-  let startX=0,startY=0,startT=0,target=null;
-  let syntheticTarget=null, syntheticAt=0;
-
-  document.addEventListener('touchstart',function(e){
-    if(e.touches.length!==1)return;
-    const t=e.target.closest('button,a,[role="button"],[onclick]');
-    if(!t || t.disabled)return;
-    target=t;
-    startX=e.touches[0].clientX;
-    startY=e.touches[0].clientY;
-    startT=Date.now();
-  },{passive:true,capture:true});
-
-  document.addEventListener('touchend',function(e){
-    if(!target)return;
-    const t=target; target=null;
-    const ch=e.changedTouches&&e.changedTouches[0];
-    if(!ch)return;
-    if(Math.abs(ch.clientX-startX)>12 || Math.abs(ch.clientY-startY)>12)return;
-    if(Date.now()-startT>800)return;
-
-    /* 스크롤이 아닌 짧은 탭이면 브라우저의 늦은 click을 기다리지 않고 즉시 실행 */
-    syntheticTarget=t;
-    syntheticAt=Date.now();
-    try{ t.click(); }catch(err){}
-  },{passive:true,capture:true});
-
-  /* 같은 탭에서 나중에 들어오는 실제 click 중복만 차단 */
-  document.addEventListener('click',function(e){
-    if(!syntheticTarget)return;
-    if(e.isTrusted && Date.now()-syntheticAt<900 &&
-       (e.target===syntheticTarget || syntheticTarget.contains(e.target))){
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      syntheticTarget=null;
-    }else if(Date.now()-syntheticAt>=900){
-      syntheticTarget=null;
-    }
-  },true);
+ window.focusMobileInputFastV101=function(el){
+   if(!el)return;
+   requestAnimationFrame(function(){
+     try{el.focus({preventScroll:true})}catch(e){try{el.focus()}catch(_){}}
+   });
+ };
 })();
 </script>
 
