@@ -9,7 +9,7 @@
 *{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:var(--bg);color:#17211c}
 header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;z-index:10}
 header b{font-size:20px}header small{display:block;color:var(--muted);margin-top:2px}main{max-width:1050px;margin:auto;padding:16px}
-.hero{background:linear-gradient(135deg,#0b7a45,#145b3d);color:#fff;border-radius:a18px;padding:22px;margin-bottom:14px}
+.hero{background:linear-gradient(135deg,#0b7a45,#145b3d);color:#fff;border-radius:18px;padding:22px;margin-bottom:14px}
 .hero h1{margin:0 0 7px;font-size:28px}.hero p{margin:0;opacity:.92}
 .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
 .quick button{min-height:110px;border:1px solid var(--line);background:#fff;border-radius:16px;font-size:28px;font-weight:800}
@@ -20914,6 +20914,93 @@ body.admin-view #adminWorkerLoginPushBadgeV89.show{
       return url;
     };
     try{sharedUploadPhoto=window.sharedUploadPhoto;}catch(e){}
+  }
+})();
+</script>
+
+
+<script id="mobile-admin-photo-fixed-v104">
+(function(){
+  let pendingPartV104='';
+
+  function ensureAdminPhotoInputV104(){
+    let input=document.getElementById('adminPhotoInputV104');
+    if(input)return input;
+
+    input=document.createElement('input');
+    input.id='adminPhotoInputV104';
+    input.type='file';
+    input.accept='image/*';
+    input.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+    document.body.appendChild(input);
+
+    input.addEventListener('change',async function(){
+      const file=input.files && input.files[0];
+      const part=pendingPartV104;
+      input.value='';
+
+      if(!file || !part)return;
+
+      try{
+        if(file.size>25*1024*1024){
+          throw new Error('사진은 25MB 이하로 선택해 주세요.');
+        }
+
+        if(!window.sharedDb){
+          throw new Error('사진 서버 연결이 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+        }
+
+        let uploadFile=file;
+        if(typeof window.optimizeItemPhoto==='function'){
+          try{
+            uploadFile=await window.optimizeItemPhoto(file);
+          }catch(e){
+            uploadFile=file;
+          }
+        }
+
+        const url=await window.sharedUploadPhoto(part,uploadFile);
+
+        if(window.sharedCache){
+          window.sharedCache.photo=window.sharedCache.photo||{};
+          window.sharedCache.photo[String(part)]=url;
+        }
+
+        try{
+          if(typeof window.search==='function')window.search();
+        }catch(e){}
+
+        alert('✅ 사진 저장 완료');
+      }catch(e){
+        console.error('관리자 모바일 사진 저장 실패',e);
+        alert('⚠️ 사진 저장 실패\n\n'+(e?.message||e));
+      }
+    });
+
+    return input;
+  }
+
+  /* 관리자/작업자 공통. 모바일 관리자에서도 즉시 사진 선택창 열림 */
+  window.choosePhoto=function(part){
+    if(!window.isAdmin && !window.currentWorker){
+      alert('로그인 후 사진을 등록할 수 있습니다.');
+      return;
+    }
+
+    pendingPartV104=String(part||'');
+    if(!pendingPartV104)return;
+
+    const input=ensureAdminPhotoInputV104();
+    input.value='';
+    input.click();
+  };
+
+  try{choosePhoto=window.choosePhoto;}catch(e){}
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',ensureAdminPhotoInputV104,{once:true});
+  }else{
+    ensureAdminPhotoInputV104();
   }
 })();
 </script>
