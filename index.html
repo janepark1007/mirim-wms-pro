@@ -14815,8 +14815,30 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
           ${Array.from({length:50},(_,i)=>`<option value="${i+1}">${i+1}번</option>`).join('')}
         </select>
       </label>
-      <label>도면 받음<input id="drawingInQtyV80" type="number" min="0" inputmode="numeric" placeholder="입고수량"></label>
-      <label>도면 보냄<input id="drawingOutQtyV80" type="number" min="0" inputmode="numeric" placeholder="출고수량"></label>
+      <label>도면 받음
+        <input id="drawingInQtyV80" type="number" min="0" inputmode="numeric" placeholder="받음수량">
+        <select id="drawingReceiveOptionV87">
+          <option value="">선택사항</option>
+          <option value="원본도면">원본도면</option>
+          <option value="사본도면">사본도면</option>
+          <option value="수정도면">수정도면</option>
+          <option value="제품사진">제품사진</option>
+          <option value="기타">기타</option>
+        </select>
+        <input id="drawingReceiveNoteV87" placeholder="받은 내용 비고">
+      </label>
+      <label>도면 보냄
+        <input id="drawingOutQtyV80" type="number" min="0" inputmode="numeric" placeholder="보냄수량">
+        <select id="drawingSendOptionV87">
+          <option value="">선택사항</option>
+          <option value="원본도면">원본도면</option>
+          <option value="사본도면">사본도면</option>
+          <option value="수정도면">수정도면</option>
+          <option value="제품사진">제품사진</option>
+          <option value="기타">기타</option>
+        </select>
+        <input id="drawingSendNoteV87" placeholder="보낸 내용 비고">
+      </label>
       <label>공정
         <select id="drawingProcessV83" onchange="toggleDrawingProcessCustomV83()">
           <option value="">선택</option>
@@ -14851,11 +14873,11 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
     <table class="drawing-v79-table">
       <thead>
         <tr>
-          <th>날짜</th><th>업체명</th><th>품명</th><th>총제품수량</th><th>공정</th><th>도면 받음</th><th>도면 보냄</th><th>현재 도면수량</th><th>보관번호</th><th>사진</th><th>비고</th><th class="drawing-v79-admin-col">관리</th>
+          <th>날짜</th><th>업체명</th><th>품명</th><th>총제품수량</th><th>공정</th><th>도면 받음</th><th>받은 내용</th><th>도면 보냄</th><th>보낸 내용</th><th>현재 도면수량</th><th>보관번호</th><th>사진</th><th>비고</th><th class="drawing-v79-admin-col">관리</th>
         </tr>
       </thead>
       <tbody id="drawingLocationBodyV79">
-        <tr><td colspan="12">등록된 도면 위치 정보가 없습니다.</td></tr>
+        <tr><td colspan="14">등록된 도면 위치 정보가 없습니다.</td></tr>
       </tbody>
     </table>
   </div>
@@ -14873,7 +14895,7 @@ function drawingLocalSetV79(rows){
   try{localStorage.setItem(DRAWING_LOCATION_LOCAL_KEY_V79,JSON.stringify(rows||[]))}catch(e){}
 }
 function clearDrawingFormV79(){
-  ['drawingEditIdV79','drawingCompanyV79','drawingCompanySelectV85','drawingItemV79','drawingQtyV79','drawingInQtyV80','drawingOutQtyV80','drawingProcessV83','drawingProcessCustomV83','drawingLocationV79','drawingNoteV79'].forEach(id=>{
+  ['drawingEditIdV79','drawingCompanyV79','drawingCompanySelectV85','drawingItemV79','drawingQtyV79','drawingInQtyV80','drawingReceiveOptionV87','drawingReceiveNoteV87','drawingOutQtyV80','drawingSendOptionV87','drawingSendNoteV87','drawingProcessV83','drawingProcessCustomV83','drawingLocationV79','drawingNoteV79'].forEach(id=>{
     const el=document.getElementById(id); if(el)el.value='';
   });
   const d=document.getElementById('drawingDateV79');
@@ -14909,7 +14931,7 @@ function renderDrawingLocationV79(){
   const body=document.getElementById('drawingLocationBodyV79'); if(!body)return;
   const q=(document.getElementById('drawingSearchV79')?.value||'').trim().toLowerCase();
   const rows=(drawingRowsV79||[]).filter(x=>!q||[
-    x.date,x.company,x.item,String(x.qty||''),x.process,x.location,x.note
+    x.date,x.company,x.item,String(x.qty||''),x.process,x.location,x.receiveOption,x.receiveNote,x.sendOption,x.sendNote,x.note
   ].some(v=>String(v||'').toLowerCase().includes(q)));
   body.innerHTML=rows.length?rows.map(x=>`
     <tr>
@@ -14919,7 +14941,9 @@ function renderDrawingLocationV79(){
       <td>${Number(x.qty||0).toLocaleString()}</td>
       <td>${esc(x.process||'-')}</td>
       <td>${Number(x.inQty||0).toLocaleString()}</td>
+      <td>${esc([x.receiveOption,x.receiveNote].filter(Boolean).join(' · ')||'-')}</td>
       <td>${Number(x.outQty||0).toLocaleString()}</td>
+      <td>${esc([x.sendOption,x.sendNote].filter(Boolean).join(' · ')||'-')}</td>
       <td><b>${Math.max(0,Number(x.inQty||0)-Number(x.outQty||0)).toLocaleString()}</b></td>
       <td><b>${esc(x.location||'-')}</b></td>
       <td>${x.photoUrl?`<img src="${esc(x.photoUrl)}" alt="도면 사진" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #dbe6e0">`:'-'}</td>
@@ -14928,7 +14952,7 @@ function renderDrawingLocationV79(){
         <button type="button" class="secondary" onclick="editDrawingLocationV79('${esc(String(x.id))}')">수정</button>
         <button type="button" class="danger" onclick="deleteDrawingLocationV79('${esc(String(x.id))}')">삭제</button>`:''}
       </td>
-    </tr>`).join(''):`<tr><td colspan="12">등록된 도면 위치 정보가 없습니다.</td></tr>`;
+    </tr>`).join(''):`<tr><td colspan="14">등록된 도면 위치 정보가 없습니다.</td></tr>`;
 }
 async function openDrawingLocationV79(){
   if(!isAdmin&&!currentWorker)return alert('로그인 후 확인할 수 있습니다.');
@@ -14991,7 +15015,11 @@ async function saveDrawingLocationV79(){
   const item=(document.getElementById('drawingItemV79')?.value||'').trim();
   const qtyRaw=(document.getElementById('drawingQtyV79')?.value||'').trim();
   const inQtyRaw=(document.getElementById('drawingInQtyV80')?.value||'').trim();
+  const receiveOption=(document.getElementById('drawingReceiveOptionV87')?.value||'').trim();
+  const receiveNote=(document.getElementById('drawingReceiveNoteV87')?.value||'').trim();
   const outQtyRaw=(document.getElementById('drawingOutQtyV80')?.value||'').trim();
+  const sendOption=(document.getElementById('drawingSendOptionV87')?.value||'').trim();
+  const sendNote=(document.getElementById('drawingSendNoteV87')?.value||'').trim();
   const processSel=(document.getElementById('drawingProcessV83')?.value||'').trim();
   const processCustom=(document.getElementById('drawingProcessCustomV83')?.value||'').trim();
   const process=processSel==='직접입력'?processCustom:processSel;
@@ -15019,7 +15047,9 @@ async function saveDrawingLocationV79(){
     date,company,item,
     qty:qtyRaw===''?0:Number(qtyRaw),
     inQty:inQtyRaw===''?0:Number(inQtyRaw),
+    receiveOption,receiveNote,
     outQty:outQtyRaw===''?0:Number(outQtyRaw),
+    sendOption,sendNote,
     process,location,note,photoUrl,
     updated_by:isAdmin?'관리자':String(currentWorker?.name||'작업자'),
     updated_at:new Date().toISOString()
@@ -15097,7 +15127,11 @@ function editDrawingLocationV79(id){
   document.getElementById('drawingItemV79').value=x.item||'';
   document.getElementById('drawingQtyV79').value=x.qty??'';
   document.getElementById('drawingInQtyV80').value=x.inQty??'';
+  document.getElementById('drawingReceiveOptionV87').value=x.receiveOption||'';
+  document.getElementById('drawingReceiveNoteV87').value=x.receiveNote||'';
   document.getElementById('drawingOutQtyV80').value=x.outQty??'';
+  document.getElementById('drawingSendOptionV87').value=x.sendOption||'';
+  document.getElementById('drawingSendNoteV87').value=x.sendNote||'';
   const processOptions=['땜','하우징','디서브','완제품','러그','페놀'];
   const ps=document.getElementById('drawingProcessV83');
   const pc=document.getElementById('drawingProcessCustomV83');
@@ -15162,7 +15196,7 @@ async function notifyDrawingWorkerActivityV82(action,payload){
     const {error}=await sharedDb.from('wms_admin_notifications').insert({
       type:'DRAWING_WORKER_ACTIVITY_V82',
       title:'📐 도면 작업 알림',
-      message:`${worker} · ${action} · ${payload.company||'-'} · ${payload.item||'-'} · ${payload.process||'-'} · 받음 ${Number(payload.inQty||0)} / 보냄 ${Number(payload.outQty||0)} · 보관번호 ${payload.location||'-'}`,
+      message:`${worker} · ${action} · ${payload.company||'-'} · ${payload.item||'-'} · ${payload.process||'-'} · 받음 ${Number(payload.inQty||0)} (${[payload.receiveOption,payload.receiveNote].filter(Boolean).join(' / ')||'-'}) · 보냄 ${Number(payload.outQty||0)} (${[payload.sendOption,payload.sendNote].filter(Boolean).join(' / ')||'-'}) · 보관번호 ${payload.location||'-'}`,
       payload:{...payload,worker,action},
       created_at:new Date().toISOString()
     });
