@@ -14715,4 +14715,284 @@ function requireWorkerApproval2589(action){
   return true;
 }
 </script>
+
+<style id="drawing-location-v79-style">
+#drawingLocationCardV79{display:none}
+body.drawing-location-open-v79 #drawingLocationCardV79{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  width:100%!important;max-width:1050px!important;margin:12px auto!important;box-sizing:border-box!important;
+}
+.drawing-v79-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.drawing-v79-head h2{margin:0}
+.drawing-v79-entry{border:1px solid #dbe6e0;border-radius:14px;padding:12px;background:#f8fbf9;margin-bottom:12px}
+.drawing-v79-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.drawing-v79-grid label{font-weight:800;font-size:13px;color:#315443}
+.drawing-v79-grid input{width:100%;min-height:44px;margin-top:5px;border:1px solid #ccd7d1;border-radius:10px;padding:8px;background:#fff}
+.drawing-v79-wide{grid-column:span 2}
+.drawing-v79-actions{display:flex;gap:8px;margin-top:10px}
+.drawing-v79-search{width:100%;min-height:44px;border:1px solid #ccd7d1;border-radius:10px;padding:9px;margin-bottom:10px}
+.drawing-v79-table-wrap{overflow:auto;border:1px solid #dfe8e3;border-radius:12px;background:#fff}
+.drawing-v79-table{width:100%;min-width:820px;border-collapse:collapse;font-size:14px}
+.drawing-v79-table th,.drawing-v79-table td{padding:10px 8px;border-bottom:1px solid #e7ece9;text-align:left;white-space:nowrap}
+.drawing-v79-table th{background:#eef6f1;position:sticky;top:0;z-index:1}
+.drawing-v79-table td.note{white-space:normal;min-width:180px}
+.drawing-v79-admin-col{min-width:120px}
+body:not(.admin-view) #drawingLocationAdminEntryV79,
+body:not(.admin-view) #drawingLocationCardV79 .drawing-v79-admin-col{display:none!important}
+body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="drawing"]{display:flex!important}
+@media(max-width:760px){
+  .drawing-v79-grid{grid-template-columns:1fr 1fr}
+  .drawing-v79-wide{grid-column:1/-1}
+  body.drawing-location-open-v79 #drawingLocationCardV79{
+    width:calc(100% - 16px)!important;margin-left:auto!important;margin-right:auto!important;
+  }
+  .drawing-v79-head{align-items:flex-start}
+}
+</style>
+
+<section class="card" id="drawingLocationCardV79">
+  <div class="drawing-v79-head">
+    <div>
+      <h2>📐 도면 위치 관리</h2>
+      <div style="color:#64756c;margin-top:4px">날짜 · 업체명 · 품목 · 총제품수량 · 보관위치 · 비고를 한눈에 확인합니다.</div>
+    </div>
+    <button type="button" class="secondary" onclick="closeDrawingLocationV79()">닫기</button>
+  </div>
+
+  <div id="drawingLocationAdminEntryV79" class="drawing-v79-entry">
+    <input type="hidden" id="drawingEditIdV79">
+    <div class="drawing-v79-grid">
+      <label>날짜<input id="drawingDateV79" type="date"></label>
+      <label>업체명<input id="drawingCompanyV79" placeholder="업체명"></label>
+      <label>품목<input id="drawingItemV79" placeholder="품목 / 제품명"></label>
+      <label>총제품수량<input id="drawingQtyV79" type="number" min="0" inputmode="numeric" placeholder="수량"></label>
+      <label>보관위치<input id="drawingLocationV79" placeholder="예: 도면함 A-3"></label>
+      <label>비고<input id="drawingNoteV79" placeholder="특이사항"></label>
+    </div>
+    <div class="drawing-v79-actions">
+      <button type="button" class="primary" onclick="saveDrawingLocationV79()">도면 정보 저장</button>
+      <button type="button" class="secondary" onclick="clearDrawingFormV79()">입력 초기화</button>
+    </div>
+  </div>
+
+  <input id="drawingSearchV79" class="drawing-v79-search" placeholder="업체명 · 품목 · 보관위치 검색" oninput="renderDrawingLocationV79()">
+
+  <div class="drawing-v79-table-wrap">
+    <table class="drawing-v79-table">
+      <thead>
+        <tr>
+          <th>날짜</th><th>업체명</th><th>품목</th><th>총제품수량</th><th>보관위치</th><th>비고</th><th class="drawing-v79-admin-col">관리</th>
+        </tr>
+      </thead>
+      <tbody id="drawingLocationBodyV79">
+        <tr><td colspan="7">등록된 도면 위치 정보가 없습니다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script id="drawing-location-v79-script">
+const DRAWING_LOCATION_TYPE_V79='DRAWING_LOCATION_V79';
+const DRAWING_LOCATION_LOCAL_KEY_V79='mirim_drawing_location_v79';
+let drawingRowsV79=[];
+
+function drawingLocalGetV79(){
+  try{return JSON.parse(localStorage.getItem(DRAWING_LOCATION_LOCAL_KEY_V79)||'[]')||[]}catch(e){return[]}
+}
+function drawingLocalSetV79(rows){
+  try{localStorage.setItem(DRAWING_LOCATION_LOCAL_KEY_V79,JSON.stringify(rows||[]))}catch(e){}
+}
+function clearDrawingFormV79(){
+  ['drawingEditIdV79','drawingCompanyV79','drawingItemV79','drawingQtyV79','drawingLocationV79','drawingNoteV79'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.value='';
+  });
+  const d=document.getElementById('drawingDateV79');
+  if(d)d.value=new Date().toLocaleDateString('en-CA');
+}
+async function loadDrawingLocationV79(){
+  if(sharedReady&&sharedDb){
+    try{
+      const {data,error}=await sharedDb.from('wms_admin_notifications')
+        .select('id,payload,created_at')
+        .eq('type',DRAWING_LOCATION_TYPE_V79)
+        .order('created_at',{ascending:false});
+      if(error)throw error;
+      drawingRowsV79=(data||[]).map(r=>({
+        shared_id:r.id,
+        id:String(r.id),
+        ...(r.payload||{}),
+        created_at:r.created_at
+      }));
+      drawingLocalSetV79(drawingRowsV79);
+      renderDrawingLocationV79();
+      return;
+    }catch(e){console.warn('도면 위치 공용 조회 실패',e);}
+  }
+  drawingRowsV79=drawingLocalGetV79();
+  renderDrawingLocationV79();
+}
+function renderDrawingLocationV79(){
+  const body=document.getElementById('drawingLocationBodyV79'); if(!body)return;
+  const q=(document.getElementById('drawingSearchV79')?.value||'').trim().toLowerCase();
+  const rows=(drawingRowsV79||[]).filter(x=>!q||[
+    x.date,x.company,x.item,x.location,x.note
+  ].some(v=>String(v||'').toLowerCase().includes(q)));
+  body.innerHTML=rows.length?rows.map(x=>`
+    <tr>
+      <td>${esc(x.date||'-')}</td>
+      <td><b>${esc(x.company||'-')}</b></td>
+      <td>${esc(x.item||'-')}</td>
+      <td>${Number(x.qty||0).toLocaleString()}</td>
+      <td><b>${esc(x.location||'-')}</b></td>
+      <td class="note">${esc(x.note||'-')}</td>
+      <td class="drawing-v79-admin-col">${isAdmin?`
+        <button type="button" class="secondary" onclick="editDrawingLocationV79('${esc(String(x.id))}')">수정</button>
+        <button type="button" class="danger" onclick="deleteDrawingLocationV79('${esc(String(x.id))}')">삭제</button>`:''}
+      </td>
+    </tr>`).join(''):`<tr><td colspan="7">등록된 도면 위치 정보가 없습니다.</td></tr>`;
+}
+async function openDrawingLocationV79(){
+  if(!isAdmin&&!currentWorker)return alert('로그인 후 확인할 수 있습니다.');
+  document.body.classList.add('drawing-location-open-v79');
+  if(isAdmin){
+    document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus','other-storage-open-v50');
+  }
+  const card=document.getElementById('drawingLocationCardV79');
+  if(card){
+    card.style.setProperty('display','block','important');
+    card.style.setProperty('visibility','visible','important');
+  }
+  if(isAdmin){
+    const entry=document.getElementById('drawingLocationAdminEntryV79');
+    if(entry)entry.style.setProperty('display','block','important');
+  }
+  clearDrawingFormV79();
+  await loadDrawingLocationV79();
+  setTimeout(()=>card?.scrollIntoView({behavior:'auto',block:'start'}),50);
+}
+function closeDrawingLocationV79(){
+  document.body.classList.remove('drawing-location-open-v79');
+  const card=document.getElementById('drawingLocationCardV79');
+  if(card){card.style.removeProperty('display');card.style.removeProperty('visibility');}
+  if(isAdmin){try{showAdminReferenceHome()}catch(e){}}
+}
+async function saveDrawingLocationV79(){
+  if(!isAdmin)return alert('도면 정보 수정은 관리자 모드에서만 가능합니다.');
+  const editId=(document.getElementById('drawingEditIdV79')?.value||'').trim();
+  const date=document.getElementById('drawingDateV79')?.value||'';
+  const company=(document.getElementById('drawingCompanyV79')?.value||'').trim();
+  const item=(document.getElementById('drawingItemV79')?.value||'').trim();
+  const qtyRaw=(document.getElementById('drawingQtyV79')?.value||'').trim();
+  const location=(document.getElementById('drawingLocationV79')?.value||'').trim();
+  const note=(document.getElementById('drawingNoteV79')?.value||'').trim();
+
+  if(!date)return alert('날짜를 입력해 주세요.');
+  if(!company)return alert('업체명을 입력해 주세요.');
+  if(!item)return alert('품목을 입력해 주세요.');
+  if(!location)return alert('보관위치를 입력해 주세요.');
+  if(qtyRaw!==''&&Number(qtyRaw)<0)return alert('총제품수량을 확인해 주세요.');
+
+  const payload={date,company,item,qty:qtyRaw===''?0:Number(qtyRaw),location,note,updated_at:new Date().toISOString()};
+
+  if(sharedReady&&sharedDb){
+    try{
+      if(editId){
+        const row=drawingRowsV79.find(x=>String(x.id)===String(editId));
+        if(row?.shared_id){
+          const {error}=await sharedDb.from('wms_admin_notifications')
+            .update({
+              title:'📐 도면 위치 관리',
+              message:`${company} · ${item} · ${location}`,
+              payload
+            }).eq('id',row.shared_id).eq('type',DRAWING_LOCATION_TYPE_V79);
+          if(error)throw error;
+        }
+      }else{
+        const {error}=await sharedDb.from('wms_admin_notifications').insert({
+          type:DRAWING_LOCATION_TYPE_V79,
+          title:'📐 도면 위치 관리',
+          message:`${company} · ${item} · ${location}`,
+          payload,
+          created_at:new Date().toISOString()
+        });
+        if(error)throw error;
+      }
+    }catch(e){
+      console.error('도면 위치 공용 저장 실패',e);
+      return alert('도면 위치 저장 실패: '+(e.message||e));
+    }
+  }else{
+    let rows=drawingLocalGetV79();
+    if(editId){
+      rows=rows.map(x=>String(x.id)===String(editId)?{...x,...payload}:x);
+    }else{
+      rows.unshift({id:'local_'+Date.now(),...payload,created_at:new Date().toISOString()});
+    }
+    drawingLocalSetV79(rows);
+  }
+  clearDrawingFormV79();
+  await loadDrawingLocationV79();
+  alert('✅ 도면 위치 정보를 저장했습니다.');
+}
+function editDrawingLocationV79(id){
+  if(!isAdmin)return alert('관리자만 수정할 수 있습니다.');
+  const x=drawingRowsV79.find(r=>String(r.id)===String(id)); if(!x)return;
+  document.getElementById('drawingEditIdV79').value=x.id||'';
+  document.getElementById('drawingDateV79').value=x.date||'';
+  document.getElementById('drawingCompanyV79').value=x.company||'';
+  document.getElementById('drawingItemV79').value=x.item||'';
+  document.getElementById('drawingQtyV79').value=x.qty??'';
+  document.getElementById('drawingLocationV79').value=x.location||'';
+  document.getElementById('drawingNoteV79').value=x.note||'';
+  document.getElementById('drawingLocationAdminEntryV79')?.scrollIntoView({behavior:'auto',block:'start'});
+}
+async function deleteDrawingLocationV79(id){
+  if(!isAdmin)return alert('관리자만 삭제할 수 있습니다.');
+  if(!confirm('이 도면 위치 정보를 삭제할까요?'))return;
+  const row=drawingRowsV79.find(x=>String(x.id)===String(id));
+  if(row?.shared_id&&sharedReady&&sharedDb){
+    try{
+      const {error}=await sharedDb.from('wms_admin_notifications')
+        .delete().eq('id',row.shared_id).eq('type',DRAWING_LOCATION_TYPE_V79);
+      if(error)throw error;
+    }catch(e){return alert('삭제 실패: '+(e.message||e));}
+  }else{
+    drawingLocalSetV79(drawingLocalGetV79().filter(x=>String(x.id)!==String(id)));
+  }
+  await loadDrawingLocationV79();
+}
+function addDrawingShortcutsV79(){
+  /* 관리자 바로가기: 기존 버튼 복제 후 도면관리 버튼만 추가 */
+  if(isAdmin&&!document.getElementById('adminDrawingShortcutV79')){
+    const buttons=[...document.querySelectorAll('button')];
+    const anchor=buttons.find(b=>(b.textContent||'').includes('기타자재 보관'))||
+                 buttons.find(b=>(b.textContent||'').includes('BOM 관리'));
+    if(anchor&&anchor.parentElement){
+      const b=anchor.cloneNode(true);
+      b.id='adminDrawingShortcutV79';
+      b.removeAttribute('onclick');
+      b.onclick=(e)=>{e.preventDefault();e.stopPropagation();openDrawingLocationV79();};
+      b.innerHTML='📐<br><b>도면 관리</b><br><small>도면 위치 등록·수정</small>';
+      anchor.parentElement.insertAdjacentElement('afterend',b);
+    }
+  }
+
+  /* 작업자 바로가기: 도면 위치 확인 전용 */
+  const grid=document.querySelector('#workerMainShortcutCard .worker-main-shortcut-grid');
+  if(grid&&!document.getElementById('workerDrawingShortcutV79')){
+    const anchor=grid.querySelector('.worker-main-shortcut-btn');
+    if(anchor){
+      const b=anchor.cloneNode(true);
+      b.id='workerDrawingShortcutV79';
+      b.dataset.workerMain='drawing';
+      b.removeAttribute('onclick');
+      b.onclick=(e)=>{e.preventDefault();e.stopPropagation();openDrawingLocationV79();};
+      b.innerHTML='📐<span><b>도면 위치 확인</b><small>업체·품목·보관위치 조회</small></span>';
+      grid.appendChild(b);
+    }
+  }
+}
+window.addEventListener('load',()=>setTimeout(addDrawingShortcutsV79,1200));
+document.addEventListener('click',()=>setTimeout(addDrawingShortcutsV79,100),true);
+</script>
 </body></html>
