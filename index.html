@@ -2605,10 +2605,11 @@ async function optimizeItemPhoto(file){
  finally{if(objectUrl)URL.revokeObjectURL(objectUrl);if(bitmap&&typeof bitmap.close==='function')bitmap.close();}
 }
 function choosePhoto(part){
- if(!isAdmin){
-   alert('사진 등록/변경은 관리자 로그인 후 가능합니다.');
+ if(!isAdmin && !currentWorker){
+   alert('사진 등록 전 작업자 로그인이 필요합니다.');
    return;
  }
+ if(!isAdmin && !requireWorkerApproval2589('사진 등록/변경'))return;
  const input=document.createElement('input');
  input.type='file';
  input.accept='image/*';
@@ -3652,7 +3653,7 @@ function adminLogin(){
    return;
  }
  const cfg=window.MIRIM_CONFIG||{};
- const adminPin = String(cfg.adminPin || '2589');
+ const adminPin = '0307';
  const pin=prompt('관리자 PIN을 입력하세요.');
  if(pin===null)return;
  if(String(pin)===adminPin){
@@ -5334,6 +5335,7 @@ async function saveIn(x,i){
  const qty=Number($('in_qty_'+i)?.value);
  if(!worker)return alert('등록자 이름을 입력하세요.');
  if(!qty||qty<=0)return alert('입고수량을 입력하세요.');
+ if(!isAdmin && !requireWorkerApproval2589('입고 등록'))return;
  /* 작업자 로그인만 되어 있으면 입고 가능 - 관리자 PIN 요구 안 함 */
  try{
    if(sharedReady){
@@ -5701,6 +5703,7 @@ async function saveOut(x,i){
 
  
  if(!qty || qty<=0) return alert('출고수량을 입력하세요.');
+ if(!isAdmin && !requireWorkerApproval2589('출고 등록'))return;
 
  const base=getCurrentStock(x);
  const inTotal=inboundTotalFor(x.part);
@@ -14695,4 +14698,21 @@ async function openAdminUsersV73(){
   input,select,textarea,button{box-sizing:border-box;}
 }
 </style>
+
+<script id="worker-approval-pin-v77">
+function requireWorkerApproval2589(action){
+  if(isAdmin)return true;
+  if(!currentWorker){
+    alert('작업자 로그인이 필요합니다.');
+    return false;
+  }
+  const pin=prompt('🔐 관리자 승인 필요\n\n'+action+'을 진행하려면 승인 비밀번호를 입력하세요.');
+  if(pin===null)return false;
+  if(String(pin)!=='2589'){
+    alert('승인 비밀번호가 맞지 않습니다. 진행되지 않았습니다.');
+    return false;
+  }
+  return true;
+}
+</script>
 </body></html>
