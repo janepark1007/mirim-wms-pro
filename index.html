@@ -2406,10 +2406,6 @@ async function submitStandaloneOrder(){
 
 function openMode(m){
  if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
- if(m==='inbound' && !isAdmin && String(currentWorker?.name||'').trim()!=='박향숙'){
-   alert('빠른입고 입력은 박향숙 관리자만 사용할 수 있습니다.');
-   return;
- }
  if(m==='order'){openStandaloneOrder();return;}
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
@@ -5334,7 +5330,7 @@ async function allocateInboundToOpenOrders(item,inQty,worker){
 let lastInboundOrderMatchResult=null;
 async function saveIn(x,i){
  if(!currentWorker && !isAdmin){alert('입고 저장 전 작업자 로그인이 필요합니다.');return;}
- const worker=(currentWorker?.name)||$('in_worker_'+i)?.value.trim()||'관리자';
+ const worker=currentWorker?.name||(isAdmin?'관리자':'');
  const qty=Number($('in_qty_'+i)?.value);
  if(!worker)return alert('등록자 이름을 입력하세요.');
  if(!qty||qty<=0)return alert('입고수량을 입력하세요.');
