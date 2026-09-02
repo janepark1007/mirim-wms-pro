@@ -2846,7 +2846,7 @@ async function saveLocation(part,i){
  }
  if(parkLocationWorker){
    const cfg=window.MIRIM_CONFIG||window.MIRIM_SUPABASE||{};
-   const correct=String(cfg.adminPin||'2589');
+   const correct=String(cfg.adminPin||'0307');
    const pin=prompt('🔐 위치 저장 관리자 승인\n\n박향숙 작업자 위치 저장은 관리자 PIN이 필요합니다.\n관리자 PIN을 입력하세요.');
    if(pin===null)return;
    if(String(pin)!==correct){
