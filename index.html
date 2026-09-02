@@ -14749,18 +14749,19 @@ body.drawing-location-open-v79 #drawingLocationCardV79{
 .drawing-v79-entry{border:1px solid #dbe6e0;border-radius:14px;padding:12px;background:#f8fbf9;margin-bottom:12px}
 .drawing-v79-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .drawing-v79-grid label{font-weight:800;font-size:13px;color:#315443}
-.drawing-v79-grid input{width:100%;min-height:44px;margin-top:5px;border:1px solid #ccd7d1;border-radius:10px;padding:8px;background:#fff}
+.drawing-v79-grid input,.drawing-v79-grid select{width:100%;min-height:44px;margin-top:5px;border:1px solid #ccd7d1;border-radius:10px;padding:8px;background:#fff}
 .drawing-v79-wide{grid-column:span 2}
 .drawing-v79-actions{display:flex;gap:8px;margin-top:10px}
 .drawing-v79-search{width:100%;min-height:44px;border:1px solid #ccd7d1;border-radius:10px;padding:9px;margin-bottom:10px}
 .drawing-v79-table-wrap{overflow:auto;border:1px solid #dfe8e3;border-radius:12px;background:#fff}
-.drawing-v79-table{width:100%;min-width:820px;border-collapse:collapse;font-size:14px}
+.drawing-v79-table{width:100%;min-width:1050px;border-collapse:collapse;font-size:14px}
 .drawing-v79-table th,.drawing-v79-table td{padding:10px 8px;border-bottom:1px solid #e7ece9;text-align:left;white-space:nowrap}
 .drawing-v79-table th{background:#eef6f1;position:sticky;top:0;z-index:1}
 .drawing-v79-table td.note{white-space:normal;min-width:180px}
 .drawing-v79-admin-col{min-width:120px}
-body:not(.admin-view) #drawingLocationAdminEntryV79,
+body:not(.admin-view) #drawingPhotoLabelV82,
 body:not(.admin-view) #drawingLocationCardV79 .drawing-v79-admin-col{display:none!important}
+body:not(.admin-view) #drawingLocationAdminEntryV79{display:block!important}
 body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-main="drawing"]{display:flex!important}
 @media(max-width:760px){
   .drawing-v79-grid{grid-template-columns:1fr 1fr}
@@ -14785,7 +14786,7 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
   <div class="drawing-v79-head">
     <div>
       <h2>📐 도면 등록·관리</h2>
-      <div style="color:#64756c;margin-top:4px">도면을 등록하고 입고·출고 수량과 보관위치를 관리합니다.</div>
+      <div style="color:#64756c;margin-top:4px">도면을 등록하고 받음·보냄 수량과 보관위치를 관리합니다.</div>
     </div>
     <button type="button" class="secondary" onclick="closeDrawingLocationV79()">닫기</button>
   </div>
@@ -14796,11 +14797,20 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
       <label>날짜<input id="drawingDateV79" type="date"></label>
       <label>업체명<input id="drawingCompanyV79" placeholder="업체명"></label>
       <label>품목<input id="drawingItemV79" placeholder="품목 / 제품명"></label>
-      <label>총제품수량<input id="drawingQtyV79" type="number" min="0" inputmode="numeric" placeholder="수량"></label>
-      <label>도면 입고수량<input id="drawingInQtyV80" type="number" min="0" inputmode="numeric" placeholder="입고수량"></label>
-      <label>도면 출고수량<input id="drawingOutQtyV80" type="number" min="0" inputmode="numeric" placeholder="출고수량"></label>
+      <label>총제품수량
+        <select id="drawingQtyV79">
+          <option value="">선택</option>
+          ${Array.from({length:50},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
+        </select>
+      </label>
+      <label>도면 받음<input id="drawingInQtyV80" type="number" min="0" inputmode="numeric" placeholder="입고수량"></label>
+      <label>도면 보냄<input id="drawingOutQtyV80" type="number" min="0" inputmode="numeric" placeholder="출고수량"></label>
       <label>보관위치<input id="drawingLocationV79" placeholder="예: 도면함 A-3"></label>
       <label class="drawing-v79-wide">비고<input id="drawingNoteV79" placeholder="특이사항"></label>
+      <label id="drawingPhotoLabelV82" class="drawing-v79-wide">도면 사진 (관리자만)
+        <input id="drawingPhotoV82" type="file" accept="image/*" capture="environment">
+        <div id="drawingPhotoPreviewV82" style="margin-top:8px"></div>
+      </label>
     </div>
     <div class="drawing-v79-actions">
       <button type="button" class="primary" onclick="saveDrawingLocationV79()">도면 등록 저장</button>
@@ -14814,11 +14824,11 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
     <table class="drawing-v79-table">
       <thead>
         <tr>
-          <th>날짜</th><th>업체명</th><th>품목</th><th>총제품수량</th><th>도면 입고</th><th>도면 출고</th><th>현재 도면수량</th><th>보관위치</th><th>비고</th><th class="drawing-v79-admin-col">관리</th>
+          <th>날짜</th><th>업체명</th><th>품목</th><th>총제품수량</th><th>도면 받음</th><th>도면 보냄</th><th>현재 도면수량</th><th>보관위치</th><th>사진</th><th>비고</th><th class="drawing-v79-admin-col">관리</th>
         </tr>
       </thead>
       <tbody id="drawingLocationBodyV79">
-        <tr><td colspan="10">등록된 도면 위치 정보가 없습니다.</td></tr>
+        <tr><td colspan="11">등록된 도면 위치 정보가 없습니다.</td></tr>
       </tbody>
     </table>
   </div>
@@ -14841,6 +14851,8 @@ function clearDrawingFormV79(){
   });
   const d=document.getElementById('drawingDateV79');
   if(d)d.value=new Date().toLocaleDateString('en-CA');
+  const pf=document.getElementById('drawingPhotoV82'); if(pf)pf.value='';
+  const pp=document.getElementById('drawingPhotoPreviewV82'); if(pp)pp.innerHTML='';
 }
 async function loadDrawingLocationV79(){
   if(sharedReady&&sharedDb){
@@ -14874,18 +14886,19 @@ function renderDrawingLocationV79(){
     <tr>
       <td>${esc(x.date||'-')}</td>
       <td><b>${esc(x.company||'-')}</b></td>
-      <td>${esc(x.item||'-')}</td>
+      <td>${esc(x.item||'-')}${(!isAdmin&&currentWorker)?`<div style="margin-top:6px"><button type="button" class="secondary" onclick="editDrawingLocationV79('${esc(String(x.id))}')">수정 · 받음/보냄</button></div>`:''}</td>
       <td>${Number(x.qty||0).toLocaleString()}</td>
       <td>${Number(x.inQty||0).toLocaleString()}</td>
       <td>${Number(x.outQty||0).toLocaleString()}</td>
       <td><b>${Math.max(0,Number(x.inQty||0)-Number(x.outQty||0)).toLocaleString()}</b></td>
       <td><b>${esc(x.location||'-')}</b></td>
+      <td>${x.photoUrl?`<img src="${esc(x.photoUrl)}" alt="도면 사진" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #dbe6e0">`:'-'}</td>
       <td class="note">${esc(x.note||'-')}</td>
       <td class="drawing-v79-admin-col">${isAdmin?`
         <button type="button" class="secondary" onclick="editDrawingLocationV79('${esc(String(x.id))}')">수정</button>
         <button type="button" class="danger" onclick="deleteDrawingLocationV79('${esc(String(x.id))}')">삭제</button>`:''}
       </td>
-    </tr>`).join(''):`<tr><td colspan="10">등록된 도면 위치 정보가 없습니다.</td></tr>`;
+    </tr>`).join(''):`<tr><td colspan="11">등록된 도면 위치 정보가 없습니다.</td></tr>`;
 }
 async function openDrawingLocationV79(){
   if(!isAdmin&&!currentWorker)return alert('로그인 후 확인할 수 있습니다.');
@@ -14898,10 +14911,8 @@ async function openDrawingLocationV79(){
     card.style.setProperty('display','block','important');
     card.style.setProperty('visibility','visible','important');
   }
-  if(isAdmin){
-    const entry=document.getElementById('drawingLocationAdminEntryV79');
-    if(entry)entry.style.setProperty('display','block','important');
-  }
+  const entry=document.getElementById('drawingLocationAdminEntryV79');
+  if(entry)entry.style.setProperty('display','block','important');
   clearDrawingFormV79();
   await loadDrawingLocationV79();
   setTimeout(()=>card?.scrollIntoView({behavior:'auto',block:'start'}),50);
@@ -14913,7 +14924,7 @@ function closeDrawingLocationV79(){
   if(isAdmin){try{showAdminReferenceHome()}catch(e){}}
 }
 async function saveDrawingLocationV79(){
-  if(!isAdmin)return alert('도면 정보 수정은 관리자 모드에서만 가능합니다.');
+  if(!isAdmin&&!currentWorker)return alert('로그인 후 도면 정보를 입력할 수 있습니다.');
   const editId=(document.getElementById('drawingEditIdV79')?.value||'').trim();
   const date=document.getElementById('drawingDateV79')?.value||'';
   const company=(document.getElementById('drawingCompanyV79')?.value||'').trim();
@@ -14923,21 +14934,30 @@ async function saveDrawingLocationV79(){
   const outQtyRaw=(document.getElementById('drawingOutQtyV80')?.value||'').trim();
   const location=(document.getElementById('drawingLocationV79')?.value||'').trim();
   const note=(document.getElementById('drawingNoteV79')?.value||'').trim();
+  const photoFile=isAdmin ? document.getElementById('drawingPhotoV82')?.files?.[0] : null;
 
   if(!date)return alert('날짜를 입력해 주세요.');
   if(!company)return alert('업체명을 입력해 주세요.');
   if(!item)return alert('품목을 입력해 주세요.');
   if(!location)return alert('보관위치를 입력해 주세요.');
-  if(qtyRaw!==''&&Number(qtyRaw)<0)return alert('총제품수량을 확인해 주세요.');
-  if(inQtyRaw!==''&&Number(inQtyRaw)<0)return alert('도면 입고수량을 확인해 주세요.');
-  if(outQtyRaw!==''&&Number(outQtyRaw)<0)return alert('도면 출고수량을 확인해 주세요.');
+  if(qtyRaw!==''&&(Number(qtyRaw)<1||Number(qtyRaw)>50))return alert('총제품수량은 1~50에서 선택해 주세요.');
+  if(inQtyRaw!==''&&Number(inQtyRaw)<0)return alert('도면 받음 수량을 확인해 주세요.');
+  if(outQtyRaw!==''&&Number(outQtyRaw)<0)return alert('도면 보냄 수량을 확인해 주세요.');
+
+  const oldRow=editId?drawingRowsV79.find(x=>String(x.id)===String(editId)):null;
+  let photoUrl=oldRow?.photoUrl||'';
+  if(photoFile){
+    try{photoUrl=await uploadDrawingPhotoV82(editId||('new_'+Date.now()),photoFile);}
+    catch(e){return alert('도면 사진 저장 실패: '+(e.message||e));}
+  }
 
   const payload={
     date,company,item,
     qty:qtyRaw===''?0:Number(qtyRaw),
     inQty:inQtyRaw===''?0:Number(inQtyRaw),
     outQty:outQtyRaw===''?0:Number(outQtyRaw),
-    location,note,
+    location,note,photoUrl,
+    updated_by:isAdmin?'관리자':String(currentWorker?.name||'작업자'),
     updated_at:new Date().toISOString()
   };
 
@@ -14977,12 +14997,17 @@ async function saveDrawingLocationV79(){
     }
     drawingLocalSetV79(rows);
   }
+
+  if(!isAdmin&&currentWorker){
+    try{await notifyDrawingWorkerActivityV82(editId?'수정':'등록/받음·보냄',payload);}catch(e){console.warn('도면 작업자 알림 저장 실패',e);}
+  }
+
   clearDrawingFormV79();
   await loadDrawingLocationV79();
-  alert('✅ 도면 위치 정보를 저장했습니다.');
+  alert(isAdmin?'✅ 도면 정보를 저장했습니다.':'✅ 도면 정보를 저장했습니다. 관리자 알림에 전달됩니다.');
 }
 function editDrawingLocationV79(id){
-  if(!isAdmin)return alert('관리자만 수정할 수 있습니다.');
+  if(!isAdmin&&!currentWorker)return alert('로그인 후 수정할 수 있습니다.');
   const x=drawingRowsV79.find(r=>String(r.id)===String(id)); if(!x)return;
   document.getElementById('drawingEditIdV79').value=x.id||'';
   document.getElementById('drawingDateV79').value=x.date||'';
@@ -14993,6 +15018,8 @@ function editDrawingLocationV79(id){
   document.getElementById('drawingOutQtyV80').value=x.outQty??'';
   document.getElementById('drawingLocationV79').value=x.location||'';
   document.getElementById('drawingNoteV79').value=x.note||'';
+  const pp=document.getElementById('drawingPhotoPreviewV82');
+  if(pp)pp.innerHTML=(isAdmin&&x.photoUrl)?`<img src="${esc(x.photoUrl)}" alt="현재 도면 사진" style="max-width:160px;max-height:120px;object-fit:cover;border-radius:8px">`:'';
   document.getElementById('drawingLocationAdminEntryV79')?.scrollIntoView({behavior:'auto',block:'start'});
 }
 async function deleteDrawingLocationV79(id){
@@ -15010,6 +15037,38 @@ async function deleteDrawingLocationV79(id){
   }
   await loadDrawingLocationV79();
 }
+
+async function uploadDrawingPhotoV82(key,file){
+  if(!isAdmin)throw new Error('도면 사진은 관리자만 등록할 수 있습니다.');
+  if(!sharedReady||!sharedDb)throw new Error('공용 동기화 연결이 필요합니다.');
+  if(file.size>25*1024*1024)throw new Error('사진은 25MB 이하로 선택해 주세요.');
+  const uploadFile=await optimizeItemPhoto(file);
+  const safe=String(key||Date.now()).replace(/[^a-zA-Z0-9._-]/g,'_');
+  const ext=(uploadFile.type==='image/png')?'png':(uploadFile.type==='image/webp'?'webp':'jpg');
+  const path=`drawings/${safe}_${Date.now()}.${ext}`;
+  const bucket=sharedDb.storage.from('production-item-photos');
+  const {error}=await bucket.upload(path,uploadFile,{upsert:false,contentType:uploadFile.type||'image/jpeg',cacheControl:'31536000'});
+  if(error)throw error;
+  const {data}=bucket.getPublicUrl(path);
+  if(!data?.publicUrl)throw new Error('사진 주소 생성에 실패했습니다.');
+  return data.publicUrl+'?v='+Date.now();
+}
+
+async function notifyDrawingWorkerActivityV82(action,payload){
+  if(!currentWorker)return;
+  const worker=String(currentWorker.name||'작업자');
+  if(sharedReady&&sharedDb){
+    const {error}=await sharedDb.from('wms_admin_notifications').insert({
+      type:'DRAWING_WORKER_ACTIVITY_V82',
+      title:'📐 도면 작업 알림',
+      message:`${worker} · ${action} · ${payload.company||'-'} · ${payload.item||'-'} · 받음 ${Number(payload.inQty||0)} / 보냄 ${Number(payload.outQty||0)} · ${payload.location||'-'}`,
+      payload:{...payload,worker,action},
+      created_at:new Date().toISOString()
+    });
+    if(error)throw error;
+  }
+}
+
 function addDrawingShortcutsV79(){
   /* 관리자 바로가기: 기존 버튼 복제 후 도면관리 버튼만 추가 */
   if(isAdmin&&!document.getElementById('adminDrawingShortcutV79')){
@@ -15021,7 +15080,7 @@ function addDrawingShortcutsV79(){
       b.id='adminDrawingShortcutV79';
       b.removeAttribute('onclick');
       b.onclick=(e)=>{e.preventDefault();e.stopPropagation();openDrawingLocationV79();};
-      b.innerHTML='📐<br><b>도면 등록·관리</b><br><small>도면 등록 · 입출고 · 위치관리</small>';
+      b.innerHTML='📐<br><b>도면 등록·관리</b><br><small>도면 등록 · 받음/보냄 · 위치관리</small>';
       anchor.parentElement.insertAdjacentElement('afterend',b);
     }
   }
@@ -15036,7 +15095,7 @@ function addDrawingShortcutsV79(){
       b.dataset.workerMain='drawing';
       b.removeAttribute('onclick');
       b.onclick=(e)=>{e.preventDefault();e.stopPropagation();openDrawingLocationV79();};
-      b.innerHTML='📐<span><b>도면 위치 확인</b><small>업체·품목·보관위치 조회</small></span>';
+      b.innerHTML='📐<span><b>도면 확인·받음/보냄</b><small>조회 · 수정 · 받음/보냄 입력</small></span>';
       grid.appendChild(b);
     }
   }
