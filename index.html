@@ -1737,7 +1737,7 @@ body.park-location-worker-v63 .erp-only{
       <button onclick="document.getElementById('recordLookupAdminCard')?.scrollIntoView({behavior:'smooth'})">📄<span>기록 불러오기</span></button>
       <button onclick="document.getElementById('locationOrganizerCard')?.scrollIntoView({behavior:'smooth'});loadLocationOrganizer()">🧹<span>위치 정리</span></button>
       <button onclick="document.getElementById('nasExcelAdminCard')?.scrollIntoView({behavior:'smooth'})">📊<span>NAS 엑셀 연동</span></button>
-      <button onclick="document.getElementById('loginLogBtn')?.click()">👥<span>사용자 관리</span></button>
+      <button onclick="openAdminUsersV73()">👥<span>사용자 관리</span></button>
       <button onclick="document.getElementById('notifBtn')?.click()">🔔<span>알림 확인</span></button>
     </div>
   </div>
@@ -8215,7 +8215,7 @@ function ensureAdminWelcomeShortcuts(){
       <button class="admin-welcome-shortcut-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>위치 정리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openLocationRegistrationV59()"><span class="ico">📍</span><span>위치 등록</span><small>미등록 품목 위치 입력</small></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
-      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
+      <button class="admin-welcome-shortcut-btn" onclick="openAdminUsersV73()"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
       <button class="admin-welcome-shortcut-btn admin-io-stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span><small>입고·출고·차이수량·위치·빈도</small></button>
       <button class="admin-welcome-shortcut-btn admin-po-tools" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span><small>VIP BOM 전체 기능</small></button>
@@ -9215,7 +9215,7 @@ function ensureAdminReferenceHome(){
 <button class="ar-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
 <button class="ar-btn ar-location-register-v59" onclick="openLocationRegistrationV59()"><span class="ico">📍</span><span>위치 등록</span><small>위치 미등록 품목 등록</small></button>
         <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
-        <button class="ar-btn" onclick="openExistingAdminSection('users')"><span class="ico">👥</span><span>사용자 관리</span></button>
+        <button class="ar-btn" onclick="openAdminUsersV73()"><span class="ico">👥</span><span>사용자 관리</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
         <button class="ar-btn stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span></button>
         <button class="ar-btn po-tools" onclick="openAdminBomManagementV42()"><span class="ico">👑</span><span>BOM 관리</span></button>
@@ -10630,6 +10630,7 @@ function wireAdminShortcutButtonsV41(){
       e.preventDefault();
       e.stopPropagation();
       if(kind==='inoutstat'){openAdminInOutStatisticsV39();return;}
+      if(kind==='users'){openAdminUsersV73();return;}
       openAdminShortcutListV41(kind);
     };
   });
@@ -14520,6 +14521,105 @@ document.addEventListener('click',()=>setTimeout(addErpChangeShortcutV71,80),tru
     display:block!important;
     visibility:visible!important;
     opacity:1!important;
+  }
+}
+</style>
+
+<script id="mobile-admin-users-fix-v73">
+async function openAdminUsersV73(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+  /* 다른 정상 기능은 건드리지 않고 사용자관리 화면만 단독으로 연다 */
+  try{
+    restoreAdminShortcutFocusV41();
+    ensureAdminShortcutFocusPanelV41();
+
+    document.body.classList.remove(
+      'admin-reference-home',
+      'admin-task-focus',
+      'admin-bom-view',
+      'other-storage-open-v50'
+    );
+    document.body.classList.add('admin-shortcut-focus');
+
+    const panel=document.getElementById('adminShortcutFocusPanel');
+    const title=document.getElementById('adminShortcutFocusTitle');
+    const users=document.getElementById('loginLogPanel');
+
+    if(title) title.textContent='👥 사용자 관리';
+    if(panel){
+      panel.classList.remove('hidden');
+      panel.style.setProperty('display','block','important');
+      panel.style.setProperty('visibility','visible','important');
+      panel.style.setProperty('opacity','1','important');
+      panel.style.setProperty('width','100%','important');
+      panel.style.setProperty('max-width','100%','important');
+    }
+
+    if(!users){
+      alert('사용자 관리창을 찾지 못했습니다.');
+      return;
+    }
+
+    users.classList.remove('hidden','hidden-admin');
+    users.style.setProperty('display','block','important');
+    users.style.setProperty('visibility','visible','important');
+    users.style.setProperty('opacity','1','important');
+    users.style.setProperty('width','100%','important');
+    users.style.setProperty('max-width','100%','important');
+
+    if(typeof moveToAdminShortcutFocusV41==='function'){
+      moveToAdminShortcutFocusV41(users);
+    }
+
+    try{
+      if(typeof loadLoginLogs==='function') await loadLoginLogs();
+    }catch(e){
+      console.error('사용자 관리 불러오기 오류',e);
+    }
+
+    window.scrollTo({top:0,behavior:'instant'});
+  }catch(e){
+    console.error('사용자 관리 열기 오류',e);
+
+    /* 모바일 보조 경로 */
+    const users=document.getElementById('loginLogPanel');
+    if(users){
+      users.classList.remove('hidden','hidden-admin');
+      users.style.setProperty('display','block','important');
+      users.style.setProperty('visibility','visible','important');
+      try{users.scrollIntoView({behavior:'auto',block:'start'});}catch(err){}
+      try{if(typeof loadLoginLogs==='function') await loadLoginLogs();}catch(err){}
+    }else{
+      alert('사용자 관리 화면을 열지 못했습니다.');
+    }
+  }
+}
+</script>
+
+<style id="mobile-admin-users-fix-v73-style">
+@media(max-width:760px){
+  body.admin-view.admin-shortcut-focus #adminShortcutFocusPanel{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  body.admin-view.admin-shortcut-focus #loginLogPanel{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  body.admin-view.admin-shortcut-focus #loginLogPanel *{
+    max-width:100%;
+    box-sizing:border-box;
   }
 }
 </style>
