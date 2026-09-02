@@ -14623,4 +14623,60 @@ async function openAdminUsersV73(){
   }
 }
 </style>
+
+<style id="mobile-admin-center-restore-v74">
+@media(max-width:760px){
+  /* 관리자 모바일 본 화면 공통 중앙 정렬 복구 */
+  body.admin-view main{
+    width:calc(100% - 16px)!important;
+    max-width:1050px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding-left:0!important;
+    padding-right:0!important;
+    box-sizing:border-box!important;
+  }
+
+  body.admin-view .dashboard-home,
+  body.admin-view #home,
+  body.admin-view #work,
+  body.admin-view #adminWelcomeShortcutBox,
+  body.admin-view #adminShortcutFocusPanel,
+  body.admin-view #adminTaskFocusPanel,
+  body.admin-view #loginLogPanel{
+    width:100%!important;
+    max-width:1050px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+  }
+
+  /* V72/V73에서 열림 보장을 위해 넣은 전체폭 강제값은 유지하되,
+     화면 자체는 중앙 컨테이너 안에서만 표시 */
+  body.admin-view #work:not(.hidden),
+  body.admin-view.admin-shortcut-focus #adminShortcutFocusPanel,
+  body.admin-view.admin-shortcut-focus #loginLogPanel{
+    width:100%!important;
+    max-width:1050px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  body.admin-view #adminWelcomeShortcutBox{
+    width:100%!important;
+    margin-top:10px!important;
+    margin-bottom:10px!important;
+  }
+
+  body.admin-view .card,
+  body.admin-view #adminReferenceHome,
+  body.admin-view #adminInOutTotalCard,
+  body.admin-view #locationOrganizerCard,
+  body.admin-view #otherMaterialStorageCard{
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
 </body></html>
