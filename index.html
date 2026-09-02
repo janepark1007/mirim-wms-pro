@@ -14808,19 +14808,7 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
       <label id="drawingCompanyCustomWrapV85" style="display:none">업체명 수동입력
         <input id="drawingCompanyV79" placeholder="업체명을 직접 입력">
       </label>
-      <label>품명
-        <select id="drawingItemSelectV84" onchange="toggleDrawingItemCustomV84()">
-          <option value="">선택</option>
-          <option value="NPP">NPP</option>
-          <option value="프라임">프라임</option>
-          <option value="렉">렉</option>
-          <option value="쎄파">쎄파</option>
-          <option value="직접입력">직접입력</option>
-        </select>
-      </label>
-      <label id="drawingItemCustomWrapV84" style="display:none">품명 직접입력
-        <input id="drawingItemV79" placeholder="품명을 직접 입력">
-      </label>
+      <label>품명<input id="drawingItemV79" placeholder="품명"></label>
       <label>총제품수량
         <select id="drawingQtyV79">
           <option value="">선택</option>
@@ -14885,7 +14873,7 @@ function drawingLocalSetV79(rows){
   try{localStorage.setItem(DRAWING_LOCATION_LOCAL_KEY_V79,JSON.stringify(rows||[]))}catch(e){}
 }
 function clearDrawingFormV79(){
-  ['drawingEditIdV79','drawingCompanyV79','drawingCompanySelectV85','drawingItemV79','drawingItemSelectV84','drawingQtyV79','drawingInQtyV80','drawingOutQtyV80','drawingProcessV83','drawingProcessCustomV83','drawingLocationV79','drawingNoteV79'].forEach(id=>{
+  ['drawingEditIdV79','drawingCompanyV79','drawingCompanySelectV85','drawingItemV79','drawingQtyV79','drawingInQtyV80','drawingOutQtyV80','drawingProcessV83','drawingProcessCustomV83','drawingLocationV79','drawingNoteV79'].forEach(id=>{
     const el=document.getElementById(id); if(el)el.value='';
   });
   const d=document.getElementById('drawingDateV79');
@@ -14893,7 +14881,6 @@ function clearDrawingFormV79(){
   const pf=document.getElementById('drawingPhotoV82'); if(pf)pf.value='';
   const pp=document.getElementById('drawingPhotoPreviewV82'); if(pp)pp.innerHTML='';
   const pcw=document.getElementById('drawingProcessCustomWrapV83'); if(pcw)pcw.style.display='none';
-  const icw=document.getElementById('drawingItemCustomWrapV84'); if(icw)icw.style.display='none';
   const ccw=document.getElementById('drawingCompanyCustomWrapV85'); if(ccw)ccw.style.display='none';
 }
 async function loadDrawingLocationV79(){
@@ -14983,18 +14970,6 @@ function toggleDrawingCompanyCustomV85(){
   }
 }
 
-function toggleDrawingItemCustomV84(){
-  const sel=document.getElementById('drawingItemSelectV84');
-  const wrap=document.getElementById('drawingItemCustomWrapV84');
-  const input=document.getElementById('drawingItemV79');
-  if(sel?.value==='직접입력'){
-    if(wrap)wrap.style.display='block';
-    if(input)input.focus();
-  }else{
-    if(wrap)wrap.style.display='none';
-    if(input)input.value=sel?.value||'';
-  }
-}
 
 function toggleDrawingProcessCustomV83(){
   const sel=document.getElementById('drawingProcessV83');
@@ -15013,9 +14988,7 @@ async function saveDrawingLocationV79(){
   const companySel=(document.getElementById('drawingCompanySelectV85')?.value||'').trim();
   const companyCustom=(document.getElementById('drawingCompanyV79')?.value||'').trim();
   const company=(companySel==='직접입력'||companySel==='프라임')?companyCustom:(companySel||companyCustom);
-  const itemSel=(document.getElementById('drawingItemSelectV84')?.value||'').trim();
-  const itemCustom=(document.getElementById('drawingItemV79')?.value||'').trim();
-  const item=itemSel==='직접입력'?itemCustom:(itemSel||itemCustom);
+  const item=(document.getElementById('drawingItemV79')?.value||'').trim();
   const qtyRaw=(document.getElementById('drawingQtyV79')?.value||'').trim();
   const inQtyRaw=(document.getElementById('drawingInQtyV80')?.value||'').trim();
   const outQtyRaw=(document.getElementById('drawingOutQtyV80')?.value||'').trim();
@@ -15121,25 +15094,7 @@ function editDrawingLocationV79(id){
       if(companyWrap)companyWrap.style.display='none';
     }
   }
-  const itemOptions=['NPP','프라임','렉','쎄파'];
-  const itemSelEl=document.getElementById('drawingItemSelectV84');
-  const itemInput=document.getElementById('drawingItemV79');
-  const itemWrap=document.getElementById('drawingItemCustomWrapV84');
-  if(itemSelEl){
-    if(itemOptions.includes(String(x.item||''))){
-      itemSelEl.value=String(x.item||'');
-      if(itemInput)itemInput.value=String(x.item||'');
-      if(itemWrap)itemWrap.style.display='none';
-    }else if(x.item){
-      itemSelEl.value='직접입력';
-      if(itemInput)itemInput.value=String(x.item||'');
-      if(itemWrap)itemWrap.style.display='block';
-    }else{
-      itemSelEl.value='';
-      if(itemInput)itemInput.value='';
-      if(itemWrap)itemWrap.style.display='none';
-    }
-  }
+  document.getElementById('drawingItemV79').value=x.item||'';
   document.getElementById('drawingQtyV79').value=x.qty??'';
   document.getElementById('drawingInQtyV80').value=x.inQty??'';
   document.getElementById('drawingOutQtyV80').value=x.outQty??'';
