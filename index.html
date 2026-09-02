@@ -14717,10 +14717,32 @@ function requireWorkerApproval2589(action){
 </script>
 
 <style id="drawing-location-v79-style">
-#drawingLocationCardV79{display:none}
+#drawingLocationCardV79{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  background:#f5f8f6;
+  overflow:auto;
+  padding:18px;
+}
 body.drawing-location-open-v79 #drawingLocationCardV79{
-  display:block!important;visibility:visible!important;opacity:1!important;
-  width:100%!important;max-width:1050px!important;margin:12px auto!important;box-sizing:border-box!important;
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+.drawing-v79-head,
+#drawingLocationAdminEntryV79,
+#drawingSearchV79,
+.drawing-v79-table-wrap{
+  width:100%;
+  max-width:1100px;
+  margin-left:auto;
+  margin-right:auto;
 }
 .drawing-v79-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
 .drawing-v79-head h2{margin:0}
@@ -14744,7 +14766,16 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
   .drawing-v79-grid{grid-template-columns:1fr 1fr}
   .drawing-v79-wide{grid-column:1/-1}
   body.drawing-location-open-v79 #drawingLocationCardV79{
-    width:calc(100% - 16px)!important;margin-left:auto!important;margin-right:auto!important;
+    width:100%!important;
+    margin:0!important;
+    padding:10px!important;
+  }
+  .drawing-v79-head,
+  #drawingLocationAdminEntryV79,
+  #drawingSearchV79,
+  .drawing-v79-table-wrap{
+    width:100%!important;
+    max-width:100%!important;
   }
   .drawing-v79-head{align-items:flex-start}
 }
@@ -14753,8 +14784,8 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
 <section class="card" id="drawingLocationCardV79">
   <div class="drawing-v79-head">
     <div>
-      <h2>📐 도면 위치 관리</h2>
-      <div style="color:#64756c;margin-top:4px">날짜 · 업체명 · 품목 · 총제품수량 · 도면 입고 · 도면 출고 · 현재 도면수량 · 보관위치 · 비고를 한눈에 확인합니다.</div>
+      <h2>📐 도면 등록·관리</h2>
+      <div style="color:#64756c;margin-top:4px">도면을 등록하고 입고·출고 수량과 보관위치를 관리합니다.</div>
     </div>
     <button type="button" class="secondary" onclick="closeDrawingLocationV79()">닫기</button>
   </div>
@@ -14772,7 +14803,7 @@ body:not(.admin-view):not(.worker-locked) #workerMainShortcutCard [data-worker-m
       <label class="drawing-v79-wide">비고<input id="drawingNoteV79" placeholder="특이사항"></label>
     </div>
     <div class="drawing-v79-actions">
-      <button type="button" class="primary" onclick="saveDrawingLocationV79()">도면 정보 저장</button>
+      <button type="button" class="primary" onclick="saveDrawingLocationV79()">도면 등록 저장</button>
       <button type="button" class="secondary" onclick="clearDrawingFormV79()">입력 초기화</button>
     </div>
   </div>
@@ -14990,7 +15021,7 @@ function addDrawingShortcutsV79(){
       b.id='adminDrawingShortcutV79';
       b.removeAttribute('onclick');
       b.onclick=(e)=>{e.preventDefault();e.stopPropagation();openDrawingLocationV79();};
-      b.innerHTML='📐<br><b>도면 관리</b><br><small>도면 위치 등록·수정</small>';
+      b.innerHTML='📐<br><b>도면 등록·관리</b><br><small>도면 등록 · 입출고 · 위치관리</small>';
       anchor.parentElement.insertAdjacentElement('afterend',b);
     }
   }
