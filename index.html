@@ -3926,7 +3926,7 @@ async function initSharedDb(){
        await loadErpUnregisteredItems();
        updateHomeSummary();
      }catch(e){ console.error('공용 자동동기화 오류',e); }
-   },15000);
+   },600000);
  }catch(e){
    console.error('Supabase init failed',e);
    sharedReady=false;
@@ -11724,13 +11724,13 @@ body.admin-task-focus #locationOrganizerCard button{
       startSharedRealtimeV1();
       await refreshAllSharedV1('startup');
 
-      /* Realtime 설정이 서버에서 꺼져 있어도 모바일/PC가 최대 5초 내 동기화 */
+      /* V92 무료 플랜 절약: Realtime이 막힌 경우에만 5분 간격 안전 동기화 */
       if(window.__mirimSharedRealtimeFallbackV1)clearInterval(window.__mirimSharedRealtimeFallbackV1);
       window.__mirimSharedRealtimeFallbackV1=setInterval(()=>{
         if(document.visibilityState==='visible'){
           refreshAllSharedV1('fallback-5s');
         }
-      },5000);
+      },300000);
     }else{
       setRealtimeBadgeV1(false,'공용 DB 연결 안됨');
     }
@@ -12217,13 +12217,13 @@ body.admin-view.admin-reference-home #adminWorkerOrdersV2{
       }
     }
 
-    /* Realtime이 막혀 있어도 5초마다 현재 화면 데이터 확인 */
+    /* V92 무료 플랜 절약: 주문 목록 안전 확인은 2분 간격, Realtime은 그대로 사용 */
     if(window.__workerOrderPollV2)clearInterval(window.__workerOrderPollV2);
     window.__workerOrderPollV2=setInterval(()=>{
       if(document.visibilityState!=='visible')return;
       if(currentWorker)loadMyOrdersV2();
       if(isAdmin)loadAdminWorkerOrdersV2();
-    },5000);
+    },120000);
   }
 
   /* 관리자/작업자 모드가 나중에 전환되어도 패널 생성 */
@@ -14325,7 +14325,7 @@ body.admin-view.other-storage-open-v50 #adminWorkerOrdersV2{
 
  window.addEventListener('load',()=>{
    setTimeout(poll,800);
-   setInterval(poll,15000);
+   setInterval(poll,120000);
  });
  document.addEventListener('click',()=>{if(isAdmin)setTimeout(poll,250)},true);
 })();
@@ -15360,4 +15360,11 @@ function addDrawingShortcutsV79(){
 window.addEventListener('load',()=>setTimeout(addDrawingShortcutsV79,1200));
 document.addEventListener('click',()=>setTimeout(addDrawingShortcutsV79,100),true);
 </script>
+
+<!-- V92: Supabase 무료 플랜 트래픽 절약
+     - 공용 전체자료 반복조회 15초 -> 10분
+     - Realtime fallback 전체조회 5초 -> 5분
+     - 작업자 주문 반복조회 5초 -> 2분
+     - 관리자 알림 반복조회 15초 -> 2분
+     저장/Realtime/화면복귀 즉시 갱신은 유지 -->
 </body></html>
