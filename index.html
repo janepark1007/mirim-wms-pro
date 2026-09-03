@@ -4377,7 +4377,11 @@ async function shareUnregisteredOrder(){
  if(!photoFile){alert('ERP 미등록 제품은 확인할 수 있도록 제품 사진을 찍어 주세요.');return;}
 
  try{
-   const savedPhotoUrl=await sharedUploadOrderPhoto(photoFile);
+   let savedPhotoUrl='';
+   if(sharedReady&&sharedDb){
+     try{savedPhotoUrl=await sharedUploadOrderPhoto(photoFile);}
+     catch(e){console.warn('ERP 미등록 주문 사진 공용저장 생략',e);}
+   }
    await saveDailyOrderRequest({part:'ERP미등록',name:name||'사진 확인 필요',spec:''},qty,worker,note,'자재 주문요청',savedPhotoUrl);
  }catch(e){
    console.error('ERP 미등록 주문 저장 실패',e);
@@ -4610,11 +4614,42 @@ function fillUnregisteredWorker(){
 }
 let todayOrderRows=[];
 
+const PENDING_ORDER_KEY_V89='mirim_pending_order_requests_v89';
+
+function getPendingOrderRequestsV89(){
+  try{
+    const rows=JSON.parse(localStorage.getItem(PENDING_ORDER_KEY_V89)||'[]');
+    return Array.isArray(rows)?rows:[];
+  }catch(e){return [];}
+}
+
+function savePendingOrderRequestsV89(rows){
+  try{localStorage.setItem(PENDING_ORDER_KEY_V89,JSON.stringify(rows||[]));}
+  catch(e){console.warn('주문 대기저장 실패',e);}
+}
+
+async function flushPendingOrderRequestsV89(){
+  if(!sharedReady||!sharedDb)return false;
+  const rows=getPendingOrderRequestsV89();
+  if(!rows.length)return true;
+  const remain=[];
+  for(const row of rows){
+    try{
+      const {error}=await sharedDb.from('production_order_requests').insert(row.data);
+      if(error)throw error;
+    }catch(e){
+      console.warn('주문 대기자료 공용 동기화 실패',e);
+      remain.push(row);
+    }
+  }
+  savePendingOrderRequestsV89(remain);
+  return remain.length===0;
+}
+
 async function saveDailyOrderRequest(x,qty,worker,note,requestType='자재 주문요청',photoUrl=''){
- if(!sharedReady||!sharedDb) throw new Error('공용 동기화 연결이 필요합니다.');
  const isOrder=requestType==='자재 주문요청';
  const savedNote=`[문의종류:${requestType}]${photoUrl?`[문의사진:${photoUrl}]`:''}${note?'\n'+note:''}`;
- const {error}=await sharedDb.from('production_order_requests').insert({
+ const rowData={
    part_no:String(x.part||''),
    item_name:x.name||'',
    spec:x.spec||'',
@@ -4623,12 +4658,28 @@ async function saveDailyOrderRequest(x,qty,worker,note,requestType='자재 주�
    note:savedNote,
    status:isOrder?'요청':'문의중',
    created_at:new Date().toISOString()
- });
- if(error)throw error;
- await loadTodayOrderRequests();
+ };
+
+ if(sharedReady&&sharedDb){
+   try{
+     await flushPendingOrderRequestsV89();
+     const {error}=await sharedDb.from('production_order_requests').insert(rowData);
+     if(error)throw error;
+     try{await loadTodayOrderRequests();}catch(e){console.warn('주문목록 새로고침 생략',e);}
+     return {saved:'shared'};
+   }catch(e){
+     console.warn('공용 주문 저장 실패, 로컬 대기저장으로 전환',e);
+   }
+ }
+
+ const pending=getPendingOrderRequestsV89();
+ pending.push({id:'pending_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),data:rowData});
+ savePendingOrderRequestsV89(pending);
+ return {saved:'pending'};
 }
 
 async function loadTodayOrderRequests(){
+ try{if(sharedReady&&sharedDb)await flushPendingOrderRequestsV89();}catch(e){console.warn('주문 대기자료 동기화 생략',e);}
  if(!sharedReady||!sharedDb)return;
  try{
    const {data,error}=await sharedDb.from('production_order_requests')
@@ -5054,12 +5105,16 @@ async function shareOrderRequest(x,i){
  if(note){lines.push('');lines.push('📝 추가내용 : '+note);}
  const msg=lines.join('\n');
 
+ let orderSaveResult=null;
  try{
-   await saveDailyOrderRequest(x,qty?Number(qty):0,worker,note,type,photoUrl||'');
+   orderSaveResult=await saveDailyOrderRequest(x,qty?Number(qty):0,worker,note,type,photoUrl||'');
  }catch(e){
    console.error('주문·문의 저장 실패',e);
    alert('주문·문의 저장 실패: '+(e.message||e));
    return;
+ }
+ if(orderSaveResult?.saved==='pending'){
+   console.warn('공용 동기화 미연결: 주문·문의는 기기에 임시 저장 후 카톡 전송 계속');
  }
 
  let photoFile=null;
