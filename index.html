@@ -14013,4 +14013,321 @@ body.worker-search-main-v110:not(.admin-view) #publicDrawingSearchV108 button{
   }
 })();
 </script>
+
+<style id="npp-drawing-v113-style">
+/* V113: 엑셀 정리 NPP 도면검색 + 관리자 위치수정 */
+#nppAdminPanelV113{display:none}
+body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
+  display:block!important;
+  width:min(1240px,calc(100% - 24px));
+  margin:18px auto 40px;
+}
+body.admin-view.npp-admin-open-v113 #home,
+body.admin-view.npp-admin-open-v113 #work,
+body.admin-view.npp-admin-open-v113 #publicDrawingSearchV108,
+body.admin-view.npp-admin-open-v113 #adminReferenceHome{
+  display:none!important;
+}
+.npp-admin-card-v113{
+  background:#fff;
+  border:1px solid #e4def3;
+  border-radius:20px;
+  box-shadow:0 10px 26px rgba(63,48,118,.07);
+  padding:20px;
+}
+.npp-admin-head-v113{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.npp-admin-title-v113{font-size:25px;font-weight:1000;color:#6849bc}
+.npp-admin-sub-v113{margin-top:5px;color:#7e8490;font-size:13px;font-weight:800}
+.npp-admin-back-v113{
+  border:1px solid #cfc6e7;background:#fff;color:#5d489f;border-radius:10px;
+  padding:10px 14px;font-weight:1000;cursor:pointer
+}
+.npp-admin-search-v113{
+  display:grid;grid-template-columns:minmax(260px,1fr) 180px 110px;
+  gap:9px;margin:16px 0 12px
+}
+.npp-admin-search-v113 input,.npp-admin-search-v113 select,.npp-admin-search-v113 button{
+  min-height:46px;border-radius:10px;border:1px solid #d7d9df;padding:0 12px;font-weight:800
+}
+.npp-admin-search-v113 button{background:#7155c9;color:#fff;border-color:#7155c9;font-weight:1000}
+.npp-admin-count-v113{margin:8px 0 10px;color:#59606a;font-weight:900}
+.npp-admin-table-wrap-v113{overflow:auto;border:1px solid #e3e5e8;border-radius:12px}
+.npp-admin-table-v113{width:100%;border-collapse:collapse;min-width:900px}
+.npp-admin-table-v113 th,.npp-admin-table-v113 td{
+  border-bottom:1px solid #eceef1;padding:10px 8px;text-align:left;vertical-align:middle;font-size:13px
+}
+.npp-admin-table-v113 th{background:#f6f3fd;color:#5c4796;font-weight:1000;position:sticky;top:0;z-index:1}
+.npp-admin-table-v113 .no-v113{width:68px;text-align:center;font-weight:1000;color:#6849bc}
+.npp-admin-table-v113 .loc-v113{font-weight:1000;color:#146b48}
+.npp-admin-table-v113 input,.npp-admin-table-v113 select{
+  width:100%;box-sizing:border-box;min-height:38px;border:1px solid #cfd3da;border-radius:8px;padding:6px 8px
+}
+.npp-admin-table-v113 button{
+  border:0;border-radius:8px;padding:8px 10px;font-weight:1000;cursor:pointer;white-space:nowrap
+}
+.npp-edit-v113{background:#f0eafe;color:#6246b1}
+.npp-save-v113{background:#dff5e9;color:#146b48}
+.npp-cancel-v113{background:#f2f3f5;color:#555}
+.npp-public-chips-v113{display:none}
+body.worker-search-main-v110:not(.admin-view) .npp-public-chips-v113{
+  display:flex!important;flex-wrap:wrap;gap:7px;margin-top:12px
+}
+.npp-public-chips-v113 button{
+  min-height:38px;padding:0 12px;border:1px solid #c8b8ef;border-radius:9px;
+  background:#fbf9ff;color:#6747b8;font-weight:1000;cursor:pointer
+}
+.npp-public-chips-v113 button.active{background:#7659cb;color:#fff}
+body.worker-search-main-v110:not(.admin-view) #drawingQuickRangesV110{display:none!important}
+body.worker-search-main-v110:not(.admin-view) #publicDrawingQtyV108{min-width:190px}
+@media(max-width:720px){
+ .npp-admin-search-v113{grid-template-columns:1fr}
+ .npp-admin-card-v113{padding:14px 10px}
+ .npp-admin-title-v113{font-size:21px}
+}
+</style>
+
+<section id="nppAdminPanelV113">
+  <div class="npp-admin-card-v113">
+    <div class="npp-admin-head-v113">
+      <div>
+        <div class="npp-admin-title-v113">📐 NPP 도면위치 관리</div>
+        <div class="npp-admin-sub-v113">업로드한 엑셀 정리본 206건 · 관리자에서 보관위치/확인상태/비고 수정 가능</div>
+      </div>
+      <button type="button" class="npp-admin-back-v113" onclick="closeNppAdminV113()">← 관리자 메인</button>
+    </div>
+    <div class="npp-admin-search-v113">
+      <input id="nppAdminQv113" type="text" placeholder="찾기번호 · 도면명 · 분류 · 보관위치 검색">
+      <select id="nppAdminFilterV113">
+        <option value="">전체</option>
+        <option value="확인 필요">확인 필요</option>
+        <option value="레버파일">레버파일</option>
+        <option value="SHERPA">SHERPA</option>
+        <option value="NPG">NPG</option>
+        <option value="NPM / NVG / NPK">NPM / NVG / NPK</option>
+        <option value="NPR / NVS / NRC">NPR / NVS / NRC</option>
+        <option value="NNA / NCA / NDS">NNA / NCA / NDS</option>
+        <option value="NSM / 기타">NSM / 기타</option>
+      </select>
+      <button type="button" onclick="renderNppAdminV113()">검색</button>
+    </div>
+    <div id="nppAdminCountV113" class="npp-admin-count-v113"></div>
+    <div class="npp-admin-table-wrap-v113">
+      <table class="npp-admin-table-v113">
+        <thead><tr>
+          <th>찾기번호</th><th>도면·문서명</th><th>분류키</th><th>보관위치</th>
+          <th>기존 분류</th><th>확인상태</th><th>비고</th><th>관리</th>
+        </tr></thead>
+        <tbody id="nppAdminBodyV113"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div id="nppPublicChipsV113" class="npp-public-chips-v113">
+  <button type="button" data-npp-chip="" onclick="setNppPublicChipV113('',this)">전체</button>
+  <button type="button" data-npp-chip="확인 필요" onclick="setNppPublicChipV113('확인 필요',this)">확인 필요</button>
+  <button type="button" data-npp-chip="레버파일" onclick="setNppPublicChipV113('레버파일',this)">레버파일</button>
+  <button type="button" data-npp-chip="SHERPA" onclick="setNppPublicChipV113('SHERPA',this)">SHERPA</button>
+  <button type="button" data-npp-chip="NPG" onclick="setNppPublicChipV113('NPG',this)">NPG</button>
+  <button type="button" data-npp-chip="NPM / NVG / NPK" onclick="setNppPublicChipV113('NPM / NVG / NPK',this)">NPM/NVG/NPK</button>
+  <button type="button" data-npp-chip="NPR / NVS / NRC" onclick="setNppPublicChipV113('NPR / NVS / NRC',this)">NPR/NVS/NRC</button>
+  <button type="button" data-npp-chip="NNA / NCA / NDS" onclick="setNppPublicChipV113('NNA / NCA / NDS',this)">NNA/NCA/NDS</button>
+  <button type="button" data-npp-chip="NSM / 기타" onclick="setNppPublicChipV113('NSM / 기타',this)">NSM/기타</button>
+</div>
+
+<script id="npp-drawing-v113-script">
+const NPP_DRAWING_BASE_V113=[{"findNo":"001","name":"15KM NVG-S01 / NPG-배선","key":"15KM","location":"레버파일","category":"별도 파일","status":"확인 필요","note":"사진 라벨"},{"findNo":"002","name":"16L급 일체형(056947)","key":"16L급","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"003","name":"20EX-F 13.56MHz (050287)","key":"20EX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"004","name":"20KM-A01-M-MAIN(060939)","key":"20KM","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"005","name":"5G ICP CHAMBER(063367)","key":"5G","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"006","name":"AC CABLE (05834)","key":"AC","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"007","name":"AC OFF INTERLOCK 배선","key":"AC","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"008","name":"MAT FILTER B/D","key":"MAT","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"009","name":"Maxter WIRING PART LIST","key":"MAXTER","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"010","name":"NAF-5KRA-A01","key":"NAF","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"011","name":"NAS-06MXQ-P01 / AP1(H01)","key":"NAS","location":"레버파일","category":"별도 파일","status":"확인 필요","note":"사진 라벨"},{"findNo":"012","name":"NAS-08MX6-S1","key":"NAS","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"013","name":"NAS-15MXX-C01","key":"NAS","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"014","name":"NAS-60KAX-VA1 CTL배선(072586)","key":"NAS","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"015","name":"NCA-0604L-K01","key":"NCA","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"016","name":"NCA-0604Z-K01","key":"NCA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"017","name":"NDS-C10ZA-E01","key":"NDS","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"018","name":"NDS-C22ZA-H01(외부배선)","key":"NDS","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"019","name":"NDS-C22ZA-M01(내부배선)","key":"NDS","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"020","name":"NDS-R22ZA-H01(063679)","key":"NDS","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"021","name":"NDS-R22ZA-H03(077348)","key":"NDS","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"022","name":"NDS-R22ZA-J02","key":"NDS","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"023","name":"NDS-R22ZA-J02 / H01 / H03 / J03","key":"NDS","location":"레버파일","category":"별도 파일","status":"확인 필요","note":"사진 라벨"},{"findNo":"024","name":"NFG-01KNV-S04","key":"NFG","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"025","name":"NFG-01KNV-S12(072604)","key":"NFG","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"026","name":"NFG-03KAV-S01","key":"NFG","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"027","name":"NFG-04KEV-S01","key":"NFG","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"028","name":"NFG-15PFV-S02","key":"NFG","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"029","name":"NFG-20KFS-P01","key":"NFG","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"030","name":"NFG-30KAS-C02","key":"NFG","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"031","name":"NFG-30KDS-D05","key":"NFG","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"032","name":"NFG-60KAS-D02","key":"NFG","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"033","name":"NHF-5KQA-A15","key":"NHF","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"034","name":"NHJ-60kAM-UA0","key":"NHJ","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"035","name":"NMJ-30KXC-UXA","key":"NMJ","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"036","name":"NMS-20KAX-A4A","key":"NMS","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"037","name":"NNA-0602L-A036","key":"NNA","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"038","name":"NNA-0602L-A11","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"039","name":"NNA-0604L-A01","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"040","name":"NNA-0604L-A24","key":"NNA","location":"10, 레버파일","category":"NNA / NCA / NDS","status":"확인","note":"사진 라벨"},{"findNo":"041","name":"NNA-0604L-L01","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"042","name":"NNA-0906L-A02(210205)","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"043","name":"NNA-0906L-A23","key":"NNA","location":"5, 10","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"044","name":"NNA-0906L-L01","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"045","name":"NNA-0906L-L02","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"046","name":"NNA-1103X-W01","key":"NNA","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"047","name":"NNA-1515L-A01(063421)","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"048","name":"NNA-1515L-A05(067251)","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"049","name":"NNA-1515L-A11","key":"NNA","location":"10","category":"NNA / NCA / NDS","status":"확인","note":""},{"findNo":"050","name":"NNA-1515L-A11~A12","key":"NNA","location":"레버파일","category":"별도 파일","status":"확인 필요","note":"사진 라벨"},{"findNo":"051","name":"NNJ-C4 KM3-W12","key":"NNJ","location":"11","category":"NSM / 기타","status":"확인 필요","note":"바인더 11 손글씨 판독"},{"findNo":"052","name":"NPA-1515L-A12","key":"NPA","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"053","name":"NPB-5POD 배선","key":"NPB","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"054","name":"NPF-20KH (HKC) (053893)","key":"NPF","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"055","name":"NPG-10KM-A","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"056","name":"NPG-10KM-SA(034082)","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"057","name":"NPG-12KM","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"058","name":"NPG-12KM-ASH","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"059","name":"NPG-12KMA-H01(073645)","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"060","name":"NPG-15KM CE(210907)","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"061","name":"NPG-18KM","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"062","name":"NPG-18KM-A01","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"063","name":"NPG-20(22)KM-F","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"064","name":"NPG-20(24)KM-A01 (035338)","key":"NPG","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"065","name":"NPG-20KM-F01","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"066","name":"NPG-22KM-A01(057305)","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"067","name":"NPG-22KM-D01(059315)","key":"NPG","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"068","name":"NPG-22KM-F02(072394)","key":"NPG","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"069","name":"NPJ-80KAC-UAO","key":"NPJ","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"070","name":"NPK-300A","key":"NPK","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"071","name":"NPM-10KM","key":"NPM","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"072","name":"NPMJ-80KA 13.56MHz (46886)","key":"NPMJ","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"073","name":"NPMJ-80KD 3.2MHz (46885)","key":"NPMJ","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"074","name":"NPR-2245X-D01(059314)","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"075","name":"NPR-301L","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"076","name":"NPR-301L-S","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"077","name":"NPR-361L-J(057080)","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"078","name":"NPR-362L(03220)","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"079","name":"NPR-362L-A01","key":"NPR","location":"7, 레버파일","category":"NPR","status":"확인","note":"사진 라벨"},{"findNo":"080","name":"NPR-362L-F","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"081","name":"NPR-362L-F(삼성A3횡전개용)","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"082","name":"NPR-362L-FJ","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"083","name":"NPR-362L-J","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"084","name":"NPR-362L-S","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"085","name":"NPR-364L-A01 / A02","key":"NPR","location":"7, 레버파일","category":"NPR","status":"확인 필요","note":"사진 라벨"},{"findNo":"086","name":"NPR-364L-A02 (HEAD용)","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"087","name":"NPR-451L-A02","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"088","name":"NPR-452L-A01","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"089","name":"NPR-452L-F","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"090","name":"NPR-452L-J","key":"NPR","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"091","name":"NPR-452L-J(066878)","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"092","name":"NPR-453L","key":"NPR","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"093","name":"NPR-454L-A01","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"094","name":"NPR-454L-A01 / A02","key":"NPR","location":"레버파일","category":"별도 파일","status":"확인 필요","note":"사진 라벨"},{"findNo":"095","name":"NPR-454L-A01 HEAD","key":"NPR","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"096","name":"NPR-454L-A02","key":"NPR","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"097","name":"NPR-454L-A02 (HEAD용)","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"098","name":"NPR-710L-A01","key":"NPR","location":"7","category":"NPR","status":"확인","note":""},{"findNo":"099","name":"NPRLC-100","key":"NPRLC","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"100","name":"NPRLC-300","key":"NPRLC","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"101","name":"NPRLC-400 / NVRLC-400","key":"NPRLC","location":"레버파일","category":"별도 파일","status":"확인 필요","note":"사진 라벨"},{"findNo":"102","name":"NPRLC-500(038114)","key":"NPRLC","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"103","name":"NRC-A0704-K03","key":"NRC","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"104","name":"NRC-A0704-K03 SET UP","key":"NRC","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"105","name":"NRC-A0704-K04","key":"NRC","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"106","name":"NRC-A0704-K04 SET UP","key":"NRC","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"107","name":"NRC-A0704-K04 SET UP(특주)","key":"NRC","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"108","name":"NSH-20AXI(20DXI)-A2C","key":"NSH","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"109","name":"NSM-03ANW-XXA","key":"NSM","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"110","name":"NSM-03ANW-XXA(066228)","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"111","name":"NSM-05AHD-XXA","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"112","name":"NSM-05AXJ-SOC","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"113","name":"NSM-20AXA-A4A","key":"NSM","location":"1, 2","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"114","name":"NSM-20AXB-E3A","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"115","name":"NSM-20AXI-A2B","key":"NSM","location":"1, 2","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"116","name":"NSM-20AXJ-APA","key":"NSM","location":"1, 2","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"117","name":"NSM-20AXR-XXA","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"118","name":"NSM-20AXR-XXA(미정)","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"119","name":"NSM-20AXV-P9A","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"120","name":"NSM-20AXW-B7A","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"121","name":"NSM-20AXW-BKA(BOE B11)","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"122","name":"NSM-20AXW-C5A","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"123","name":"NSM-20AXW-HKA(원익8.5G)","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"124","name":"NSM-20AXW-T9A","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"125","name":"NSM-20DXV-P9A","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"126","name":"NSM-20DXW-BKA","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"127","name":"NSM-20DXW-C5A","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"128","name":"NSM-20DXW-HKA(원익8.5G)","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"129","name":"NSM-20DXW-T9A","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"130","name":"NSM-20FXF-XXA","key":"NSM","location":"1, 2","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"131","name":"NSM-30AK2-U01","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"132","name":"NSM-30AXA-A4A","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"133","name":"NSM-30AXA-A4B","key":"NSM","location":"1","category":"SHERPA (1)","status":"확인","note":""},{"findNo":"134","name":"NSM-30AXA-ITA(횡전개용)","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"135","name":"NSM-30AXI-A4B","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"136","name":"NSM-30AXI-APA","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"137","name":"NSM-30AXI-T5A","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"138","name":"NSM-30AXR-XXA","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"139","name":"NSM-30AXR-XXB","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"140","name":"NSM-30AXR-XXD","key":"NSM","location":"2, 레버파일","category":"SHERPA (2)","status":"확인","note":"사진 라벨"},{"findNo":"141","name":"NSM-30AXV-APA","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"142","name":"NSM-30AXW-TMB","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"143","name":"NSM-30DXI-APA","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"144","name":"NSM-30DXI-T5A","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"145","name":"NSM-30DXV-APA","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"146","name":"NSM-30DXW-TMB","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"147","name":"NSM-35PRD-XXA","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"148","name":"NSM-60AXI-XXA","key":"NSM","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"149","name":"NSM-90AXV-XXA","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"150","name":"NSM-90DXV-XXA","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"151","name":"NSM-NSM-30AXA-ITA","key":"NSM","location":"2","category":"SHERPA (2)","status":"확인","note":""},{"findNo":"152","name":"NVA-0604L-L01","key":"NVA","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"153","name":"NVA-1008L-M01","key":"NVA","location":"5","category":"NVA / NNA / NVR","status":"확인 필요","note":"바인더 5 상단 손글씨"},{"findNo":"154","name":"NVA-1008X-W21","key":"NVA","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"155","name":"NVA-1008Z-K01(065252)","key":"NVA","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"156","name":"NVA-1516X-M01","key":"NVA","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"157","name":"NVA-1516X-S01(W01)","key":"NVA","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"158","name":"NVG-10KM-A01","key":"NVG","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"159","name":"NVG-10KM-S01(039539)","key":"NVG","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"160","name":"NVG-10KM-W01(058636)","key":"NVG","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"161","name":"NVG-15(20)KM-S01","key":"NVG","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"162","name":"NVG-15KM-S01","key":"NVG","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"163","name":"NVG-18KMi-A01(049924)","key":"NVG","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"164","name":"NVG-18KMW01","key":"NVG","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"165","name":"NVR-1007L-S02","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"166","name":"NVR-1007X-S02","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"167","name":"NVR-1007X-W01(058637)","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"168","name":"NVR-1512Y-S02(047264)","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"169","name":"NVR-1824X-T01","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"170","name":"NVR-1824X-W01","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"171","name":"NVR-1824X-W02(060452)","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"172","name":"NVR-1824X-W03(E-Cat)","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인 필요","note":"바인더 5 상단 손글씨"},{"findNo":"173","name":"NVR-1824Y-T01","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"174","name":"NVR-1824Z-D01(059826)","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"175","name":"NVR-2036X-D01","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"176","name":"NVR-2445X-D01","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"177","name":"NVR-2445Z-D01","key":"NVR","location":"레버파일","category":"별도 파일","status":"확인","note":"사진 라벨"},{"findNo":"178","name":"NVR-710L-A01","key":"NVR","location":"5","category":"NVA / NNA / NVR","status":"확인","note":""},{"findNo":"179","name":"NVRLC-400(011172)","key":"NVRLC","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"180","name":"NVRLC-500(043474)","key":"NVRLC","location":"6","category":"NPG","status":"확인","note":""},{"findNo":"181","name":"NVS-15MXX-C01(075381)","key":"NVS","location":"8","category":"NPR / NVS / NRC","status":"확인","note":""},{"findNo":"182","name":"NXG-100LV-A01(059425)","key":"NXG","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"183","name":"NZJ-80KAC-UAO","key":"NZJ","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"184","name":"SHERPA-FIXED IPS-5G(35289)","key":"SHERPA","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"185","name":"SHERPA-FIXED IPS-6G(035463)","key":"SHERPA","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"186","name":"SHERPA05EX-FIXED(038074)","key":"SHERPA05EX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"187","name":"SHERPA20CX ICD-A3용(032503)","key":"SHERPA20CX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"188","name":"SHERPA20CX ICD5.5G-A2용(040449)","key":"SHERPA20CX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"189","name":"SHERPA20CX IPS-5G(35287)","key":"SHERPA20CX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"190","name":"SHERPA20CX IPS-FIC용(035521)","key":"SHERPA20CX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"191","name":"SHERPA20CX IPS5.5G-A2용(040638)","key":"SHERPA20CX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"192","name":"SHERPA20CX IPS 6G OLED용(035345)","key":"SHERPA20CX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"193","name":"SHERPA20EX ICD5.5G-A2용(040353)","key":"SHERPA20EX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"194","name":"SHERPA20EX IPS-5G(35288)","key":"SHERPA20EX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"195","name":"SHERPA20EX IPS 6G OLED용(035346)","key":"SHERPA20EX","location":"4","category":"SHERPA (4)","status":"확인","note":""},{"findNo":"196","name":"SHERPA30CX ADP BOE충전3.2MHz","key":"SHERPA30CX","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"197","name":"SHERPA30EX(03522) IPS-FIC용","key":"SHERPA30EX","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"198","name":"SHERPA30EX(03525) ICD-A3용,PH#2","key":"SHERPA30EX","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"199","name":"SHERPA30EX(C-PJT) AKT 8 LINE","key":"SHERPA30EX","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"200","name":"SHERPA30FX-주성27.12 (037080)","key":"SHERPA30FX","location":"3","category":"SHERPA (3)","status":"확인","note":""},{"findNo":"201","name":"VONE PLUS(미정) 360~480kHz","key":"VONE","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"202","name":"VONE WIRING PART LIST","key":"VONE","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"203","name":"인더페이스 2종","key":"인더페이스","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"204","name":"인베니아 FILTER FAN1,2배선 (NPF-20KH)","key":"인베니아","location":"9","category":"NPM / NVG / NPK","status":"확인","note":""},{"findNo":"205","name":"컴퓨터배선 (25P-3.56M)","key":"컴퓨터배선","location":"11","category":"NSM / 기타","status":"확인","note":""},{"findNo":"206","name":"컴퓨터배선 (9P-3.42M)","key":"컴퓨터배선","location":"11","category":"NSM / 기타","status":"확인","note":""}];
+const NPP_DRAWING_KEY_V113='mirim_npp_drawing_excel_v113';
+
+function nppLoadV113(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(NPP_DRAWING_KEY_V113)||'[]');
+    if(Array.isArray(saved)&&saved.length)return saved;
+  }catch(e){}
+  try{localStorage.setItem(NPP_DRAWING_KEY_V113,JSON.stringify(NPP_DRAWING_BASE_V113));}catch(e){}
+  return NPP_DRAWING_BASE_V113.map(x=>({...x}));
+}
+function nppSaveAllV113(rows){
+  try{localStorage.setItem(NPP_DRAWING_KEY_V113,JSON.stringify(rows));}catch(e){}
+}
+function escV113(v){
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function nppHayV113(x){
+  return [x.findNo,x.name,x.key,x.location,x.category,x.status,x.note]
+    .map(v=>String(v||'').toLowerCase().replace(/\s+/g,'')).join('|');
+}
+
+function openNppAdminV113(){
+  if(!isAdmin)return alert('관리자 모드에서만 수정할 수 있습니다.');
+  document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus','other-storage-open-v50');
+  document.body.classList.add('npp-admin-open-v113');
+  renderNppAdminV113();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function closeNppAdminV113(){
+  document.body.classList.remove('npp-admin-open-v113');
+  try{forceAdminMainV109();}catch(e){
+    const h=document.getElementById('home');if(h)h.style.display='block';
+  }
+}
+function renderNppAdminV113(){
+  const body=document.getElementById('nppAdminBodyV113');
+  const count=document.getElementById('nppAdminCountV113');
+  if(!body)return;
+  const q=(document.getElementById('nppAdminQv113')?.value||'').trim().toLowerCase().replace(/\s+/g,'');
+  const f=(document.getElementById('nppAdminFilterV113')?.value||'').trim();
+  const rows=nppLoadV113();
+  const filtered=rows.filter(x=>{
+    if(q&&!nppHayV113(x).includes(q))return false;
+    if(f&&!nppHayV113(x).includes(f.toLowerCase().replace(/\s+/g,'')))return false;
+    return true;
+  });
+  if(count)count.textContent=`전체 ${rows.length}건 · 현재 ${filtered.length}건`;
+  body.innerHTML=filtered.map(x=>`
+    <tr data-findno="${escV113(x.findNo)}">
+      <td class="no-v113">${escV113(x.findNo)}</td>
+      <td><b>${escV113(x.name)}</b></td>
+      <td>${escV113(x.key)}</td>
+      <td class="loc-v113">${escV113(x.location||'-')}</td>
+      <td>${escV113(x.category||'-')}</td>
+      <td>${escV113(x.status||'-')}</td>
+      <td>${escV113(x.note||'')}</td>
+      <td><button type="button" class="npp-edit-v113" onclick="editNppRowV113('${escV113(x.findNo)}')">수정</button></td>
+    </tr>`).join('');
+}
+function editNppRowV113(findNo){
+  const rows=nppLoadV113(), x=rows.find(r=>String(r.findNo)===String(findNo));
+  const tr=[...document.querySelectorAll('#nppAdminBodyV113 tr')].find(r=>r.dataset.findno===String(findNo));
+  if(!x||!tr)return;
+  tr.innerHTML=`
+    <td class="no-v113">${escV113(x.findNo)}</td>
+    <td><b>${escV113(x.name)}</b></td>
+    <td>${escV113(x.key)}</td>
+    <td><input id="nppLocEditV113_${escV113(x.findNo)}" value="${escV113(x.location)}" placeholder="보관위치"></td>
+    <td>${escV113(x.category||'-')}</td>
+    <td>
+      <select id="nppStatusEditV113_${escV113(x.findNo)}">
+        <option value="확인"${x.status==='확인'?' selected':''}>확인</option>
+        <option value="확인 필요"${x.status==='확인 필요'?' selected':''}>확인 필요</option>
+      </select>
+    </td>
+    <td><input id="nppNoteEditV113_${escV113(x.findNo)}" value="${escV113(x.note)}" placeholder="비고"></td>
+    <td>
+      <button type="button" class="npp-save-v113" onclick="saveNppRowV113('${escV113(x.findNo)}')">저장</button>
+      <button type="button" class="npp-cancel-v113" onclick="renderNppAdminV113()">취소</button>
+    </td>`;
+}
+function saveNppRowV113(findNo){
+  if(!isAdmin)return;
+  const rows=nppLoadV113();
+  const i=rows.findIndex(r=>String(r.findNo)===String(findNo));
+  if(i<0)return;
+  rows[i]={
+    ...rows[i],
+    location:(document.getElementById(`nppLocEditV113_${findNo}`)?.value||'').trim(),
+    status:(document.getElementById(`nppStatusEditV113_${findNo}`)?.value||'확인').trim(),
+    note:(document.getElementById(`nppNoteEditV113_${findNo}`)?.value||'').trim()
+  };
+  nppSaveAllV113(rows);
+  renderNppAdminV113();
+}
+
+/* 관리자 메인에 NPP 도면위치 관리 버튼만 추가 */
+function ensureNppAdminButtonV113(){
+  if(!isAdmin)return;
+  const home=document.getElementById('home');
+  if(!home||document.getElementById('nppAdminBtnV113'))return;
+  const quick=document.getElementById('adminQuickInOutV108');
+  const wrap=document.createElement('div');
+  wrap.id='nppAdminBtnV113';
+  wrap.style.cssText='width:min(1120px,calc(100% - 20px));margin:0 auto 12px;';
+  wrap.innerHTML=`<button type="button" onclick="openNppAdminV113()" style="width:100%;min-height:58px;border:1px solid #d8cef2;border-radius:14px;background:#f3efff;color:#6548b3;font-size:17px;font-weight:1000;cursor:pointer">📐 NPP 도면위치 관리 · 엑셀 정리 206건</button>`;
+  if(quick&&quick.parentNode)quick.insertAdjacentElement('afterend',wrap);
+  else home.insertAdjacentElement('afterbegin',wrap);
+}
+
+/* 작업자 NPP 도면검색: 숫자 총제품수량 대신 찾기 쉬운 검색기준 */
+function setupPublicNppSearchV113(){
+  const draw=document.getElementById('publicDrawingSearchV108');
+  const sel=document.getElementById('publicDrawingQtyV108');
+  const chips=document.getElementById('nppPublicChipsV113');
+  if(!draw||!sel)return;
+  const h=draw.querySelector('h2'); if(h)h.textContent='📐 NPP도면위치 검색';
+  const sub=draw.querySelector('.public-drawing-head-v108>div');
+  if(sub)sub.textContent='찾기번호 · 도면명 · 분류 · 보관위치로 바로 찾을 수 있습니다.';
+  sel.innerHTML=`
+    <option value="">검색기준 전체</option>
+    <option value="findNo">찾기번호</option>
+    <option value="name">도면·문서명</option>
+    <option value="location">보관위치</option>
+    <option value="category">분류</option>
+    <option value="status">확인상태</option>`;
+  if(chips&&!draw.contains(chips)){
+    const s=draw.querySelector('.public-drawing-search-v108');
+    if(s)s.insertAdjacentElement('afterend',chips);
+  }
+}
+function setNppPublicChipV113(v,btn){
+  const q=document.getElementById('publicDrawingQueryV108');
+  const sel=document.getElementById('publicDrawingQtyV108');
+  document.querySelectorAll('#nppPublicChipsV113 button').forEach(b=>b.classList.toggle('active',b===btn));
+  if(sel)sel.value='';
+  if(q)q.value=v;
+  runPublicDrawingSearchV108();
+}
+window.runPublicDrawingSearchV108=function(){
+  const qEl=document.getElementById('publicDrawingQueryV108');
+  const filterEl=document.getElementById('publicDrawingQtyV108');
+  const status=document.getElementById('publicDrawingStatusV108');
+  const out=document.getElementById('publicDrawingResultsV108');
+  if(!qEl||!status||!out)return;
+  const raw=(qEl.value||'').trim();
+  const q=raw.toLowerCase().replace(/\s+/g,'');
+  const field=filterEl?.value||'';
+  const rows=nppLoadV113();
+  const filtered=rows.filter(x=>{
+    if(!q)return true;
+    if(field)return String(x[field]||'').toLowerCase().replace(/\s+/g,'').includes(q);
+    return nppHayV113(x).includes(q);
+  }).slice(0,80);
+  status.textContent=`NPP 도면 검색결과 ${filtered.length}건${filtered.length===80?' (최대 80건 표시)':''}`;
+  out.innerHTML=filtered.length?filtered.map(x=>`
+    <div class="public-drawing-row-v108">
+      <div class="pdr-top-v108">
+        <div>
+          <div class="pdr-item-v108">${escV113(x.name||'도면명 미입력')}</div>
+          <div class="pdr-company-v108">찾기번호 ${escV113(x.findNo)} · ${escV113(x.key||'-')}</div>
+        </div>
+        <div class="pdr-qty-v108">${escV113(x.status||'')}</div>
+      </div>
+      <div class="pdr-loc-v108">📍 보관위치 · ${escV113(x.location||'미등록')}</div>
+      <div class="pdr-meta-v108">${escV113(x.category||'-')}${x.note?' · '+escV113(x.note):''}</div>
+    </div>`).join(''):'<div class="notice">일치하는 NPP도면위치가 없습니다.</div>';
+};
+
+/* 기존 관리자 메인 복구 후 버튼 표시 */
+const __forceAdminMainBeforeV113=window.forceAdminMainV109;
+if(typeof __forceAdminMainBeforeV113==='function'){
+  window.forceAdminMainV109=function(){
+    document.body.classList.remove('npp-admin-open-v113');
+    const r=__forceAdminMainBeforeV113.apply(this,arguments);
+    setTimeout(ensureNppAdminButtonV113,40);
+    return r;
+  };
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(setupPublicNppSearchV113,90);
+    setTimeout(()=>{if(isAdmin)ensureNppAdminButtonV113();},300);
+    const aq=document.getElementById('nppAdminQv113');
+    if(aq)aq.addEventListener('keydown',e=>{if(e.key==='Enter')renderNppAdminV113();});
+  },{once:true});
+}else{
+  setTimeout(setupPublicNppSearchV113,90);
+  setTimeout(()=>{if(isAdmin)ensureNppAdminButtonV113();},300);
+}
+</script>
 </body></html>
