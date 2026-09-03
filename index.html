@@ -13542,4 +13542,409 @@ if(document.readyState==='loading'){
   setTimeout(forceAdminMainV109,250);
 }
 </script>
+
+<style id="worker-search-main-v110-style">
+/* V110 작업자 메인 = 로그인 없는 검색 전용 화면 */
+body.worker-search-main-v110:not(.admin-view){
+  background:#f5f8f6!important;
+}
+body.worker-search-main-v110:not(.admin-view) main{
+  max-width:none!important;
+  width:100%!important;
+  padding:18px 0 46px!important;
+}
+body.worker-search-main-v110:not(.admin-view) .worker-auth,
+body.worker-search-main-v110:not(.admin-view) #workerLoginPanel,
+body.worker-search-main-v110:not(.admin-view) #workerLoginBtn,
+body.worker-search-main-v110:not(.admin-view) #workerBadge,
+body.worker-search-main-v110:not(.admin-view) #loginLogBtn,
+body.worker-search-main-v110:not(.admin-view) #notifBtn,
+body.worker-search-main-v110:not(.admin-view) #homeBtn,
+body.worker-search-main-v110:not(.admin-view) #topExcelExportBtn,
+body.worker-search-main-v110:not(.admin-view) #adminLoginBtn{
+  display:none!important;
+}
+
+/* 과거 로그인 잠금 효과 완전 제거 */
+body.worker-search-main-v110.worker-locked main > section,
+body.worker-search-main-v110.worker-locked main > .card,
+body.worker-search-main-v110.worker-locked .quick,
+body.worker-search-main-v110.worker-locked #work{
+  pointer-events:auto!important;
+  user-select:auto!important;
+  opacity:1!important;
+  filter:none!important;
+}
+body.worker-search-main-v110:not(.admin-view) .login-lock-guide{
+  display:block!important;
+  max-width:720px!important;
+  margin:16px auto 18px!important;
+  padding:14px 18px!important;
+  border-radius:14px!important;
+  border:1px solid #efd28b!important;
+  background:#fff8df!important;
+  color:#6d5000!important;
+  font-weight:1000!important;
+  text-align:center!important;
+}
+
+/* 공용동기화 안내 */
+body.worker-search-main-v110:not(.admin-view) #syncBar{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  margin:0 0 22px!important;
+  padding:12px 18px!important;
+  border-radius:0!important;
+  background:#fff0ed!important;
+  color:#b42318!important;
+  font-weight:1000!important;
+}
+#publicSyncRetryV110{
+  display:none;
+}
+body.worker-search-main-v110:not(.admin-view) #publicSyncRetryV110{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:0 13px;
+  border:1px solid #bfd8cc;
+  border-radius:9px;
+  background:#fff;
+  color:#167349;
+  font-weight:1000;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+/* 자재 위치 검색 */
+body.worker-search-main-v110:not(.admin-view) #work{
+  display:block!important;
+  width:min(1180px,calc(100% - 28px))!important;
+  margin:0 auto 22px!important;
+}
+body.worker-search-main-v110:not(.admin-view) #work>.card{
+  padding:26px 24px!important;
+  border:1px solid #dce9e2!important;
+  border-radius:22px!important;
+  background:#fff!important;
+  box-shadow:0 10px 28px rgba(26,79,55,.07)!important;
+}
+body.worker-search-main-v110:not(.admin-view) #work #title{
+  margin:0!important;
+  text-align:center!important;
+  color:#2d9a6b!important;
+  font-size:clamp(27px,3.8vw,36px)!important;
+  font-weight:1000!important;
+}
+body.worker-search-main-v110:not(.admin-view) #work #title::before{
+  content:"🔎 ";
+}
+body.worker-search-main-v110:not(.admin-view) #work #title::after{
+  content:"\A품번 또는 품명을 입력하면 보관 위치를 바로 확인할 수 있습니다.";
+  display:block;
+  white-space:pre;
+  margin-top:8px;
+  color:#84928b;
+  font-size:13px;
+  font-weight:800;
+}
+body.worker-search-main-v110:not(.admin-view) .division-search-row{
+  display:grid!important;
+  grid-template-columns:220px minmax(260px,1fr) 110px!important;
+  gap:10px!important;
+  margin-top:22px!important;
+}
+body.worker-search-main-v110:not(.admin-view) #divisionSearch,
+body.worker-search-main-v110:not(.admin-view) #q,
+body.worker-search-main-v110:not(.admin-view) #searchBtn{
+  min-height:56px!important;
+  border-radius:13px!important;
+  font-size:15px!important;
+}
+body.worker-search-main-v110:not(.admin-view) #searchBtn{
+  background:#43a875!important;
+  border-color:#43a875!important;
+  font-size:17px!important;
+  font-weight:1000!important;
+}
+
+/* 도면 위치 검색 */
+body.worker-search-main-v110:not(.admin-view) #publicDrawingSearchV108{
+  display:block!important;
+  width:min(1180px,calc(100% - 28px))!important;
+  margin:0 auto 22px!important;
+  padding:24px!important;
+  box-sizing:border-box!important;
+  border:1px solid #e5e0f3!important;
+  border-radius:22px!important;
+  background:#fff!important;
+  box-shadow:0 10px 28px rgba(75,62,135,.06)!important;
+}
+body.worker-search-main-v110:not(.admin-view) .public-drawing-head-v108 h2{
+  margin:0!important;
+  color:#7659cb!important;
+  font-size:clamp(26px,3.5vw,34px)!important;
+  font-weight:1000!important;
+}
+body.worker-search-main-v110:not(.admin-view) .public-drawing-head-v108>div{
+  margin-top:6px!important;
+  color:#8a8f9b!important;
+}
+body.worker-search-main-v110:not(.admin-view) .public-drawing-search-v108{
+  grid-template-columns:minmax(260px,1fr) 210px 115px!important;
+  gap:10px!important;
+  margin-top:18px!important;
+}
+body.worker-search-main-v110:not(.admin-view) .public-drawing-search-v108 input,
+body.worker-search-main-v110:not(.admin-view) .public-drawing-search-v108 select,
+body.worker-search-main-v110:not(.admin-view) .public-drawing-search-v108 button{
+  min-height:54px!important;
+  border-radius:12px!important;
+}
+body.worker-search-main-v110:not(.admin-view) .public-drawing-search-v108 button{
+  background:#7659cb!important;
+  border-color:#7659cb!important;
+  font-weight:1000!important;
+  font-size:16px!important;
+}
+#drawingQuickRangesV110{
+  display:none;
+}
+body.worker-search-main-v110:not(.admin-view) #drawingQuickRangesV110{
+  display:flex!important;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:12px;
+}
+#drawingQuickRangesV110 button{
+  min-height:40px;
+  padding:0 14px;
+  border:1px solid #bca9ec;
+  border-radius:9px;
+  background:#fbf9ff;
+  color:#6747b8;
+  font-weight:1000;
+  cursor:pointer;
+}
+#drawingQuickRangesV110 button.active{
+  background:#7659cb;
+  color:#fff;
+}
+
+/* 검색 전용 안내 */
+#workerSearchOnlyFooterV110{display:none}
+body.worker-search-main-v110:not(.admin-view) #workerSearchOnlyFooterV110{
+  display:block!important;
+  width:min(1180px,calc(100% - 28px));
+  margin:0 auto;
+  padding:14px 18px;
+  box-sizing:border-box;
+  border:1px solid #d4eadc;
+  border-radius:14px;
+  background:#eef8f2;
+  color:#438260;
+  text-align:center;
+  font-weight:900;
+}
+body.worker-search-main-v110:not(.admin-view) #workerSearchOnlyFooterV110 b{
+  color:#2e9260;
+  margin-right:6px;
+}
+
+@media(max-width:720px){
+  body.worker-search-main-v110:not(.admin-view) main{padding-top:10px!important}
+  body.worker-search-main-v110:not(.admin-view) .login-lock-guide{
+    width:calc(100% - 20px)!important;
+    box-sizing:border-box!important;
+    margin:8px auto 12px!important;
+    padding:11px 10px!important;
+    font-size:12px!important;
+  }
+  body.worker-search-main-v110:not(.admin-view) #syncBar{
+    flex-direction:column!important;
+    align-items:stretch!important;
+    padding:10px 12px!important;
+    font-size:12px!important;
+  }
+  body.worker-search-main-v110:not(.admin-view) #publicSyncRetryV110{width:100%}
+  body.worker-search-main-v110:not(.admin-view) #work,
+  body.worker-search-main-v110:not(.admin-view) #publicDrawingSearchV108,
+  body.worker-search-main-v110:not(.admin-view) #workerSearchOnlyFooterV110{
+    width:calc(100% - 14px)!important;
+  }
+  body.worker-search-main-v110:not(.admin-view) #work>.card,
+  body.worker-search-main-v110:not(.admin-view) #publicDrawingSearchV108{
+    padding:16px 12px!important;
+    border-radius:17px!important;
+  }
+  body.worker-search-main-v110:not(.admin-view) .division-search-row,
+  body.worker-search-main-v110:not(.admin-view) .public-drawing-search-v108{
+    grid-template-columns:1fr!important;
+  }
+}
+</style>
+
+<div id="drawingQuickRangesV110" aria-label="도면 수량 빠른검색">
+  <button type="button" onclick="setPublicDrawingRangeV110(1,10,this)">1~10번</button>
+  <button type="button" onclick="setPublicDrawingRangeV110(11,20,this)">11~20번</button>
+  <button type="button" onclick="setPublicDrawingRangeV110(21,30,this)">21~30번</button>
+  <button type="button" onclick="setPublicDrawingRangeV110(31,40,this)">31~40번</button>
+  <button type="button" onclick="setPublicDrawingRangeV110(41,50,this)">41~50번</button>
+  <button type="button" onclick="setPublicDrawingRangeV110(0,0,this)">전체</button>
+</div>
+
+<div id="workerSearchOnlyFooterV110">
+  ℹ️ <b>검색 전용 모드</b> 위치 확인 용도로 제공되며, 데이터 수정·등록 기능은 관리자 모드에서만 가능합니다.
+</div>
+
+<script id="worker-search-main-v110-script">
+let __publicDrawingRangeV110=null;
+
+function placeWorkerSearchExtrasV110(){
+  const draw=document.getElementById('publicDrawingSearchV108');
+  const ranges=document.getElementById('drawingQuickRangesV110');
+  const footer=document.getElementById('workerSearchOnlyFooterV110');
+  const sync=document.getElementById('syncBar');
+
+  if(draw&&ranges&&!draw.contains(ranges)){
+    const search=draw.querySelector('.public-drawing-search-v108');
+    if(search)search.insertAdjacentElement('afterend',ranges);
+  }
+  if(draw&&footer&&draw.nextElementSibling!==footer){
+    draw.insertAdjacentElement('afterend',footer);
+  }
+
+  if(sync&&!document.getElementById('publicSyncRetryV110')){
+    const b=document.createElement('button');
+    b.type='button';
+    b.id='publicSyncRetryV110';
+    b.textContent='↻ 동기화 재시도';
+    b.onclick=async()=>{
+      if(typeof manualSharedReconnectV106==='function'){
+        await manualSharedReconnectV106();
+      }else{
+        try{await initSharedDb();}catch(e){}
+      }
+    };
+    sync.appendChild(b);
+  }
+}
+
+function setPublicDrawingRangeV110(min,max,btn){
+  __publicDrawingRangeV110=min&&max?[min,max]:null;
+  const sel=document.getElementById('publicDrawingQtyV108');
+  if(sel)sel.value='';
+  document.querySelectorAll('#drawingQuickRangesV110 button').forEach(x=>x.classList.toggle('active',x===btn));
+  runPublicDrawingSearchV108();
+}
+
+/* 기존 도면검색의 정확수량 + V110 구간검색을 함께 지원 */
+const __oldRunPublicDrawingSearchV110=window.runPublicDrawingSearchV108;
+window.runPublicDrawingSearchV108=async function(){
+  if(!__publicDrawingRangeV110){
+    return __oldRunPublicDrawingSearchV110.apply(this,arguments);
+  }
+
+  const qEl=document.getElementById('publicDrawingQueryV108');
+  const status=document.getElementById('publicDrawingStatusV108');
+  const out=document.getElementById('publicDrawingResultsV108');
+  if(!qEl||!status||!out)return;
+
+  const raw=(qEl.value||'').trim();
+  const q=raw.toLowerCase().replace(/\s+/g,'');
+  const rows=await getPublicDrawingRowsV108();
+  const [min,max]=__publicDrawingRangeV110;
+
+  const filtered=rows.filter(x=>{
+    const n=Number(x.qty||0);
+    if(n<min||n>max)return false;
+    if(!q)return true;
+    const hay=[
+      x.company,x.item,x.process,x.location,x.note,x.date,
+      x.receiveOption,x.receiveNote,x.sendOption,x.sendNote
+    ].map(v=>String(v||'').toLowerCase().replace(/\s+/g,'')).join('|');
+    return hay.includes(q);
+  }).slice(0,50);
+
+  status.textContent=`도면 검색결과 ${filtered.length}건 · ${min}~${max}번`;
+  out.innerHTML=filtered.length?filtered.map(x=>`
+    <div class="public-drawing-row-v108">
+      <div class="pdr-top-v108">
+        <div>
+          <div class="pdr-item-v108">${esc(x.item||'품명 미입력')}</div>
+          <div class="pdr-company-v108">${esc(x.company||'-')}</div>
+        </div>
+        <div class="pdr-qty-v108">총제품수량 ${Number(x.qty||0)?Number(x.qty)+'번':'-'}</div>
+      </div>
+      <div class="pdr-loc-v108">📍 보관번호 · ${esc(x.location||'미등록')}</div>
+      <div class="pdr-meta-v108">공정 ${esc(x.process||'-')} · 날짜 ${esc(x.date||'-')}</div>
+    </div>`).join(''):'<div class="notice">일치하는 도면 위치가 없습니다.</div>';
+};
+
+/* 일반 작업자 흐름에서 로그인 UI를 완전히 사용하지 않음 */
+function activateWorkerSearchMainV110(){
+  if(isAdmin||document.body.classList.contains('admin-view'))return;
+
+  currentWorker={id:'public_search_v110',name:'작업자 검색'};
+  document.body.classList.remove('worker-locked');
+  document.body.classList.add(
+    'worker-location-only-v104',
+    'worker-search-only-v101',
+    'worker-search-main-v110'
+  );
+
+  const guide=document.querySelector('.login-lock-guide');
+  if(guide)guide.innerHTML='🔓 작업자 로그인 없이 <b>자재 위치 검색 · 도면 위치 검색</b>을 바로 사용할 수 있습니다.';
+
+  const wp=document.getElementById('workerLoginPanel');
+  if(wp)wp.style.setProperty('display','none','important');
+
+  try{
+    const work=document.getElementById('work');
+    const home=document.getElementById('home');
+    if(home)home.classList.add('hidden');
+    if(work){
+      work.classList.remove('hidden');
+      work.style.removeProperty('display');
+    }
+    const title=document.getElementById('title');
+    if(title)title.textContent='자재 위치 검색';
+  }catch(e){}
+
+  placeWorkerSearchExtrasV110();
+}
+
+/* 관리자 진입 시 작업자 검색전용 스타일 해제 */
+const __oldOpenAdminEntryV110=window.openAdminEntryV105;
+if(typeof __oldOpenAdminEntryV110==='function'){
+  window.openAdminEntryV105=function(){
+    document.body.classList.remove('worker-search-main-v110');
+    return __oldOpenAdminEntryV110.apply(this,arguments);
+  };
+}
+
+/* 관리자 메인 복구 시에도 작업자 스타일 완전 제거 */
+const __oldForceAdminMainV110=window.forceAdminMainV109;
+if(typeof __oldForceAdminMainV110==='function'){
+  window.forceAdminMainV109=function(){
+    document.body.classList.remove('worker-search-main-v110');
+    return __oldForceAdminMainV110.apply(this,arguments);
+  };
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(activateWorkerSearchMainV110,60);
+    setTimeout(placeWorkerSearchExtrasV110,200);
+  },{once:true});
+}else{
+  setTimeout(activateWorkerSearchMainV110,60);
+  setTimeout(placeWorkerSearchExtrasV110,200);
+}
+</script>
 </body></html>
