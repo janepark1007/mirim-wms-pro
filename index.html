@@ -3525,6 +3525,13 @@ async function workerLogin(){
  if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
 
  try{
+   // Supabase 무료 플랜 제한으로 공용 DB가 막힌 상태에서는
+   // 박향숙 계정은 서버 RPC를 호출하지 않고 즉시 비상 로그인.
+   if((!sharedReady || !sharedDb) && name==='박향숙' && pin==='0307'){
+     finishWorkerLoginV91({id:'offline_park_v94',name:'박향숙'},true);
+     return;
+   }
+
    const loginDb=await getWorkerLoginDbV91();
 
    if(loginDb && typeof loginDb.rpc==='function'){
@@ -3565,7 +3572,7 @@ async function workerLogin(){
        // DB 자체가 끊긴 경우에만 박향숙 계정의 기존 지정 비밀번호로 비상 로그인.
        // 비밀번호가 틀린 DB 응답은 아래 fallback으로 우회하지 않음.
        const msg=String(dbErr?.message||dbErr||'');
-       const looksConnectionError=/fetch|network|failed|connection|offline|timeout|load|rpc|null|supabase/i.test(msg);
+       const looksConnectionError=/fetch|network|failed|connection|offline|timeout|load|rpc|null|supabase|restricted|quota|egress|upgrade|spend\s*cap|service for this project/i.test(msg);
        if(!looksConnectionError){
          return alert('로그인 실패: '+msg);
        }
@@ -3574,7 +3581,7 @@ async function workerLogin(){
 
    // 현재 실제 사용 중인 박향숙 계정은 PC/모바일 DB 장애 시에도 업무 진입 가능
    if(name==='박향숙' && pin==='0307'){
-     finishWorkerLoginV91({id:'offline_park_v91',name:'박향숙'},true);
+     finishWorkerLoginV91({id:'offline_park_v94',name:'박향숙'},true);
      return;
    }
 
