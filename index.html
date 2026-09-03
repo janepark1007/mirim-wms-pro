@@ -2405,7 +2405,7 @@ async function submitStandaloneOrder(){
 }
 
 function openMode(m){
- if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
+ if(!currentWorker&&!isAdmin&&m!=='location'){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
  if(m==='order'){openStandaloneOrder();return;}
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
@@ -2675,7 +2675,30 @@ function getAllLocations(part){
    if(Array.isArray(arr)&&arr.length)return arr;
  }catch(e){}
  const one=getLocEdit(part);
- return one?[{...one,id:null,is_primary:true}]:[];
+ if(one)return [{...one,id:null,is_primary:true}];
+
+ // DB가 끊겨도 1번 파일에 내장된 ERP/창고 위치를 검색에 사용
+ const item=(ITEMS||[]).find(x=>String(x.part)===p);
+ if(item){
+   const hasLoc=[item.room,item.zone,item.level,item.height,item.storage,item.detail,item.location]
+     .some(v=>String(v||'').trim());
+   if(hasLoc){
+     return [{
+       id:null,
+       part_no:p,
+       room:item.room||'',
+       zone:item.zone||'',
+       level:item.level||'',
+       height:item.height||'',
+       storage:item.storage||'',
+       detail:item.detail||'',
+       qty:0,
+       is_primary:true,
+       __offline_embedded:true
+     }];
+   }
+ }
+ return [];
 }
 function warehouseFloorTotals(part){
  const locations=getAllLocations(part);
@@ -3821,7 +3844,7 @@ async function initSharedDb(){
 
  if(!url||!key){
    sharedReady=false;
-   if(status) status.textContent='⚠️ 공용 동기화 설정 확인 필요';
+   if(status) status.textContent='⚠️ 공용 DB 설정 확인 필요 · 창고검색은 사용 가능';
    console.error('Supabase config missing', {hasUrl:!!url,hasKey:!!key});
    updateHomeSummary();
    return;
@@ -3875,7 +3898,7 @@ async function initSharedDb(){
    console.error('Supabase init failed',e);
    sharedReady=false;
    sharedDb=null;
-   if(status){status.textContent='⚠️ 공용 동기화 실패';status.style.background='#fff0ed';status.style.color='#b42318';}
+   if(status){status.textContent='⚠️ 공용 DB 미연결 · 창고검색은 사용 가능';status.style.background='#fff4d6';status.style.color='#725600';}
    updateHomeSummary();
  }
 }
@@ -5158,7 +5181,7 @@ async function shareOrderRequest(x,i){
  }
 }
 function search(){
- if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
+ if(!currentWorker&&!isAdmin&&mode!=='location'){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
  try{
 
  const rawQ=($('q').value||'').trim();
@@ -15512,4 +15535,24 @@ window.addEventListener('load',()=>{
 });
 document.addEventListener('click',()=>setTimeout(ensureDrawingIndexV90,120),true);
 </script>
+
+<style id="offline-location-search-v91">
+body.worker-locked [data-mode="location"]{
+  pointer-events:auto!important;
+  opacity:1!important;
+  filter:none!important;
+  position:relative!important;
+  z-index:80!important;
+}
+</style>
+<script id="offline-location-search-v91-js">
+window.addEventListener('load',()=>{
+  try{
+    document.querySelectorAll('[data-mode="location"]').forEach(btn=>{
+      btn.title='DB 연결이 없어도 품번·품명·내장 위치 검색 가능';
+    });
+  }catch(e){}
+});
+</script>
+
 </body></html>
