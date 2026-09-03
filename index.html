@@ -3524,13 +3524,14 @@ async function workerLogin(){
  if(!name) return alert('이름을 입력하세요.');
  if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
 
+ // 박향숙 기존 작업자 계정은 공용 DB 상태와 무관하게 0307로 즉시 로그인.
+ // Supabase quota/restricted 상태에서도 PC·모바일 모두 업무 진입 가능.
+ if(name==='박향숙' && pin==='0307'){
+   finishWorkerLoginV91({id:'offline_park_v96',name:'박향숙'},!sharedReady||!sharedDb);
+   return;
+ }
+
  try{
-   // Supabase 무료 플랜 제한으로 공용 DB가 막힌 상태에서는
-   // 박향숙 계정은 서버 RPC를 호출하지 않고 즉시 비상 로그인.
-   if((!sharedReady || !sharedDb) && name==='박향숙' && pin==='0307'){
-     finishWorkerLoginV91({id:'offline_park_v94',name:'박향숙'},true);
-     return;
-   }
 
    const loginDb=await getWorkerLoginDbV91();
 
@@ -3581,7 +3582,7 @@ async function workerLogin(){
 
    // 현재 실제 사용 중인 박향숙 계정은 PC/모바일 DB 장애 시에도 업무 진입 가능
    if(name==='박향숙' && pin==='0307'){
-     finishWorkerLoginV91({id:'offline_park_v94',name:'박향숙'},true);
+     finishWorkerLoginV91({id:'offline_park_v96',name:'박향숙'},true);
      return;
    }
 
