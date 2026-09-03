@@ -12424,6 +12424,14 @@ body:not(.admin-view) #drawingCompanySearchV88{display:block!important}
     </div>
     <input id="drawingSearchV79" class="drawing-v79-search" placeholder="업체명 · 품명 · 총제품수량 · 보관번호 · 공정 검색" oninput="renderDrawingLocationV79()">
 
+  <div id="drawingQuickQtyV100" style="max-width:1100px;margin:10px auto 12px">
+    <div style="font-weight:900;margin-bottom:8px">🔎 찾기쉬운 검색</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+      <button type="button" class="secondary" onclick="setDrawingQuickQtyV100('')">전체</button>
+      ${Array.from({length:50},(_,i)=>`<button type="button" class="secondary" onclick="setDrawingQuickQtyV100('${i+1}')">${i+1}</button>`).join('')}
+    </div>
+  </div>
+
   <div class="drawing-v79-table-wrap">
     <table class="drawing-v79-table">
       <thead>
@@ -12478,6 +12486,11 @@ async function loadDrawingLocationV79(){
     }catch(e){console.warn('도면 위치 공용 조회 실패',e);}
   }
   drawingRowsV79=drawingLocalGetV79();
+  renderDrawingLocationV79();
+}
+function setDrawingQuickQtyV100(v){
+  const sel=document.getElementById('drawingQtySearchV95');
+  if(sel)sel.value=String(v||'');
   renderDrawingLocationV79();
 }
 function renderDrawingLocationV79(){
