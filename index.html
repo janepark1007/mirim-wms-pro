@@ -12894,4 +12894,44 @@ function workerSearchOnlyGuardV101(action){
   }
 })();
 </script>
+
+<script id="worker-remove-three-buttons-v103">
+(function(){
+  const TARGETS=['주문요청-입고','주문요청·입고','나중에 확인','ERP 미등록 자재'];
+
+  function removeWorkerThreeV103(){
+    if(document.body.classList.contains('admin-view')) return;
+
+    const areas=[
+      document.getElementById('workerMainShortcutCard'),
+      document.getElementById('mobileWorkerCoreV2')
+    ].filter(Boolean);
+
+    areas.forEach(area=>{
+      [...area.querySelectorAll('button')].forEach(btn=>{
+        const txt=(btn.innerText||btn.textContent||'').replace(/\s+/g,' ').trim();
+        const remove =
+          (txt.includes('주문요청') && txt.includes('입고')) ||
+          txt.includes('나중에 확인') ||
+          txt.includes('ERP 미등록 자재');
+        if(remove) btn.remove();
+      });
+    });
+  }
+
+  window.removeWorkerThreeV103=removeWorkerThreeV103;
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>{
+      removeWorkerThreeV103();
+      setTimeout(removeWorkerThreeV103,300);
+      setTimeout(removeWorkerThreeV103,1200);
+    },{once:true});
+  }else{
+    removeWorkerThreeV103();
+    setTimeout(removeWorkerThreeV103,300);
+    setTimeout(removeWorkerThreeV103,1200);
+  }
+})();
+</script>
 </body></html>
