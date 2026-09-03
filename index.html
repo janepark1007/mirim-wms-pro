@@ -12494,6 +12494,14 @@ function clearDrawingFormV79(){
   const ccw=document.getElementById('drawingCompanyCustomWrapV85'); if(ccw)ccw.style.display='none';
 }
 async function loadDrawingLocationV79(){
+  // V112: 관리자 도면 데이터 보호.
+  // 먼저 기존 로컬 도면자료를 즉시 표시하고, 공용DB에서 실제 자료가 들어왔을 때만 교체한다.
+  const localRows=drawingLocalGetV79();
+  if(localRows.length){
+    drawingRowsV79=localRows;
+    renderDrawingLocationV79();
+  }
+
   if(sharedReady&&sharedDb){
     try{
       const {data,error}=await sharedDb.from('wms_admin_notifications')
@@ -12501,18 +12509,29 @@ async function loadDrawingLocationV79(){
         .eq('type',DRAWING_LOCATION_TYPE_V79)
         .order('created_at',{ascending:false});
       if(error)throw error;
-      drawingRowsV79=(data||[]).map(r=>({
+
+      const sharedRows=(data||[]).map(r=>({
         shared_id:r.id,
         id:String(r.id),
         ...(r.payload||{}),
         created_at:r.created_at
       }));
-      drawingLocalSetV79(drawingRowsV79);
+
+      // 공용DB가 제한/불안정한 동안 빈 응답으로 기존 도면 데이터를 지우지 않는다.
+      if(sharedRows.length){
+        drawingRowsV79=sharedRows;
+        drawingLocalSetV79(sharedRows);
+      }else if(!localRows.length){
+        drawingRowsV79=[];
+      }
       renderDrawingLocationV79();
       return;
-    }catch(e){console.warn('도면 위치 공용 조회 실패',e);}
+    }catch(e){
+      console.warn('도면 위치 공용 조회 실패 - 기존 로컬 도면자료 유지',e);
+    }
   }
-  drawingRowsV79=drawingLocalGetV79();
+
+  drawingRowsV79=localRows;
   renderDrawingLocationV79();
 }
 function setDrawingQuickQtyV100(v){
@@ -12554,6 +12573,14 @@ function renderDrawingLocationV79(){
 }
 async function openDrawingLocationV79(){
   if(!isAdmin&&!currentWorker)return alert('로그인 후 확인할 수 있습니다.');
+  // V112: 관리자 도면화면 진입 즉시 기존 저장 데이터 표시
+  try{
+    const localRowsV112=drawingLocalGetV79();
+    if(localRowsV112.length){
+      drawingRowsV79=localRowsV112;
+      renderDrawingLocationV79();
+    }
+  }catch(e){}
   document.body.classList.add('drawing-location-open-v79');
   if(isAdmin){
     document.body.classList.remove('admin-reference-home','admin-shortcut-focus','admin-task-focus','other-storage-open-v50');
