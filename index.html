@@ -1736,7 +1736,7 @@ body.park-location-worker-v63 .erp-only{
     <div class="admin-shortcuts">
       <button onclick="document.getElementById('recordLookupAdminCard')?.scrollIntoView({behavior:'smooth'})">📄<span>기록 불러오기</span></button>
       <button onclick="document.getElementById('locationOrganizerCard')?.scrollIntoView({behavior:'smooth'});loadLocationOrganizer()">🧹<span>위치 정리</span></button>
-      <button onclick="document.getElementById('nasExcelAdminCard')?.scrollIntoView({behavior:'smooth'})">📊<span>NAS 엑셀 연동</span></button>
+      
       <button onclick="openAdminUsersV73()">👥<span>사용자 관리</span></button>
       <button onclick="document.getElementById('notifBtn')?.click()">🔔<span>알림 확인</span></button>
     </div>
@@ -8323,8 +8323,8 @@ function ensureAdminWelcomeShortcuts(){
     <div class="admin-welcome-shortcut-grid">
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>위치 정리</span></button>
-      <button class="admin-welcome-shortcut-btn" onclick="openLocationRegistrationV59()"><span class="ico">📍</span><span>위치 등록</span><small>미등록 품목 위치 입력</small></button>
-      <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
+      
+      
       <button class="admin-welcome-shortcut-btn" onclick="openAdminUsersV73()"><span class="ico">👥</span><span>사용자 관리</span></button>
       <button class="admin-welcome-shortcut-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
       <button class="admin-welcome-shortcut-btn admin-io-stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span><small>입고·출고·차이수량·위치·빈도</small></button>
@@ -9323,8 +9323,8 @@ function ensureAdminReferenceHome(){
         <button class="ar-btn" onclick="openExistingAdminSection('records')"><span class="ico">📄</span><span>기록 불러오기</span></button>
         <button class="ar-btn ar-location-check-v66" onclick="openAdminLocationCheckV66()"><span class="ico">🔎</span><span>위치 확인</span><small>검색 후 바로 위치 수정·등록</small></button>
 <button class="ar-btn" onclick="openAdminShortcutListV41('location')"><span class="ico">🧹</span><span>기존 위치 정리·수정</span></button>
-<button class="ar-btn ar-location-register-v59" onclick="openLocationRegistrationV59()"><span class="ico">📍</span><span>위치 등록</span><small>위치 미등록 품목 등록</small></button>
-        <button class="ar-btn" onclick="openExistingAdminSection('nas')"><span class="ico">📊</span><span>NAS 엑셀 연동</span></button>
+
+        
         <button class="ar-btn" onclick="openAdminUsersV73()"><span class="ico">👥</span><span>사용자 관리</span></button>
         <button class="ar-btn" onclick="openExistingAdminSection('alerts')"><span class="ico">🔔</span><span>알림 확인</span></button>
         <button class="ar-btn stat" onclick="openAdminInOutStatisticsV39()"><span class="ico">📊</span><span>입출고 통계</span></button>
