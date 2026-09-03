@@ -2405,7 +2405,7 @@ async function submitStandaloneOrder(){
 }
 
 function openMode(m){
- if(!currentWorker&&!isAdmin&&m!=='location'){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
+ if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
  if(m==='order'){openStandaloneOrder();return;}
  mode=m;$('home').classList.add('hidden');$('photoSearchPanel')?.classList.add('hidden');$('work').classList.remove('hidden');$('title').textContent=m==='inbound'?'빠른 입고':(m==='outbound'?'빠른 출고':(m==='return'?'반환 등록':(m==='location'?'위치 확인':'품목 검색')));$('q').value='';$('results').innerHTML='';$('count').textContent='';setTimeout(()=>$('q').focus(),50)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
@@ -2675,30 +2675,7 @@ function getAllLocations(part){
    if(Array.isArray(arr)&&arr.length)return arr;
  }catch(e){}
  const one=getLocEdit(part);
- if(one)return [{...one,id:null,is_primary:true}];
-
- // DB가 끊겨도 1번 파일에 내장된 ERP/창고 위치를 검색에 사용
- const item=(ITEMS||[]).find(x=>String(x.part)===p);
- if(item){
-   const hasLoc=[item.room,item.zone,item.level,item.height,item.storage,item.detail,item.location]
-     .some(v=>String(v||'').trim());
-   if(hasLoc){
-     return [{
-       id:null,
-       part_no:p,
-       room:item.room||'',
-       zone:item.zone||'',
-       level:item.level||'',
-       height:item.height||'',
-       storage:item.storage||'',
-       detail:item.detail||'',
-       qty:0,
-       is_primary:true,
-       __offline_embedded:true
-     }];
-   }
- }
- return [];
+ return one?[{...one,id:null,is_primary:true}]:[];
 }
 function warehouseFloorTotals(part){
  const locations=getAllLocations(part);
@@ -3495,7 +3472,7 @@ async function workerLogin(){
  const pin=($('workerPinInput')?.value||'').trim();
  if(!name) return alert('이름을 입력하세요.');
  if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
- if(!sharedReady||!sharedDb) return alert('공용 동기화 연결 후 로그인할 수 있습니다.');
+
 
  try{
    const device=(navigator.userAgent||'').slice(0,180);
@@ -3844,7 +3821,7 @@ async function initSharedDb(){
 
  if(!url||!key){
    sharedReady=false;
-   if(status) status.textContent='⚠️ 공용 DB 설정 확인 필요 · 창고검색은 사용 가능';
+   if(status) status.textContent='⚠️ 공용 동기화 설정 확인 필요';
    console.error('Supabase config missing', {hasUrl:!!url,hasKey:!!key});
    updateHomeSummary();
    return;
@@ -3898,7 +3875,7 @@ async function initSharedDb(){
    console.error('Supabase init failed',e);
    sharedReady=false;
    sharedDb=null;
-   if(status){status.textContent='⚠️ 공용 DB 미연결 · 창고검색은 사용 가능';status.style.background='#fff4d6';status.style.color='#725600';}
+   if(status){status.textContent='⚠️ 공용 동기화 실패';status.style.background='#fff0ed';status.style.color='#b42318';}
    updateHomeSummary();
  }
 }
@@ -5181,7 +5158,7 @@ async function shareOrderRequest(x,i){
  }
 }
 function search(){
- if(!currentWorker&&!isAdmin&&mode!=='location'){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
+ if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
  try{
 
  const rawQ=($('q').value||'').trim();
@@ -15327,232 +15304,4 @@ function addDrawingShortcutsV79(){
 window.addEventListener('load',()=>setTimeout(addDrawingShortcutsV79,1200));
 document.addEventListener('click',()=>setTimeout(addDrawingShortcutsV79,100),true);
 </script>
-
-<style id="drawing-index-v90-style">
-#drawingIndexV90{margin:12px 0 16px;padding:14px;border:2px solid #cfe5d8;border-radius:16px;background:#f8fcfa}
-.dix-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.dix-head h3{margin:0;font-size:19px}
-.dix-sync{font-size:12px;font-weight:900;padding:6px 9px;border-radius:9px;background:#fff4d6;color:#725600}
-.dix-search{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
-.dix-search input{min-height:48px}
-.dix-search button{min-height:48px}
-.dix-groups{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
-.dix-groups button{min-height:36px;border:1px solid #cfe0d6;background:#fff;border-radius:9px;padding:0 10px;font-weight:900}
-.dix-groups button.active{background:#087a43;color:#fff;border-color:#087a43}
-.dix-list{display:grid;gap:7px;max-height:480px;overflow:auto}
-.dix-row{display:grid;grid-template-columns:64px minmax(200px,1fr) 120px 120px auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid #dde7e1;border-radius:10px;background:#fff}
-.dix-no{font-weight:1000;color:#087a43}
-.dix-name{font-weight:1000;word-break:break-word}
-.dix-loc{font-weight:900;color:#245d93}
-.dix-cat{font-size:12px;color:#617068}
-.dix-row button{min-height:36px;border:1px solid #cfe0d6;background:#eef8f2;color:#075f35;border-radius:8px;font-weight:900;padding:0 10px}
-.dix-warn{color:#b42318;font-weight:900}
-@media(max-width:760px){
- .dix-search{grid-template-columns:1fr}
- .dix-row{grid-template-columns:58px minmax(0,1fr) 90px}
- .dix-cat{grid-column:2/4}
- .dix-row button{grid-column:1/4;width:100%}
-}
-</style>
-
-<script id="drawing-index-v90-script">
-const DRAWING_INDEX_TYPE_V90='DRAWING_INDEX_V90';
-const DRAWING_INDEX_LOCAL_KEY_V90='mirim_drawing_index_v90';
-const DRAWING_INDEX_DATA_V90=[{"find_no": "001", "number_group": "1로 시작", "first_number_block": "01", "drawing_document_name": "NFG-01KNV-S04", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "002", "number_group": "1로 시작", "first_number_block": "01", "drawing_document_name": "NFG-01KNV-S12(072604)", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "003", "number_group": "1로 시작", "first_number_block": "1", "drawing_document_name": "인베니아 FILTER FAN1,2배선 (NPF-20KH)", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "004", "number_group": "1로 시작", "first_number_block": "10", "drawing_document_name": "NDS-C10ZA-E01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "005", "number_group": "1로 시작", "first_number_block": "10", "drawing_document_name": "NPG-10KM-A", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "006", "number_group": "1로 시작", "first_number_block": "10", "drawing_document_name": "NPG-10KM-SA(034082)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "007", "number_group": "1로 시작", "first_number_block": "10", "drawing_document_name": "NPM-10KM", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "008", "number_group": "1로 시작", "first_number_block": "10", "drawing_document_name": "NVG-10KM-A01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "009", "number_group": "1로 시작", "first_number_block": "10", "drawing_document_name": "NVG-10KM-S01(039539)", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "010", "number_group": "1로 시작", "first_number_block": "10", "drawing_document_name": "NVG-10KM-W01(058636)", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "011", "number_group": "1로 시작", "first_number_block": "12", "drawing_document_name": "NPG-12KM", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "012", "number_group": "1로 시작", "first_number_block": "12", "drawing_document_name": "NPG-12KM-ASH", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "013", "number_group": "1로 시작", "first_number_block": "12", "drawing_document_name": "NPG-12KMA-H01(073645)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "014", "number_group": "1로 시작", "first_number_block": "15", "drawing_document_name": "15KM NVG-S01 / NPG-배선", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인 필요", "note": "사진 라벨"}, {"find_no": "015", "number_group": "1로 시작", "first_number_block": "15", "drawing_document_name": "NAS-15MXX-C01", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "016", "number_group": "1로 시작", "first_number_block": "15", "drawing_document_name": "NFG-15PFV-S02", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "017", "number_group": "1로 시작", "first_number_block": "15", "drawing_document_name": "NPG-15KM CE(210907)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "018", "number_group": "1로 시작", "first_number_block": "15", "drawing_document_name": "NVG-15(20)KM-S01", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "019", "number_group": "1로 시작", "first_number_block": "15", "drawing_document_name": "NVG-15KM-S01", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "020", "number_group": "1로 시작", "first_number_block": "15", "drawing_document_name": "NVS-15MXX-C01(075381)", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "021", "number_group": "1로 시작", "first_number_block": "16", "drawing_document_name": "16L급 일체형(056947)", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "022", "number_group": "1로 시작", "first_number_block": "18", "drawing_document_name": "NPG-18KM", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "023", "number_group": "1로 시작", "first_number_block": "18", "drawing_document_name": "NPG-18KM-A01", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "024", "number_group": "1로 시작", "first_number_block": "18", "drawing_document_name": "NVG-18KMi-A01(049924)", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "025", "number_group": "1로 시작", "first_number_block": "18", "drawing_document_name": "NVG-18KMW01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "026", "number_group": "1로 시작", "first_number_block": "100", "drawing_document_name": "NPRLC-100", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "027", "number_group": "1로 시작", "first_number_block": "100", "drawing_document_name": "NXG-100LV-A01(059425)", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "028", "number_group": "1로 시작", "first_number_block": "1007", "drawing_document_name": "NVR-1007L-S02", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "029", "number_group": "1로 시작", "first_number_block": "1007", "drawing_document_name": "NVR-1007X-S02", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "030", "number_group": "1로 시작", "first_number_block": "1007", "drawing_document_name": "NVR-1007X-W01(058637)", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "031", "number_group": "1로 시작", "first_number_block": "1008", "drawing_document_name": "NVA-1008L-M01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인 필요", "note": "바인더 5 상단 손글씨"}, {"find_no": "032", "number_group": "1로 시작", "first_number_block": "1008", "drawing_document_name": "NVA-1008X-W21", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "033", "number_group": "1로 시작", "first_number_block": "1008", "drawing_document_name": "NVA-1008Z-K01(065252)", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "034", "number_group": "1로 시작", "first_number_block": "1103", "drawing_document_name": "NNA-1103X-W01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "035", "number_group": "1로 시작", "first_number_block": "1512", "drawing_document_name": "NVR-1512Y-S02(047264)", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "036", "number_group": "1로 시작", "first_number_block": "1515", "drawing_document_name": "NNA-1515L-A01(063421)", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "037", "number_group": "1로 시작", "first_number_block": "1515", "drawing_document_name": "NNA-1515L-A05(067251)", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "038", "number_group": "1로 시작", "first_number_block": "1515", "drawing_document_name": "NNA-1515L-A11", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "039", "number_group": "1로 시작", "first_number_block": "1515", "drawing_document_name": "NNA-1515L-A11~A12", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인 필요", "note": "사진 라벨"}, {"find_no": "040", "number_group": "1로 시작", "first_number_block": "1515", "drawing_document_name": "NPA-1515L-A12", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "041", "number_group": "1로 시작", "first_number_block": "1516", "drawing_document_name": "NVA-1516X-M01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "042", "number_group": "1로 시작", "first_number_block": "1516", "drawing_document_name": "NVA-1516X-S01(W01)", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "043", "number_group": "1로 시작", "first_number_block": "1824", "drawing_document_name": "NVR-1824X-T01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "044", "number_group": "1로 시작", "first_number_block": "1824", "drawing_document_name": "NVR-1824X-W01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "045", "number_group": "1로 시작", "first_number_block": "1824", "drawing_document_name": "NVR-1824X-W02(060452)", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "046", "number_group": "1로 시작", "first_number_block": "1824", "drawing_document_name": "NVR-1824X-W03(E-Cat)", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인 필요", "note": "바인더 5 상단 손글씨"}, {"find_no": "047", "number_group": "1로 시작", "first_number_block": "1824", "drawing_document_name": "NVR-1824Y-T01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "048", "number_group": "1로 시작", "first_number_block": "1824", "drawing_document_name": "NVR-1824Z-D01(059826)", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "049", "number_group": "2로 시작", "first_number_block": "2", "drawing_document_name": "인더페이스 2종", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "050", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "20EX-F 13.56MHz (050287)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "051", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "20KM-A01-M-MAIN(060939)", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "052", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NFG-20KFS-P01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "053", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NMS-20KAX-A4A", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "054", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NPF-20KH (HKC) (053893)", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "055", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NPG-20(22)KM-F", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "056", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NPG-20(24)KM-A01 (035338)", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "057", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NPG-20KM-F01", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "058", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSH-20AXI(20DXI)-A2C", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "059", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXA-A4A", "storage_location": "1, 2", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "060", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXB-E3A", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "061", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXI-A2B", "storage_location": "1, 2", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "062", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXJ-APA", "storage_location": "1, 2", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "063", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXR-XXA", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "064", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXR-XXA(미정)", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "065", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXV-P9A", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "066", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXW-B7A", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "067", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXW-BKA(BOE B11)", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "068", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXW-C5A", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "069", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXW-HKA(원익8.5G)", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "070", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20AXW-T9A", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "071", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20DXV-P9A", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "072", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20DXW-BKA", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "073", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20DXW-C5A", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "074", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20DXW-HKA(원익8.5G)", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "075", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20DXW-T9A", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "076", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "NSM-20FXF-XXA", "storage_location": "1, 2", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "077", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20CX ICD-A3용(032503)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "078", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20CX ICD5.5G-A2용(040449)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "079", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20CX IPS-5G(35287)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "080", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20CX IPS-FIC용(035521)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "081", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20CX IPS5.5G-A2용(040638)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "082", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20CX IPS 6G OLED용(035345)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "083", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20EX ICD5.5G-A2용(040353)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "084", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20EX IPS-5G(35288)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "085", "number_group": "2로 시작", "first_number_block": "20", "drawing_document_name": "SHERPA20EX IPS 6G OLED용(035346)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "086", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NDS-C22ZA-H01(외부배선)", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "087", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NDS-C22ZA-M01(내부배선)", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "088", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NDS-R22ZA-H01(063679)", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "089", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NDS-R22ZA-H03(077348)", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "090", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NDS-R22ZA-J02", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "091", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NDS-R22ZA-J02 / H01 / H03 / J03", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인 필요", "note": "사진 라벨"}, {"find_no": "092", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NPG-22KM-A01(057305)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "093", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NPG-22KM-D01(059315)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "094", "number_group": "2로 시작", "first_number_block": "22", "drawing_document_name": "NPG-22KM-F02(072394)", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "095", "number_group": "2로 시작", "first_number_block": "25", "drawing_document_name": "컴퓨터배선 (25P-3.56M)", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "096", "number_group": "2로 시작", "first_number_block": "2036", "drawing_document_name": "NVR-2036X-D01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "097", "number_group": "2로 시작", "first_number_block": "2245", "drawing_document_name": "NPR-2245X-D01(059314)", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "098", "number_group": "2로 시작", "first_number_block": "2445", "drawing_document_name": "NVR-2445X-D01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "099", "number_group": "2로 시작", "first_number_block": "2445", "drawing_document_name": "NVR-2445Z-D01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "100", "number_group": "3로 시작", "first_number_block": "03", "drawing_document_name": "NFG-03KAV-S01", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "101", "number_group": "3로 시작", "first_number_block": "03", "drawing_document_name": "NSM-03ANW-XXA", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "102", "number_group": "3로 시작", "first_number_block": "03", "drawing_document_name": "NSM-03ANW-XXA(066228)", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "103", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NFG-30KAS-C02", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "104", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NFG-30KDS-D05", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "105", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NMJ-30KXC-UXA", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "106", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AK2-U01", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "107", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXA-A4A", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "108", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXA-A4B", "storage_location": "1", "category": "SHERPA (1)", "check_status": "확인", "note": ""}, {"find_no": "109", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXA-ITA(횡전개용)", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "110", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXI-A4B", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "111", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXI-APA", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "112", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXI-T5A", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "113", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXR-XXA", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "114", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXR-XXB", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "115", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXR-XXD", "storage_location": "2, 레버파일", "category": "SHERPA (2)", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "116", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXV-APA", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "117", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30AXW-TMB", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "118", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30DXI-APA", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "119", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30DXI-T5A", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "120", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30DXV-APA", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "121", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-30DXW-TMB", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "122", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "NSM-NSM-30AXA-ITA", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "123", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "SHERPA30CX ADP BOE충전3.2MHz", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "124", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "SHERPA30EX(03522) IPS-FIC용", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "125", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "SHERPA30EX(03525) ICD-A3용,PH#2", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "126", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "SHERPA30EX(C-PJT) AKT 8 LINE", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "127", "number_group": "3로 시작", "first_number_block": "30", "drawing_document_name": "SHERPA30FX-주성27.12 (037080)", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "128", "number_group": "3로 시작", "first_number_block": "35", "drawing_document_name": "NSM-35PRD-XXA", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "129", "number_group": "3로 시작", "first_number_block": "300", "drawing_document_name": "NPK-300A", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "130", "number_group": "3로 시작", "first_number_block": "300", "drawing_document_name": "NPRLC-300", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "131", "number_group": "3로 시작", "first_number_block": "301", "drawing_document_name": "NPR-301L", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "132", "number_group": "3로 시작", "first_number_block": "301", "drawing_document_name": "NPR-301L-S", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "133", "number_group": "3로 시작", "first_number_block": "360", "drawing_document_name": "VONE PLUS(미정) 360~480kHz", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "134", "number_group": "3로 시작", "first_number_block": "361", "drawing_document_name": "NPR-361L-J(057080)", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "135", "number_group": "3로 시작", "first_number_block": "362", "drawing_document_name": "NPR-362L(03220)", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "136", "number_group": "3로 시작", "first_number_block": "362", "drawing_document_name": "NPR-362L-A01", "storage_location": "7, 레버파일", "category": "NPR", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "137", "number_group": "3로 시작", "first_number_block": "362", "drawing_document_name": "NPR-362L-F", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "138", "number_group": "3로 시작", "first_number_block": "362", "drawing_document_name": "NPR-362L-F(삼성A3횡전개용)", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "139", "number_group": "3로 시작", "first_number_block": "362", "drawing_document_name": "NPR-362L-FJ", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "140", "number_group": "3로 시작", "first_number_block": "362", "drawing_document_name": "NPR-362L-J", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "141", "number_group": "3로 시작", "first_number_block": "362", "drawing_document_name": "NPR-362L-S", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "142", "number_group": "3로 시작", "first_number_block": "364", "drawing_document_name": "NPR-364L-A01 / A02", "storage_location": "7, 레버파일", "category": "NPR", "check_status": "확인 필요", "note": "사진 라벨"}, {"find_no": "143", "number_group": "3로 시작", "first_number_block": "364", "drawing_document_name": "NPR-364L-A02 (HEAD용)", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "144", "number_group": "4로 시작", "first_number_block": "04", "drawing_document_name": "NFG-04KEV-S01", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "145", "number_group": "4로 시작", "first_number_block": "4", "drawing_document_name": "NNJ-C4 KM3-W12", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인 필요", "note": "바인더 11 손글씨 판독"}, {"find_no": "146", "number_group": "4로 시작", "first_number_block": "400", "drawing_document_name": "NPRLC-400 / NVRLC-400", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인 필요", "note": "사진 라벨"}, {"find_no": "147", "number_group": "4로 시작", "first_number_block": "400", "drawing_document_name": "NVRLC-400(011172)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "148", "number_group": "4로 시작", "first_number_block": "451", "drawing_document_name": "NPR-451L-A02", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "149", "number_group": "4로 시작", "first_number_block": "452", "drawing_document_name": "NPR-452L-A01", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "150", "number_group": "4로 시작", "first_number_block": "452", "drawing_document_name": "NPR-452L-F", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "151", "number_group": "4로 시작", "first_number_block": "452", "drawing_document_name": "NPR-452L-J", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "152", "number_group": "4로 시작", "first_number_block": "452", "drawing_document_name": "NPR-452L-J(066878)", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "153", "number_group": "4로 시작", "first_number_block": "453", "drawing_document_name": "NPR-453L", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "154", "number_group": "4로 시작", "first_number_block": "454", "drawing_document_name": "NPR-454L-A01", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "155", "number_group": "4로 시작", "first_number_block": "454", "drawing_document_name": "NPR-454L-A01 / A02", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인 필요", "note": "사진 라벨"}, {"find_no": "156", "number_group": "4로 시작", "first_number_block": "454", "drawing_document_name": "NPR-454L-A01 HEAD", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "157", "number_group": "4로 시작", "first_number_block": "454", "drawing_document_name": "NPR-454L-A02", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "158", "number_group": "4로 시작", "first_number_block": "454", "drawing_document_name": "NPR-454L-A02 (HEAD용)", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "159", "number_group": "5로 시작", "first_number_block": "5", "drawing_document_name": "5G ICP CHAMBER(063367)", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "160", "number_group": "5로 시작", "first_number_block": "5", "drawing_document_name": "NAF-5KRA-A01", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "161", "number_group": "5로 시작", "first_number_block": "5", "drawing_document_name": "NHF-5KQA-A15", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "162", "number_group": "5로 시작", "first_number_block": "5", "drawing_document_name": "NPB-5POD 배선", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "163", "number_group": "5로 시작", "first_number_block": "05", "drawing_document_name": "NSM-05AHD-XXA", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "164", "number_group": "5로 시작", "first_number_block": "05", "drawing_document_name": "NSM-05AXJ-SOC", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "165", "number_group": "5로 시작", "first_number_block": "5", "drawing_document_name": "SHERPA-FIXED IPS-5G(35289)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "166", "number_group": "5로 시작", "first_number_block": "05", "drawing_document_name": "SHERPA05EX-FIXED(038074)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "167", "number_group": "5로 시작", "first_number_block": "500", "drawing_document_name": "NPRLC-500(038114)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "168", "number_group": "5로 시작", "first_number_block": "500", "drawing_document_name": "NVRLC-500(043474)", "storage_location": "6", "category": "NPG", "check_status": "확인", "note": ""}, {"find_no": "169", "number_group": "5로 시작", "first_number_block": "05834", "drawing_document_name": "AC CABLE (05834)", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "170", "number_group": "6로 시작", "first_number_block": "06", "drawing_document_name": "NAS-06MXQ-P01 / AP1(H01)", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인 필요", "note": "사진 라벨"}, {"find_no": "171", "number_group": "6로 시작", "first_number_block": "6", "drawing_document_name": "SHERPA-FIXED IPS-6G(035463)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "172", "number_group": "6로 시작", "first_number_block": "60", "drawing_document_name": "NAS-60KAX-VA1 CTL배선(072586)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "173", "number_group": "6로 시작", "first_number_block": "60", "drawing_document_name": "NFG-60KAS-D02", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "174", "number_group": "6로 시작", "first_number_block": "60", "drawing_document_name": "NHJ-60kAM-UA0", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "175", "number_group": "6로 시작", "first_number_block": "60", "drawing_document_name": "NSM-60AXI-XXA", "storage_location": "3", "category": "SHERPA (3)", "check_status": "확인", "note": ""}, {"find_no": "176", "number_group": "6로 시작", "first_number_block": "0602", "drawing_document_name": "NNA-0602L-A036", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "177", "number_group": "6로 시작", "first_number_block": "0602", "drawing_document_name": "NNA-0602L-A11", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "178", "number_group": "6로 시작", "first_number_block": "0604", "drawing_document_name": "NCA-0604L-K01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "179", "number_group": "6로 시작", "first_number_block": "0604", "drawing_document_name": "NCA-0604Z-K01", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "180", "number_group": "6로 시작", "first_number_block": "0604", "drawing_document_name": "NNA-0604L-A01", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "181", "number_group": "6로 시작", "first_number_block": "0604", "drawing_document_name": "NNA-0604L-A24", "storage_location": "10, 레버파일", "category": "NNA / NCA / NDS", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "182", "number_group": "6로 시작", "first_number_block": "0604", "drawing_document_name": "NNA-0604L-L01", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "183", "number_group": "6로 시작", "first_number_block": "0604", "drawing_document_name": "NVA-0604L-L01", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "184", "number_group": "7로 시작", "first_number_block": "0704", "drawing_document_name": "NRC-A0704-K03", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "185", "number_group": "7로 시작", "first_number_block": "0704", "drawing_document_name": "NRC-A0704-K03 SET UP", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "186", "number_group": "7로 시작", "first_number_block": "0704", "drawing_document_name": "NRC-A0704-K04", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "187", "number_group": "7로 시작", "first_number_block": "0704", "drawing_document_name": "NRC-A0704-K04 SET UP", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "188", "number_group": "7로 시작", "first_number_block": "0704", "drawing_document_name": "NRC-A0704-K04 SET UP(특주)", "storage_location": "8", "category": "NPR / NVS / NRC", "check_status": "확인", "note": ""}, {"find_no": "189", "number_group": "7로 시작", "first_number_block": "710", "drawing_document_name": "NPR-710L-A01", "storage_location": "7", "category": "NPR", "check_status": "확인", "note": ""}, {"find_no": "190", "number_group": "7로 시작", "first_number_block": "710", "drawing_document_name": "NVR-710L-A01", "storage_location": "5", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "191", "number_group": "8로 시작", "first_number_block": "08", "drawing_document_name": "NAS-08MX6-S1", "storage_location": "레버파일", "category": "별도 파일", "check_status": "확인", "note": "사진 라벨"}, {"find_no": "192", "number_group": "8로 시작", "first_number_block": "80", "drawing_document_name": "NPJ-80KAC-UAO", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "193", "number_group": "8로 시작", "first_number_block": "80", "drawing_document_name": "NPMJ-80KA 13.56MHz (46886)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "194", "number_group": "8로 시작", "first_number_block": "80", "drawing_document_name": "NPMJ-80KD 3.2MHz (46885)", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "195", "number_group": "8로 시작", "first_number_block": "80", "drawing_document_name": "NZJ-80KAC-UAO", "storage_location": "4", "category": "SHERPA (4)", "check_status": "확인", "note": ""}, {"find_no": "196", "number_group": "9로 시작", "first_number_block": "9", "drawing_document_name": "컴퓨터배선 (9P-3.42M)", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "197", "number_group": "9로 시작", "first_number_block": "90", "drawing_document_name": "NSM-90AXV-XXA", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "198", "number_group": "9로 시작", "first_number_block": "90", "drawing_document_name": "NSM-90DXV-XXA", "storage_location": "2", "category": "SHERPA (2)", "check_status": "확인", "note": ""}, {"find_no": "199", "number_group": "9로 시작", "first_number_block": "0906", "drawing_document_name": "NNA-0906L-A02(210205)", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "200", "number_group": "9로 시작", "first_number_block": "0906", "drawing_document_name": "NNA-0906L-A23", "storage_location": "5, 10", "category": "NVA / NNA / NVR", "check_status": "확인", "note": ""}, {"find_no": "201", "number_group": "9로 시작", "first_number_block": "0906", "drawing_document_name": "NNA-0906L-L01", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "202", "number_group": "9로 시작", "first_number_block": "0906", "drawing_document_name": "NNA-0906L-L02", "storage_location": "10", "category": "NNA / NCA / NDS", "check_status": "확인", "note": ""}, {"find_no": "203", "number_group": "숫자 없음", "first_number_block": "", "drawing_document_name": "AC OFF INTERLOCK 배선", "storage_location": "11", "category": "NSM / 기타", "check_status": "확인", "note": ""}, {"find_no": "204", "number_group": "숫자 없음", "first_number_block": "", "drawing_document_name": "MAT FILTER B/D", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "205", "number_group": "숫자 없음", "first_number_block": "", "drawing_document_name": "Maxter WIRING PART LIST", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}, {"find_no": "206", "number_group": "숫자 없음", "first_number_block": "", "drawing_document_name": "VONE WIRING PART LIST", "storage_location": "9", "category": "NPM / NVG / NPK", "check_status": "확인", "note": ""}];
-let drawingIndexRowsV90=[...DRAWING_INDEX_DATA_V90];
-let drawingIndexGroupV90='전체';
-
-function drawingIndexKeyV90(r){
-  return String(r.find_no||'')+'|'+String(r.drawing_document_name||'');
-}
-function saveDrawingIndexLocalV90(rows){
-  try{localStorage.setItem(DRAWING_INDEX_LOCAL_KEY_V90,JSON.stringify(rows||[]));}catch(e){}
-}
-function loadDrawingIndexLocalV90(){
-  try{return JSON.parse(localStorage.getItem(DRAWING_INDEX_LOCAL_KEY_V90)||'[]')||[];}catch(e){return[];}
-}
-function ensureDrawingIndexV90(){
-  const card=document.getElementById('drawingLocationCardV79');
-  if(!card || document.getElementById('drawingIndexV90'))return;
-  const tableWrap=card.querySelector('.drawing-v79-table-wrap');
-  const box=document.createElement('div');
-  box.id='drawingIndexV90';
-  box.innerHTML=`
-    <div class="dix-head">
-      <h3>🔎 도면 빠른찾기 · 206건</h3>
-      <span id="drawingIndexSyncV90" class="dix-sync">동기화 확인중</span>
-    </div>
-    <div class="dix-search">
-      <input id="drawingIndexSearchV90" placeholder="찾기번호 · 도면/문서명 · 보관위치 · 분류 검색" oninput="renderDrawingIndexV90()">
-      <button type="button" class="primary" onclick="syncDrawingIndexV90(true)">DB 동기화</button>
-    </div>
-    <div id="drawingIndexGroupsV90" class="dix-groups"></div>
-    <div id="drawingIndexCountV90" style="margin:4px 0 8px;color:#617068;font-weight:900"></div>
-    <div id="drawingIndexListV90" class="dix-list"></div>`;
-  if(tableWrap)tableWrap.insertAdjacentElement('beforebegin',box);
-  else card.appendChild(box);
-  buildDrawingGroupsV90();
-  renderDrawingIndexV90();
-}
-function buildDrawingGroupsV90(){
-  const el=document.getElementById('drawingIndexGroupsV90'); if(!el)return;
-  const groups=['전체','1로 시작','2로 시작','3로 시작','4로 시작','5로 시작','6로 시작','7로 시작','8로 시작','9로 시작','숫자 없음'];
-  el.innerHTML=groups.map(g=>`<button type="button" class="${drawingIndexGroupV90===g?'active':''}" onclick="setDrawingGroupV90('${g}')">${g}</button>`).join('');
-}
-function setDrawingGroupV90(g){drawingIndexGroupV90=g;buildDrawingGroupsV90();renderDrawingIndexV90();}
-function renderDrawingIndexV90(){
-  const list=document.getElementById('drawingIndexListV90'); if(!list)return;
-  const q=(document.getElementById('drawingIndexSearchV90')?.value||'').trim().toLowerCase();
-  const rows=(drawingIndexRowsV90||[]).filter(r=>{
-    if(drawingIndexGroupV90!=='전체' && String(r.number_group||'')!==drawingIndexGroupV90)return false;
-    if(!q)return true;
-    return [r.find_no,r.first_number_block,r.drawing_document_name,r.storage_location,r.category,r.check_status,r.note]
-      .some(v=>String(v||'').toLowerCase().includes(q));
-  });
-  const count=document.getElementById('drawingIndexCountV90');
-  if(count)count.textContent=`검색 ${rows.length.toLocaleString()}건 / 전체 ${drawingIndexRowsV90.length.toLocaleString()}건`;
-  list.innerHTML=rows.length?rows.map(r=>`
-    <div class="dix-row">
-      <div class="dix-no">${esc(r.find_no||'')}</div>
-      <div><div class="dix-name">${esc(r.drawing_document_name||'')}</div>${r.check_status==='확인 필요'?'<div class="dix-warn">⚠️ 확인 필요</div>':''}</div>
-      <div class="dix-loc">📁 ${esc(r.storage_location||'-')}</div>
-      <div class="dix-cat">${esc(r.category||'')}</div>
-      <button type="button" onclick="applyDrawingIndexV90('${String(r.find_no||'').replace(/'/g,"\\'")}')">등록창에 불러오기</button>
-    </div>`).join(''):'<div class="notice">검색 결과가 없습니다.</div>';
-}
-function applyDrawingIndexV90(no){
-  const r=(drawingIndexRowsV90||[]).find(x=>String(x.find_no)===String(no)); if(!r)return;
-  const item=document.getElementById('drawingItemV79'); if(item)item.value=r.drawing_document_name||'';
-  const loc=document.getElementById('drawingLocationV79'); if(loc)loc.value=r.storage_location||'';
-  const note=document.getElementById('drawingNoteV79');
-  if(note)note.value=`찾기번호 ${r.find_no} · ${r.number_group||''} · ${r.category||''}${r.check_status==='확인 필요'?' · ⚠️ 확인 필요':''}${r.note?' · '+r.note:''}`;
-  const proc=document.getElementById('drawingProcessV83');
-  const custom=document.getElementById('drawingProcessCustomV83');
-  const wrap=document.getElementById('drawingProcessCustomWrapV83');
-  if(proc){proc.value='직접입력';if(custom)custom.value='도면보관';if(wrap)wrap.style.display='block';}
-  window.scrollTo({top:document.getElementById('drawingLocationAdminEntryV79')?.offsetTop||0,behavior:'smooth'});
-}
-async function syncDrawingIndexV90(showAlert){
-  const status=document.getElementById('drawingIndexSyncV90');
-  if(!sharedReady||!sharedDb){
-    saveDrawingIndexLocalV90(DRAWING_INDEX_DATA_V90);
-    if(status)status.textContent='⚠️ DB 미연결 · 이 기기 저장';
-    if(showAlert)alert('DB 공용 동기화가 아직 연결되지 않았습니다. 도면 206건은 이 기기에서 바로 검색할 수 있게 저장했습니다.');
-    return false;
-  }
-  try{
-    if(status)status.textContent='DB 동기화 중...';
-    const {data:existing,error:readError}=await sharedDb.from('wms_admin_notifications')
-      .select('id,payload').eq('type',DRAWING_INDEX_TYPE_V90).limit(1000);
-    if(readError)throw readError;
-    const keys=new Set((existing||[]).map(x=>drawingIndexKeyV90(x.payload||{})));
-    const missing=DRAWING_INDEX_DATA_V90.filter(r=>!keys.has(drawingIndexKeyV90(r)));
-    if(missing.length){
-      const batch=missing.map(r=>({
-        type:DRAWING_INDEX_TYPE_V90,
-        title:'📐 도면 빠른찾기',
-        message:`${r.find_no||''} · ${r.drawing_document_name||''} · ${r.storage_location||''}`,
-        payload:r,
-        created_at:new Date().toISOString()
-      }));
-      for(let i=0;i<batch.length;i+=100){
-        const {error}=await sharedDb.from('wms_admin_notifications').insert(batch.slice(i,i+100));
-        if(error)throw error;
-      }
-    }
-    const {data:again,error:againError}=await sharedDb.from('wms_admin_notifications')
-      .select('payload').eq('type',DRAWING_INDEX_TYPE_V90).limit(1000);
-    if(againError)throw againError;
-    const merged=[...DRAWING_INDEX_DATA_V90];
-    const map=new Map(merged.map(r=>[drawingIndexKeyV90(r),r]));
-    (again||[]).forEach(x=>{const r=x.payload||{};if(r.find_no&&r.drawing_document_name)map.set(drawingIndexKeyV90(r),r);});
-    drawingIndexRowsV90=[...map.values()].sort((a,b)=>String(a.find_no).localeCompare(String(b.find_no),undefined,{numeric:true}));
-    saveDrawingIndexLocalV90(drawingIndexRowsV90);
-    renderDrawingIndexV90();
-    if(status)status.textContent=`✅ DB 동기화 ${drawingIndexRowsV90.length}건`;
-    if(showAlert)alert(`✅ 도면목록 DB 동기화 완료\n현재 ${drawingIndexRowsV90.length}건`);
-    return true;
-  }catch(e){
-    console.error('도면목록 DB 동기화 실패',e);
-    saveDrawingIndexLocalV90(DRAWING_INDEX_DATA_V90);
-    if(status)status.textContent='⚠️ DB 동기화 실패 · 로컬 사용중';
-    if(showAlert)alert('도면목록 DB 동기화 실패: '+(e.message||e));
-    return false;
-  }
-}
-
-/* 기존 파일의 설정 객체 이름 차이까지 받아주는 DB 연결 보강 */
-async function repairSharedDbV90(){
-  if(sharedReady&&sharedDb){await syncDrawingIndexV90(false);return true;}
-  const candidates=[
-    window.MIRIM_CONFIG,
-    window.MIRIM_SUPABASE,
-    window.MIRIM_SUPABASE_CONFIG,
-    window.SUPABASE_CONFIG,
-    window.mirimConfig
-  ].filter(Boolean);
-  let cfg={};
-  for(const c of candidates){
-    if(c&&typeof c==='object'){cfg=c.supabase&&typeof c.supabase==='object'?c.supabase:c;break;}
-  }
-  const url=cfg.url||cfg.URL||cfg.supabaseUrl||cfg.supabase_url||'';
-  const key=cfg.publishableKey||cfg.publishable_key||cfg.anonKey||cfg.anon_key||cfg.key||'';
-  if(!url||!key){
-    const s=document.getElementById('drawingIndexSyncV90');if(s)s.textContent='⚠️ DB 설정(config.js) 확인 필요';
-    return false;
-  }
-  if(!window.supabase||typeof window.supabase.createClient!=='function'){
-    const s=document.getElementById('drawingIndexSyncV90');if(s)s.textContent='⚠️ Supabase 라이브러리 연결 실패';
-    return false;
-  }
-  try{
-    sharedDb=window.supabase.createClient(url,key);
-    const test=await sharedDb.from('production_inventory_sync').select('part_no').limit(1);
-    if(test.error)throw test.error;
-    sharedReady=true;
-    const syncBar=document.getElementById('syncBar');
-    if(syncBar){syncBar.textContent='✅ 공용 동기화 연결';syncBar.style.background='#eaf7ef';syncBar.style.color='#0b6b3e';}
-    try{await loadSharedCache();}catch(e){console.warn(e);}
-    try{await refreshSharedHistories();}catch(e){console.warn(e);}
-    await syncDrawingIndexV90(false);
-    return true;
-  }catch(e){
-    console.error('DB 재연결 실패',e);
-    const s=document.getElementById('drawingIndexSyncV90');if(s)s.textContent='⚠️ DB 연결 실패';
-    return false;
-  }
-}
-
-window.addEventListener('load',()=>{
-  setTimeout(async()=>{
-    ensureDrawingIndexV90();
-    const local=loadDrawingIndexLocalV90();
-    if(local.length) drawingIndexRowsV90=local;
-    else saveDrawingIndexLocalV90(DRAWING_INDEX_DATA_V90);
-    renderDrawingIndexV90();
-    await repairSharedDbV90();
-  },1600);
-});
-document.addEventListener('click',()=>setTimeout(ensureDrawingIndexV90,120),true);
-</script>
-
-<style id="offline-location-search-v91">
-body.worker-locked [data-mode="location"]{
-  pointer-events:auto!important;
-  opacity:1!important;
-  filter:none!important;
-  position:relative!important;
-  z-index:80!important;
-}
-</style>
-<script id="offline-location-search-v91-js">
-window.addEventListener('load',()=>{
-  try{
-    document.querySelectorAll('[data-mode="location"]').forEach(btn=>{
-      btn.title='DB 연결이 없어도 품번·품명·내장 위치 검색 가능';
-    });
-  }catch(e){}
-});
-</script>
-
 </body></html>
