@@ -13442,4 +13442,104 @@ if(document.readyState==='loading'){
   setTimeout(ensureAdminQuickInOutV108,300);
 }
 </script>
+
+<style id="admin-main-force-restore-v109-style">
+/* V109: 관리자 로그인 후 기존 정상 관리자 메인(#home)을 확실히 표시 */
+body.admin-view:not(.admin-task-focus) #home{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:min(1120px,calc(100% - 20px))!important;
+  max-width:1120px!important;
+  margin:0 auto!important;
+}
+body.admin-view:not(.admin-task-focus) #home .welcome-row{
+  display:flex!important;
+}
+body.admin-view:not(.admin-task-focus) #home .today-task-grid{
+  display:grid!important;
+}
+/* 과거 별도 관리자 메인 상태가 남아도 현재 홈을 가리지 않게 */
+body.admin-view #adminReferenceHome{
+  display:none!important;
+}
+</style>
+
+<script id="admin-main-force-restore-v109-script">
+function forceAdminMainV109(){
+  if(!isAdmin)return;
+
+  /* 과거 관리자 전용 메인 상태가 현재 #home을 통째로 숨기는 문제 차단 */
+  document.body.classList.remove(
+    'admin-reference-home',
+    'worker-location-only-v104',
+    'worker-search-only-v101',
+    'admin-shortcut-focus',
+    'admin-task-focus',
+    'other-storage-open-v50'
+  );
+
+  const home=document.getElementById('home');
+  const work=document.getElementById('work');
+  const photo=document.getElementById('photoSearchPanel');
+  const workerLogin=document.getElementById('workerLoginPanel');
+
+  if(home){
+    home.classList.remove('hidden');
+    home.style.removeProperty('display');
+    home.style.setProperty('display','block','important');
+    home.style.setProperty('visibility','visible','important');
+    home.style.setProperty('opacity','1','important');
+  }
+  if(work){
+    work.classList.add('hidden');
+    work.style.setProperty('display','none','important');
+  }
+  if(photo){
+    photo.classList.add('hidden');
+    photo.style.setProperty('display','none','important');
+  }
+  if(workerLogin){
+    workerLogin.classList.add('hidden');
+    workerLogin.style.setProperty('display','none','important');
+  }
+
+  /* 기존 관리자 빠른 입고/출고가 메인에서 그대로 보이게 */
+  const grid=home?.querySelector('.today-task-grid');
+  if(grid){
+    grid.style.setProperty('display','grid','important');
+    const inBtn=grid.querySelector('[data-mode="inbound"]');
+    const outBtn=grid.querySelector('[data-mode="outbound"]');
+    if(inBtn)inBtn.style.removeProperty('display');
+    if(outBtn)outBtn.style.removeProperty('display');
+  }
+
+  try{ensureAdminQuickInOutV108?.();}catch(e){}
+  try{updateHomeSummary?.();}catch(e){}
+  try{syncDashboardStats?.();}catch(e){}
+}
+
+/* 기존 관리자 로그인 완료 함수가 무엇을 호출하든 마지막에 메인 복구 */
+const __adminLoginBeforeV109=window.adminLogin;
+if(typeof __adminLoginBeforeV109==='function' && !__adminLoginBeforeV109.__v109){
+  const wrapped=async function(){
+    const r=await __adminLoginBeforeV109.apply(this,arguments);
+    if(isAdmin){
+      setTimeout(forceAdminMainV109,20);
+      setTimeout(forceAdminMainV109,150);
+      setTimeout(forceAdminMainV109,500);
+    }
+    return r;
+  };
+  wrapped.__v109=true;
+  window.adminLogin=wrapped;
+}
+
+/* 이미 관리자 로그인 상태로 새로고침해도 복구 */
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(forceAdminMainV109,250),{once:true});
+}else{
+  setTimeout(forceAdminMainV109,250);
+}
+</script>
 </body></html>
