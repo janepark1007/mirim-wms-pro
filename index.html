@@ -1783,8 +1783,8 @@ body.park-location-worker-v63 .erp-only{
 
 <section class="card" id="publicDrawingSearchV108">
   <div class="public-drawing-head-v108">
-    <h2>📐 도면 위치 검색</h2>
-    <div>업체명 · 품명 · 보관번호 · 공정으로 도면 위치를 확인합니다.</div>
+    <h2>📐 NPP도면위치 검색</h2>
+    <div>업체명 · 품명 · 보관번호 · 공정으로 NPP도면위치를 확인합니다.</div>
   </div>
   <div class="public-drawing-search-v108">
     <input id="publicDrawingQueryV108" placeholder="업체명 · 품명 · 보관번호 · 공정 입력"
@@ -1792,7 +1792,7 @@ body.park-location-worker-v63 .erp-only{
     <select id="publicDrawingQtyV108" onchange="runPublicDrawingSearchV108()">
       <option value="">총제품수량 전체</option><option value="1">1번</option><option value="2">2번</option><option value="3">3번</option><option value="4">4번</option><option value="5">5번</option><option value="6">6번</option><option value="7">7번</option><option value="8">8번</option><option value="9">9번</option><option value="10">10번</option><option value="11">11번</option><option value="12">12번</option><option value="13">13번</option><option value="14">14번</option><option value="15">15번</option><option value="16">16번</option><option value="17">17번</option><option value="18">18번</option><option value="19">19번</option><option value="20">20번</option><option value="21">21번</option><option value="22">22번</option><option value="23">23번</option><option value="24">24번</option><option value="25">25번</option><option value="26">26번</option><option value="27">27번</option><option value="28">28번</option><option value="29">29번</option><option value="30">30번</option><option value="31">31번</option><option value="32">32번</option><option value="33">33번</option><option value="34">34번</option><option value="35">35번</option><option value="36">36번</option><option value="37">37번</option><option value="38">38번</option><option value="39">39번</option><option value="40">40번</option><option value="41">41번</option><option value="42">42번</option><option value="43">43번</option><option value="44">44번</option><option value="45">45번</option><option value="46">46번</option><option value="47">47번</option><option value="48">48번</option><option value="49">49번</option><option value="50">50번</option>
     </select>
-    <button type="button" class="primary" onclick="runPublicDrawingSearchV108()">도면 찾기</button>
+    <button type="button" class="primary" onclick="runPublicDrawingSearchV108()">NPP도면 찾기</button>
   </div>
   <div id="publicDrawingStatusV108" class="public-drawing-status-v108">
     검색어를 입력하거나 총제품수량을 선택하세요.
@@ -5248,7 +5248,8 @@ async function shareOrderRequest(x,i){
  }
 }
 function search(){
- if(!currentWorker&&!isAdmin){showWorkerLogin();alert('작업자 또는 관리자 로그인 후 사용할 수 있습니다.');return;}
+ // V111: 일반 작업자 검색은 로그인/공용동기화 없이도 내장·로컬 데이터로 항상 검색 허용
+ if(!currentWorker&&!isAdmin){currentWorker={id:'public_search_v111',name:'작업자 검색'};}
  try{
 
  const rawQ=($('q').value||'').trim();
@@ -13398,7 +13399,7 @@ async function runPublicDrawingSearchV108(){
     return;
   }
 
-  status.textContent='도면 위치를 찾는 중입니다...';
+  status.textContent='NPP도면위치를 찾는 중입니다...';
   const rows=await getPublicDrawingRowsV108();
   const filtered=rows.filter(x=>{
     if(qty&&String(Number(x.qty||0))!==qty)return false;
@@ -13424,7 +13425,7 @@ async function runPublicDrawingSearchV108(){
       <div class="pdr-meta-v108">
         공정 ${esc(x.process||'-')} · 현재 도면수량 ${Number(x.currentQty||x.drawingQty||0).toLocaleString()} · 날짜 ${esc(x.date||'-')}
       </div>
-    </div>`).join(''):'<div class="notice">일치하는 도면 위치가 없습니다.</div>';
+    </div>`).join(''):'<div class="notice">일치하는 NPP도면위치가 없습니다.</div>';
 }
 
 const __oldRestoreAdminMainV108=window.restoreAdminMainV107;
@@ -13883,7 +13884,7 @@ window.runPublicDrawingSearchV108=async function(){
       </div>
       <div class="pdr-loc-v108">📍 보관번호 · ${esc(x.location||'미등록')}</div>
       <div class="pdr-meta-v108">공정 ${esc(x.process||'-')} · 날짜 ${esc(x.date||'-')}</div>
-    </div>`).join(''):'<div class="notice">일치하는 도면 위치가 없습니다.</div>';
+    </div>`).join(''):'<div class="notice">일치하는 NPP도면위치가 없습니다.</div>';
 };
 
 /* 일반 작업자 흐름에서 로그인 UI를 완전히 사용하지 않음 */
@@ -13899,7 +13900,7 @@ function activateWorkerSearchMainV110(){
   );
 
   const guide=document.querySelector('.login-lock-guide');
-  if(guide)guide.innerHTML='🔓 작업자 로그인 없이 <b>자재 위치 검색 · 도면 위치 검색</b>을 바로 사용할 수 있습니다.';
+  if(guide)guide.innerHTML='🔓 작업자 로그인 없이 <b>자재 위치 검색 · NPP도면위치 검색</b>을 바로 사용할 수 있습니다.';
 
   const wp=document.getElementById('workerLoginPanel');
   if(wp)wp.style.setProperty('display','none','important');
@@ -13946,5 +13947,43 @@ if(document.readyState==='loading'){
   setTimeout(activateWorkerSearchMainV110,60);
   setTimeout(placeWorkerSearchExtrasV110,200);
 }
+</script>
+
+<style id="public-search-enable-v111-style">
+body.worker-search-main-v110:not(.admin-view) #q,
+body.worker-search-main-v110:not(.admin-view) #divisionSearch,
+body.worker-search-main-v110:not(.admin-view) #searchBtn,
+body.worker-search-main-v110:not(.admin-view) #publicDrawingQueryV108,
+body.worker-search-main-v110:not(.admin-view) #publicDrawingQtyV108,
+body.worker-search-main-v110:not(.admin-view) #publicDrawingSearchV108 button{
+  pointer-events:auto!important;
+  opacity:1!important;
+  filter:none!important;
+  user-select:auto!important;
+}
+</style>
+<script id="public-search-enable-v111-script">
+(function(){
+  function enablePublicSearchV111(){
+    if(isAdmin||document.body.classList.contains('admin-view'))return;
+    if(!currentWorker)currentWorker={id:'public_search_v111',name:'작업자 검색'};
+    ['q','divisionSearch','searchBtn','publicDrawingQueryV108','publicDrawingQtyV108'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){
+        el.disabled=false;
+        el.removeAttribute('disabled');
+        el.style.pointerEvents='auto';
+        el.style.opacity='1';
+      }
+    });
+    const title=document.querySelector('#publicDrawingSearchV108 h2');
+    if(title)title.textContent='📐 NPP도면위치 검색';
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>setTimeout(enablePublicSearchV111,80),{once:true});
+  }else{
+    setTimeout(enablePublicSearchV111,80);
+  }
+})();
 </script>
 </body></html>
