@@ -13127,4 +13127,75 @@ function openAdminEntryV105(){
   }
 }
 </script>
+
+<style id="shared-sync-reconnect-v106-style">
+#sharedReconnectV106{
+  position:fixed;
+  top:58px;
+  right:12px;
+  z-index:99998;
+  border:0;
+  border-radius:10px;
+  padding:9px 13px;
+  background:#eef7f1;
+  color:#145c3b;
+  font-weight:900;
+  font-size:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,.10);
+  cursor:pointer;
+}
+body:not(.admin-view) #sharedReconnectV106{display:none!important;}
+@media(max-width:700px){
+  #sharedReconnectV106{top:48px;right:8px;padding:8px 10px;font-size:11px;}
+}
+</style>
+
+<button type="button" id="sharedReconnectV106" onclick="manualSharedReconnectV106()">🔄 공용 동기화 재연결</button>
+
+<script id="shared-sync-reconnect-v106-script">
+let __sharedReconnectBusyV106=false;
+
+async function manualSharedReconnectV106(){
+  if(__sharedReconnectBusyV106)return;
+  __sharedReconnectBusyV106=true;
+  const btn=document.getElementById('sharedReconnectV106');
+  if(btn){btn.disabled=true;btn.textContent='연결 확인 중...';}
+  try{
+    await initSharedDb();
+    if(sharedReady){
+      try{await loadSharedCache();}catch(e){}
+      try{await loadSharedLocations();}catch(e){}
+      try{search();}catch(e){}
+      alert('✅ 공용 동기화가 다시 연결되었습니다.');
+    }else{
+      alert('⚠️ 아직 Supabase 공용 서비스가 제한 상태입니다.\n제한이 풀리면 자동으로 다시 연결됩니다.');
+    }
+  }catch(e){
+    alert('⚠️ 아직 공용 동기화를 사용할 수 없습니다.');
+  }finally{
+    __sharedReconnectBusyV106=false;
+    if(btn){btn.disabled=false;btn.textContent='🔄 공용 동기화 재연결';}
+  }
+}
+
+(function(){
+  // 기존 초기 연결은 그대로 사용하고, 실패했을 때만 10분마다 가볍게 재시도.
+  if(window.__sharedReconnectTimerV106)clearInterval(window.__sharedReconnectTimerV106);
+  window.__sharedReconnectTimerV106=setInterval(async()=>{
+    if(sharedReady || __sharedReconnectBusyV106)return;
+    __sharedReconnectBusyV106=true;
+    try{
+      await initSharedDb();
+      if(sharedReady){
+        try{await loadSharedLocations();}catch(e){}
+        try{search();}catch(e){}
+      }
+    }catch(e){
+      console.warn('V106 공용 동기화 재연결 대기',e);
+    }finally{
+      __sharedReconnectBusyV106=false;
+    }
+  },600000);
+})();
+</script>
 </body></html>
