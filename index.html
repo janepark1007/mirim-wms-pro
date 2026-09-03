@@ -14259,12 +14259,13 @@ function setupPublicNppSearchV113(){
   const sub=draw.querySelector('.public-drawing-head-v108>div');
   if(sub)sub.textContent='찾기번호 · 도면명 · 분류 · 보관위치로 바로 찾을 수 있습니다.';
   sel.innerHTML=`
-    <option value="">검색기준 전체</option>
+    <option value="name" selected>도면·문서명</option>
     <option value="findNo">찾기번호</option>
-    <option value="name">도면·문서명</option>
     <option value="location">보관위치</option>
     <option value="category">분류</option>
-    <option value="status">확인상태</option>`;
+    <option value="status">확인상태</option>
+    <option value="">검색기준 전체</option>`;
+  sel.value='name';
   if(chips&&!draw.contains(chips)){
     const s=draw.querySelector('.public-drawing-search-v108');
     if(s)s.insertAdjacentElement('afterend',chips);
