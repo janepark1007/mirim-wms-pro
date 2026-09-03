@@ -3467,62 +3467,118 @@ async function workerRegister(){
  }
 }
 
+async function getWorkerLoginDbV91(){
+  if(sharedDb && typeof sharedDb.rpc==='function') return sharedDb;
+
+  // 공용 동기화가 아직 준비되지 않았으면 한 번 재연결 시도
+  try{
+    if(typeof initSharedDb==='function') await initSharedDb();
+  }catch(e){
+    console.warn('로그인 전 공용 DB 재연결 시도 실패',e);
+  }
+  if(sharedDb && typeof sharedDb.rpc==='function') return sharedDb;
+
+  // 재고 동기화 테스트가 실패해 sharedDb가 null이어도 로그인 RPC만 별도 시도
+  try{
+    const cfg=window.MIRIM_CONFIG||window.MIRIM_SUPABASE||{};
+    const url=cfg.url||cfg.URL||'';
+    const key=cfg.publishableKey||cfg.publishable_key||cfg.anonKey||'';
+    if(url&&key&&window.supabase&&typeof window.supabase.createClient==='function'){
+      return window.supabase.createClient(url,key);
+    }
+  }catch(e){
+    console.warn('로그인 전용 DB 생성 실패',e);
+  }
+  return null;
+}
+
+function finishWorkerLoginV91(worker,offline=false){
+  currentWorker=worker;
+  sessionStorage.setItem('mirim_worker_session',JSON.stringify(currentWorker));
+  sessionStorage.removeItem('mirim_vip_ok');
+  sessionStorage.removeItem('mirim_vip_view');
+  $('vipBomPanel')?.classList.add('hidden');
+  $('workerRegisterStatus')?.classList.add('hidden');
+
+  document.body.classList.remove('worker-locked');
+  $('workerLoginPanel')?.classList.add('hidden');
+  $('work')?.classList.add('hidden');
+  $('photoSearchPanel')?.classList.add('hidden');
+  $('notifPanel')?.classList.add('hidden');
+  $('loginLogPanel')?.classList.add('hidden');
+  $('home')?.classList.remove('hidden');
+
+  updateWorkerUI();
+  try{updateHomeSummary();}catch(e){}
+  try{renderDailyHistories();}catch(e){}
+  try{if(typeof syncParkLocationAccessV62==='function')syncParkLocationAccessV62();}catch(e){}
+
+  const suffix=offline?'\n\n⚠️ 현재 공용 DB는 미연결 상태입니다. 로그인은 정상 처리되었고, 연결되는 기능은 자동으로 다시 동기화됩니다.':'';
+  alert(`✅ ${currentWorker.name}님, 반갑습니다!\n\n🌱 ${workerPositiveMessage(currentWorker.name)}${suffix}`);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 async function workerLogin(){
  const name=($('workerNameInput')?.value||'').trim();
  const pin=($('workerPinInput')?.value||'').trim();
  if(!name) return alert('이름을 입력하세요.');
  if(!/^\d{4}$/.test(pin)) return alert('비밀번호는 숫자 4자리로 입력하세요.');
 
-
  try{
-   const device=(navigator.userAgent||'').slice(0,180);
-   const {data,error}=await sharedDb.rpc('worker_login',{p_name:name,p_pin:pin,p_device:device});
-   if(error) throw error;
+   const loginDb=await getWorkerLoginDbV91();
 
-   const row=Array.isArray(data)?data[0]:data;
-   if(!row || row.ok!==true) return alert(row?.message||'이름 또는 비밀번호를 확인하세요.');
+   if(loginDb && typeof loginDb.rpc==='function'){
+     try{
+       const device=(navigator.userAgent||'').slice(0,180);
+       const {data,error}=await loginDb.rpc('worker_login',{p_name:name,p_pin:pin,p_device:device});
+       if(error) throw error;
 
-   $('workerRegisterStatus')?.classList.add('hidden');
+       const row=Array.isArray(data)?data[0]:data;
+       if(!row || row.ok!==true) return alert(row?.message||'이름 또는 비밀번호를 확인하세요.');
 
-   currentWorker={id:row.worker_id,name:row.worker_name};
-   sessionStorage.setItem('mirim_worker_session',JSON.stringify(currentWorker));
-   sessionStorage.removeItem('mirim_vip_ok');
-   sessionStorage.removeItem('mirim_vip_view');
-   $('vipBomPanel')?.classList.add('hidden');
-   try{
-     const {error:notifErr}=await sharedDb.from('wms_admin_notifications').insert({
-       type:'WORKER_LOGIN',
-       title:'🔑 작업자 로그인',
-       message:`${currentWorker.name}님이 로그인했습니다.`,
-       payload:{
-         worker_name:currentWorker.name,
-         worker_id:currentWorker.id,
-         event_type:'LOGIN',
-         created_at:new Date().toISOString()
-       },
-       created_at:new Date().toISOString()
-     });
-     if(notifErr) console.warn('로그인 관리자 알림 기록 실패',notifErr);
-   }catch(e){
-     console.warn('로그인 관리자 알림 기록 실패',e);
+       finishWorkerLoginV91({id:row.worker_id,name:row.worker_name},false);
+
+       // 로그인 알림은 공용 DB가 실제 사용 가능할 때만 기록
+       try{
+         if(sharedReady&&sharedDb){
+           const {error:notifErr}=await sharedDb.from('wms_admin_notifications').insert({
+             type:'WORKER_LOGIN',
+             title:'🔑 작업자 로그인',
+             message:`${row.worker_name}님이 로그인했습니다.`,
+             payload:{
+               worker_name:row.worker_name,
+               worker_id:row.worker_id,
+               event_type:'LOGIN',
+               created_at:new Date().toISOString()
+             },
+             created_at:new Date().toISOString()
+           });
+           if(notifErr)console.warn('로그인 관리자 알림 기록 실패',notifErr);
+         }
+       }catch(e){console.warn('로그인 관리자 알림 기록 실패',e);}
+
+       try{if(sharedReady)await loadWorkerPersonalAlerts(true);}catch(e){console.warn('로그인 개인알림 표시 실패',e);}
+       return;
+     }catch(dbErr){
+       console.warn('작업자 DB 로그인 실패/연결불안정',dbErr);
+
+       // DB 자체가 끊긴 경우에만 박향숙 계정의 기존 지정 비밀번호로 비상 로그인.
+       // 비밀번호가 틀린 DB 응답은 아래 fallback으로 우회하지 않음.
+       const msg=String(dbErr?.message||dbErr||'');
+       const looksConnectionError=/fetch|network|failed|connection|offline|timeout|load|rpc|null|supabase/i.test(msg);
+       if(!looksConnectionError){
+         return alert('로그인 실패: '+msg);
+       }
+     }
    }
 
-   // 로그인 후 잠금 해제 + 메인 강제 표시
-   document.body.classList.remove('worker-locked');
-   $('workerLoginPanel')?.classList.add('hidden');
-   $('work')?.classList.add('hidden');
-   $('photoSearchPanel')?.classList.add('hidden');
-   $('notifPanel')?.classList.add('hidden');
-   $('loginLogPanel')?.classList.add('hidden');
-   $('home')?.classList.remove('hidden');
+   // 현재 실제 사용 중인 박향숙 계정은 PC/모바일 DB 장애 시에도 업무 진입 가능
+   if(name==='박향숙' && pin==='0307'){
+     finishWorkerLoginV91({id:'offline_park_v91',name:'박향숙'},true);
+     return;
+   }
 
-   updateWorkerUI();
-   try{updateHomeSummary();}catch(e){}
-   try{renderDailyHistories();}catch(e){}
-
-   try{await loadWorkerPersonalAlerts(true);}catch(e){console.warn('로그인 개인알림 표시 실패',e);}
-   alert(`✅ ${currentWorker.name}님, 반갑습니다!\n\n🌱 ${workerPositiveMessage(currentWorker.name)}\n\n메인 화면으로 이동합니다.`);
-   window.scrollTo({top:0,behavior:'smooth'});
+   alert('공용 DB 연결이 불안정합니다. 잠시 후 다시 시도해 주세요.\n\n박향숙 계정은 기존 비밀번호 0307로 비상 로그인할 수 있습니다.');
  }catch(e){
    console.error(e);
    alert('로그인 실패: '+(e.message||e));
