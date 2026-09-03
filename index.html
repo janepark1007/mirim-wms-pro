@@ -3713,7 +3713,9 @@ function updateAdminUI(){
  }
 }
 function adminLogin(){
- if(currentWorker&&!isAdmin){alert('일반 작업자 로그인 상태에서는 관리자 모드에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
+ const publicSearchWorker=String(currentWorker?.id||'')==='public_search_v102';
+ if(currentWorker&&!isAdmin&&!publicSearchWorker){alert('일반 작업자 로그인 상태에서는 관리자 모드에 들어갈 수 없습니다. 작업자 로그아웃 후 이용해 주세요.');return;}
+ if(publicSearchWorker){ currentWorker=null; sessionStorage.removeItem('mirim_worker_session'); }
  if(isAdmin){
    isAdmin=false;
    sessionStorage.removeItem('mirim_prod_admin');sessionStorage.removeItem('mirim_admin_last_activity_v11');
@@ -12932,6 +12934,154 @@ function workerSearchOnlyGuardV101(action){
     setTimeout(removeWorkerThreeV103,300);
     setTimeout(removeWorkerThreeV103,1200);
   }
+})();
+</script>
+
+<style id="unified-worker-location-v104">
+/* V104: 작업자=로그인 없는 위치검색 / 관리자=기존 관리자 모드 */
+body.worker-location-only-v104:not(.admin-view) #workerLoginBtn,
+body.worker-location-only-v104:not(.admin-view) #workerBadge,
+body.worker-location-only-v104:not(.admin-view) #homeBtn,
+body.worker-location-only-v104:not(.admin-view) #topExcelExportBtn,
+body.worker-location-only-v104:not(.admin-view) #notifBtn,
+body.worker-location-only-v104:not(.admin-view) #loginLogBtn{
+  display:none!important;
+}
+
+/* 작업자 화면에서는 위치검색 외의 메인/기록/관리 화면을 감춤 */
+body.worker-location-only-v104:not(.admin-view) #home,
+body.worker-location-only-v104:not(.admin-view) #workerLoginPanel,
+body.worker-location-only-v104:not(.admin-view) #photoSearchPanel,
+body.worker-location-only-v104:not(.admin-view) #recentInboundCard,
+body.worker-location-only-v104:not(.admin-view) #recentOutboundCard,
+body.worker-location-only-v104:not(.admin-view) #locationOrganizerCard,
+body.worker-location-only-v104:not(.admin-view) #otherMaterialStorageCard,
+body.worker-location-only-v104:not(.admin-view) #adminInOutTotalCard,
+body.worker-location-only-v104:not(.admin-view) #drawingLocationCardV79{
+  display:none!important;
+}
+
+body.worker-location-only-v104:not(.admin-view) #work{
+  display:block!important;
+  width:min(1120px,calc(100% - 24px));
+  margin:22px auto 40px!important;
+}
+
+body.worker-location-only-v104:not(.admin-view) #work>.card{
+  border-radius:22px!important;
+  padding:24px!important;
+  box-shadow:0 10px 34px rgba(28,88,58,.10)!important;
+  border:1px solid #d6eadf!important;
+}
+
+body.worker-location-only-v104:not(.admin-view) #work #title{
+  margin:0 0 6px!important;
+  font-size:clamp(25px,4vw,34px)!important;
+  text-align:center!important;
+  color:#145c3b!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #title::after{
+  content:"\A품번 또는 품명을 입력하면 보관 위치를 바로 확인할 수 있습니다.";
+  white-space:pre;
+  display:block;
+  margin-top:7px;
+  font-size:13px;
+  font-weight:800;
+  color:#6b7d73;
+}
+body.worker-location-only-v104:not(.admin-view) .division-search-row{
+  margin-top:22px!important;
+  gap:10px!important;
+}
+body.worker-location-only-v104:not(.admin-view) #q{
+  min-height:56px!important;
+  font-size:17px!important;
+  border-radius:13px!important;
+}
+body.worker-location-only-v104:not(.admin-view) #divisionSearch,
+body.worker-location-only-v104:not(.admin-view) #searchBtn{
+  min-height:56px!important;
+  border-radius:13px!important;
+}
+body.worker-location-only-v104:not(.admin-view) #searchBtn{
+  min-width:100px!important;
+  font-weight:1000!important;
+}
+body.worker-location-only-v104:not(.admin-view) #count{
+  text-align:center!important;
+  font-weight:900!important;
+  margin:14px 0 4px!important;
+}
+
+/* 검색전용 안전장치: 결과에서 수정/등록/삭제 관련 UI는 숨김 */
+body.worker-location-only-v104:not(.admin-view) #results button,
+body.worker-location-only-v104:not(.admin-view) #results input,
+body.worker-location-only-v104:not(.admin-view) #results select,
+body.worker-location-only-v104:not(.admin-view) #results textarea,
+body.worker-location-only-v104:not(.admin-view) #results .later-check-direct-wrap,
+body.worker-location-only-v104:not(.admin-view) #results .worker-admin-detail{
+  display:none!important;
+}
+
+@media(max-width:700px){
+  body.worker-location-only-v104:not(.admin-view) #work{
+    width:calc(100% - 14px)!important;
+    margin:10px auto 26px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work>.card{
+    padding:16px 12px!important;
+    border-radius:17px!important;
+  }
+}
+</style>
+
+<script id="unified-worker-location-v104-script">
+(function(){
+  function openPublicLocationV104(){
+    if(document.body.classList.contains('admin-view') || isAdmin) return;
+
+    document.body.classList.add('worker-location-only-v104','worker-search-only-v101');
+
+    if(!currentWorker || String(currentWorker.id||'')!=='public_search_v102'){
+      currentWorker={id:'public_search_v102',name:'작업자'};
+    }
+
+    const wp=document.getElementById('workerLoginPanel');
+    if(wp)wp.classList.add('hidden');
+
+    try{
+      openMode('location');
+    }catch(e){
+      try{mode='location';}catch(_){}
+      document.getElementById('home')?.classList.add('hidden');
+      document.getElementById('work')?.classList.remove('hidden');
+      const title=document.getElementById('title');
+      if(title)title.textContent='🔎 자재 위치 검색';
+    }
+
+    const title=document.getElementById('title');
+    if(title)title.textContent='🔎 자재 위치 검색';
+    const q=document.getElementById('q');
+    if(q)q.placeholder='품번 또는 품명을 입력하세요';
+  }
+
+  function afterAdminClickV104(){
+    setTimeout(()=>{
+      if(isAdmin || document.body.classList.contains('admin-view')){
+        document.body.classList.remove('worker-location-only-v104','worker-search-only-v101');
+        document.getElementById('work')?.classList.add('hidden');
+        document.getElementById('home')?.classList.remove('hidden');
+      }
+    },80);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>setTimeout(openPublicLocationV104,80),{once:true});
+  }else{
+    setTimeout(openPublicLocationV104,80);
+  }
+
+  document.getElementById('adminLoginBtn')?.addEventListener('click',afterAdminClickV104);
 })();
 </script>
 </body></html>
