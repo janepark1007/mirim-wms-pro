@@ -3492,8 +3492,9 @@ async function getWorkerLoginDbV91(){
   return null;
 }
 
-function finishWorkerLoginV91(worker,offline=false){
+function finishWorkerLoginV91(worker,offline=false,searchOnly=false){
   currentWorker=worker;
+  document.body.classList.toggle('worker-search-only-v101',!!searchOnly);
   sessionStorage.setItem('mirim_worker_session',JSON.stringify(currentWorker));
   sessionStorage.removeItem('mirim_vip_ok');
   sessionStorage.removeItem('mirim_vip_view');
@@ -3513,7 +3514,9 @@ function finishWorkerLoginV91(worker,offline=false){
   try{renderDailyHistories();}catch(e){}
   try{if(typeof syncParkLocationAccessV62==='function')syncParkLocationAccessV62();}catch(e){}
 
-  const suffix=offline?'\n\n⚠️ 현재 공용 DB는 미연결 상태입니다. 로그인은 정상 처리되었고, 연결되는 기능은 자동으로 다시 동기화됩니다.':'';
+  const suffix=searchOnly
+    ? '\n\n🔎 현재 공용 동기화가 중단되어 작업자 모드는 검색 전용입니다.\n수정 · 삭제 · 입고 · 출고 · 주문 등록은 사용할 수 없습니다.'
+    : (offline?'\n\n⚠️ 현재 공용 DB는 미연결 상태입니다. 로그인은 정상 처리되었고, 연결되는 기능은 자동으로 다시 동기화됩니다.':'');
   alert(`✅ ${currentWorker.name}님, 반갑습니다!\n\n🌱 ${workerPositiveMessage(currentWorker.name)}${suffix}`);
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -3527,7 +3530,7 @@ async function workerLogin(){
  // 박향숙 기존 작업자 계정은 공용 DB 상태와 무관하게 0307로 즉시 로그인.
  // Supabase quota/restricted 상태에서도 PC·모바일 모두 업무 진입 가능.
  if(name==='박향숙' && pin==='0307'){
-   finishWorkerLoginV91({id:'offline_park_v96',name:'박향숙'},!sharedReady||!sharedDb);
+   finishWorkerLoginV91({id:'offline_park_v96',name:'박향숙'},!sharedReady||!sharedDb,!sharedReady||!sharedDb);
    return;
  }
 
@@ -3582,11 +3585,13 @@ async function workerLogin(){
 
    // 현재 실제 사용 중인 박향숙 계정은 PC/모바일 DB 장애 시에도 업무 진입 가능
    if(name==='박향숙' && pin==='0307'){
-     finishWorkerLoginV91({id:'offline_park_v96',name:'박향숙'},true);
+     finishWorkerLoginV91({id:'offline_park_v96',name:'박향숙'},true,true);
      return;
    }
 
-   alert('공용 DB 연결이 불안정합니다. 잠시 후 다시 시도해 주세요.\n\n박향숙 계정은 기존 비밀번호 0307로 비상 로그인할 수 있습니다.');
+   // V101: 공용 DB 장애 때는 계정 검증/쓰기 권한을 주지 않고 검색 전용으로만 진입
+   finishWorkerLoginV91({id:'offline_search_v101_'+Date.now(),name:name},true,true);
+   return;
  }catch(e){
    console.error(e);
    alert('로그인 실패: '+(e.message||e));
@@ -12793,4 +12798,66 @@ document.addEventListener('click',()=>setTimeout(addDrawingShortcutsV79,100),tru
      - 작업자 주문 반복조회 5초 -> 2분
      - 관리자 알림 반복조회 15초 -> 2분
      저장/Realtime/화면복귀 즉시 갱신은 유지 -->
+
+<style id="worker-search-only-v101">
+/* V101 작업자 검색 전용: 공용 DB 장애 시 검색 화면만 허용 */
+body.worker-search-only-v101:not(.admin-view) #workerMainShortcutCard .worker-main-shortcut-btn{
+  display:none!important;
+}
+body.worker-search-only-v101:not(.admin-view) #workerMainShortcutCard [data-worker-main="location"],
+body.worker-search-only-v101:not(.admin-view) #workerMainShortcutCard [data-worker-main="photo"],
+body.worker-search-only-v101:not(.admin-view) #workerMainShortcutCard [data-worker-main="drawing"]{
+  display:flex!important;
+}
+
+/* 메인 검색 결과에서 수정/삭제/저장/사진변경 동작 숨김 */
+body.worker-search-only-v101:not(.admin-view) #results button,
+body.worker-search-only-v101:not(.admin-view) #results input,
+body.worker-search-only-v101:not(.admin-view) #results select,
+body.worker-search-only-v101:not(.admin-view) #results textarea,
+body.worker-search-only-v101:not(.admin-view) #results .loc-editor,
+body.worker-search-only-v101:not(.admin-view) #results .location-edit-actions,
+body.worker-search-only-v101:not(.admin-view) #results .multi-loc-actions,
+body.worker-search-only-v101:not(.admin-view) #results .photo-actions{
+  display:none!important;
+}
+
+/* 도면 확인은 검색/조회만: 입력·저장·관리 기능 숨김 */
+body.worker-search-only-v101:not(.admin-view) #drawingLocationCardV79 .drawing-v79-form,
+body.worker-search-only-v101:not(.admin-view) #drawingLocationCardV79 .drawing-v79-admin-col,
+body.worker-search-only-v101:not(.admin-view) #drawingLocationCardV79 button:not([onclick*="setDrawingQuickQtyV100"]):not([onclick*="closeDrawingLocationV79"]){
+  display:none!important;
+}
+body.worker-search-only-v101:not(.admin-view) #drawingLocationCardV79 input:not(#drawingCompanySearchV88):not(#drawingSearchV79),
+body.worker-search-only-v101:not(.admin-view) #drawingLocationCardV79 select:not(#drawingQtySearchV95){
+  display:none!important;
+}
+</style>
+<script id="worker-search-only-guard-v101">
+function workerSearchOnlyGuardV101(action){
+  if(document.body.classList.contains('worker-search-only-v101') && !isAdmin){
+    alert('🔎 현재 작업자 모드는 검색 전용입니다.\n수정 · 삭제 · 저장 기능은 사용할 수 없습니다.');
+    return false;
+  }
+  return true;
+}
+(function(){
+  const guarded=[
+    'saveLocation','editLocation','saveMultiLocation','deleteLocation',
+    'saveInbound','saveOutbound','saveReturn',
+    'saveDrawingLocationV79','editDrawingLocationV79','deleteDrawingLocationV79',
+    'saveUnregisteredItem','saveOtherMaterialStorageV47'
+  ];
+  guarded.forEach(name=>{
+    const fn=window[name];
+    if(typeof fn!=='function' || fn.__searchOnlyGuardV101)return;
+    const wrapped=function(){
+      if(!workerSearchOnlyGuardV101(name))return;
+      return fn.apply(this,arguments);
+    };
+    wrapped.__searchOnlyGuardV101=true;
+    window[name]=wrapped;
+  });
+})();
+</script>
 </body></html>
