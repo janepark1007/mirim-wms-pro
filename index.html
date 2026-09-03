@@ -3548,11 +3548,15 @@ async function workerLogout(){
 
 async function loadWorkerLoginLogs(){
  if(!isAdmin) return;
- if(!sharedReady||!sharedDb) return alert('공용 동기화 연결이 필요합니다.');
+ const body=$('loginLogBody');
+ if(!sharedReady||!sharedDb){
+   if(body)body.innerHTML='<tr><td colspan="5">공용 동기화 연결 후 로그인 이력을 확인할 수 있습니다.</td></tr>';
+   return;
+ }
  try{
    const cfg=window.MIRIM_CONFIG||{};
    const {data,error}=await sharedDb.rpc('admin_worker_login_logs',{
-     p_admin_pin:String(cfg.adminPin||'2589'),
+     p_admin_pin:String(cfg.adminPin||'0307'),
      p_limit:200
    });
    if(error) throw error;
@@ -10593,7 +10597,7 @@ async function openAdminShortcutListV41(kind){
     if(title)title.textContent='👥 사용자 관리';
     const el=document.getElementById('loginLogPanel');
     ok=moveToAdminShortcutFocusV41(el);
-    try{if(typeof loadLoginLogs==='function')await loadLoginLogs();}catch(e){}
+    try{if(typeof loadWorkerLoginLogs==='function')await loadWorkerLoginLogs();}catch(e){}
   }
   else if(kind==='alerts'){
     if(title)title.textContent='🔔 알림 확인';
@@ -14625,9 +14629,13 @@ async function openAdminUsersV73(){
     if(typeof moveToAdminShortcutFocusV41==='function'){
       moveToAdminShortcutFocusV41(users);
     }
+    users.classList.remove('hidden','hidden-admin');
+    users.style.setProperty('display','block','important');
+    users.style.setProperty('visibility','visible','important');
+    users.style.setProperty('opacity','1','important');
 
     try{
-      if(typeof loadLoginLogs==='function') await loadLoginLogs();
+      if(typeof loadWorkerLoginLogs==='function') await loadWorkerLoginLogs();
     }catch(e){
       console.error('사용자 관리 불러오기 오류',e);
     }
@@ -14643,7 +14651,7 @@ async function openAdminUsersV73(){
       users.style.setProperty('display','block','important');
       users.style.setProperty('visibility','visible','important');
       try{users.scrollIntoView({behavior:'auto',block:'start'});}catch(err){}
-      try{if(typeof loadLoginLogs==='function') await loadLoginLogs();}catch(err){}
+      try{if(typeof loadWorkerLoginLogs==='function') await loadWorkerLoginLogs();}catch(err){}
     }else{
       alert('사용자 관리 화면을 열지 못했습니다.');
     }
