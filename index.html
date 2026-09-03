@@ -13084,4 +13084,47 @@ body.worker-location-only-v104:not(.admin-view) #results .worker-admin-detail{
   document.getElementById('adminLoginBtn')?.addEventListener('click',afterAdminClickV104);
 })();
 </script>
+
+<style id="admin-entry-visible-v105-style">
+#adminEntryV105{
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:99999;
+  border:0;
+  border-radius:12px;
+  padding:11px 16px;
+  background:#173f35;
+  color:#fff;
+  font-weight:1000;
+  font-size:14px;
+  box-shadow:0 5px 16px rgba(0,0,0,.18);
+  cursor:pointer;
+}
+body.admin-view #adminEntryV105{display:none!important;}
+@media(max-width:700px){
+  #adminEntryV105{top:8px;right:8px;padding:9px 12px;font-size:12px;}
+}
+</style>
+<button type="button" id="adminEntryV105" onclick="openAdminEntryV105()">🔐 관리자 모드</button>
+<script id="admin-entry-visible-v105-script">
+function openAdminEntryV105(){
+  // 공개 검색용 가상 작업자 상태만 해제하고 기존 관리자 로그인 화면/로직을 사용
+  if(String(currentWorker?.id||'')==='public_search_v102'){
+    currentWorker=null;
+    try{sessionStorage.removeItem('mirim_worker_session');}catch(e){}
+  }
+  document.body.classList.remove('worker-location-only-v104','worker-search-only-v101');
+  adminLogin();
+  // 관리자 로그인 취소/실패 시 위치검색 화면으로 복귀
+  if(!isAdmin){
+    setTimeout(()=>{
+      if(!isAdmin && !document.body.classList.contains('admin-view')){
+        currentWorker={id:'public_search_v102',name:'작업자'};
+        document.body.classList.add('worker-location-only-v104','worker-search-only-v101');
+      }
+    },100);
+  }
+}
+</script>
 </body></html>
