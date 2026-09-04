@@ -14301,17 +14301,35 @@ window.runPublicDrawingSearchV108=function(){
     return nppHayV113(x).includes(q);
   }).slice(0,80);
   status.textContent=`NPP 도면 검색결과 ${filtered.length}건${filtered.length===80?' (최대 80건 표시)':''}`;
+  const allRowsV120=nppLoadV113();
+  const groupCountV120=(x)=>allRowsV120.filter(r=>String(r.key||'').trim()===String(x.key||'').trim()).length;
+  const partNoV120=(x)=>{
+    const m=String(x.name||'').match(/\((\d{5,})\)/);
+    return m?m[1]:(x.key||'-');
+  };
   out.innerHTML=filtered.length?filtered.map(x=>`
-    <div class="public-drawing-row-v108">
-      <div class="pdr-top-v108">
+    <div class="public-drawing-row-v108 npp-result-card-v120">
+      <div class="npp-result-head-v120">
         <div>
-          <div class="pdr-item-v108">${escV113(x.name||'도면명 미입력')}</div>
-          <div class="pdr-company-v108">찾기번호 ${escV113(x.findNo)} · ${escV113(x.key||'-')}</div>
+          <div class="npp-result-name-v120">${escV113(x.name||'도면·문서명 미입력')}</div>
+          <div class="npp-result-find-v120">찾기번호 ${escV113(x.findNo)} ${x.status?`· ${escV113(x.status)}`:''}</div>
         </div>
-        <div class="pdr-qty-v108">${escV113(x.status||'')}</div>
       </div>
-      <div class="pdr-loc-v108">📍 보관위치 · ${escV113(x.location||'미등록')}</div>
-      <div class="pdr-meta-v108">${escV113(x.category||'-')}${x.note?' · '+escV113(x.note):''}</div>
+      <div class="npp-result-grid-v120">
+        <div class="npp-result-box-v120 npp-part-v120">
+          <small>품번</small>
+          <b>${escV113(partNoV120(x))}</b>
+        </div>
+        <div class="npp-result-box-v120 npp-location-v120">
+          <small>보관번호</small>
+          <b>${escV113(x.location||'미등록')}</b>
+        </div>
+        <div class="npp-result-box-v120 npp-kind-v120">
+          <small>몇 종류</small>
+          <b>${escV113(x.key||'-')} · ${groupCountV120(x)}종류</b>
+        </div>
+      </div>
+      <div class="npp-result-meta-v120">${escV113(x.category||'-')}${x.note?' · '+escV113(x.note):''}</div>
     </div>`).join(''):'<div class="notice">일치하는 NPP도면위치가 없습니다.</div>';
 };
 
@@ -14813,6 +14831,102 @@ body:not(.admin-view) #work #results .location-card-v17{
   body:not(.admin-view) #work #results .result-location .all-location-line{
     width:100%!important;
     margin:4px 0!important;
+  }
+}
+</style>
+
+<style id="npp-result-oneglance-v120-style">
+/* V120 NPP 검색결과: 품번 / 보관번호 / 몇종류 한눈에 */
+body.worker-search-main-v110:not(.admin-view) #publicDrawingResultsV108 .npp-result-card-v120{
+  padding:16px!important;
+  border:1px solid #dfd8f2!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  box-shadow:0 5px 16px rgba(83,61,145,.06)!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-head-v120{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin-bottom:12px!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-name-v120{
+  color:#20242a!important;
+  font-size:19px!important;
+  line-height:1.3!important;
+  font-weight:1000!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-find-v120{
+  margin-top:5px!important;
+  color:#7c6aa9!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-grid-v120{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-box-v120{
+  min-height:78px!important;
+  padding:10px 12px!important;
+  box-sizing:border-box!important;
+  border-radius:12px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-box-v120 small{
+  display:block!important;
+  margin-bottom:5px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-box-v120 b{
+  display:block!important;
+  font-size:18px!important;
+  line-height:1.25!important;
+  font-weight:1000!important;
+  word-break:break-word!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-part-v120{
+  border:1px solid #c8dcf5!important;
+  background:#f1f7ff!important;
+  color:#255fa8!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-location-v120{
+  border:1px solid #bfe5cf!important;
+  background:#eef9f3!important;
+  color:#15704b!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-kind-v120{
+  border:1px solid #dfd1f7!important;
+  background:#f7f2ff!important;
+  color:#6c49ba!important;
+}
+body.worker-search-main-v110:not(.admin-view) .npp-result-meta-v120{
+  margin-top:9px!important;
+  padding-top:8px!important;
+  border-top:1px dashed #e0e1e5!important;
+  color:#717781!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  text-align:left!important;
+}
+@media(max-width:620px){
+  body.worker-search-main-v110:not(.admin-view) .npp-result-grid-v120{
+    grid-template-columns:1fr 1fr!important;
+  }
+  body.worker-search-main-v110:not(.admin-view) .npp-kind-v120{
+    grid-column:1 / -1!important;
+  }
+  body.worker-search-main-v110:not(.admin-view) .npp-result-name-v120{
+    font-size:16px!important;
+  }
+  body.worker-search-main-v110:not(.admin-view) .npp-result-box-v120 b{
+    font-size:16px!important;
   }
 }
 </style>
