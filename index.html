@@ -5330,15 +5330,16 @@ function search(){
    return `<div class="result">
       <div class="result-card-main">
         ${photoHtml}
-        <div>
+        <div class="worker-result-info-v118">
           <div class="result-part">${esc(x.part)}</div>
           <div class="result-name">${esc(x.name)}</div>
           ${isAdmin?`<div class="worker-admin-detail" style="color:var(--muted);margin-top:6px">${esc(x.spec||'')}</div>`:''}
 
           <div class="worker-search-stock-row-v117">
             ${(!isAdmin && mode==='search')?`<div class="park-erp-qty-v64 worker-erp-side-v117">
-              <small>ERP 수량</small>
-              <b>${Number(x.erpQty||0).toLocaleString()}개</b>
+              <small>🗄️ ERP 현재 수량</small>
+              <b>${Number(getCurrentErpQtyV118(x)).toLocaleString()}개</b>
+              <em>ERP 기준 2026-09-02</em>
             </div>`:''}
 
             <div class="result-location">
@@ -14419,4 +14420,215 @@ body.worker-location-only-v104:not(.admin-view) #results .location-card-v17{
   }
 }
 </style>
+
+<style id="worker-horizontal-result-v118-style">
+/* V118: 작업자 검색 결과를 요청 이미지처럼 가로형으로 */
+body.worker-location-only-v104:not(.admin-view) #work #results .result{
+  width:100%!important;
+  max-width:1180px!important;
+  margin:0 auto 14px!important;
+  padding:16px!important;
+  box-sizing:border-box!important;
+}
+
+body.worker-location-only-v104:not(.admin-view) #work #results .result-card-main{
+  display:grid!important;
+  grid-template-columns:180px minmax(0,1fr)!important;
+  gap:18px!important;
+  align-items:start!important;
+  width:100%!important;
+  max-width:100%!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+
+body.worker-location-only-v104:not(.admin-view) #work #results .result-photo-box{
+  width:180px!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .result-photo-box img,
+body.worker-location-only-v104:not(.admin-view) #work #results .result-photo-empty{
+  width:180px!important;
+  height:180px!important;
+  object-fit:contain!important;
+}
+
+body.worker-location-only-v104:not(.admin-view) #work #results .worker-result-info-v118{
+  position:relative!important;
+  min-width:0!important;
+  padding-right:230px!important;
+}
+
+body.worker-location-only-v104:not(.admin-view) #work #results .result-part,
+body.worker-location-only-v104:not(.admin-view) #work #results .result-name{
+  text-align:left!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .result-part{
+  font-size:28px!important;
+  font-weight:1000!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .result-name{
+  font-size:21px!important;
+  line-height:1.35!important;
+  margin-top:5px!important;
+}
+
+/* ERP 현재수량을 오른쪽 상단 카드로 */
+body.worker-location-only-v104:not(.admin-view) #work #results .worker-search-stock-row-v117{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:18px 0 0!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .worker-erp-side-v117{
+  position:absolute!important;
+  top:0!important;
+  right:0!important;
+  width:210px!important;
+  min-height:110px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:12px!important;
+  margin:0!important;
+  border:1px solid #b8d8f5!important;
+  border-radius:14px!important;
+  background:#eef7ff!important;
+  box-sizing:border-box!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .worker-erp-side-v117 small{
+  color:#245fa8!important;
+  font-size:15px!important;
+  font-weight:1000!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .worker-erp-side-v117 b{
+  margin-top:4px!important;
+  color:#275eb5!important;
+  font-size:30px!important;
+  font-weight:1000!important;
+  line-height:1.1!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .worker-erp-side-v117 em{
+  display:block!important;
+  margin-top:7px!important;
+  color:#68798a!important;
+  font-size:11px!important;
+  font-style:normal!important;
+  font-weight:800!important;
+}
+
+/* 자재위치 상세를 가로 카드로 */
+body.worker-location-only-v104:not(.admin-view) #work #results .result-location{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:14px!important;
+  border-radius:14px!important;
+  box-sizing:border-box!important;
+  background:#eef9f3!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .result-location small{
+  text-align:left!important;
+  font-size:14px!important;
+  color:#40534a!important;
+  margin-bottom:10px!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .location-cards-v17{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(150px,1fr))!important;
+  gap:10px!important;
+  width:100%!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .location-card-v17{
+  width:100%!important;
+  min-width:0!important;
+  min-height:120px!important;
+  margin:0!important;
+  padding:12px!important;
+  box-sizing:border-box!important;
+  border-radius:13px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .location-label-v17{
+  font-size:16px!important;
+  font-weight:1000!important;
+  text-align:center!important;
+  margin-bottom:8px!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .location-value-v17{
+  font-size:18px!important;
+  line-height:1.35!important;
+  text-align:center!important;
+  font-weight:1000!important;
+}
+body.worker-location-only-v104:not(.admin-view) #work #results .location-qty-admin{
+  display:inline!important;
+  color:#ff2f75!important;
+  font-weight:1000!important;
+}
+
+/* 기존 작업자용 나중에확인은 검색전용 메인에서 숨김 */
+body.worker-location-only-v104:not(.admin-view) #work #results .later-check-direct-wrap{
+  display:none!important;
+}
+
+@media(max-width:900px){
+  body.worker-location-only-v104:not(.admin-view) #work #results .worker-result-info-v118{
+    padding-right:0!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .worker-erp-side-v117{
+    position:static!important;
+    width:100%!important;
+    min-height:auto!important;
+    margin-bottom:10px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .location-cards-v17{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+@media(max-width:700px){
+  body.worker-location-only-v104:not(.admin-view) #work #results .result-card-main{
+    display:grid!important;
+    grid-template-columns:110px minmax(0,1fr)!important;
+    gap:10px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .result-photo-box{
+    width:110px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .result-photo-box img,
+  body.worker-location-only-v104:not(.admin-view) #work #results .result-photo-empty{
+    width:110px!important;
+    height:110px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .result-part{
+    font-size:18px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .result-name{
+    font-size:15px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .worker-search-stock-row-v117{
+    grid-column:1 / -1!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #work #results .location-cards-v17{
+    grid-template-columns:1fr!important;
+  }
+}
+</style>
+
+<script id="erp-current-v118-script">
+/* V118: 2026-09-02 ERP 변경목록에 있는 품목은 'new' 수량을 우선 사용 */
+function getCurrentErpQtyV118(x){
+  try{
+    const part=String(x?.part||'').trim();
+    const changed=Array.isArray(window.ERP_CHANGE_DATA_V71)
+      ? window.ERP_CHANGE_DATA_V71.find(r=>String(r.part||'').trim()===part)
+      : null;
+    if(changed && Number.isFinite(Number(changed.new))) return Number(changed.new);
+  }catch(e){}
+  return Number(x?.erpQty||0);
+}
+</script>
 </body></html>
