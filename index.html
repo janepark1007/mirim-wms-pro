@@ -5335,17 +5335,19 @@ function search(){
           <div class="result-name">${esc(x.name)}</div>
           ${isAdmin?`<div class="worker-admin-detail" style="color:var(--muted);margin-top:6px">${esc(x.spec||'')}</div>`:''}
 
-          ${(!isAdmin && mode==='search')?`<div class="park-erp-qty-v64">
-            <small>ERP 수량</small>
-            <b>${Number(x.erpQty||0).toLocaleString()}개</b>
-          </div>`:''}
+          <div class="worker-search-stock-row-v117">
+            ${(!isAdmin && mode==='search')?`<div class="park-erp-qty-v64 worker-erp-side-v117">
+              <small>ERP 수량</small>
+              <b>${Number(x.erpQty||0).toLocaleString()}개</b>
+            </div>`:''}
 
-          <div class="result-location">
-            <small>📍 자재 위치 ${getAllLocations(x.part).length>1?`· 총 ${getAllLocations(x.part).length}곳`:''}</small>
-            ${getAllLocations(x.part).length
-              ? getAllLocations(x.part).map(e=>`<b class="all-location-line">${e.is_primary?'★':'•'} ${esc(formatLoc(e))}<span class="location-qty-admin"> · ${Number(e.qty||0).toLocaleString()}개</span>${e.is_primary?' (주 위치)':''}</b>`).join('')
-              : `<b>⚠️ 위치 확인 필요</b>`}
-            ${getAllLocations(x.part).length?`<b class="all-location-line" style="margin-top:7px;padding-top:7px;border-top:1px solid #bcd6c8;color:#087c49">위치 총수량 · ${getAllLocations(x.part).reduce((sum,e)=>sum+Number(e.qty||0),0).toLocaleString()}개</b>`:''}
+            <div class="result-location">
+              <small>📍 자재 위치 ${getAllLocations(x.part).length>1?`· 총 ${getAllLocations(x.part).length}곳`:''}</small>
+              ${getAllLocations(x.part).length
+                ? getAllLocations(x.part).map(e=>`<b class="all-location-line">${e.is_primary?'★':'•'} ${esc(formatLoc(e))}<span class="location-qty-admin"> · ${Number(e.qty||0).toLocaleString()}개</span>${e.is_primary?' (주 위치)':''}</b>`).join('')
+                : `<b>⚠️ 위치 확인 필요</b>`}
+              ${getAllLocations(x.part).length?`<b class="all-location-line" style="margin-top:7px;padding-top:7px;border-top:1px solid #bcd6c8;color:#087c49">위치 총수량 · ${getAllLocations(x.part).reduce((sum,e)=>sum+Number(e.qty||0),0).toLocaleString()}개</b>`:''}
+            </div>
           </div>
 
           <div class="later-check-direct-wrap">
@@ -10857,7 +10859,10 @@ body:not(.admin-view) #results .later-check-btn:active{
         totalText=oldTotal.textContent||totalText;
       }
 
-      locHtml=locHtml.slice(0,2);
+      // V117: 일반 작업자 검색에서는 등록된 모든 자재위치를 상세 표시
+      if(!(document.body.classList.contains('worker-location-only-v104')&&!document.body.classList.contains('admin-view'))){
+        locHtml=locHtml.slice(0,2);
+      }
 
       if(!locHtml.length && !totalText) return;
 
@@ -14331,4 +14336,87 @@ if(document.readyState==='loading'){
   setTimeout(()=>{if(isAdmin)ensureNppAdminButtonV113();},300);
 }
 </script>
+
+<style id="worker-location-detail-v117-style">
+/* V117 일반 작업자 검색: ERP 수량 + 상세 자재위치를 한눈에 */
+body.worker-location-only-v104:not(.admin-view) #results .worker-search-stock-row-v117{
+  display:grid!important;
+  grid-template-columns:180px minmax(0,1fr)!important;
+  gap:12px!important;
+  align-items:stretch!important;
+  width:100%!important;
+  max-width:760px!important;
+  margin:10px auto 0!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .worker-erp-side-v117{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:center!important;
+  min-height:100%!important;
+  margin:0!important;
+  padding:14px 12px!important;
+  border:1px solid #f0c7d5!important;
+  border-radius:14px!important;
+  background:#fff1f6!important;
+  box-sizing:border-box!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .worker-erp-side-v117 small{
+  display:block!important;
+  color:#a13b66!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .worker-erp-side-v117 b{
+  display:block!important;
+  margin-top:5px!important;
+  color:#d11f67!important;
+  font-size:25px!important;
+  font-weight:1000!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .result-location{
+  margin:0!important;
+  max-width:none!important;
+  padding:13px 14px!important;
+  text-align:left!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .result-location small{
+  text-align:left!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .result-location .all-location-line,
+body.worker-location-only-v104:not(.admin-view) #results .result-location .location-card-v17,
+body.worker-location-only-v104:not(.admin-view) #results .result-location .location-value-v17{
+  text-align:left!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .result-location .location-qty-admin{
+  display:inline!important;
+  color:#d11f67!important;
+  font-weight:1000!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .location-cards-v17{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:7px!important;
+}
+body.worker-location-only-v104:not(.admin-view) #results .location-card-v17{
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+
+@media(max-width:700px){
+  body.worker-location-only-v104:not(.admin-view) #results .worker-search-stock-row-v117{
+    grid-template-columns:1fr!important;
+    max-width:100%!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #results .worker-erp-side-v117{
+    min-height:auto!important;
+    padding:10px!important;
+  }
+  body.worker-location-only-v104:not(.admin-view) #results .worker-erp-side-v117 b{
+    font-size:22px!important;
+  }
+}
+</style>
 </body></html>
