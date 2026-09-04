@@ -15032,4 +15032,71 @@ if(document.readyState==='loading'){
   if(isAdmin)setTimeout(forceAdminHomeV121,250);
 }
 </script>
+
+<style id="worker-location-four-v122-style">
+/* V122 엑셀자재위치 검색결과 기본 4칸:
+   1자재위치 / 2자재위치 / 소모자재위치 / 총수량 */
+body:not(.admin-view) #work #results .location-cards-v17{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:9px!important;
+  width:100%!important;
+}
+body:not(.admin-view) #work #results .location-card-v17{
+  min-height:105px!important;
+}
+@media(max-width:760px){
+  body:not(.admin-view) #work #results .location-cards-v17{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+</style>
+
+<script id="worker-location-four-v122-script">
+/* 기존 검색 결과가 그려진 뒤 위치카드의 제목/순서를 요청 형식으로만 재정리 */
+(function(){
+  function normalizeWorkerLocationV122(){
+    if(isAdmin||document.body.classList.contains('admin-view'))return;
+
+    document.querySelectorAll('#work #results .location-cards-v17').forEach(box=>{
+      const cards=[...box.querySelectorAll('.location-card-v17')];
+      if(!cards.length)return;
+
+      const totalCard=cards.find(c=>{
+        const tx=(c.textContent||'').replace(/\s+/g,'');
+        return tx.includes('총수량')||tx.includes('재고총수량')||tx.includes('위치총수량');
+      });
+
+      const locationCards=cards.filter(c=>c!==totalCard);
+      const labels=['1자재위치','2자재위치','소모자재위치'];
+
+      locationCards.slice(0,3).forEach((card,i)=>{
+        const label=card.querySelector('.location-label-v17');
+        if(label)label.textContent=labels[i];
+      });
+
+      if(totalCard){
+        const label=totalCard.querySelector('.location-label-v17');
+        if(label)label.textContent='총수량';
+      }
+
+      /* 기본 순서 고정 */
+      locationCards.slice(0,3).forEach(c=>box.appendChild(c));
+      if(totalCard)box.appendChild(totalCard);
+    });
+  }
+
+  /* 검색 함수 실행 후에만 한 번 재정리 - 새 감시기/폴링 추가 없음 */
+  const oldSearch=window.search;
+  if(typeof oldSearch==='function'&&!oldSearch.__v122){
+    const wrapped=function(){
+      const r=oldSearch.apply(this,arguments);
+      setTimeout(normalizeWorkerLocationV122,30);
+      return r;
+    };
+    wrapped.__v122=true;
+    window.search=wrapped;
+  }
+})();
+</script>
 </body></html>
