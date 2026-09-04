@@ -14930,4 +14930,106 @@ body.worker-search-main-v110:not(.admin-view) .npp-result-meta-v120{
   }
 }
 </style>
+
+<style id="admin-main-restore-v121-style">
+/* V121: 관리자 로그인 시 메인 홈을 최우선으로 표시 */
+body.admin-view:not(.npp-admin-open-v113) #home{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body.admin-view:not(.npp-admin-open-v113) #work,
+body.admin-view:not(.npp-admin-open-v113) #publicDrawingSearchV108,
+body.admin-view:not(.npp-admin-open-v113) #workerLoginPanel{
+  display:none!important;
+}
+</style>
+
+<script id="admin-main-restore-v121-script">
+function forceAdminHomeV121(){
+  if(!isAdmin)return;
+
+  document.body.classList.remove(
+    'worker-location-only-v104',
+    'worker-search-only-v101',
+    'worker-search-main-v110',
+    'admin-reference-home',
+    'admin-shortcut-focus',
+    'admin-task-focus',
+    'other-storage-open-v50',
+    'npp-admin-open-v113'
+  );
+
+  const home=document.getElementById('home');
+  const work=document.getElementById('work');
+  const draw=document.getElementById('publicDrawingSearchV108');
+  const workerLogin=document.getElementById('workerLoginPanel');
+
+  if(home){
+    home.classList.remove('hidden');
+    home.style.setProperty('display','block','important');
+    home.style.setProperty('visibility','visible','important');
+    home.style.setProperty('opacity','1','important');
+  }
+  if(work){
+    work.classList.add('hidden');
+    work.style.setProperty('display','none','important');
+  }
+  if(draw){
+    draw.style.setProperty('display','none','important');
+  }
+  if(workerLogin){
+    workerLogin.classList.add('hidden');
+    workerLogin.style.setProperty('display','none','important');
+  }
+
+  try{ensureAdminQuickInOutV108();}catch(e){}
+  try{ensureNppAdminButtonV113();}catch(e){}
+  try{updateHomeSummary?.();}catch(e){}
+  try{syncDashboardStats?.();}catch(e){}
+}
+
+/* 관리자 로그인 완료 후 마지막에 반드시 메인 복구 */
+const __adminLoginBeforeV121=window.adminLogin;
+if(typeof __adminLoginBeforeV121==='function' && !__adminLoginBeforeV121.__v121){
+  const wrapped=async function(){
+    const r=await __adminLoginBeforeV121.apply(this,arguments);
+    if(isAdmin){
+      setTimeout(forceAdminHomeV121,30);
+      setTimeout(forceAdminHomeV121,180);
+      setTimeout(forceAdminHomeV121,500);
+    }
+    return r;
+  };
+  wrapped.__v121=true;
+  window.adminLogin=wrapped;
+}
+
+/* 기존 관리자 메인 복구 함수 호출 시에도 V121 적용 */
+const __forceAdminMainBeforeV121=window.forceAdminMainV109;
+if(typeof __forceAdminMainBeforeV121==='function'){
+  window.forceAdminMainV109=function(){
+    const r=__forceAdminMainBeforeV121.apply(this,arguments);
+    setTimeout(forceAdminHomeV121,10);
+    return r;
+  };
+}
+
+/* NPP 관리 화면 닫을 때도 메인으로 */
+const __closeNppAdminBeforeV121=window.closeNppAdminV113;
+if(typeof __closeNppAdminBeforeV121==='function'){
+  window.closeNppAdminV113=function(){
+    try{__closeNppAdminBeforeV121.apply(this,arguments);}catch(e){}
+    setTimeout(forceAdminHomeV121,20);
+  };
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(isAdmin)setTimeout(forceAdminHomeV121,250);
+  },{once:true});
+}else{
+  if(isAdmin)setTimeout(forceAdminHomeV121,250);
+}
+</script>
 </body></html>
