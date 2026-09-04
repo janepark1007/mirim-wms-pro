@@ -5335,7 +5335,7 @@ function search(){
           <div class="result-name">${esc(x.name)}</div>
           ${isAdmin?`<div class="worker-admin-detail" style="color:var(--muted);margin-top:6px">${esc(x.spec||'')}</div>`:''}
 
-          ${parkLocationWorker?`<div class="park-erp-qty-v64">
+          ${(!isAdmin && mode==='search')?`<div class="park-erp-qty-v64">
             <small>ERP 수량</small>
             <b>${Number(x.erpQty||0).toLocaleString()}개</b>
           </div>`:''}
