@@ -16723,7 +16723,7 @@ if(document.readyState==='loading'){
    관리자 메인 버튼 클릭만 캡처 단계에서 1개 기능으로 정확히 연결한다. */
 (function(){
   const routeMapV137={
-    adminMainOutboundV137:()=>{ closeAdminMainV125(); openAdminQuickInOutV108('outbound'); },
+    adminMainOutboundV137:()=>{ openFastOutboundV143(); },
     adminMainLocationV137:()=>{ closeAdminMainV125(); openMode('location'); },
     adminMainUnregV137:()=>{ closeAdminMainV125(); openAdminTaskView('unreg'); },
     adminMainOrdersV137:()=>{ closeAdminMainV125(); openAdminTaskView('orders'); },
@@ -17024,6 +17024,191 @@ async function saveFastInboundV140(){
     document.getElementById('fiPartV140').focus();
   }catch(e){console.error(e);alert('입고 저장 실패: '+(e.message||e))}
   finally{syncFastInboundV140()}
+}
+</script>
+
+<style id="fast-outbound-v143-style">
+#fastOutboundV143{display:none}
+body.admin-view.fast-outbound-v143 #fastOutboundV143{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  width:100%!important;min-height:calc(100vh - 80px)!important;
+  padding:12px!important;box-sizing:border-box!important;background:#fff7f7!important;
+}
+body.admin-view.fast-outbound-v143 main > *:not(#fastOutboundV143){display:none!important}
+.fo143-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;background:#fff;border:1px solid #ecdada;border-radius:14px}
+.fo143-head h2{margin:0;font-size:22px;color:#8b2020}
+.fo143-head p{margin:4px 0 0;font-size:12px;color:#756666;font-weight:800}
+.fo143-home{min-height:42px;padding:8px 12px;border:1px solid #dfcccc;border-radius:10px;background:#fff;font-weight:1000}
+.fo143-form{display:grid;grid-template-columns:minmax(0,1.35fr) 130px 170px minmax(0,.9fr) 130px;gap:8px;margin-top:10px;padding:14px;background:#fff;border:2px solid #e7bcbc;border-radius:14px}
+.fo143-form input{min-height:54px;padding:10px 12px;border:2px solid #e1cece;border-radius:10px;font-size:17px;font-weight:900;box-sizing:border-box}
+.fo143-save{border:0;border-radius:10px;background:#b52c2c;color:#fff;font-size:16px;font-weight:1000;cursor:pointer}
+.fo143-save:disabled{opacity:.4}
+.fo143-picked,.fo143-status{margin-top:9px;padding:9px 11px;border-radius:9px;background:#fff;border:1px solid #eadcdc;font-size:13px;font-weight:900}
+.fo143-photo-box{display:flex;align-items:center;gap:10px;margin-top:9px;padding:10px 11px;background:#fff;border:1px solid #eadcdc;border-radius:10px}
+.fo143-photo-preview{flex:1;min-width:0;font-size:12px;font-weight:900;color:#675c5c}
+.fo143-photo-preview img{display:block;max-width:110px;max-height:90px;object-fit:contain;border-radius:8px;margin-top:6px}
+.fo143-photo-box button{min-height:42px;padding:8px 12px;border:0;border-radius:9px;background:#ece7f8;color:#514078;font-weight:1000}
+.fo143-photo-box button:disabled{opacity:.45}
+.fo143-results{display:grid;gap:7px;margin-top:8px}
+.fo143-row{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:8px;align-items:center;padding:9px 11px;background:#fff;border:1px solid #eadcdc;border-radius:10px}
+.fo143-row button{min-height:38px;border:0;border-radius:8px;background:#f8e5e5;color:#8a2525;font-weight:1000}
+@media(max-width:720px){.fo143-form{grid-template-columns:1fr 105px}.fo143-form #foPersonV143,.fo143-form #foLocV143,.fo143-save{grid-column:1/-1}.fo143-photo-box{align-items:flex-start;flex-direction:column}.fo143-photo-box button{width:100%}}
+</style>
+
+<script id="fast-outbound-v143-script">
+window.__foRowsV143=[];
+window.__foSelectedV143=null;
+
+function ensureFastOutboundV143(){
+  let p=document.getElementById('fastOutboundV143');
+  if(p)return p;
+  const main=document.querySelector('main');
+  if(!main)return null;
+  p=document.createElement('section');
+  p.id='fastOutboundV143';
+  p.innerHTML=`
+    <div class="fo143-head">
+      <div><h2>📤 택배 빠른출고</h2><p>빠른입고와 같은 방식으로 품목 확인 후 바로 출고합니다.</p></div>
+      <button class="fo143-home" type="button" onclick="closeFastOutboundV143()">⌂ 관리자 메인</button>
+    </div>
+    <div class="fo143-form">
+      <input id="foPartV143" autocomplete="off" placeholder="품번 또는 품명">
+      <input id="foQtyV143" type="number" inputmode="numeric" min="1" placeholder="출고수량">
+      <input id="foPersonV143" autocomplete="off" placeholder="가져간 사람">
+      <input id="foLocV143" autocomplete="off" placeholder="비고(선택)">
+      <button id="foSaveV143" class="fo143-save" type="button" onclick="saveFastOutboundV143()">📤 출고저장</button>
+    </div>
+    <div id="foPickedV143" class="fo143-picked">품목을 검색하세요.</div>
+    <div id="foPhotoBoxV143" class="fo143-photo-box">
+      <div id="foPhotoPreviewV143" class="fo143-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
+      <button id="foPhotoBtnV143" type="button" onclick="changeFastOutboundPhotoV143()" disabled>📷 사진 등록</button>
+    </div>
+    <div id="foResultsV143" class="fo143-results"></div>
+    <div id="foStatusV143" class="fo143-status"></div>`;
+  main.insertBefore(p,main.firstChild);
+
+  const part=document.getElementById('foPartV143');
+  const qty=document.getElementById('foQtyV143');
+  part.addEventListener('input',searchFastOutboundV143);
+  part.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchFastOutboundV143(true)}});
+  qty.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('foPersonV143')?.focus()}});
+  return p;
+}
+
+function openFastOutboundV143(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  ensureFastOutboundV143();
+  document.body.classList.remove('admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus','npp-admin-open-v113','fast-inbound-v140');
+  document.body.classList.add('fast-outbound-v143');
+  syncFastOutboundV143();
+  setTimeout(()=>document.getElementById('foPartV143')?.focus(),30);
+}
+function closeFastOutboundV143(){
+  document.body.classList.remove('fast-outbound-v143');
+  try{openAdminMainV125()}catch(e){}
+}
+function itemsFastOutboundV143(){
+  return (typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+}
+function stockFastOutboundV143(x){
+  try{
+    if(typeof getCurrentStock==='function')return Number(getCurrentStock(x)||0);
+    if(typeof getCurrentQty==='function')return Number(getCurrentQty(x)||0);
+    if(typeof getCurrentErpQtyV118==='function')return Number(getCurrentErpQtyV118(x)||0);
+  }catch(e){}
+  return Number(x.erpQty||0);
+}
+function locTextFastOutboundV143(x){
+  const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+  return locs.length?locs.map(l=>[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')).filter(Boolean).join(' / '):'위치 미등록';
+}
+function renderFastOutboundPhotoV143(){
+  const box=document.getElementById('foPhotoPreviewV143'),btn=document.getElementById('foPhotoBtnV143'),x=window.__foSelectedV143;
+  if(!box||!btn)return;
+  if(!x){box.textContent='품목 선택 후 사진을 확인할 수 있습니다.';btn.disabled=true;btn.textContent='📷 사진 등록';return}
+  const photo=(typeof getPhoto==='function')?getPhoto(x.part):'';
+  btn.disabled=false;btn.textContent=photo?'📷 사진 수정':'📷 사진 등록';
+  box.innerHTML=photo?`현재 저장된 사진<img src="${photo}" alt="${esc(x.part||'')} 사진">`:'현재 저장된 사진이 없습니다.';
+}
+function changeFastOutboundPhotoV143(){
+  const x=window.__foSelectedV143;
+  if(!x)return alert('품목을 먼저 선택하세요.');
+  if(typeof choosePhoto!=='function')return alert('기존 사진 등록 기능을 찾지 못했습니다.');
+  choosePhoto(x.part);
+  let n=0;const timer=setInterval(()=>{renderFastOutboundPhotoV143();if(++n>=20)clearInterval(timer)},500);
+}
+function searchFastOutboundV143(focusQty=false){
+  const raw=(document.getElementById('foPartV143')?.value||'').trim(),q=raw.toLowerCase();
+  const picked=document.getElementById('foPickedV143'),out=document.getElementById('foResultsV143');
+  window.__foSelectedV143=null;
+  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';renderFastOutboundPhotoV143();return}
+  const all=itemsFastOutboundV143();
+  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
+  window.__foRowsV143=rows;
+  if(rows.length===1){
+    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';renderFastOutboundPhotoV143();
+    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+    out.innerHTML='';if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
+  }
+  picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
+  out.innerHTML=rows.map((x,i)=>`<div class="fo143-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastOutboundV143(${i})">선택</button></div>`).join('');
+}
+function selectFastOutboundV143(i){
+  const x=window.__foRowsV143[i];if(!x)return;
+  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';renderFastOutboundPhotoV143();
+  document.getElementById('foPickedV143').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+  document.getElementById('foResultsV143').innerHTML='';document.getElementById('foQtyV143')?.focus();
+}
+function syncFastOutboundV143(){
+  const ok=!!(sharedReady&&sharedDb),el=document.getElementById('foStatusV143'),btn=document.getElementById('foSaveV143');
+  if(el){el.textContent=ok?'● 공용 DB 연결됨 · 출고수량 PC/모바일 전체 반영':'● 공용 DB 연결 안 됨 · 저장 차단';el.style.color=ok?'#167044':'#b02f2f'}
+  if(btn)btn.disabled=!ok;return ok;
+}
+async function saveFastOutboundV143(){
+  if(!syncFastOutboundV143())return alert('공용 DB 연결 후 저장할 수 있습니다.');
+  const x=window.__foSelectedV143;
+  const qty=Number(document.getElementById('foQtyV143')?.value||0);
+  const person=(document.getElementById('foPersonV143')?.value||'').trim();
+  const note=(document.getElementById('foLocV143')?.value||'').trim();
+  if(!x)return alert('품목을 먼저 선택하세요.');
+  if(!qty||qty<=0)return alert('출고수량을 입력하세요.');
+  if(!person)return alert('가져간 사람을 입력하세요.');
+  const before=stockFastOutboundV143(x);
+  if(before<qty)return alert(`현재고 ${before.toLocaleString()}개보다 많이 출고할 수 없습니다.`);
+
+  try{
+    /* 기존 공용 출고 처리 사용: 출고수량/현재고/입출고 집계가 기존 구조대로 모두 갱신 */
+    await sharedAddMovement('OUT',x,qty,person);
+
+    /* 가져간 사람 + 비고는 공용 관리기록에도 남김 */
+    try{
+      const payload={part_no:String(x.part),item_name:x.name||'',qty:Number(qty),taken_by:person,note:note||'',worker:'관리자'};
+      const {error}=await sharedDb.from('wms_admin_notifications').insert({
+        type:'FAST_OUTBOUND_PERSON',
+        title:`📤 빠른출고 · ${person}`,
+        message:`${x.part} · ${qty} · 가져간 사람 ${person}${note?' · '+note:''}`,
+        payload,created_at:new Date().toISOString()
+      });
+      if(error)throw error;
+    }catch(metaErr){console.warn('빠른출고 가져간 사람 기록 실패',metaErr)}
+
+    await refreshSharedHistories();
+    if(typeof loadSharedLocations==='function')await loadSharedLocations();
+    try{updateHomeSummary();syncDashboardStats()}catch(e){}
+
+    alert(`✅ ${x.part} ${qty.toLocaleString()}개 출고 완료\n👤 가져간 사람: ${person}\nPC/모바일 출고수량 전체 반영`);
+    window.__foSelectedV143=null;
+    document.getElementById('foPartV143').value='';
+    document.getElementById('foQtyV143').value='';
+    document.getElementById('foPersonV143').value='';
+    document.getElementById('foLocV143').value='';
+    document.getElementById('foPickedV143').textContent='다음 출고 품목을 입력하세요.';
+    document.getElementById('foResultsV143').innerHTML='';
+    renderFastOutboundPhotoV143();
+    document.getElementById('foPartV143').focus();
+  }catch(e){console.error(e);alert('출고 저장 실패: '+(e.message||e))}
+  finally{syncFastOutboundV143()}
 }
 </script>
 </body></html>
