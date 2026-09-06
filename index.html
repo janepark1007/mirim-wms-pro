@@ -1741,6 +1741,39 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="inout-general-location-colors-v230">
+#fiPickedV140 .loc-row-v230,
+#foPickedV143 .loc-row-v230,
+#results .loc-row-v230{
+  display:inline-block!important;
+  box-sizing:border-box!important;
+  border-radius:8px!important;
+  padding:5px 9px!important;
+  margin:3px 4px!important;
+  font-weight:1000!important;
+  line-height:1.35!important;
+}
+#fiPickedV140 .loc1-row-v230,#foPickedV143 .loc1-row-v230,#results .loc1-row-v230{
+  background:#ffe1e4!important;color:#b9141a!important;border:1px solid #ef9da3!important;
+}
+#fiPickedV140 .loc2-row-v230,#foPickedV143 .loc2-row-v230,#results .loc2-row-v230{
+  background:#ddf6e5!important;color:#087a43!important;border:1px solid #8fd0a9!important;
+}
+#fiPickedV140 .loc3-row-v230,#foPickedV143 .loc3-row-v230,#results .loc3-row-v230{
+  background:#ffe45c!important;color:#5f4700!important;border:1px solid #caa900!important;
+}
+@media(max-width:768px){
+  #fiPickedV140 .loc-row-v230,
+  #foPickedV143 .loc-row-v230,
+  #results .loc-row-v230{
+    display:block!important;
+    width:100%!important;
+    margin:6px 0!important;
+    padding:8px 10px!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19616,6 +19649,62 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot229,{once:true});
   else boot229();
+})();
+</script>
+
+<script id="inout-general-location-colors-v230-script">
+(function(){
+  function esc230(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+  function colorText230(root){
+    if(!root)return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[]; while(walker.nextNode())nodes.push(walker.currentNode);
+
+    nodes.forEach(n=>{
+      const p=n.parentNode;
+      if(!p || p.closest('.loc-row-v230,input,textarea,select,button'))return;
+      const s=n.nodeValue||'';
+      const re=/([123])자재위치:\s*([\s\S]*?)(?=\s*\/\s*[123]자재위치:|$)/g;
+      if(!re.test(s))return;
+      re.lastIndex=0;
+
+      const frag=document.createDocumentFragment();
+      let last=0,m;
+      while((m=re.exec(s))){
+        if(m.index>last)frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+        const sp=document.createElement('span');
+        sp.className='loc-row-v230 loc'+m[1]+'-row-v230';
+        sp.textContent=m[1]+'자재위치: '+m[2].trim().replace(/\s*\/\s*$/,'');
+        frag.appendChild(sp);
+        last=re.lastIndex;
+      }
+      if(last<s.length)frag.appendChild(document.createTextNode(s.slice(last)));
+      p.replaceChild(frag,n);
+    });
+  }
+
+  function run230(){
+    colorText230(document.getElementById('fiPickedV140'));  // 빠른입고
+    colorText230(document.getElementById('foPickedV143'));  // 빠른출고
+    colorText230(document.getElementById('results'));       // 일반 자재위치검색
+  }
+
+  function boot230(){
+    run230();
+    ['fiPickedV140','foPickedV143','results'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      let busy=false;
+      new MutationObserver(()=>{
+        if(busy)return;
+        busy=true;
+        setTimeout(()=>{try{run230()}finally{busy=false}},0);
+      }).observe(el,{childList:true,subtree:true,characterData:true});
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot230,{once:true});
+  else boot230();
 })();
 </script>
 </body></html>
