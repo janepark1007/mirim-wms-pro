@@ -1854,6 +1854,30 @@ body.park-location-worker-v63 .erp-only{
 #nppAdminPanelV113 .npp-loc-number-select-v232{min-width:90px!important}
 #nppAdminPanelV113 .npp-loc-manual-input-v232{min-width:170px!important}
 </style>
+
+<style id="npp-category-multicolor-v233">
+.npp-cat-v233{
+  display:inline-block!important;
+  padding:4px 8px!important;
+  margin:2px!important;
+  border-radius:7px!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+.npp-cat-NPR-v233{background:#ffe0e6!important;color:#a3122c!important;border:1px solid #ee9bad!important}
+.npp-cat-NPG-v233{background:#dff1ff!important;color:#075c9c!important;border:1px solid #91c9ef!important}
+.npp-cat-NPM-v233{background:#e2f7e8!important;color:#087a43!important;border:1px solid #94d4ad!important}
+.npp-cat-NVG-v233{background:#fff0c9!important;color:#8a5b00!important;border:1px solid #e5c56d!important}
+.npp-cat-NPK-v233{background:#efe5ff!important;color:#6334a5!important;border:1px solid #c9aef0!important}
+.npp-cat-NVS-v233{background:#dff8f7!important;color:#08716d!important;border:1px solid #8fd6d2!important}
+.npp-cat-NRC-v233{background:#ffe8d8!important;color:#a34a0a!important;border:1px solid #efb687!important}
+.npp-cat-NNA-v233{background:#e6e9ff!important;color:#3949a3!important;border:1px solid #abb3ed!important}
+.npp-cat-NCA-v233{background:#f7e1f1!important;color:#8c2f70!important;border:1px solid #d9a1c7!important}
+.npp-cat-NDS-v233{background:#e8f0d8!important;color:#536d16!important;border:1px solid #b8cb87!important}
+.npp-cat-NSM-v233{background:#e8e8e8!important;color:#454545!important;border:1px solid #bdbdbd!important}
+.npp-cat-SHERPA-v233{background:#ffd9c9!important;color:#9b3510!important;border:1px solid #ed9c7b!important}
+.npp-cat-ETC-v233{background:#f0f0f0!important;color:#555!important;border:1px solid #c8c8c8!important}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19918,6 +19942,80 @@ function locationColorHtmlV231(x){
   };
 
   setTimeout(()=>{try{window.renderNppAdminV113()}catch(e){}},0);
+})();
+</script>
+
+<script id="npp-category-multicolor-v233-script">
+(function(){
+  const KEYS=['SHERPA','NPR','NPG','NPM','NVG','NPK','NVS','NRC','NNA','NCA','NDS','NSM'];
+
+  function colorCategoryCellV233(cell){
+    if(!cell || cell.querySelector('.npp-cat-v233'))return;
+    const raw=(cell.textContent||'').trim();
+    if(!raw || raw==='-')return;
+
+    const found=KEYS.filter(k=>new RegExp('(^|[^A-Z])'+k+'([^A-Z]|$)','i').test(raw));
+    if(!found.length){
+      cell.innerHTML=`<span class="npp-cat-v233 npp-cat-ETC-v233">${escV113(raw)}</span>`;
+      return;
+    }
+
+    let html=raw;
+    found.forEach(k=>{
+      html=html.replace(new RegExp(k,'gi'),`<span class="npp-cat-v233 npp-cat-${k}-v233">${k}</span>`);
+    });
+    cell.innerHTML=html;
+  }
+
+  function runV233(){
+    /* 관리자 NPP 표: 기존 분류 열 */
+    const table=document.querySelector('#nppAdminPanelV113 table');
+    if(table&&table.rows.length){
+      const heads=[...table.rows[0].cells].map(c=>(c.textContent||'').trim());
+      const idx=heads.findIndex(v=>v==='기존 분류');
+      if(idx>=0)[...table.rows].slice(1).forEach(r=>colorCategoryCellV233(r.cells[idx]));
+    }
+
+    /* 일반/모바일 NPP 도면찾기: 결과의 분류 표시 */
+    document.querySelectorAll('#publicDrawingResultsV108 .npp-result-meta-v120').forEach(el=>{
+      if(el.querySelector('.npp-cat-v233'))return;
+      const raw=el.textContent||'';
+      KEYS.forEach(k=>{
+        const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+        const nodes=[]; while(walker.nextNode())nodes.push(walker.currentNode);
+        nodes.forEach(n=>{
+          const s=n.nodeValue||'';
+          const re=new RegExp(k,'i');
+          if(!re.test(s))return;
+          const frag=document.createDocumentFragment();
+          const parts=s.split(new RegExp('('+k+')','ig'));
+          parts.forEach(part=>{
+            if(part.toUpperCase()===k){
+              const sp=document.createElement('span');
+              sp.className=`npp-cat-v233 npp-cat-${k}-v233`;
+              sp.textContent=k;
+              frag.appendChild(sp);
+            }else frag.appendChild(document.createTextNode(part));
+          });
+          n.parentNode.replaceChild(frag,n);
+        });
+      });
+    });
+  }
+
+  function bootV233(){
+    runV233();
+    const roots=[document.getElementById('nppAdminPanelV113'),document.getElementById('publicDrawingResultsV108')].filter(Boolean);
+    roots.forEach(root=>{
+      let busy=false;
+      new MutationObserver(()=>{
+        if(busy)return; busy=true;
+        setTimeout(()=>{try{runV233()}finally{busy=false}},0);
+      }).observe(root,{childList:true,subtree:true});
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootV233,{once:true});
+  else bootV233();
 })();
 </script>
 </body></html>
