@@ -17288,6 +17288,7 @@ function ensureFastOutboundV143(){
       <button id="foSaveV143" class="fo143-save" type="button" onclick="saveFastOutboundV143()">📤 출고저장</button>
     </div>
     <div id="foPickedV143" class="fo143-picked">품목을 검색하세요.</div>
+    <div id="foRecentOutboundV184" class="fo184-recent-outbound"></div>
     <div id="foLocationQtyV166" class="loc166-box"></div>
     <div id="foPhotoBoxV143" class="fo143-photo-box">
       <div id="foPhotoPreviewV143" class="fo143-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
@@ -17454,17 +17455,84 @@ function changeFastOutboundPhotoV143(){
   choosePhoto(x.part);
   let n=0;const timer=setInterval(()=>{renderFastOutboundPhotoV143();if(++n>=20)clearInterval(timer)},500);
 }
+
+async function loadRecentOutboundV184(part){
+  const el=document.getElementById('foRecentOutboundV184');
+  if(!el)return;
+  const p=String(part||'').trim();
+  if(!p){el.innerHTML='';return;}
+
+  el.innerHTML='<div class="fo184-title">최근 출고내역 불러오는 중...</div>';
+  let rows=[];
+
+  try{
+    if(sharedReady&&sharedDb){
+      const {data,error}=await sharedDb
+        .from('production_movements')
+        .select('*')
+        .eq('part_no',p)
+        .order('created_at',{ascending:false})
+        .limit(30);
+      if(error)throw error;
+      rows=(data||[]).filter(r=>r.movement_type==='OUT').slice(0,10);
+    }
+  }catch(e){
+    console.warn('빠른출고 최근 출고내역 DB 조회 실패',e);
+  }
+
+  if(!rows.length){
+    try{
+      const local=(typeof getHist==='function')?(getHist()||[]):[];
+      rows=local.filter(r=>String(r.part||r.part_no||'').trim()===p)
+        .map(r=>({
+          movement_type:'OUT',
+          qty:Number(r.qty||0),
+          worker_name:r.worker||r.worker_name||r.person||'',
+          location:r.location||r.loc||'',
+          created_at:r.created_at||r.time||r.date||''
+        }))
+        .slice(0,10);
+    }catch(e){}
+  }
+
+  if(!rows.length){
+    el.innerHTML='<div class="fo184-title">최근 출고내역</div><div class="fo184-empty">최근 출고기록이 없습니다.</div>';
+    return;
+  }
+
+  const fmt=v=>{
+    try{
+      const d=new Date(v);
+      if(Number.isNaN(d.getTime()))return escHtml(String(v||''));
+      return d.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }catch(e){return escHtml(String(v||''));}
+  };
+
+  el.innerHTML=`<div class="fo184-title">최근 출고내역 최근 ${rows.length}건</div>`+
+    rows.map(r=>{
+      const qty=Number(r.qty||0).toLocaleString();
+      const loc=String(r.location||'').trim();
+      const worker=String(r.worker_name||r.worker||'').trim();
+      return `<div class="fo184-row">
+        <span class="fo184-date">${fmt(r.created_at)}</span>
+        <b class="fo184-out">출고 -${qty}</b>
+        ${loc?`<span>위치: ${escHtml(loc)}</span>`:''}
+        ${worker?`<span>가져간 사람: ${escHtml(worker)}</span>`:''}
+      </div>`;
+    }).join('');
+}
+
 function searchFastOutboundV143(focusQty=false){
   const raw=(document.getElementById('foPartV143')?.value||'').trim(),q=raw.toLowerCase();
   const picked=document.getElementById('foPickedV143'),out=document.getElementById('foResultsV143');
   window.__foSelectedV143=null;
-  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';showStockQtyFastOutboundV149(null);fillOutboundLocationSelectV150(null);renderFastOutboundPhotoV143();return}
+  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';showStockQtyFastOutboundV149(null);fillOutboundLocationSelectV150(null);renderFastOutboundPhotoV143();loadRecentOutboundV184('');return}
   const all=itemsFastOutboundV143();
   let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
   if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
   window.__foRowsV143=rows;
   if(rows.length===1){
-    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();
+    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();loadRecentOutboundV184(x.part);
     picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
     out.innerHTML='';if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
   }
@@ -17473,7 +17541,7 @@ function searchFastOutboundV143(focusQty=false){
 }
 function selectFastOutboundV143(i){
   const x=window.__foRowsV143[i];if(!x)return;
-  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();
+  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();loadRecentOutboundV184(x.part);
   document.getElementById('foPickedV143').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
   document.getElementById('foResultsV143').innerHTML='';document.getElementById('foQtyV143')?.focus();
 }
@@ -17930,5 +17998,14 @@ window.search=function(){
 .fi183-date{color:#6b746f}
 .fi183-in{color:#137042}
 .fi183-empty{padding:8px 9px;background:#fafafa;border:1px solid #e6e6e6;border-radius:8px;font-size:12px;color:#777;font-weight:800}
+</style>
+
+<style id="fast-outbound-recent-v184-style">
+.fo184-recent-outbound{margin-top:8px}
+.fo184-title{font-size:13px;font-weight:1000;color:#8f2929;margin-bottom:5px}
+.fo184-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:7px 9px;margin-top:4px;background:#fff8f8;border:1px solid #efd9d9;border-radius:8px;font-size:12px;font-weight:850;color:#514545}
+.fo184-date{color:#756b6b}
+.fo184-out{color:#b52e2e}
+.fo184-empty{padding:8px 9px;background:#fafafa;border:1px solid #e6e6e6;border-radius:8px;font-size:12px;color:#777;font-weight:800}
 </style>
 </body></html>
