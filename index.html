@@ -16719,4 +16719,188 @@ if(document.readyState==='loading'){
   setTimeout(buildAdminMainV127,4200);
 }
 </script>
+
+<style id="admin-main-route-sync-v128-style">
+/* V128 관리자 메인 클릭 후 다른 구버전 화면이 덮지 않도록 라우팅 상태 정리 */
+body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125{
+  display:block!important;
+}
+</style>
+
+<script id="admin-main-route-sync-v128-script">
+/* 관리자 메인에서 다른 화면으로 이동 중인지 표시.
+   로그인 직후 남아 있던 지연 타이머가 메인을 다시 띄우는 현상 방지 */
+window.__adminRouteAwayV128=false;
+
+function prepareAdminRouteV128(){
+  window.__adminRouteAwayV128=true;
+
+  document.body.classList.remove(
+    'admin-mainmenu-open-v125',
+    'admin-reference-home',
+    'admin-shortcut-focus',
+    'admin-task-focus',
+    'admin-bom-view',
+    'other-storage-open-v50',
+    'npp-admin-open-v113',
+    'drawing-location-open-v79'
+  );
+
+  try{restoreAdminTaskElements?.();}catch(e){}
+  try{restoreAdminShortcutFocusV41?.();}catch(e){}
+
+  const task=document.getElementById('adminTaskFocusPanel');
+  if(task)task.classList.add('hidden');
+
+  const shortcut=document.getElementById('adminShortcutFocusPanel');
+  if(shortcut)shortcut.classList.add('hidden');
+
+  const npp=document.getElementById('nppAdminPanelV113');
+  if(npp)npp.classList.add('hidden');
+}
+
+/* 관리자 메인 버튼은 이 함수 하나로만 연결 */
+async function adminGoV128(target){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+  prepareAdminRouteV128();
+
+  try{
+    if(target==='inbound'){
+      openAdminQuickInOutV108('inbound');
+      return;
+    }
+    if(target==='outbound'){
+      openAdminQuickInOutV108('outbound');
+      return;
+    }
+    if(target==='location'){
+      openMode('location');
+      return;
+    }
+    if(target==='unreg'){
+      await openAdminTaskView('unreg');
+      return;
+    }
+    if(target==='orders'){
+      await openAdminTaskView('orders');
+      return;
+    }
+    if(target==='history'){
+      await openAdminTaskView('history');
+      return;
+    }
+    if(target==='later'){
+      await openAdminTaskView('later');
+      return;
+    }
+    if(target==='npp'){
+      openNppAdminV113();
+      return;
+    }
+    if(target==='users'){
+      await openAdminUsersV73();
+      return;
+    }
+  }catch(e){
+    console.error('관리자 메뉴 이동 오류',target,e);
+    alert('해당 관리자 화면을 열지 못했습니다.');
+  }
+}
+
+/* V125의 로그인 후 0.3/1.2/3.8초 지연 메인 재표시를 차단.
+   사용자가 이미 메뉴를 눌렀으면 절대 메인으로 되돌리지 않는다. */
+const __openAdminMainOriginalV128=window.openAdminMainV125;
+if(typeof __openAdminMainOriginalV128==='function'){
+  window.openAdminMainV125=function(force){
+    if(window.__adminRouteAwayV128 && force!==true)return;
+    window.__adminRouteAwayV128=false;
+    return __openAdminMainOriginalV128.apply(this,arguments);
+  };
+}
+
+function adminHomeV128(){
+  window.__adminRouteAwayV128=false;
+  try{window.openAdminMainV125(true);}catch(e){}
+  setTimeout(()=>{
+    try{buildAdminMainV127();refreshAdminMainV127();}catch(e){}
+  },20);
+}
+
+/* 현재 관리자 메인 카드의 모든 버튼을 실제 기존 화면에 정확히 연결 */
+function syncAdminMainButtonsV128(){
+  const box=document.getElementById('adminMainMenuV125');
+  if(!box)return;
+
+  const map=[
+    ['.admin127-in',"adminGoV128('inbound')"],
+    ['.admin127-out',"adminGoV128('outbound')"],
+    ['.admin127-loc',"adminGoV128('location')"],
+    ['.admin127-unreg',"adminGoV128('unreg')"],
+    ['.admin127-orders',"adminGoV128('orders')"],
+    ['.admin127-later',"adminGoV128('later')"],
+    ['.admin127-npp',"adminGoV128('npp')"],
+    ['.admin127-users',"adminGoV128('users')"]
+  ];
+  map.forEach(([sel,code])=>{
+    const b=box.querySelector(sel);
+    if(b)b.setAttribute('onclick',code);
+  });
+
+  /* 하단 관리자 메인 다시보기 */
+  const bottom=[...box.querySelectorAll('.admin127-bottom button')];
+  if(bottom[1])bottom[1].setAttribute('onclick','adminHomeV128()');
+
+  refreshAdminMainDataV128();
+}
+
+/* 관리자 메인의 수치도 기존 실제 데이터 표시값과 항상 맞춤 */
+function refreshAdminMainDataV128(){
+  try{syncDashboardStats?.();}catch(e){}
+  try{updateHomeSummary?.();}catch(e){}
+  try{renderUnregisteredItems?.();}catch(e){}
+
+  const pairs=[
+    ['todayInV127','adminTodayIn','0건'],
+    ['todayOutV127','adminTodayOut','0건'],
+    ['erpCountV127','adminErpCount',
+      (Array.isArray(window.ITEMS)?window.ITEMS.length.toLocaleString()+'개':'0개')],
+    ['pendingV127','adminPendingCount','0건'],
+    ['unregV127','adminUnregCount','0건']
+  ];
+  pairs.forEach(([to,from,fb])=>{
+    const a=document.getElementById(to);
+    const b=document.getElementById(from);
+    if(a)a.textContent=(b&&String(b.textContent||'').trim())||fb;
+  });
+
+  try{refreshAdminMainV127?.();}catch(e){}
+}
+
+/* V127가 메인을 다시 그릴 때마다 버튼 재연결 */
+const __buildAdminMainBeforeV128=window.buildAdminMainV127;
+if(typeof __buildAdminMainBeforeV128==='function'){
+  window.buildAdminMainV127=function(){
+    const r=__buildAdminMainBeforeV128.apply(this,arguments);
+    setTimeout(syncAdminMainButtonsV128,10);
+    return r;
+  };
+}
+
+/* 홈 버튼: 관리자면 정확히 관리자 메인으로 */
+document.getElementById('homeBtn')?.addEventListener('click',(e)=>{
+  if(isAdmin){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    adminHomeV128();
+  }
+},true);
+
+/* 현재 열린 관리자 메인도 즉시 동기화 */
+setTimeout(()=>{
+  if(isAdmin && document.body.classList.contains('admin-mainmenu-open-v125')){
+    syncAdminMainButtonsV128();
+  }
+},120);
+</script>
 </body></html>
