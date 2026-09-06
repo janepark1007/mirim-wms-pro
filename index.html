@@ -17833,4 +17833,55 @@ window.search=function(){
 .pub162-loc{margin-top:6px;padding:9px 11px;border-radius:8px;background:#f7f4fb;color:#4d327b;font-size:14px;font-weight:1000}
 @media(max-width:720px){.pub162-top{gap:6px}.pub162-stock{font-size:14px}}
 </style>
+
+<style id="public-search-result-visible-v164-style">
+/* 일반 자재위치검색 결과가 반드시 검색창 바로 아래 보이도록 */
+body:not(.admin-view) #results{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  margin-top:12px!important;
+  width:100%!important;
+}
+body:not(.admin-view) #results .pub162-card{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:relative!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+body:not(.admin-view) #work{
+  overflow:visible!important;
+  height:auto!important;
+  min-height:0!important;
+}
+</style>
+<script id="public-search-result-visible-v164-script">
+(function(){
+  const prevV164=window.search;
+  window.search=async function(){
+    const result=await (typeof prevV164==='function'?prevV164.apply(this,arguments):undefined);
+    if(!document.body.classList.contains('admin-view')){
+      const out=document.getElementById('results');
+      if(out){
+        out.classList.remove('hidden');
+        out.style.display='block';
+        out.style.visibility='visible';
+        out.style.opacity='1';
+      }
+    }
+    return result;
+  };
+})();
+</script>
 </body></html>
