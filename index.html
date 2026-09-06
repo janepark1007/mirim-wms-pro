@@ -17006,11 +17006,10 @@ function changeFastInboundPhotoV142(){
 }
 
 function searchFastInboundV140(focusQty=false){
-  const raw=(document.getElementById('fiPartV140')?.value||'').trim();
-  const q=raw.toLowerCase();
-  const picked=document.getElementById('fiPickedV140');
-  const out=document.getElementById('fiResultsV140');
+  const raw=(document.getElementById('fiPartV140')?.value||'').trim(),q=raw.toLowerCase();
+  const picked=document.getElementById('fiPickedV140'),out=document.getElementById('fiResultsV140');
   window.__fiSelectedV140=null;
+
   if(!q){
     picked.textContent='품목을 검색하세요.';
     out.innerHTML='';
@@ -17021,53 +17020,36 @@ function searchFastInboundV140(focusQty=false){
   }
 
   const all=itemsFastInboundV140();
-  const exact=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
-  const rows=exact.length
-    ? exact
-    : all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
+  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
   window.__fiRowsV140=rows;
 
-  /* 정확한 품번일 때만 자동선택 — 입력 중 비슷한 품목 1개 때문에 검색이 끊기지 않게 함 */
-  if(exact.length===1){
-    const x=exact[0];
+  if(rows.length===1){
+    const x=rows[0];
     window.__fiSelectedV140=x;
     document.getElementById('fiPartV140').value=x.part||'';
     showStockFastInboundV149(x);
     renderLocationQtyBoxV166('fiLocationQtyV166',x);
     renderFastInboundPhotoV142();
 
+    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+    out.innerHTML='';
+
     getLatestWarehouseStockV156(x.part).then(n=>{
       const el=document.getElementById('fiStockV149');
       if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
       renderLocationQtyBoxV166('fiLocationQtyV166',x);
+      const p=document.getElementById('fiPickedV140');
+      if(p&&window.__fiSelectedV140===x)p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
     }).catch(()=>{});
 
-    picked.innerHTML=`<b>✅ 선택: ${escHtml(x.part)} · ${escHtml(x.name||'')}</b><br><span>현재고: ${stockFastInboundV149(x).toLocaleString()} · 위치: ${escHtml(locTextFastOutboundV143(x))}</span>`;
-    out.innerHTML='';
     if(focusQty)setTimeout(()=>document.getElementById('fiQtyV140')?.focus(),20);
     return;
   }
 
   renderLocationQtyBoxV166('fiLocationQtyV166',null);
   picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
-  out.innerHTML=rows.map((x,i)=>{
-    const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
-    const locText=locs.length
-      ? locs.map((l,n)=>{
-          const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ');
-          return text?`${n+1}자재위치: ${text} · 수량 ${Number(l.qty||0).toLocaleString()}`:'';
-        }).filter(Boolean).join(' / ')
-      : '위치 미등록';
-    return `<div class="fi140-row">
-      <div>
-        <b>${esc(x.part||'')}</b><br>
-        <small>${esc(x.name||'')}</small>
-        <div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</div>
-        <div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locText)}</div>
-      </div>
-      <button type="button" onclick="selectFastInboundV140(${i})">선택</button>
-    </div>`;
-  }).join('');
+  out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
 }
 
 function selectFastInboundV140(i){
@@ -17076,22 +17058,19 @@ function selectFastInboundV140(i){
   document.getElementById('fiPartV140').value=x.part||'';
   showStockFastInboundV149(x);
   renderLocationQtyBoxV166('fiLocationQtyV166',x);
+  renderFastInboundPhotoV142();
+
+  document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+  document.getElementById('fiResultsV140').innerHTML='';
+
   getLatestWarehouseStockV156(x.part).then(n=>{
     const el=document.getElementById('fiStockV149');
     if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
     renderLocationQtyBoxV166('fiLocationQtyV166',x);
+    const p=document.getElementById('fiPickedV140');
+    if(p&&window.__fiSelectedV140===x)p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
   }).catch(()=>{});
-  renderFastInboundPhotoV142();
-  const locText=locTextFastOutboundV143(x);
-  let stock=0;
-  try{
-    if(typeof getCurrentStock==='function') stock=Number(getCurrentStock(x)||0);
-    else if(typeof getCurrentQty==='function') stock=Number(getCurrentQty(x)||0);
-    else if(typeof getCurrentErpQtyV118==='function') stock=Number(getCurrentErpQtyV118(x)||0);
-    else stock=Number(x.erpQty||0);
-  }catch(e){ stock=Number(x.erpQty||0); }
-  document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(stock||0).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locText)}</span>`;
-  document.getElementById('fiResultsV140').innerHTML='';
+
   document.getElementById('fiQtyV140')?.focus();
 }
 
