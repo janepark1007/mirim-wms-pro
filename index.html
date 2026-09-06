@@ -5593,6 +5593,35 @@ async function saveReturn(x,i){
  }
 }
 
+async function getLatestWarehouseStockV156(part){
+  const p=String(part||'');
+  if(!p)return 0;
+  if(sharedReady&&sharedDb){
+    try{
+      const {data,error}=await sharedDb.from('production_inventory_sync')
+        .select('part_no,current_stock,updated_at')
+        .eq('part_no',p).limit(1);
+      if(error)throw error;
+      const r=(data||[])[0];
+      if(r){
+        const n=Number(r.current_stock||0);
+        sharedCache.stock[p]=n;
+        sharedCache.stockUpdated[p]=r.updated_at||'';
+        sharedCache.movementDelta[p]=0;
+        return n;
+      }
+    }catch(e){console.warn('최신 현 창고 재고 조회 실패',e);}
+  }
+  try{
+    const x=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS.find(v=>String(v.part)===p):null;
+    if(x&&typeof getCurrentStock==='function'){
+      const n=getCurrentStock(x);
+      if(Number.isFinite(Number(n)))return Number(n);
+    }
+  }catch(e){}
+  return 0;
+}
+
 async function refreshSharedStockV152(part){
  if(!sharedReady||!sharedDb)return;
  const p=String(part||'');
@@ -16970,6 +16999,10 @@ function searchFastInboundV140(focusQty=false){
     const x=rows[0];window.__fiSelectedV140=x;
     document.getElementById('fiPartV140').value=x.part||'';
     showStockFastInboundV149(x);
+    getLatestWarehouseStockV156(x.part).then(n=>{
+      const el=document.getElementById('fiStockV149');
+      if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
+    });
     renderFastInboundPhotoV142();
     const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
     const locText=locs.length
@@ -17018,6 +17051,10 @@ function selectFastInboundV140(i){
   window.__fiSelectedV140=x;
   document.getElementById('fiPartV140').value=x.part||'';
   showStockFastInboundV149(x);
+  getLatestWarehouseStockV156(x.part).then(n=>{
+    const el=document.getElementById('fiStockV149');
+    if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
+  });
   renderFastInboundPhotoV142();
   const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
   const locText=locs.length
@@ -17070,6 +17107,7 @@ async function saveFastInboundV140(){
   try{
     await sharedAddMovement('IN',x,qty,'관리자');
     await refreshSharedStockV152(x.part);
+    await getLatestWarehouseStockV156(x.part);
     /* 빠른입고 거래명세서 여부를 공용 DB에 별도 기록 */
     try{
       const payload={part_no:String(x.part),item_name:x.name||'',qty:Number(qty),statement,warehouse:warehouse||'',location:loc||'',worker:'관리자'};
@@ -17254,7 +17292,14 @@ function searchFastOutboundV143(focusQty=false){
   if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
   window.__foRowsV143=rows;
   if(rows.length===1){
-    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();
+    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);
+    getLatestWarehouseStockV156(x.part).then(n=>{
+      const el=document.getElementById('foErpQtyV148');
+      if(el&&window.__foSelectedV143===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
+      const picked=document.getElementById('foPickedV143');
+      if(picked&&window.__foSelectedV143===x)picked.innerHTML=`<b>✅ 선택: ${escHtml(x.part)} · ${escHtml(x.name||'')}</b><br><span>현재고: ${Number(n).toLocaleString()} · 위치: ${escHtml(locTextFastOutboundV143(x))}</span>`;
+    });
+    renderFastOutboundPhotoV143();
     picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
     out.innerHTML='';if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
   }
@@ -17263,7 +17308,14 @@ function searchFastOutboundV143(focusQty=false){
 }
 function selectFastOutboundV143(i){
   const x=window.__foRowsV143[i];if(!x)return;
-  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();
+  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);
+    getLatestWarehouseStockV156(x.part).then(n=>{
+      const el=document.getElementById('foErpQtyV148');
+      if(el&&window.__foSelectedV143===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
+      const picked=document.getElementById('foPickedV143');
+      if(picked&&window.__foSelectedV143===x)picked.innerHTML=`<b>✅ 선택: ${escHtml(x.part)} · ${escHtml(x.name||'')}</b><br><span>현재고: ${Number(n).toLocaleString()} · 위치: ${escHtml(locTextFastOutboundV143(x))}</span>`;
+    });
+    renderFastOutboundPhotoV143();
   document.getElementById('foPickedV143').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
   document.getElementById('foResultsV143').innerHTML='';document.getElementById('foQtyV143')?.focus();
 }
@@ -17288,6 +17340,7 @@ async function saveFastOutboundV143(){
     /* 기존 공용 출고 처리 사용: 출고수량/현재고/입출고 집계가 기존 구조대로 모두 갱신 */
     await sharedAddMovement('OUT',x,qty,person);
     await refreshSharedStockV152(x.part);
+    await getLatestWarehouseStockV156(x.part);
 
     /* 가져간 사람 + 비고는 공용 관리기록에도 남김 */
     try{
