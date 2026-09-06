@@ -16765,7 +16765,7 @@ body.admin-view.fast-inbound-v140 main > *:not(#fastInboundV140){display:none!im
 .fi140-head h2{margin:0;font-size:22px;color:#145a37}
 .fi140-head p{margin:4px 0 0;font-size:12px;color:#65746c;font-weight:800}
 .fi140-home{min-height:42px;padding:8px 12px;border:1px solid #cbdad2;border-radius:10px;background:#fff;font-weight:1000}
-.fi140-form{display:grid;grid-template-columns:minmax(0,1.4fr) 150px minmax(0,1fr) 130px;gap:8px;margin-top:10px;padding:14px;background:#fff;border:2px solid #b7ddc7;border-radius:14px}
+.fi140-form{display:grid;grid-template-columns:minmax(0,1.35fr) 130px 170px minmax(0,.9fr) 130px;gap:8px;margin-top:10px;padding:14px;background:#fff;border:2px solid #b7ddc7;border-radius:14px}
 .fi140-form input{min-height:54px;padding:10px 12px;border:2px solid #cbdcd3;border-radius:10px;font-size:17px;font-weight:900;box-sizing:border-box}
 .fi140-save{border:0;border-radius:10px;background:#087a43;color:#fff;font-size:16px;font-weight:1000;cursor:pointer}
 .fi140-save:disabled{opacity:.4}
@@ -16773,7 +16773,14 @@ body.admin-view.fast-inbound-v140 main > *:not(#fastInboundV140){display:none!im
 .fi140-results{display:grid;gap:7px;margin-top:8px}
 .fi140-row{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:8px;align-items:center;padding:9px 11px;background:#fff;border:1px solid #dce7e1;border-radius:10px}
 .fi140-row button{min-height:38px;border:0;border-radius:8px;background:#e3f2e9;color:#155c38;font-weight:1000}
-@media(max-width:720px){.fi140-form{grid-template-columns:1fr 100px}.fi140-form #fiLocV140,.fi140-save{grid-column:1/-1}}
+
+.fi140-form select{min-height:54px;padding:10px 12px;border:2px solid #cbdcd3;border-radius:10px;font-size:15px;font-weight:900;box-sizing:border-box;background:#fff}
+.fi142-photo-box{display:flex;align-items:center;gap:10px;margin-top:9px;padding:10px 11px;background:#fff;border:1px solid #dce7e1;border-radius:10px}
+.fi142-photo-preview{flex:1;min-width:0;font-size:12px;font-weight:900;color:#5c6861}
+.fi142-photo-preview img{display:block;max-width:110px;max-height:90px;object-fit:contain;border-radius:8px;margin-top:6px}
+.fi142-photo-box button{min-height:42px;padding:8px 12px;border:0;border-radius:9px;background:#ece7f8;color:#514078;font-weight:1000}
+.fi142-photo-box button:disabled{opacity:.45}
+@media(max-width:720px){.fi140-form{grid-template-columns:1fr 105px}.fi140-form #fiStatementV142{grid-column:1/-1}.fi140-form #fiLocV140,.fi140-save{grid-column:1/-1}.fi142-photo-box{align-items:flex-start;flex-direction:column}.fi142-photo-box button{width:100%}}
 </style>
 
 <script id="fast-inbound-direct-v140-script">
@@ -16795,10 +16802,19 @@ function ensureFastInboundV140(){
     <div class="fi140-form">
       <input id="fiPartV140" autocomplete="off" placeholder="품번 또는 품명">
       <input id="fiQtyV140" type="number" inputmode="numeric" min="1" placeholder="입고수량">
+      <select id="fiStatementV142" aria-label="거래명세서 여부">
+        <option value="">거래명세서 선택</option>
+        <option value="있다">거래명세서 있다</option>
+        <option value="없다">거래명세서 없다</option>
+      </select>
       <input id="fiLocV140" autocomplete="off" placeholder="임시위치(선택)">
       <button id="fiSaveV140" class="fi140-save" type="button" onclick="saveFastInboundV140()">📥 입고저장</button>
     </div>
     <div id="fiPickedV140" class="fi140-picked">품목을 검색하세요.</div>
+    <div id="fiPhotoBoxV142" class="fi142-photo-box">
+      <div id="fiPhotoPreviewV142" class="fi142-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
+      <button id="fiPhotoBtnV142" type="button" onclick="changeFastInboundPhotoV142()" disabled>📷 사진 등록</button>
+    </div>
     <div id="fiResultsV140" class="fi140-results"></div>
     <div id="fiStatusV140" class="fi140-status"></div>`;
   main.insertBefore(p,main.firstChild);
@@ -16834,13 +16850,43 @@ function itemsFastInboundV140(){
   return (typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
 }
 
+function renderFastInboundPhotoV142(){
+  const box=document.getElementById('fiPhotoPreviewV142');
+  const btn=document.getElementById('fiPhotoBtnV142');
+  const x=window.__fiSelectedV140;
+  if(!box||!btn)return;
+  if(!x){
+    box.textContent='품목 선택 후 사진을 확인할 수 있습니다.';
+    btn.disabled=true; btn.textContent='📷 사진 등록';
+    return;
+  }
+  const photo=(typeof getPhoto==='function')?getPhoto(x.part):'';
+  btn.disabled=false;
+  btn.textContent=photo?'📷 사진 수정':'📷 사진 등록';
+  box.innerHTML=photo
+    ? `현재 저장된 사진<img src="${photo}" alt="${esc(x.part||'')} 사진">`
+    : '현재 저장된 사진이 없습니다.';
+}
+function changeFastInboundPhotoV142(){
+  const x=window.__fiSelectedV140;
+  if(!x)return alert('품목을 먼저 선택하세요.');
+  if(typeof choosePhoto!=='function')return alert('기존 사진 등록 기능을 찾지 못했습니다.');
+  choosePhoto(x.part);
+  /* 기존 사진 저장 기능이 완료된 뒤 미리보기만 갱신 */
+  let n=0;
+  const timer=setInterval(()=>{
+    renderFastInboundPhotoV142();
+    if(++n>=20)clearInterval(timer);
+  },500);
+}
+
 function searchFastInboundV140(focusQty=false){
   const raw=(document.getElementById('fiPartV140')?.value||'').trim();
   const q=raw.toLowerCase();
   const picked=document.getElementById('fiPickedV140');
   const out=document.getElementById('fiResultsV140');
   window.__fiSelectedV140=null;
-  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';return}
+  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';renderFastInboundPhotoV142();return}
 
   const all=itemsFastInboundV140();
   let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
@@ -16850,6 +16896,7 @@ function searchFastInboundV140(focusQty=false){
   if(rows.length===1){
     const x=rows[0];window.__fiSelectedV140=x;
     document.getElementById('fiPartV140').value=x.part||'';
+    renderFastInboundPhotoV142();
     const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
     const locText=locs.length
       ? locs.map(l=>[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')).filter(Boolean).join(' / ')
@@ -16896,6 +16943,7 @@ function selectFastInboundV140(i){
   const x=window.__fiRowsV140[i];if(!x)return;
   window.__fiSelectedV140=x;
   document.getElementById('fiPartV140').value=x.part||'';
+  renderFastInboundPhotoV142();
   const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
   const locText=locs.length
     ? locs.map(l=>[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')).filter(Boolean).join(' / ')
@@ -16936,12 +16984,29 @@ async function saveFastInboundV140(){
   if(!syncFastInboundV140())return alert('공용 DB 연결 후 저장할 수 있습니다.');
   const x=window.__fiSelectedV140;
   const qty=Number(document.getElementById('fiQtyV140')?.value||0);
+  const statement=(document.getElementById('fiStatementV142')?.value||'').trim();
   const loc=(document.getElementById('fiLocV140')?.value||'').trim();
   if(!x)return alert('품목을 먼저 선택하세요.');
   if(!qty||qty<=0)return alert('입고수량을 입력하세요.');
+  if(!statement)return alert('거래명세서 있다 / 없다를 선택하세요.');
 
   try{
     await sharedAddMovement('IN',x,qty,'관리자');
+    /* 빠른입고 거래명세서 여부를 공용 DB에 별도 기록 */
+    try{
+      const payload={part_no:String(x.part),item_name:x.name||'',qty:Number(qty),statement,location:loc||'',worker:'관리자'};
+      const {error}=await sharedDb.from('wms_admin_notifications').insert({
+        type:'FAST_INBOUND_STATEMENT',
+        title:`📦 빠른입고 · 거래명세서 ${statement}`,
+        message:`${x.part} · ${qty} · 거래명세서 ${statement}`,
+        payload,
+        created_at:new Date().toISOString()
+      });
+      if(error)throw error;
+    }catch(metaErr){
+      console.error('거래명세서 기록 실패',metaErr);
+      throw new Error('입고는 처리되었지만 거래명세서 기록 저장에 실패했습니다. 중복 입고하지 말고 관리자에게 확인해 주세요.');
+    }
     try{await allocateInboundToOpenOrders(x,qty,'관리자')}catch(e){}
     if(loc)await saveLocationFastInboundV140(x,qty,loc);
     await refreshSharedHistories();
@@ -16951,9 +17016,11 @@ async function saveFastInboundV140(){
     window.__fiSelectedV140=null;
     document.getElementById('fiPartV140').value='';
     document.getElementById('fiQtyV140').value='';
+    document.getElementById('fiStatementV142').value='';
     document.getElementById('fiLocV140').value='';
     document.getElementById('fiPickedV140').textContent='다음 택배 품목을 입력하세요.';
     document.getElementById('fiResultsV140').innerHTML='';
+    renderFastInboundPhotoV142();
     document.getElementById('fiPartV140').focus();
   }catch(e){console.error(e);alert('입고 저장 실패: '+(e.message||e))}
   finally{syncFastInboundV140()}
