@@ -16874,7 +16874,7 @@ function refreshAdminMainDataV128(){
     ['todayInV127','adminTodayIn','0건'],
     ['todayOutV127','adminTodayOut','0건'],
     ['erpCountV127','adminErpCount',
-      (Array.isArray(window.ITEMS)?window.ITEMS.length.toLocaleString()+'개':'0개')],
+      ((typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS.length.toLocaleString()+'개':'0개')],
     ['pendingV127','adminPendingCount','0건'],
     ['unregV127','adminUnregCount','0건']
   ];
@@ -17668,7 +17668,9 @@ function coreHomeV131(){
 }
 
 function coreFindV131(q){
-  const items=Array.isArray(window.ITEMS)?window.ITEMS:[];
+  // V132: ITEMS는 window.ITEMS가 아니라 이 파일의 const ITEMS로 선언되어 있음.
+  // 관리자 자재위치 검색이 0건으로 나오던 원인 수정.
+  const items=(typeof ITEMS!=='undefined' && Array.isArray(ITEMS)) ? ITEMS : [];
   const s=String(q||'').trim().toLowerCase();
   if(!s)return [];
   const exact=items.filter(x=>String(x.part||'').toLowerCase()===s);
