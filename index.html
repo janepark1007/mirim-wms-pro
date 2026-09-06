@@ -1653,6 +1653,28 @@ body.park-location-worker-v63 .erp-only{
   vertical-align:middle!important;
 }
 </style>
+
+<style id="npp-admin-storage-location-v227-style">
+#nppAdminPanelV113 .npp-storage-number-v227{
+  display:inline-block!important;
+  background:#e5b800!important;
+  color:#241d00!important;
+  border:2px solid #9f7f00!important;
+  border-radius:5px!important;
+  padding:4px 10px!important;
+  font-weight:1000!important;
+  line-height:1.15!important;
+}
+#nppAdminPanelV113 .npp-storage-lever-v227{
+  display:inline-block!important;
+  background:#efe7ff!important;
+  color:#6138a8!important;
+  border:1px solid #cbb9ee!important;
+  border-radius:6px!important;
+  padding:4px 9px!important;
+  font-weight:1000!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19432,6 +19454,52 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   }else{
     bootV226();
   }
+})();
+</script>
+
+<script id="npp-admin-storage-location-v227-script">
+(function(){
+  function applyAdminStorageV227(){
+    const root=document.getElementById('nppAdminPanelV113');
+    if(!root)return;
+    const table=root.querySelector('table');
+    if(!table || !table.rows.length)return;
+
+    const headers=[...table.rows[0].cells].map(c=>(c.textContent||'').trim());
+    const idx=headers.findIndex(v=>v==='보관위치');
+    if(idx<0)return;
+
+    [...table.rows].slice(1).forEach(row=>{
+      const cell=row.cells[idx];
+      if(!cell || cell.querySelector('input,select,textarea'))return;
+
+      const raw=(cell.textContent||'').trim();
+      if(!raw)return;
+
+      if(/^\d+$/.test(raw)){
+        cell.innerHTML='<span class="npp-storage-number-v227">'+raw+'</span>';
+      }else if(raw.includes('레버파일')){
+        const m=raw.match(/레버파일\s*[-_:]?\s*(\d+)?/);
+        cell.innerHTML='<span class="npp-storage-lever-v227">레버파일</span>'+
+          (m&&m[1]?' <span class="npp-storage-number-v227">'+m[1]+'</span>':'');
+      }
+    });
+  }
+
+  function bootV227(){
+    const root=document.getElementById('nppAdminPanelV113');
+    if(!root)return;
+    let busy=false;
+    const run=()=>{
+      if(busy)return;
+      busy=true;
+      try{applyAdminStorageV227()}finally{busy=false}
+    };
+    run();
+    new MutationObserver(()=>setTimeout(run,0)).observe(root,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootV227,{once:true});
+  else bootV227();
 })();
 </script>
 </body></html>
