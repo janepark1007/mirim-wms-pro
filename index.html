@@ -17848,4 +17848,84 @@ setTimeout(()=>{
   }
 },150);
 </script>
+
+<style id="admin-mode-restore-v132fix-style">
+/* V132 FIX: 관리자 로그인 후 관리자 메인을 최우선으로 복구 */
+body.admin-view.admin-mainmenu-open-v125 main{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:calc(100vh - 70px)!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  width:100%!important;
+  min-height:calc(100vh - 80px)!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+body.admin-view.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125){
+  display:none!important;
+}
+</style>
+
+<script id="admin-mode-restore-v132fix-script">
+function restoreAdminMainV132Fix(){
+  if(!isAdmin)return;
+
+  /* 뒤에 추가된 업무화면 상태가 관리자 메인을 가리지 않게 초기화 */
+  window.__adminRouteAwayV128=false;
+  document.body.classList.remove(
+    'admin-core-open-v131',
+    'fast-inbound-open-v133',
+    'admin-task-focus',
+    'admin-shortcut-focus',
+    'npp-admin-open-v113',
+    'admin-reference-home',
+    'other-storage-open-v50',
+    'admin-location-edit-v129',
+    'admin-location-edit-v134'
+  );
+  document.body.classList.add('admin-view','admin-mainmenu-open-v125');
+
+  try{
+    if(typeof buildAdminMainV127==='function')buildAdminMainV127();
+    else if(typeof openAdminMainV125==='function')openAdminMainV125(true);
+  }catch(e){console.error('관리자 메인 복구',e)}
+
+  const menu=document.getElementById('adminMainMenuV125');
+  if(menu){
+    menu.style.setProperty('display','block','important');
+    menu.style.setProperty('visibility','visible','important');
+    menu.style.setProperty('opacity','1','important');
+    menu.style.setProperty('pointer-events','auto','important');
+  }
+}
+
+/* 관리자 로그인 성공 직후 반드시 관리자 메인 복구 */
+const __adminLoginBeforeV132Fix=window.adminLogin;
+if(typeof __adminLoginBeforeV132Fix==='function'){
+  window.adminLogin=async function(){
+    const r=await __adminLoginBeforeV132Fix.apply(this,arguments);
+    if(isAdmin){
+      restoreAdminMainV132Fix();
+      setTimeout(restoreAdminMainV132Fix,250);
+      setTimeout(restoreAdminMainV132Fix,1200);
+      setTimeout(restoreAdminMainV132Fix,3500);
+    }
+    return r;
+  };
+}
+
+/* 이미 관리자 상태로 열린 경우도 복구 */
+setTimeout(()=>{
+  if(isAdmin)restoreAdminMainV132Fix();
+},180);
+</script>
 </body></html>
