@@ -16632,14 +16632,14 @@ function buildAdminMainV127(){
         <button type="button" id="adminMainInboundV137" class="admin127-in" onclick="event.stopPropagation();openFastInboundV140();return false;">
           📥 빠른입고<small>입고 수량 등록</small>
         </button>
-        <button type="button" id="adminMainOutboundV137" class="admin127-out">
+        <button type="button" id="adminMainOutboundV137" class="admin127-out" onclick="event.stopPropagation();openFastOutboundV143();return false;">
           📤 빠른출고<small>출고 수량 등록</small>
         </button>
       </div>
 
       <div class="admin127-section">관리 바로가기</div>
       <div class="admin127-links">
-        <button type="button" id="adminMainLocationV137" class="admin127-loc">
+        <button type="button" id="adminMainLocationV137" class="admin127-loc" onclick="event.stopPropagation();openAdminLocationV144();return false;">
           <span class="ico">📍</span>자재위치 검색<small>위치 · 수량 확인</small>
         </button>
         <button type="button" id="adminMainUnregV137" class="admin127-unreg">
@@ -16723,8 +16723,6 @@ if(document.readyState==='loading'){
    관리자 메인 버튼 클릭만 캡처 단계에서 1개 기능으로 정확히 연결한다. */
 (function(){
   const routeMapV137={
-    adminMainOutboundV137:()=>{ openFastOutboundV143(); },
-    adminMainLocationV137:()=>{ openAdminLocationV144(); },
     adminMainUnregV137:()=>{ closeAdminMainV125(); openAdminTaskView('unreg'); },
     adminMainOrdersV137:()=>{ closeAdminMainV125(); openAdminTaskView('orders'); },
     adminMainLaterV137:()=>{ closeAdminMainV125(); openAdminTaskView('later'); },
@@ -17100,6 +17098,8 @@ function openFastOutboundV143(){
   ensureFastOutboundV143();
   document.body.classList.remove('admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus','npp-admin-open-v113','fast-inbound-v140');
   document.body.classList.add('fast-outbound-v143');
+  const panel=document.getElementById('fastOutboundV143');
+  if(panel)panel.style.setProperty('display','block','important');
   syncFastOutboundV143();
   setTimeout(()=>document.getElementById('foPartV143')?.focus(),30);
 }
@@ -17271,6 +17271,8 @@ function openAdminLocationV144(){
   ensureAdminLocationV144();
   document.body.classList.remove('admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus','npp-admin-open-v113','fast-inbound-v140','fast-outbound-v143');
   document.body.classList.add('admin-location-v144');
+  const panel=document.getElementById('adminLocationV144');
+  if(panel)panel.style.setProperty('display','block','important');
   try{if(typeof loadSharedLocations==='function')loadSharedLocations()}catch(e){}
   setTimeout(()=>document.getElementById('alQueryV144')?.focus(),30);
 }
