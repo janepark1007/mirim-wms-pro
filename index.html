@@ -17712,4 +17712,82 @@ window.search=function(){
 };
 </script>
 
+
+<script id="public-search-live-stock-location-v161">
+(function(){
+  let busyV161=false;
+
+  async function refreshPublicItemDataV161(part){
+    if(!sharedReady||!sharedDb)return;
+    const p=String(part||'').trim();
+    if(!p)return;
+
+    try{
+      const [stockRes,locRes]=await Promise.all([
+        sharedDb.from('production_inventory_sync')
+          .select('part_no,current_stock,updated_at').eq('part_no',p).limit(1),
+        sharedDb.from('production_item_locations')
+          .select('*').eq('part_no',p)
+      ]);
+
+      if(stockRes.error)throw stockRes.error;
+      if(locRes.error)throw locRes.error;
+
+      const s=(stockRes.data||[])[0];
+      if(s){
+        sharedCache.stock[p]=Number(s.current_stock||0);
+        sharedCache.stockUpdated[p]=s.updated_at||'';
+        sharedCache.movementDelta[p]=0;
+      }
+
+      if(sharedCache.locations){
+        sharedCache.locations[p]=(locRes.data||[]);
+      }
+    }catch(e){
+      console.warn('일반검색 최신 재고/위치 동기화 실패',e);
+    }
+  }
+
+  const previousSearchV161=window.search;
+  window.search=async function(){
+    /* 관리자모드는 기존 검색 동작 그대로 */
+    if(document.body.classList.contains('admin-view')){
+      return typeof previousSearchV161==='function'
+        ? previousSearchV161.apply(this,arguments)
+        : undefined;
+    }
+
+    if(busyV161){
+      return typeof previousSearchV161==='function'
+        ? previousSearchV161.apply(this,arguments)
+        : undefined;
+    }
+
+    const q=(document.getElementById('q')?.value||'').trim().toLowerCase();
+    if(!q){
+      return typeof previousSearchV161==='function'
+        ? previousSearchV161.apply(this,arguments)
+        : undefined;
+    }
+
+    const items=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+    let rows=items.filter(x=>
+      String(x.part||'').toLowerCase()===q ||
+      String(x.part||'').toLowerCase().includes(q) ||
+      String(x.name||'').toLowerCase().includes(q)
+    ).slice(0,30);
+
+    busyV161=true;
+    try{
+      /* 일반모드에 보여줄 품목의 공용 DB 최신값을 먼저 동기화 */
+      await Promise.all(rows.map(x=>refreshPublicItemDataV161(x.part)));
+      if(typeof previousSearchV161==='function'){
+        return previousSearchV161.apply(this,arguments);
+      }
+    }finally{
+      busyV161=false;
+    }
+  };
+})();
+</script>
 </body></html>
