@@ -3109,13 +3109,43 @@ function photoMatchCard(m,source){
  </div>`;
 }
 function openMatchedInbound(part){
- $('photoSearchPanel').classList.add('hidden');
- $('work').classList.remove('hidden');
- mode='inbound';
- $('title').textContent='빠른 입고';
- $('q').value=part;
- search();
+  try{$('photoSearchPanel')?.classList.add('hidden')}catch(e){}
+  if(isAdmin && typeof openFastInboundV140==='function'){
+    openFastInboundV140();
+    setTimeout(()=>{
+      const inp=document.getElementById('fiPartV140');
+      if(inp)inp.value=part;
+      try{searchFastInboundV140(true)}catch(e){}
+      const st=document.getElementById('fiStatusV140');
+      if(st)st.textContent='✅ 사진에서 찾은 품번입니다. 실제 품번·입고수량·거래명세서 여부를 확인한 뒤 입고저장하세요.';
+    },60);
+    return;
+  }
+  $('work').classList.remove('hidden');
+  mode='inbound';
+  $('title').textContent='빠른 입고';
+  $('q').value=part;
+  search();
 }
+
+function openInboundPhotoAutomationV200(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  try{document.body.classList.remove('fast-inbound-v140','admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus')}catch(e){}
+  try{$('home')?.classList.add('hidden')}catch(e){}
+  try{$('work')?.classList.add('hidden')}catch(e){}
+  const p=$('photoSearchPanel');
+  if(!p)return alert('사진 검색 화면을 찾지 못했습니다.');
+  p.classList.remove('hidden');
+  $('photoSearchPreview').innerHTML='';
+  $('photoSearchResults').innerHTML='';
+  $('photoSearchStatus').innerHTML='<b style="color:#3459a5">택배 라벨 또는 거래명세서에서 품번이 잘 보이게 촬영하세요.</b><br>사진 인식 → ERP 대조 → 품번 선택 → 택배 빠른입고로 자동 연결됩니다.';
+  const h=p.querySelector('h2');
+  if(h)h.textContent='📦 택배사진 자동입고';
+  const choose=$('photoSearchChoose');
+  if(choose)choose.textContent='📷 택배 라벨 / 거래명세서 사진 찍기';
+  setTimeout(()=>{ try{$('photoSearchInput').click()}catch(e){} },120);
+}
+
 async function runPhotoSearch(file){
  if(!file)return;
  if(file.size>6*1024*1024){alert('사진은 6MB 이하로 선택해 주세요.');return;}
@@ -3135,7 +3165,7 @@ async function runPhotoSearch(file){
        recognizedText=String(r?.data?.text||'').trim();
        const ocrMatches=ocrPartCandidates(recognizedText);
        if(ocrMatches.length){
-         sections.push(`<div class="notice" style="margin-top:12px;background:#eaf8ef">✅ 사진 글자에서 ERP 품번 후보 ${ocrMatches.length}개를 찾았습니다. 맞는 품번을 확인한 뒤 선택하세요.</div>${ocrMatches.map(m=>photoMatchCard(m,'ocr')).join('')}`);
+         sections.push(`<div class="notice" style="margin-top:12px;background:#eaf8ef">✅ 사진에서 ERP 품번 후보 ${ocrMatches.length}개를 찾았습니다. 맞는 품번의 [⬇️ 빠른입고]를 누르면 입고 화면에 자동 연결됩니다.</div>${ocrMatches.map(m=>photoMatchCard(m,'ocr')).join('')}`);
        }else if(recognizedText){
          sections.push(`<div class="notice" style="margin-top:12px">⚠️ 글자는 읽었지만 ERP 품번과 확실히 일치하는 항목은 찾지 못했습니다.</div>`);
        }
@@ -16368,6 +16398,7 @@ body.admin-view:not(.admin-task-focus) #adminQuickInOutV108{
 }
 .admin-main-top-v123 .in-v123{background:#087a43!important}
 .admin-main-top-v123 .out-v123{background:#b82929!important}
+.admin-main-top-v123 .photo-v200{background:#3459a5!important}
 .admin-main-top-v123 button small{
   display:block;
   margin-top:5px;
@@ -16510,6 +16541,9 @@ function ensureAdminMainV123(){
         </button>
         <button type="button" class="out-v123" onclick="openAdminQuickInOutV108('outbound')">
           📤 빠른출고<small>출고 수량 등록</small>
+        </button>
+        <button type="button" class="photo-v200" onclick="openInboundPhotoAutomationV200()">
+          📷 택배사진 자동입고<small>품번 인식 → ERP 대조</small>
         </button>
       </div>
 
@@ -17946,7 +17980,7 @@ function ensureFastInboundV140(){
   p.innerHTML=`
     <div class="fi140-head">
       <div><h2>📦 택배 빠른입고</h2><p>택배 정리하면서 바로 입력하고 공용 DB에 저장합니다.</p></div>
-      <button class="fi140-home" type="button" onclick="closeFastInboundV140()">⌂ 관리자 메인</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" onclick="openInboundPhotoAutomationV200()" style="min-height:42px;border:0;border-radius:10px;background:#3459a5;color:#fff;font-weight:1000;padding:0 13px">📷 택배사진 자동찾기</button><button class="fi140-home" type="button" onclick="closeFastInboundV140()">⌂ 관리자 메인</button></div>
     </div>
     <div class="fi140-form">
       <input id="fiPartV140" autocomplete="off" placeholder="품번 또는 품명">
@@ -17970,7 +18004,7 @@ function ensureFastInboundV140(){
     <div id="fiLocationQtyV166" class="loc166-box"></div>
     <div id="fiPhotoBoxV142" class="fi142-photo-box">
       <div id="fiPhotoPreviewV142" class="fi142-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
-      <button id="fiPhotoBtnV142" type="button" onclick="changeFastInboundPhotoV142()" disabled>📷 사진 등록</button>
+      <button id="fiPhotoBtnV142" type="button" onclick="changeFastInboundPhotoV142()" disabled>🖼 품목사진 등록</button>
     </div>
     <div id="fiResultsV140" class="fi140-results"></div>
     <div id="fiStatusV140" class="fi140-status"></div>`;
@@ -18031,12 +18065,12 @@ function renderFastInboundPhotoV142(){
   if(!box||!btn)return;
   if(!x){
     box.textContent='품목 선택 후 사진을 확인할 수 있습니다.';
-    btn.disabled=true; btn.textContent='📷 사진 등록';
+    btn.disabled=true; btn.textContent='🖼 품목사진 등록';
     return;
   }
   const photo=(typeof getPhoto==='function')?getPhoto(x.part):'';
   btn.disabled=false;
-  btn.textContent=photo?'📷 사진 수정':'📷 사진 등록';
+  btn.textContent=photo?'🖼 품목사진 수정':'🖼 품목사진 등록';
   box.innerHTML=photo
     ? `현재 저장된 사진<img src="${photo}" alt="${esc(x.part||'')} 사진">`
     : '현재 저장된 사진이 없습니다.';
