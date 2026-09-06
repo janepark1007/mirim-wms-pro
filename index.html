@@ -17074,8 +17074,10 @@ async function loadRecentInboundV183(part){
 }
 
 function searchFastInboundV140(focusQty=false){
-  const raw=(document.getElementById('fiPartV140')?.value||'').trim(),q=raw.toLowerCase();
-  const picked=document.getElementById('fiPickedV140'),out=document.getElementById('fiResultsV140');
+  const raw=(document.getElementById('fiPartV140')?.value||'').trim();
+  const q=raw.toLowerCase();
+  const picked=document.getElementById('fiPickedV140');
+  const out=document.getElementById('fiResultsV140');
   window.__fiSelectedV140=null;
 
   if(!q){
@@ -17089,7 +17091,13 @@ function searchFastInboundV140(focusQty=false){
   }
 
   const all=itemsFastInboundV140();
-  const rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  if(!rows.length){
+    rows=all.filter(x=>
+      String(x.part||'').toLowerCase().includes(q) ||
+      String(x.name||'').toLowerCase().includes(q)
+    ).slice(0,15);
+  }
   window.__fiRowsV140=rows;
 
   if(rows.length===1){
@@ -17109,7 +17117,9 @@ function searchFastInboundV140(focusQty=false){
       if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
       renderLocationQtyBoxV166('fiLocationQtyV166',x);
       const p=document.getElementById('fiPickedV140');
-      if(p&&window.__fiSelectedV140===x)p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+      if(p&&window.__fiSelectedV140===x){
+        p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+      }
     }).catch(()=>{});
 
     if(focusQty)setTimeout(()=>document.getElementById('fiQtyV140')?.focus(),20);
@@ -17117,6 +17127,7 @@ function searchFastInboundV140(focusQty=false){
   }
 
   renderLocationQtyBoxV166('fiLocationQtyV166',null);
+  loadRecentInboundV183('');
   picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
   out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
 }
