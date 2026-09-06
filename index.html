@@ -1486,6 +1486,28 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="npp-admin-type-v219">
+@media (min-width:769px){
+  #nppAdminPanelV113 .npp-type-v219{
+    display:inline-block;
+    padding:5px 10px;
+    border-radius:8px;
+    font-weight:1000;
+    white-space:nowrap;
+  }
+  #nppAdminPanelV113 .npp-type-storage-v219{
+    background:#e9f7ee;
+    color:#087a43;
+    border:1px solid #9ed8b5;
+  }
+  #nppAdminPanelV113 .npp-type-lever-v219{
+    background:#f2ebff;
+    color:#7047b8;
+    border:1px solid #cdbcf2;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -18939,6 +18961,62 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',startNppColorsV217,{once:true});
   }else startNppColorsV217();
+})();
+</script>
+
+<script id="npp-admin-type-v219-script">
+(function(){
+  function adjustNppAdminV219(){
+    const root=document.getElementById('nppAdminPanelV113');
+    if(!root)return;
+    const table=root.querySelector('table');
+    if(!table)return;
+
+    const rows=[...table.rows];
+    if(!rows.length)return;
+
+    const heads=[...rows[0].cells];
+    let statusIdx=heads.findIndex(c=>(c.textContent||'').trim().includes('확인상태'));
+    if(statusIdx>=0){
+      rows.forEach(r=>{
+        if(r.cells[statusIdx]) r.cells[statusIdx].style.display='none';
+      });
+    }
+
+    // 종류 열이 없을 때만 추가. 기존 데이터/저장 필드는 변경하지 않는다.
+    const currentHeads=[...rows[0].cells];
+    if(currentHeads.some(c=>(c.textContent||'').trim()==='종류'))return;
+
+    const th=document.createElement('th');
+    th.textContent='종류';
+    rows[0].appendChild(th);
+
+    rows.slice(1).forEach(r=>{
+      const td=document.createElement('td');
+      const text=(r.textContent||'');
+      const lever=text.includes('레버파일');
+      const sp=document.createElement('span');
+      sp.className='npp-type-v219 '+(lever?'npp-type-lever-v219':'npp-type-storage-v219');
+      sp.textContent=lever?'레버파일':'보관번호';
+      td.appendChild(sp);
+      r.appendChild(td);
+    });
+  }
+
+  function bootNppAdminV219(){
+    const root=document.getElementById('nppAdminPanelV113');
+    if(!root)return;
+    let busy=false;
+    const run=()=>{
+      if(busy)return;
+      busy=true;
+      try{adjustNppAdminV219()}finally{busy=false}
+    };
+    run();
+    new MutationObserver(()=>setTimeout(run,0)).observe(root,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootNppAdminV219,{once:true});
+  else bootNppAdminV219();
 })();
 </script>
 </body></html>
