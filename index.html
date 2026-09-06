@@ -5300,12 +5300,7 @@ async function shareOrderRequest(x,i){
 }
 </style>
 
-<style id="fast-inout-recent-removed-v200">
-#fiRecentInboundV183,
-#foRecentOutboundV184{
-  display:none!important;
-}
-</style>
+
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
@@ -16959,7 +16954,6 @@ function ensureFastInboundV140(){
       <div id="fiPhotoPreviewV142" class="fi142-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
       <button id="fiPhotoBtnV142" type="button" onclick="changeFastInboundPhotoV142()" disabled>📷 사진 등록</button>
     </div>
-    <div id="fiRecentInboundV183" class="fi183-recent-inbound"></div>
     <div id="fiResultsV140" class="fi140-results"></div>
     <div id="fiStatusV140" class="fi140-status"></div>`;
   main.insertBefore(p,main.firstChild);
@@ -17344,7 +17338,6 @@ function ensureFastOutboundV143(){
       <button id="foSaveV143" class="fo143-save" type="button" onclick="saveFastOutboundV143()">📤 출고저장</button>
     </div>
     <div id="foPickedV143" class="fo143-picked">품목을 검색하세요.</div>
-    <div id="foRecentOutboundV184" class="fo184-recent-outbound"></div>
     <div id="foLocationQtyV166" class="loc166-box"></div>
     <div id="foPhotoBoxV143" class="fo143-photo-box">
       <div id="foPhotoPreviewV143" class="fo143-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
