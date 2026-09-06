@@ -16933,8 +16933,8 @@ function ensureFastInboundV140(){
 
   const part=document.getElementById('fiPartV140');
   const qty=document.getElementById('fiQtyV140');
-  part.addEventListener('input',searchFastInboundV140);
-  part.addEventListener('keyup',e=>{if(e.key!=='Enter')searchFastInboundV140(false)});
+  part.addEventListener('input',()=>setTimeout(()=>searchFastInboundV140(false),0));
+  part.addEventListener('keyup',e=>{if(e.key!=='Enter')setTimeout(()=>searchFastInboundV140(false),0)});
   part.addEventListener('change',()=>searchFastInboundV140(false));
   part.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchFastInboundV140(true)}});
   qty.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveFastInboundV140()}});
@@ -17076,61 +17076,68 @@ async function loadRecentInboundV183(part){
 }
 
 function searchFastInboundV140(focusQty=false){
-  const raw=(document.getElementById('fiPartV140')?.value||'').trim();
-  const picked=document.getElementById('fiPickedV140'),out=document.getElementById('fiResultsV140');
+  const inp=document.getElementById('fiPartV140');
+  const raw=(inp?.value||'').trim();
+  const picked=document.getElementById('fiPickedV140');
+  const out=document.getElementById('fiResultsV140');
   window.__fiSelectedV140=null;
 
   if(!raw){
-    picked.textContent='품목을 검색하세요.';
-    out.innerHTML='';
-    showStockFastInboundV149(null);
-    renderLocationQtyBoxV166('fiLocationQtyV166',null);
-    renderFastInboundPhotoV142();
-    loadRecentInboundV183('');
+    if(picked)picked.textContent='품목을 검색하세요.';
+    if(out)out.innerHTML='';
+    try{showStockFastInboundV149(null)}catch(e){}
+    try{renderLocationQtyBoxV166('fiLocationQtyV166',null)}catch(e){}
+    try{renderFastInboundPhotoV142()}catch(e){}
+    try{loadRecentInboundV183('')}catch(e){}
     return;
   }
 
   const all=itemsFastInboundV140();
-  const normPart=v=>String(v||'').trim().toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
-  const q=normPart(raw);
+  const norm=v=>String(v||'').trim().toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
+  const q=norm(raw);
 
-  /* 품번만으로 좁혀짐: 정확 품번 우선, 입력 중에는 품번 부분일치만 */
-  let rows=all.filter(x=>normPart(x.part)===q);
-  if(!rows.length){
-    rows=all.filter(x=>normPart(x.part).includes(q)).slice(0,15);
-  }
-  window.__fiRowsV140=rows;
-
-  if(rows.length===1){
-    const x=rows[0];
+  const exact=all.filter(x=>norm(x.part)===q);
+  if(exact.length===1){
+    const x=exact[0];
+    window.__fiRowsV140=exact;
     window.__fiSelectedV140=x;
-    document.getElementById('fiPartV140').value=x.part||'';
-    showStockFastInboundV149(x);
-    renderLocationQtyBoxV166('fiLocationQtyV166',x);
-    renderFastInboundPhotoV142();
-    loadRecentInboundV183(x.part);
 
-    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
-    out.innerHTML='';
+    if(inp)inp.value=x.part||'';
+    if(out)out.innerHTML='';
+    if(picked){
+      picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+    }
 
-    getLatestWarehouseStockV156(x.part).then(n=>{
-      const el=document.getElementById('fiStockV149');
-      if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
-      renderLocationQtyBoxV166('fiLocationQtyV166',x);
-      const p=document.getElementById('fiPickedV140');
-      if(p&&window.__fiSelectedV140===x){
-        p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
-      }
-    }).catch(()=>{});
+    try{showStockFastInboundV149(x)}catch(e){}
+    try{renderLocationQtyBoxV166('fiLocationQtyV166',x)}catch(e){}
+    try{renderFastInboundPhotoV142()}catch(e){}
+    try{loadRecentInboundV183(x.part)}catch(e){}
+
+    try{
+      getLatestWarehouseStockV156(x.part).then(n=>{
+        const el=document.getElementById('fiStockV149');
+        if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
+        try{renderLocationQtyBoxV166('fiLocationQtyV166',x)}catch(e){}
+        const p=document.getElementById('fiPickedV140');
+        if(p&&window.__fiSelectedV140===x){
+          p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+        }
+      }).catch(()=>{});
+    }catch(e){}
 
     if(focusQty)setTimeout(()=>document.getElementById('fiQtyV140')?.focus(),20);
     return;
   }
 
-  renderLocationQtyBoxV166('fiLocationQtyV166',null);
-  loadRecentInboundV183('');
-  picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
-  out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
+  const rows=all.filter(x=>norm(x.part).startsWith(q)).slice(0,15);
+  window.__fiRowsV140=rows;
+  try{renderLocationQtyBoxV166('fiLocationQtyV166',null)}catch(e){}
+  try{loadRecentInboundV183('')}catch(e){}
+
+  if(picked)picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
+  if(out){
+    out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
+  }
 }
 
 function selectFastInboundV140(i){
