@@ -17350,11 +17350,30 @@ function syncFastOutboundV143(){
 function selectedOutboundLocationV158(x){
   const sel=document.getElementById('foLocV143');
   if(!sel||!sel.value||!x)return null;
-  const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+  const p=String(x.part);
+  const shown=(typeof getAllLocations==='function')?(getAllLocations(p)||[]):[];
   const opt=sel.options[sel.selectedIndex];
   const idx=Number(opt?.dataset?.locationIndex);
-  if(Number.isInteger(idx)&&idx>=0&&locs[idx])return locs[idx];
-  return locs.find(l=>String(l.id||'')===String(sel.value))||null;
+  const picked=(Number.isInteger(idx)&&idx>=0)?shown[idx]:null;
+  if(!picked)return null;
+
+  /* 실제 공용DB 위치행과 정확히 매칭.
+     소모자재-1, 2층자재실처럼 기존에 저장된 명칭을 그대로 기준으로 찾는다. */
+  const raw=(sharedCache.locations&&sharedCache.locations[p])||[];
+  if(picked.id){
+    const byId=raw.find(r=>String(r.id||'')===String(picked.id));
+    if(byId)return byId;
+  }
+  const norm=v=>String(v||'').trim();
+  const exact=raw.find(r=>
+    norm(r.room)===norm(picked.room) &&
+    norm(r.zone)===norm(picked.zone) &&
+    norm(r.level)===norm(picked.level) &&
+    norm(r.height)===norm(picked.height) &&
+    norm(r.storage)===norm(picked.storage) &&
+    norm(r.detail)===norm(picked.detail)
+  );
+  return exact||picked;
 }
 function outboundLocationLabelV158(l){
   return l?[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' '):'';
@@ -17364,8 +17383,22 @@ async function deductOutboundLocationQtyV158(x,qty,loc){
   const before=Number(loc.qty||0);
   if(Number(qty)>before)throw new Error(`선택한 자재위치 수량이 부족합니다. 현재 ${before.toLocaleString()}개`);
   const after=before-Number(qty);
-  await sharedSaveMultiLocation(String(x.part),{...loc,qty:after},loc.id||null);
-  return {selected:true,label:outboundLocationLabelV158(loc),before,after};
+  const p=String(x.part);
+  let target=loc;
+  if(!target.id){
+    const raw=(sharedCache.locations&&sharedCache.locations[p])||[];
+    const norm=v=>String(v||'').trim();
+    target=raw.find(r=>
+      norm(r.room)===norm(loc.room) &&
+      norm(r.zone)===norm(loc.zone) &&
+      norm(r.level)===norm(loc.level) &&
+      norm(r.height)===norm(loc.height) &&
+      norm(r.storage)===norm(loc.storage) &&
+      norm(r.detail)===norm(loc.detail)
+    )||loc;
+  }
+  await sharedSaveMultiLocation(p,{...target,qty:after},target.id||null);
+  return {selected:true,label:outboundLocationLabelV158(target),before,after};
 }
 
 async function saveFastOutboundV143(){
@@ -17388,6 +17421,7 @@ async function saveFastOutboundV143(){
     /* 기존 공용 출고 처리 사용: 출고수량/현재고/입출고 집계가 기존 구조대로 모두 갱신 */
     await sharedAddMovement('OUT',x,qty,person);
     const locationResult=await deductOutboundLocationQtyV158(x,qty,selectedLocationRecord);
+    if(typeof loadSharedLocations==='function')await loadSharedLocations();
     await refreshSharedStockV152(x.part);
     await getLatestWarehouseStockV156(x.part);
 
