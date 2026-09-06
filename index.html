@@ -16713,7 +16713,7 @@ function refreshAdminMainV127(){
     ['todayInV127','adminTodayIn','0건'],
     ['todayOutV127','adminTodayOut','0건'],
     ['erpCountV127','adminErpCount','1,438개'],
-    ['pendingV127','adminPendingCount','0건'],
+    ['registeredCountV204','homeStockTotal','0개'],
     ['unregV127','adminUnregCount','1건']
   ];
   m.forEach(([to,from,fb])=>{
@@ -16755,7 +16755,7 @@ function buildAdminMainV127(){
         <div class="admin127-stat"><small>오늘 입고</small><b id="todayInV127">0건</b></div>
         <div class="admin127-stat"><small>오늘 출고</small><b id="todayOutV127">0건</b></div>
         <div class="admin127-stat erp"><small>ERP 품목</small><b id="erpCountV127">1,438개</b></div>
-        <div class="admin127-stat pending"><small>미입고 주문</small><b id="pendingV127">0건</b></div>
+        <div class="admin127-stat pending"><small>현재 등록된 품목수</small><b id="registeredCountV204">0개</b></div>
         <div class="admin127-stat unreg"><small>ERP 미등록</small><b id="unregV127">1건</b></div>
       </div>
 
@@ -18240,6 +18240,27 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
     try{renderNppAdminV113()}catch(e){console.error(e)}
     try{window.scrollTo(0,0)}catch(e){}
   };
+})();
+</script>
+
+<script id="admin-registered-count-v204-script">
+(function(){
+  const oldRefreshV204=window.refreshAdminMainV127;
+  if(typeof oldRefreshV204==='function'){
+    window.refreshAdminMainV127=function(){
+      const r=oldRefreshV204.apply(this,arguments);
+      try{
+        updateHomeSummary();
+        const src=document.getElementById('homeStockTotal');
+        const out=document.getElementById('registeredCountV204');
+        if(out){
+          const n=String(src?.textContent||'0').replace(/[^0-9]/g,'');
+          out.textContent=(Number(n)||0).toLocaleString()+'개';
+        }
+      }catch(e){}
+      return r;
+    };
+  }
 })();
 </script>
 </body></html>
