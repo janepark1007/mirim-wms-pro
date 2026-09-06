@@ -5273,6 +5273,32 @@ async function shareOrderRequest(x,i){
      w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>미림 자재 문의</title>
      <style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.55}img{max-width:100%;max-height:480px;object-fit:contain;border:1px solid #ddd;border-radius:12px}pre{white-space:pre-wrap;background:#f5f7f6;padding:14px;border-radius:10px}</style>
 
+
+<style id="mobile-text-larger-v198">
+@media (max-width: 768px){
+  body{font-size:17px!important}
+  main, main *{line-height:1.45}
+  input,select,button,textarea{font-size:17px!important}
+  small{font-size:14px!important}
+
+  /* 빠른입고/빠른출고 */
+  .fi140-head h2,.fo143-head h2{font-size:24px!important}
+  .fi140-head p,.fo143-head p{font-size:15px!important}
+  .fi140-picked,.fo143-picked{font-size:17px!important}
+  .fi140-results,.fo143-results{font-size:16px!important}
+  .fi183-title,.fo184-title{font-size:17px!important}
+  .fi183-row,.fo184-row{font-size:16px!important}
+  .fi183-date,.fo184-date{font-size:15px!important}
+
+  /* 일반/관리자 자재위치 검색 */
+  #results,.v147-public-row,.al144-row{font-size:17px!important}
+  .al144-part{font-size:19px!important}
+  .al144-name,.al144-stock,.al144-loc{font-size:16px!important}
+  .rh176-title{font-size:17px!important}
+  .rh176-row{font-size:16px!important}
+  .rh176-date{font-size:15px!important}
+}
+</style>
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
@@ -17209,7 +17235,6 @@ async function saveFastInboundV140(){
     await refreshSharedStockV152(x.part);
     await getLatestWarehouseStockV156(x.part);
     if(typeof loadSharedLocations==='function')await loadSharedLocations();
-    loadRecentInboundV183(x.part);
     /* 빠른입고 거래명세서 여부를 공용 DB에 별도 기록 */
     try{
       const payload={part_no:String(x.part),item_name:x.name||'',qty:Number(qty),statement,warehouse:warehouse||'',location:loc||'',worker:'관리자'};
@@ -17235,6 +17260,7 @@ async function saveFastInboundV140(){
     }
     await refreshSharedHistories();
     if(typeof loadSharedLocations==='function')await loadSharedLocations();
+    await loadRecentInboundV183(x.part);
     try{updateHomeSummary();syncDashboardStats()}catch(e){}
     alert(`✅ ${x.part} ${qty.toLocaleString()}개 입고 완료`+(loc?`\n📍 ${loc}`:'')+'\nPC/모바일 공용 DB 반영');
     window.__fiSelectedV140=null;
@@ -17732,6 +17758,7 @@ async function saveFastOutboundV143(){
 
     await refreshSharedHistories();
     if(typeof loadSharedLocations==='function')await loadSharedLocations();
+    await loadRecentOutboundV184(x.part);
     try{updateHomeSummary();syncDashboardStats()}catch(e){}
 
     alert(`✅ ${x.part} ${qty.toLocaleString()}개 출고 완료\n👤 가져간 사람: ${person}${sourceLocation?`\n📍 출고위치: ${sourceLocation}`:''}${locationResult?.selected?`\n📦 해당 위치 잔량: ${Number(locationResult.after).toLocaleString()}개`:''}\nPC/모바일 출고수량 전체 반영`);
