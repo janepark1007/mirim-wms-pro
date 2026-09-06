@@ -18132,4 +18132,65 @@ body.fast-inbound-v140 .fi142-photo-box{
   margin-top:10px!important;
 }
 </style>
+
+<style id="npp-admin-route-v202-style">
+body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:relative!important;
+  z-index:20!important;
+}
+body.admin-view.npp-admin-open-v113 #adminMainMenuV125,
+body.admin-view.npp-admin-open-v113 #adminMainV123,
+body.admin-view.npp-admin-open-v113 #adminMainMenuV124,
+body.admin-view.npp-admin-open-v113 #fastInboundV140,
+body.admin-view.npp-admin-open-v113 #fastOutboundV143,
+body.admin-view.npp-admin-open-v113 #adminLocationV144{
+  display:none!important;
+}
+</style>
+<script id="npp-admin-route-v202-script">
+(function(){
+  function openNppAdminExactV202(){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+    /* 다른 전용 관리자 화면 상태만 해제 */
+    document.body.classList.remove(
+      'fast-inbound-v140',
+      'fast-outbound-v143',
+      'admin-location-v144',
+      'admin-reference-home',
+      'admin-shortcut-focus',
+      'admin-task-focus',
+      'other-storage-open-v50'
+    );
+    document.body.classList.add('admin-view','npp-admin-open-v113');
+
+    const panel=document.getElementById('nppAdminPanelV113');
+    if(panel){
+      panel.style.setProperty('display','block','important');
+      panel.style.setProperty('visibility','visible','important');
+      panel.style.setProperty('opacity','1','important');
+    }
+    try{renderNppAdminV113()}catch(e){console.error('NPP 관리자 목록 표시 오류',e)}
+    try{window.scrollTo({top:0,behavior:'instant'})}catch(e){window.scrollTo(0,0)}
+  }
+
+  /* 기존 함수 이름도 정확한 NPP 관리자 화면으로 통일 */
+  window.openNppAdminV113=openNppAdminExactV202;
+
+  /* 현재 관리자 메인의 NPP 버튼만 최종 캡처 */
+  document.addEventListener('click',function(e){
+    if(!isAdmin)return;
+    const btn=e.target.closest&&e.target.closest('#adminMainNppV137');
+    if(!btn)return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    try{closeAdminMainV125()}catch(_){}
+    openNppAdminExactV202();
+  },true);
+})();
+</script>
 </body></html>
