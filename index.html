@@ -17014,8 +17014,7 @@ function searchFastInboundV140(focusQty=false){
   if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';showStockFastInboundV149(null);renderLocationQtyBoxV166('fiLocationQtyV166',null);renderFastInboundPhotoV142();return}
 
   const all=itemsFastInboundV140();
-  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
-  if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
+  const rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
   window.__fiRowsV140=rows;
 
   if(rows.length===1){
@@ -17408,8 +17407,7 @@ function searchFastOutboundV143(focusQty=false){
   window.__foSelectedV143=null;
   if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';showStockQtyFastOutboundV149(null);fillOutboundLocationSelectV150(null);renderLocationQtyBoxV166('foLocationQtyV166',null);renderFastOutboundPhotoV143();return}
   const all=itemsFastOutboundV143();
-  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
-  if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
+  const rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
   window.__foRowsV143=rows;
   if(rows.length===1){
     const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderLocationQtyBoxV166('foLocationQtyV166',x);
