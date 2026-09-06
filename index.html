@@ -1634,6 +1634,25 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="npp-storage-location-lever-number-v226-style">
+/* NPP 보관위치: 레버파일과 숫자 분리, 숫자는 PC/모바일 모두 진한 노랑 네모 */
+#publicDrawingResultsV108 .npp-lever-label-v226{
+  font-weight:1000!important;
+}
+#publicDrawingResultsV108 .npp-lever-num-v226{
+  display:inline-block!important;
+  background:#e5b800!important;
+  color:#241d00!important;
+  border:2px solid #9f7f00!important;
+  border-radius:5px!important;
+  padding:4px 9px!important;
+  margin-left:3px!important;
+  font-weight:1000!important;
+  line-height:1.15!important;
+  vertical-align:middle!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19345,6 +19364,74 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootV224,{once:true});
   else bootV224();
+})();
+</script>
+
+<script id="npp-storage-location-lever-number-v226">
+(function(){
+  function applyV226(){
+    const root=document.getElementById('publicDrawingResultsV108');
+    if(!root)return;
+
+    /* 결과 안에서 보관위치 문구가 들어있는 모든 텍스트를 검사 */
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(n=>{
+      const parent=n.parentNode;
+      if(!parent || parent.closest('.npp-lever-num-v226')) return;
+      const s=n.nodeValue||'';
+
+      /* '레버파일 12', '레버파일-12', '레버파일:12', '레버파일12' 모두 대응 */
+      const re=/(레버파일)\s*[-_:]?\s*([0-9]+)/g;
+      if(!re.test(s)) return;
+      re.lastIndex=0;
+
+      const frag=document.createDocumentFragment();
+      let last=0,m;
+      while((m=re.exec(s))){
+        if(m.index>last) frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+
+        const label=document.createElement('span');
+        label.className='npp-lever-label-v226';
+        label.textContent=m[1];
+        frag.appendChild(label);
+        frag.appendChild(document.createTextNode(' '));
+
+        const num=document.createElement('span');
+        num.className='npp-lever-num-v226';
+        num.textContent=m[2];
+        frag.appendChild(num);
+
+        last=re.lastIndex;
+      }
+      if(last<s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      parent.replaceChild(frag,n);
+    });
+  }
+
+  function bootV226(){
+    const root=document.getElementById('publicDrawingResultsV108');
+    if(!root)return;
+    let queued=false;
+    const run=()=>{
+      if(queued)return;
+      queued=true;
+      requestAnimationFrame(()=>{
+        queued=false;
+        applyV226();
+      });
+    };
+    run();
+    new MutationObserver(run).observe(root,{childList:true,subtree:true,characterData:true});
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',bootV226,{once:true});
+  }else{
+    bootV226();
+  }
 })();
 </script>
 </body></html>
