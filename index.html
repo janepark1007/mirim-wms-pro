@@ -16899,7 +16899,7 @@ function ensureFastInboundV140(){
   p.id='fastInboundV140';
   p.innerHTML=`
     <div class="fi140-head">
-      <div><h2>📥 창고 빠른입고</h2><p>창고에서 품목 확인 후 바로 입고합니다.</p></div>
+      <div><h2>📦 택배 빠른입고</h2><p>택배 정리하면서 바로 입력하고 공용 DB에 저장합니다.</p></div>
       <button class="fi140-home" type="button" onclick="closeFastInboundV140()">⌂ 관리자 메인</button>
     </div>
     <div class="fi140-form">
@@ -16921,6 +16921,7 @@ function ensureFastInboundV140(){
       <button id="fiSaveV140" class="fi140-save" type="button" onclick="saveFastInboundV140()">📥 입고저장</button>
     </div>
     <div id="fiPickedV140" class="fi140-picked">품목을 검색하세요.</div>
+    <div id="fiRecentInboundV183" class="fi183-recent-inbound"></div>
     <div id="fiLocationQtyV166" class="loc166-box"></div>
     <div id="fiPhotoBoxV142" class="fi142-photo-box">
       <div id="fiPhotoPreviewV142" class="fi142-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
@@ -17005,6 +17006,73 @@ function changeFastInboundPhotoV142(){
   },500);
 }
 
+
+async function loadRecentInboundV183(part){
+  const el=document.getElementById('fiRecentInboundV183');
+  if(!el)return;
+  const p=String(part||'').trim();
+  if(!p){el.innerHTML='';return;}
+
+  el.innerHTML='<div class="fi183-title">최근 입고내역 불러오는 중...</div>';
+  let rows=[];
+
+  try{
+    if(sharedReady&&sharedDb){
+      const {data,error}=await sharedDb
+        .from('production_movements')
+        .select('*')
+        .eq('part_no',p)
+        .order('created_at',{ascending:false})
+        .limit(30);
+      if(error)throw error;
+      rows=(data||[]).filter(r=>r.movement_type==='IN').slice(0,10);
+    }
+  }catch(e){
+    console.warn('빠른입고 최근 입고내역 DB 조회 실패',e);
+  }
+
+  if(!rows.length){
+    try{
+      const local=(typeof getInHist==='function')?(getInHist()||[]):[];
+      rows=local.filter(r=>String(r.part||r.part_no||'').trim()===p)
+        .map(r=>({
+          movement_type:'IN',
+          qty:Number(r.qty||0),
+          worker_name:r.worker||r.worker_name||'',
+          location:r.location||r.loc||'',
+          created_at:r.created_at||r.time||r.date||''
+        }))
+        .slice(0,10);
+    }catch(e){}
+  }
+
+  if(!rows.length){
+    el.innerHTML='<div class="fi183-title">최근 입고내역</div><div class="fi183-empty">최근 입고기록이 없습니다.</div>';
+    return;
+  }
+
+  const fmt=v=>{
+    try{
+      const d=new Date(v);
+      if(Number.isNaN(d.getTime()))return escHtml(String(v||''));
+      return d.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }catch(e){return escHtml(String(v||''));}
+  };
+
+  el.innerHTML=`<div class="fi183-title">최근 입고내역 최근 ${rows.length}건</div>`+
+    rows.map(r=>{
+      const qty=Number(r.qty||0).toLocaleString();
+      const loc=String(r.location||'').trim();
+      const worker=String(r.worker_name||r.worker||'').trim();
+      return `<div class="fi183-row">
+        <span class="fi183-date">${fmt(r.created_at)}</span>
+        <b class="fi183-in">입고 +${qty}</b>
+        ${loc?`<span>위치: ${escHtml(loc)}</span>`:''}
+        ${worker?`<span>담당: ${escHtml(worker)}</span>`:''}
+      </div>`;
+    }).join('');
+}
+
 function searchFastInboundV140(focusQty=false){
   const raw=(document.getElementById('fiPartV140')?.value||'').trim(),q=raw.toLowerCase();
   const picked=document.getElementById('fiPickedV140'),out=document.getElementById('fiResultsV140');
@@ -17016,6 +17084,7 @@ function searchFastInboundV140(focusQty=false){
     showStockFastInboundV149(null);
     renderLocationQtyBoxV166('fiLocationQtyV166',null);
     renderFastInboundPhotoV142();
+    loadRecentInboundV183('');
     return;
   }
 
@@ -17030,6 +17099,7 @@ function searchFastInboundV140(focusQty=false){
     showStockFastInboundV149(x);
     renderLocationQtyBoxV166('fiLocationQtyV166',x);
     renderFastInboundPhotoV142();
+    loadRecentInboundV183(x.part);
 
     picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
     out.innerHTML='';
@@ -17058,6 +17128,7 @@ function selectFastInboundV140(i){
   showStockFastInboundV149(x);
   renderLocationQtyBoxV166('fiLocationQtyV166',x);
   renderFastInboundPhotoV142();
+  loadRecentInboundV183(x.part);
 
   document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
   document.getElementById('fiResultsV140').innerHTML='';
@@ -17117,6 +17188,7 @@ async function saveFastInboundV140(){
     await refreshSharedStockV152(x.part);
     await getLatestWarehouseStockV156(x.part);
     if(typeof loadSharedLocations==='function')await loadSharedLocations();
+    loadRecentInboundV183(x.part);
     /* 빠른입고 거래명세서 여부를 공용 DB에 별도 기록 */
     try{
       const payload={part_no:String(x.part),item_name:x.name||'',qty:Number(qty),statement,warehouse:warehouse||'',location:loc||'',worker:'관리자'};
@@ -17845,82 +17917,18 @@ window.search=function(){
 @media(max-width:720px){.rh176-row{grid-template-columns:1fr 40px 52px}.rh176-row span:last-child{grid-column:1/-1}}
 </style>
 
-<style id="fast-inbound-like-outbound-v181-style">
-/* V181: 빠른입고 화면만 창고 빠른출고와 같은 화면 구조/크기로 맞춤 */
-body.admin-view.fast-inbound-v140 #fastInboundV140{
-  background:#f7fbf8!important;
-}
-.fi140-head{
-  display:flex!important;
-  justify-content:space-between!important;
-  align-items:center!important;
-  gap:10px!important;
-  padding:14px!important;
-  background:#fff!important;
-  border:1px solid #d8e7df!important;
-  border-radius:14px!important;
-}
-.fi140-head h2{margin:0!important;font-size:22px!important;color:#12643d!important}
-.fi140-head p{margin:4px 0 0!important;font-size:12px!important;color:#65746c!important;font-weight:800!important}
-.fi140-home{
-  min-height:42px!important;padding:8px 12px!important;
-  border:1px solid #cbdad2!important;border-radius:10px!important;
-  background:#fff!important;font-weight:1000!important;
-}
-.fi140-form{
-  display:grid!important;
-  grid-template-columns:minmax(0,1.35fr) 125px 130px 165px 165px minmax(0,.9fr) 130px!important;
-  gap:8px!important;margin-top:10px!important;padding:14px!important;
-  background:#fff!important;border:2px solid #b9ddc8!important;border-radius:14px!important;
-}
-.fi140-form input,.fi140-form select{
-  min-height:54px!important;padding:10px 12px!important;
-  border:2px solid #cedfd5!important;border-radius:10px!important;
-  font-size:17px!important;font-weight:900!important;box-sizing:border-box!important;background:#fff!important;
-}
-#fiStockV149{
-  min-height:54px!important;display:flex!important;align-items:center!important;justify-content:center!important;
-  padding:10px 8px!important;border:2px solid #d7dce8!important;border-radius:10px!important;
-  background:#f7f9fc!important;color:#34425a!important;font-size:15px!important;font-weight:1000!important;
-  box-sizing:border-box!important;
-}
-.fi140-save{
-  min-height:54px!important;border:0!important;border-radius:10px!important;
-  background:#11834d!important;color:#fff!important;font-size:16px!important;font-weight:1000!important;
-}
-.fi140-picked,.fi140-status{
-  margin-top:9px!important;padding:9px 11px!important;border-radius:9px!important;
-  background:#fff!important;border:1px solid #dce7e1!important;font-size:13px!important;font-weight:900!important;
-}
-/* 출고 화면처럼 선택행에 위치별 수량이 보이므로 별도 중복 위치박스는 숨김 */
-body.fast-inbound-v140 #fiLocationQtyV166{display:none!important}
-.fi142-photo-box{
-  display:flex!important;align-items:center!important;gap:10px!important;
-  margin-top:9px!important;padding:10px 11px!important;background:#fff!important;
-  border:1px solid #dce7e1!important;border-radius:10px!important;
-}
-.fi142-photo-preview{flex:1!important;min-width:0!important;font-size:12px!important;font-weight:900!important;color:#5c6861!important}
-.fi142-photo-preview img{display:block!important;max-width:110px!important;max-height:90px!important;object-fit:contain!important;border-radius:8px!important;margin-top:6px!important}
-.fi142-photo-box button{
-  min-height:42px!important;padding:8px 12px!important;border:0!important;border-radius:9px!important;
-  background:#ece7f8!important;color:#514078!important;font-weight:1000!important;
-}
-.fi140-results{display:grid!important;gap:7px!important;margin-top:8px!important}
-.fi140-row{
-  display:grid!important;grid-template-columns:minmax(0,1fr) 100px!important;gap:8px!important;align-items:center!important;
-  padding:9px 11px!important;background:#fff!important;border:1px solid #dce7e1!important;border-radius:10px!important;
-}
-.fi140-row button{min-height:38px!important;border:0!important;border-radius:8px!important;background:#e3f2e9!important;color:#155c38!important;font-weight:1000!important}
 
-@media(max-width:720px){
-  .fi140-form{grid-template-columns:1fr 105px!important}
-  .fi140-form #fiStockV149{grid-column:1/2!important}
-  .fi140-form #fiStatementV142,
-  .fi140-form #fiWarehouseV154,
-  .fi140-form #fiLocV140,
-  .fi140-save{grid-column:1/-1!important}
-  .fi142-photo-box{align-items:flex-start!important;flex-direction:column!important}
-  .fi142-photo-box button{width:100%!important}
+<style id="fast-inbound-recent-v183-style">
+.fi183-recent-inbound{margin-top:8px}
+.fi183-title{font-size:13px;font-weight:1000;color:#185f3c;margin-bottom:5px}
+.fi183-row{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  padding:7px 9px;margin-top:4px;background:#f7fbf8;
+  border:1px solid #d8e8df;border-radius:8px;
+  font-size:12px;font-weight:850;color:#405047
 }
+.fi183-date{color:#6b746f}
+.fi183-in{color:#137042}
+.fi183-empty{padding:8px 9px;background:#fafafa;border:1px solid #e6e6e6;border-radius:8px;font-size:12px;color:#777;font-weight:800}
 </style>
 </body></html>
