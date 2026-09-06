@@ -16903,4 +16903,334 @@ setTimeout(()=>{
   }
 },120);
 </script>
+
+<style id="admin-main-role-fix-v129-style">
+/* V129: 관리자 메인에서 '자재위치 수정' 화면이 다른 메뉴에 섞여 나오지 않도록 강제 차단 */
+body.admin-view:not(.admin-location-edit-v129) #locationOrganizerCard{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+body.admin-view:not(.admin-shortcut-focus) #adminShortcutFocusPanel{
+  display:none!important;
+}
+</style>
+
+<script id="admin-main-role-fix-v129-script">
+/* =========================================================
+   V129 관리자 메인 역할별 독립 라우팅
+   - 메인 버튼의 기존 onclick 전부 제거
+   - 클릭을 캡처 단계에서 단독 처리
+   - 자재위치 수정 화면은 어떤 메인 메뉴에서도 자동 노출 금지
+   ========================================================= */
+
+function hideLocationEditorV129(){
+  document.body.classList.remove('admin-location-edit-v129','admin-shortcut-focus');
+  const loc=document.getElementById('locationOrganizerCard');
+  if(loc){
+    loc.classList.add('hidden');
+    loc.style.setProperty('display','none','important');
+    loc.style.setProperty('visibility','hidden','important');
+    loc.style.setProperty('opacity','0','important');
+    loc.style.setProperty('pointer-events','none','important');
+  }
+  const sp=document.getElementById('adminShortcutFocusPanel');
+  if(sp){
+    sp.classList.add('hidden');
+    sp.style.setProperty('display','none','important');
+  }
+}
+
+function resetAdminRouteV129(){
+  window.__adminRouteAwayV128=true;
+
+  document.body.classList.remove(
+    'admin-mainmenu-open-v125',
+    'admin-reference-home',
+    'admin-shortcut-focus',
+    'admin-task-focus',
+    'admin-bom-view',
+    'other-storage-open-v50',
+    'npp-admin-open-v113',
+    'drawing-location-open-v79',
+    'admin-location-edit-v129'
+  );
+
+  hideLocationEditorV129();
+
+  const task=document.getElementById('adminTaskFocusPanel');
+  if(task){
+    task.classList.add('hidden');
+    task.style.removeProperty('display');
+  }
+
+  const npp=document.getElementById('nppAdminPanelV113');
+  if(npp){
+    npp.style.removeProperty('display');
+  }
+
+  /* 작업/검색 화면도 우선 닫고 대상 함수가 필요한 화면만 다시 연다 */
+  const work=document.getElementById('work');
+  if(work)work.classList.add('hidden');
+
+  const photo=document.getElementById('photoSearchPanel');
+  if(photo)photo.classList.add('hidden');
+}
+
+/* 작업형 관리자 패널 - 위치수정 카드가 끼어들지 않게 전후 차단 */
+async function openTaskSafeV129(type){
+  resetAdminRouteV129();
+  hideLocationEditorV129();
+
+  try{
+    await openAdminTaskView(type);
+  }catch(e){
+    console.error('관리 작업 열기 실패',type,e);
+    alert('해당 관리 화면을 열지 못했습니다.');
+    return;
+  }
+
+  hideLocationEditorV129();
+  document.body.classList.add('admin-task-focus');
+
+  const panel=document.getElementById('adminTaskFocusPanel');
+  if(panel){
+    panel.classList.remove('hidden');
+    panel.style.setProperty('display','block','important');
+  }
+}
+
+/* 사용자관리 V73 내부에는 오래된 V41 함수 참조가 남아 있어 직접 안전하게 연다 */
+async function openAdminUsersSafeV129(){
+  resetAdminRouteV129();
+  hideLocationEditorV129();
+
+  const panel=document.getElementById('adminTaskFocusPanel');
+  const content=document.getElementById('adminTaskFocusContent');
+  const title=document.getElementById('adminTaskFocusTitle');
+  const users=document.getElementById('loginLogPanel');
+
+  if(!panel || !content || !users){
+    alert('사용자 관리 화면을 찾지 못했습니다.');
+    return;
+  }
+
+  try{restoreAdminTaskElements();}catch(e){}
+  content.innerHTML='';
+
+  if(users.parentNode){
+    const marker=document.createComment('v129-user-restore');
+    users.parentNode.insertBefore(marker,users);
+    users.dataset.v129Restore='1';
+    window.__userRestoreMarkerV129=marker;
+  }
+  content.appendChild(users);
+
+  if(title)title.textContent='👥 사용자 관리';
+  users.classList.remove('hidden','hidden-admin');
+  users.style.setProperty('display','block','important');
+  users.style.setProperty('visibility','visible','important');
+  users.style.setProperty('opacity','1','important');
+  users.style.setProperty('width','100%','important');
+
+  panel.classList.remove('hidden');
+  panel.style.setProperty('display','block','important');
+  document.body.classList.add('admin-task-focus');
+
+  try{
+    if(typeof loadLoginLogs==='function')await loadLoginLogs();
+  }catch(e){console.error('사용자 관리 불러오기 실패',e);}
+
+  hideLocationEditorV129();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* 사용자 관리에서 관리자 메인으로 복귀할 때 원위치 */
+function restoreUserPanelV129(){
+  const users=document.getElementById('loginLogPanel');
+  const marker=window.__userRestoreMarkerV129;
+  if(users && marker?.parentNode){
+    marker.parentNode.insertBefore(users,marker);
+    marker.remove();
+  }
+  window.__userRestoreMarkerV129=null;
+}
+
+/* 자재위치 '검색'만 연다. 위치수정 카드 절대 사용하지 않음 */
+function openAdminLocationSearchV129(){
+  resetAdminRouteV129();
+  hideLocationEditorV129();
+
+  try{
+    mode='location';
+    const home=document.getElementById('home');
+    const work=document.getElementById('work');
+    const photo=document.getElementById('photoSearchPanel');
+    if(home)home.classList.add('hidden');
+    if(photo)photo.classList.add('hidden');
+    if(work)work.classList.remove('hidden');
+
+    const title=document.getElementById('title');
+    if(title)title.textContent='자재위치 검색';
+    const q=document.getElementById('q');
+    const results=document.getElementById('results');
+    const count=document.getElementById('count');
+    if(q)q.value='';
+    if(results)results.innerHTML='';
+    if(count)count.textContent='';
+    setTimeout(()=>q?.focus(),50);
+  }catch(e){
+    console.error('자재위치 검색 열기 실패',e);
+    alert('자재위치 검색 화면을 열지 못했습니다.');
+  }
+
+  hideLocationEditorV129();
+}
+
+/* 빠른 입고/출고 */
+function openQuickSafeV129(kind){
+  resetAdminRouteV129();
+  hideLocationEditorV129();
+  try{
+    openAdminQuickInOutV108(kind);
+  }catch(e){
+    console.error('빠른 입출고 열기 실패',kind,e);
+    alert(kind==='inbound'?'입고등록 화면을 열지 못했습니다.':'출고등록 화면을 열지 못했습니다.');
+  }
+  hideLocationEditorV129();
+}
+
+/* NPP */
+function openNppSafeV129(){
+  resetAdminRouteV129();
+  hideLocationEditorV129();
+  try{
+    openNppAdminV113();
+  }catch(e){
+    console.error('NPP 관리 열기 실패',e);
+    alert('NPP 도면위치 관리 화면을 열지 못했습니다.');
+  }
+  hideLocationEditorV129();
+  /* NPP 자체는 위치수정 카드와 별개이므로 NPP 클래스만 유지 */
+  document.body.classList.add('npp-admin-open-v113');
+}
+
+/* 메인으로 */
+function adminHomeV129(){
+  restoreUserPanelV129();
+  try{restoreAdminTaskElements();}catch(e){}
+  resetAdminRouteV129();
+  window.__adminRouteAwayV128=false;
+
+  try{
+    window.openAdminMainV125(true);
+  }catch(e){}
+
+  setTimeout(()=>{
+    try{buildAdminMainV127();}catch(e){}
+    setTimeout(bindAdminMainRolesV129,20);
+  },20);
+}
+
+/* 정확한 역할 매핑 */
+async function runAdminRoleV129(role){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+  switch(role){
+    case 'inbound': return openQuickSafeV129('inbound');
+    case 'outbound': return openQuickSafeV129('outbound');
+    case 'location': return openAdminLocationSearchV129();
+    case 'unreg': return openTaskSafeV129('unreg');
+    case 'orders': return openTaskSafeV129('orders');
+    case 'later': return openTaskSafeV129('later');
+    case 'npp': return openNppSafeV129();
+    case 'users': return openAdminUsersSafeV129();
+    case 'refresh':
+      try{updateHomeSummary?.();syncDashboardStats?.();}catch(e){}
+      try{refreshAdminMainDataV128?.();refreshAdminMainV127?.();}catch(e){}
+      return;
+    case 'home': return adminHomeV129();
+  }
+}
+
+/* 메인 버튼에서 예전 onclick을 완전히 제거하고 data-role만 사용 */
+function bindAdminMainRolesV129(){
+  const box=document.getElementById('adminMainMenuV125');
+  if(!box)return;
+
+  const defs=[
+    ['.admin127-in','inbound'],
+    ['.admin127-out','outbound'],
+    ['.admin127-loc','location'],
+    ['.admin127-unreg','unreg'],
+    ['.admin127-orders','orders'],
+    ['.admin127-later','later'],
+    ['.admin127-npp','npp'],
+    ['.admin127-users','users']
+  ];
+
+  defs.forEach(([sel,role])=>{
+    const b=box.querySelector(sel);
+    if(!b)return;
+    b.removeAttribute('onclick');
+    b.dataset.adminRoleV129=role;
+  });
+
+  const bottom=[...box.querySelectorAll('.admin127-bottom button')];
+  if(bottom[0]){
+    bottom[0].removeAttribute('onclick');
+    bottom[0].dataset.adminRoleV129='refresh';
+  }
+  if(bottom[1]){
+    bottom[1].removeAttribute('onclick');
+    bottom[1].dataset.adminRoleV129='home';
+  }
+
+  /* 한 번만 캡처 단계에서 처리: 다른 오래된 click 핸들러가 실행될 여지를 차단 */
+  if(!box.dataset.v129Bound){
+    box.dataset.v129Bound='1';
+    box.addEventListener('click',async e=>{
+      const btn=e.target.closest('[data-admin-role-v129]');
+      if(!btn || !box.contains(btn))return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      const role=btn.dataset.adminRoleV129;
+      await runAdminRoleV129(role);
+    },true);
+  }
+}
+
+/* V127 재렌더 후에도 반드시 다시 역할 부여 */
+const __buildBeforeV129=window.buildAdminMainV127;
+if(typeof __buildBeforeV129==='function'){
+  window.buildAdminMainV127=function(){
+    const r=__buildBeforeV129.apply(this,arguments);
+    setTimeout(bindAdminMainRolesV129,5);
+    setTimeout(hideLocationEditorV129,10);
+    return r;
+  };
+}
+
+/* V128의 버튼 동기화가 뒤늦게 onclick을 다시 넣어도 V129가 마지막에 제거 */
+const __syncBeforeV129=window.syncAdminMainButtonsV128;
+if(typeof __syncBeforeV129==='function'){
+  window.syncAdminMainButtonsV128=function(){
+    const r=__syncBeforeV129.apply(this,arguments);
+    setTimeout(bindAdminMainRolesV129,0);
+    return r;
+  };
+}
+
+/* 관리자 메인에서는 위치수정 카드를 절대로 띄우지 않음 */
+setTimeout(()=>{
+  if(isAdmin){
+    hideLocationEditorV129();
+    bindAdminMainRolesV129();
+  }
+},100);
+</script>
 </body></html>
