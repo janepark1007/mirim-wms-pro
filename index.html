@@ -5658,6 +5658,30 @@ async function shareOrderRequest(x,i){
   }
 }
 </style>
+
+<style id="pc-selected-stock-text-xlarge-v211">
+@media (min-width:769px){
+  /* 선택 · 현재고 · 자재위치/수량 칸을 훨씬 크게 */
+  #fiPickedV140,
+  #fiPickedV140 *,
+  #foPickedV143,
+  #foPickedV143 *{
+    font-size:32px!important;
+    line-height:1.7!important;
+    font-weight:900!important;
+  }
+  #fiPickedV140 b,
+  #foPickedV143 b{
+    font-size:35px!important;
+    font-weight:1000!important;
+  }
+  #fiPickedV140,
+  #foPickedV143{
+    padding:18px 20px!important;
+    min-height:92px!important;
+  }
+}
+</style>
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
