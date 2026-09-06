@@ -4179,11 +4179,21 @@ async function sharedAddMovement(type,x,qty,worker){
  if(error)throw error;
 
  const cache=type==='IN' ? sharedCache.inTotal : (type==='RETURN' ? sharedCache.returnTotal : sharedCache.outTotal);
- cache[String(x.part)]=(cache[String(x.part)]||0)+Number(qty);
- if(Object.prototype.hasOwnProperty.call(sharedCache.stock,String(x.part))){
-   const delta=type==='OUT'?-Number(qty):Number(qty);
-   sharedCache.movementDelta[String(x.part)]=(sharedCache.movementDelta[String(x.part)]||0)+delta;
- }
+ cache[p]=(cache[p]||0)+Number(qty);
+
+ /* 관리자 공용 현창고수량을 단일 기준값으로 즉시 저장 */
+ const before=Number(sharedCache.stock[p]||0)+Number(sharedCache.movementDelta[p]||0);
+ const delta=type==='OUT'?-Number(qty):Number(qty);
+ const after=before+delta;
+ const stockTime=new Date().toISOString();
+ const {error:stockErr}=await sharedDb.from('production_inventory_sync').upsert(
+   {part_no:p,current_stock:after,updated_at:stockTime},
+   {onConflict:'part_no'}
+ );
+ if(stockErr)throw stockErr;
+ sharedCache.stock[p]=after;
+ sharedCache.stockUpdated[p]=stockTime;
+ sharedCache.movementDelta[p]=0;
 
  const viewRow={
    time:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
@@ -5581,6 +5591,23 @@ async function saveReturn(x,i){
    console.error('반환 저장 실패',err);
    alert('반환 저장 실패: '+(err.message||err));
  }
+}
+
+async function refreshSharedStockV152(part){
+ if(!sharedReady||!sharedDb)return;
+ const p=String(part||'');
+ if(!p)return;
+ try{
+   const {data,error}=await sharedDb.from('production_inventory_sync')
+     .select('part_no,current_stock,updated_at').eq('part_no',p).limit(1);
+   if(error)throw error;
+   const r=(data||[])[0];
+   if(r){
+     sharedCache.stock[p]=Number(r.current_stock||0);
+     sharedCache.stockUpdated[p]=r.updated_at||'';
+     sharedCache.movementDelta[p]=0;
+   }
+ }catch(e){console.warn('공용 현창고수량 재동기화 실패',e);}
 }
 
 async function refreshSharedHistories(){
@@ -17034,6 +17061,7 @@ async function saveFastInboundV140(){
 
   try{
     await sharedAddMovement('IN',x,qty,'관리자');
+    await refreshSharedStockV152(x.part);
     /* 빠른입고 거래명세서 여부를 공용 DB에 별도 기록 */
     try{
       const payload={part_no:String(x.part),item_name:x.name||'',qty:Number(qty),statement,location:loc||'',worker:'관리자'};
@@ -17249,6 +17277,7 @@ async function saveFastOutboundV143(){
   try{
     /* 기존 공용 출고 처리 사용: 출고수량/현재고/입출고 집계가 기존 구조대로 모두 갱신 */
     await sharedAddMovement('OUT',x,qty,person);
+    await refreshSharedStockV152(x.part);
 
     /* 가져간 사람 + 비고는 공용 관리기록에도 남김 */
     try{
