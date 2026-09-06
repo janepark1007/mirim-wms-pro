@@ -17074,11 +17074,11 @@ async function loadRecentInboundV183(part){
 }
 
 function searchFastInboundV140(focusQty=false){
-  const raw=(document.getElementById('fiPartV140')?.value||'').trim(),q=raw.toLowerCase();
+  const raw=(document.getElementById('fiPartV140')?.value||'').trim();
   const picked=document.getElementById('fiPickedV140'),out=document.getElementById('fiResultsV140');
   window.__fiSelectedV140=null;
 
-  if(!q){
+  if(!raw){
     picked.textContent='품목을 검색하세요.';
     out.innerHTML='';
     showStockFastInboundV149(null);
@@ -17089,12 +17089,13 @@ function searchFastInboundV140(focusQty=false){
   }
 
   const all=itemsFastInboundV140();
-  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  const normPart=v=>String(v||'').trim().toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
+  const q=normPart(raw);
+
+  /* 품번만으로 좁혀짐: 정확 품번 우선, 입력 중에는 품번 부분일치만 */
+  let rows=all.filter(x=>normPart(x.part)===q);
   if(!rows.length){
-    rows=all.filter(x=>
-      String(x.part||'').toLowerCase().includes(q) ||
-      String(x.name||'').toLowerCase().includes(q)
-    ).slice(0,15);
+    rows=all.filter(x=>normPart(x.part).includes(q)).slice(0,15);
   }
   window.__fiRowsV140=rows;
 
