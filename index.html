@@ -15426,4 +15426,245 @@ window.addEventListener('load',()=>{
   },900);
 });
 </script>
+
+<style id="admin-main-menu-v124-style">
+/* V124 예전처럼 "주메인 메뉴" 중심 관리자 홈 */
+body.admin-view:not(.admin-task-focus):not(.npp-admin-open-v113) #adminMainV123{
+  display:none!important;
+}
+
+#adminMainMenuV124{display:none}
+body.admin-view:not(.admin-task-focus):not(.npp-admin-open-v113) #adminMainMenuV124{
+  display:block!important;
+  width:min(1180px,calc(100% - 24px))!important;
+  margin:16px auto 28px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+  border-radius:22px!important;
+  border:1px solid #dfe6e2!important;
+  background:#ffffff!important;
+  box-shadow:0 8px 28px rgba(29,66,48,.09)!important;
+}
+
+.admin-mainmenu-head-v124{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:16px;
+}
+.admin-mainmenu-title-v124{
+  font-size:25px;
+  font-weight:1000;
+  color:#1d392d;
+}
+.admin-mainmenu-sub-v124{
+  margin-top:4px;
+  font-size:12px;
+  font-weight:800;
+  color:#76837c;
+}
+.admin-mainmenu-sync-v124{
+  padding:9px 12px;
+  border-radius:999px;
+  background:#eef8f2;
+  border:1px solid #c8e4d3;
+  color:#176642;
+  font-size:12px;
+  font-weight:1000;
+}
+.admin-mainmenu-sync-v124.off{
+  background:#fff1f1;
+  border-color:#efcaca;
+  color:#a83434;
+}
+
+/* 예전 관리자 바로가기 느낌 */
+.admin-mainmenu-grid-v124{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.admin-mainmenu-btn-v124{
+  min-height:110px!important;
+  border:0!important;
+  border-radius:18px!important;
+  color:#fff!important;
+  font-size:21px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.08)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+}
+.admin-mainmenu-btn-v124 small{
+  font-size:11px!important;
+  font-weight:800!important;
+  opacity:.9!important;
+}
+
+/* 기존 사용자가 지정했던 색상 기준 */
+.admin-mainmenu-in-v124{background:#087a43!important}
+.admin-mainmenu-out-v124{background:#b51f2b!important}
+.admin-mainmenu-unreg-v124{background:#8a176a!important}
+.admin-mainmenu-orders-v124{background:#d7196d!important}
+.admin-mainmenu-recent-v124{background:#58bfa4!important}
+.admin-mainmenu-later-v124{background:#174fa7!important}
+.admin-mainmenu-location-v124{background:#6a4dbb!important}
+.admin-mainmenu-npp-v124{background:#7255b9!important}
+.admin-mainmenu-users-v124{background:#5b6f62!important}
+.admin-mainmenu-refresh-v124{background:#4e6b5b!important}
+
+.admin-mainmenu-section-v124{
+  margin:18px 0 9px;
+  font-size:14px;
+  font-weight:1000;
+  color:#44544b;
+}
+
+.admin-mainmenu-smallgrid-v124{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.admin-mainmenu-smallgrid-v124 button{
+  min-height:76px!important;
+  border-radius:14px!important;
+  border:1px solid #dfe6e2!important;
+  background:#f9fbfa!important;
+  color:#2c3e34!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+
+@media(max-width:700px){
+  body.admin-view:not(.admin-task-focus):not(.npp-admin-open-v113) #adminMainMenuV124{
+    width:calc(100% - 12px)!important;
+    padding:12px!important;
+    margin:8px auto 18px!important;
+  }
+  .admin-mainmenu-title-v124{font-size:21px}
+  .admin-mainmenu-grid-v124{grid-template-columns:1fr 1fr}
+  .admin-mainmenu-btn-v124{
+    min-height:92px!important;
+    font-size:17px!important;
+  }
+  .admin-mainmenu-smallgrid-v124{grid-template-columns:1fr 1fr}
+}
+</style>
+
+<script id="admin-main-menu-v124-script">
+function refreshAdminMainMenuV124(){
+  const sync=document.getElementById('adminMainMenuSyncV124');
+  if(sync){
+    const ok=!!(window.sharedReady || (typeof sharedReady!=='undefined'&&sharedReady));
+    sync.textContent=ok?'● 동기화 연결됨':'● 동기화 확인';
+    sync.classList.toggle('off',!ok);
+  }
+}
+
+function ensureAdminMainMenuV124(){
+  if(!isAdmin)return;
+  const home=document.getElementById('home');
+  if(!home)return;
+
+  let box=document.getElementById('adminMainMenuV124');
+  if(!box){
+    box=document.createElement('section');
+    box.id='adminMainMenuV124';
+    box.innerHTML=`
+      <div class="admin-mainmenu-head-v124">
+        <div>
+          <div class="admin-mainmenu-title-v124">🏠 관리자 주메인 메뉴</div>
+          <div class="admin-mainmenu-sub-v124">자주 쓰는 기능을 예전처럼 큰 메뉴로 바로 실행합니다.</div>
+        </div>
+        <div id="adminMainMenuSyncV124" class="admin-mainmenu-sync-v124">● 동기화 확인</div>
+      </div>
+
+      <div class="admin-mainmenu-grid-v124">
+        <button class="admin-mainmenu-btn-v124 admin-mainmenu-in-v124" type="button"
+          onclick="openAdminQuickInOutV108('inbound')">
+          📥 입고등록
+          <small>빠른입고</small>
+        </button>
+
+        <button class="admin-mainmenu-btn-v124 admin-mainmenu-out-v124" type="button"
+          onclick="openAdminQuickInOutV108('outbound')">
+          📤 출고등록
+          <small>빠른출고</small>
+        </button>
+
+        <button class="admin-mainmenu-btn-v124 admin-mainmenu-unreg-v124" type="button"
+          onclick="openAdminTaskView('unreg')">
+          ⚠️ ERP 미등록 자재
+          <small>신규/미등록 자재 관리</small>
+        </button>
+
+        <button class="admin-mainmenu-btn-v124 admin-mainmenu-orders-v124" type="button"
+          onclick="openAdminTaskView('orders')">
+          🛒 주문요청 & 문의건 통합관리
+          <small>작업자 주문·문의 확인</small>
+        </button>
+
+        <button class="admin-mainmenu-btn-v124 admin-mainmenu-recent-v124" type="button"
+          onclick="openAdminTaskView('recent')">
+          🧾 최근 입출고
+          <small>최근 등록 내역 확인</small>
+        </button>
+
+        <button class="admin-mainmenu-btn-v124 admin-mainmenu-later-v124" type="button"
+          onclick="openAdminTaskView('later')">
+          📌 나중에 확인
+          <small>확인할 업무 모아보기</small>
+        </button>
+      </div>
+
+      <div class="admin-mainmenu-section-v124">추가 관리 메뉴</div>
+      <div class="admin-mainmenu-smallgrid-v124">
+        <button type="button" onclick="openMode('location')">📍 자재위치 검색</button>
+        <button type="button" onclick="openNppAdminV113()">📐 NPP 도면위치 관리</button>
+        <button type="button" onclick="openAdminUsersV73()">👥 사용자 관리</button>
+        <button type="button" onclick="try{updateHomeSummary();syncDashboardStats();refreshAdminMainMenuV124();}catch(e){refreshAdminMainMenuV124();}">↻ 현황 새로고침</button>
+        <button type="button" onclick="try{forceAdminHomeV121();}catch(e){};setTimeout(ensureAdminMainMenuV124,30)">⌂ 관리자 메인</button>
+        <button type="button" onclick="try{manualSharedReconnectV106();}catch(e){try{initSharedDb();}catch(_){}};setTimeout(refreshAdminMainMenuV124,500)">🔄 동기화 재연결</button>
+      </div>
+    `;
+    home.prepend(box);
+  }
+  refreshAdminMainMenuV124();
+}
+
+/* 기존 홈 복구 흐름 마지막에 주메인 메뉴 표시 */
+const __forceAdminHomeBeforeV124=window.forceAdminHomeV121;
+if(typeof __forceAdminHomeBeforeV124==='function'){
+  window.forceAdminHomeV121=function(){
+    const r=__forceAdminHomeBeforeV124.apply(this,arguments);
+    if(isAdmin){
+      setTimeout(ensureAdminMainMenuV124,30);
+      setTimeout(refreshAdminMainMenuV124,120);
+    }
+    return r;
+  };
+}
+
+/* forceAdminMainV109 호출 경로도 보강 */
+const __forceAdminMainBeforeV124=window.forceAdminMainV109;
+if(typeof __forceAdminMainBeforeV124==='function'){
+  window.forceAdminMainV109=function(){
+    const r=__forceAdminMainBeforeV124.apply(this,arguments);
+    if(isAdmin)setTimeout(ensureAdminMainMenuV124,40);
+    return r;
+  };
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(isAdmin)ensureAdminMainMenuV124();
+  },700);
+});
+</script>
 </body></html>
