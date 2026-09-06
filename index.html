@@ -17091,7 +17091,9 @@ function searchFastInboundV140(focusQty=false){
   }
 
   const all=itemsFastInboundV140();
-  const rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  const normPart=v=>String(v||'').trim().toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
+  const nq=normPart(raw);
+  const rows=all.filter(x=>normPart(x.part)===nq);
   window.__fiRowsV140=rows;
 
   if(rows.length===1){
