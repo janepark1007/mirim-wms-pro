@@ -17283,7 +17283,8 @@ function fillOutboundLocationSelectV150(x){
     const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ') || `자재위치 ${i+1}`;
     const qty=(l.qty===0||l.qty)?` · 수량 ${Number(l.qty).toLocaleString()}`:'';
     const opt=document.createElement('option');
-    opt.value=text;
+    opt.value=String(l.id||`idx:${i}`);
+    opt.dataset.locationIndex=String(i);
     opt.textContent=`${i+1}자재위치: ${text}${qty}`;
     sel.appendChild(opt);
   });
@@ -17346,21 +17347,47 @@ function syncFastOutboundV143(){
   if(el){el.textContent=ok?'● 공용 DB 연결됨 · 출고수량 PC/모바일 전체 반영':'● 공용 DB 연결 안 됨 · 저장 차단';el.style.color=ok?'#167044':'#b02f2f'}
   if(btn)btn.disabled=!ok;return ok;
 }
+function selectedOutboundLocationV158(x){
+  const sel=document.getElementById('foLocV143');
+  if(!sel||!sel.value||!x)return null;
+  const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+  const opt=sel.options[sel.selectedIndex];
+  const idx=Number(opt?.dataset?.locationIndex);
+  if(Number.isInteger(idx)&&idx>=0&&locs[idx])return locs[idx];
+  return locs.find(l=>String(l.id||'')===String(sel.value))||null;
+}
+function outboundLocationLabelV158(l){
+  return l?[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' '):'';
+}
+async function deductOutboundLocationQtyV158(x,qty,loc){
+  if(!loc)return {selected:false,label:''};
+  const before=Number(loc.qty||0);
+  if(Number(qty)>before)throw new Error(`선택한 자재위치 수량이 부족합니다. 현재 ${before.toLocaleString()}개`);
+  const after=before-Number(qty);
+  await sharedSaveMultiLocation(String(x.part),{...loc,qty:after},loc.id||null);
+  return {selected:true,label:outboundLocationLabelV158(loc),before,after};
+}
+
 async function saveFastOutboundV143(){
   if(!syncFastOutboundV143())return alert('공용 DB 연결 후 저장할 수 있습니다.');
   const x=window.__foSelectedV143;
   const qty=Number(document.getElementById('foQtyV143')?.value||0);
   const person=(document.getElementById('foPersonV143')?.value||'').trim();
-  const sourceLocation=(document.getElementById('foLocV143')?.value||'').trim();
+  const selectedLocationRecord=selectedOutboundLocationV158(x);
+  const sourceLocation=outboundLocationLabelV158(selectedLocationRecord);
   if(!x)return alert('품목을 먼저 선택하세요.');
   if(!qty||qty<=0)return alert('출고수량을 입력하세요.');
   if(!person)return alert('가져간 사람을 입력하세요.');
   const before=stockFastOutboundV143(x);
   if(before<qty)return alert(`현재고 ${before.toLocaleString()}개보다 많이 출고할 수 없습니다.`);
+  if(selectedLocationRecord && qty>Number(selectedLocationRecord.qty||0)){
+    return alert(`선택한 자재위치 수량 ${Number(selectedLocationRecord.qty||0).toLocaleString()}개보다 많이 출고할 수 없습니다.`);
+  }
 
   try{
     /* 기존 공용 출고 처리 사용: 출고수량/현재고/입출고 집계가 기존 구조대로 모두 갱신 */
     await sharedAddMovement('OUT',x,qty,person);
+    const locationResult=await deductOutboundLocationQtyV158(x,qty,selectedLocationRecord);
     await refreshSharedStockV152(x.part);
     await getLatestWarehouseStockV156(x.part);
 
@@ -17380,7 +17407,7 @@ async function saveFastOutboundV143(){
     if(typeof loadSharedLocations==='function')await loadSharedLocations();
     try{updateHomeSummary();syncDashboardStats()}catch(e){}
 
-    alert(`✅ ${x.part} ${qty.toLocaleString()}개 출고 완료\n👤 가져간 사람: ${person}${sourceLocation?`\n📍 출고위치: ${sourceLocation}`:''}\nPC/모바일 출고수량 전체 반영`);
+    alert(`✅ ${x.part} ${qty.toLocaleString()}개 출고 완료\n👤 가져간 사람: ${person}${sourceLocation?`\n📍 출고위치: ${sourceLocation}`:''}${locationResult?.selected?`\n📦 해당 위치 잔량: ${Number(locationResult.after).toLocaleString()}개`:''}\nPC/모바일 출고수량 전체 반영`);
     window.__foSelectedV143=null;
     document.getElementById('foPartV143').value='';
     document.getElementById('foQtyV143').value='';
