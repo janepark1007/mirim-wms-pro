@@ -17675,7 +17675,48 @@ function stockAdminLocationV144(x){
   }catch(e){}
   return Number(x.erpQty||0);
 }
-async function searchAdminLocationV144(){
+async 
+async function loadRecentInOutForSearchV176(part,targetId){
+  const box=document.getElementById(targetId);
+  if(!box)return;
+  if(!part){box.innerHTML='';return}
+  box.innerHTML='<div class="rh176-loading">최근 입고·출고 기록 불러오는 중...</div>';
+  let rows=[];
+  try{
+    if(sharedReady&&sharedDb){
+      const {data,error}=await sharedDb.from('production_movements')
+        .select('movement_type,part_no,part_name,qty,worker_name,location,note,created_at')
+        .eq('part_no',String(part))
+        .in('movement_type',['IN','OUT'])
+        .order('created_at',{ascending:false})
+        .limit(10);
+      if(error)throw error;
+      rows=data||[];
+    }else{
+      const ins=(typeof getInHist==='function'?getInHist():[]).filter(r=>String(r.part_no||r.part||'')===String(part)).map(r=>({...r,movement_type:'IN'}));
+      const outs=(typeof getHist==='function'?getHist():[]).filter(r=>String(r.part_no||r.part||'')===String(part)).map(r=>({...r,movement_type:'OUT'}));
+      rows=[...ins,...outs].sort((a,b)=>new Date(b.created_at||b.time||0)-new Date(a.created_at||a.time||0)).slice(0,10);
+    }
+  }catch(e){
+    console.warn('최근 입출고 기록 조회 실패',e);
+    box.innerHTML='<div class="rh176-empty">최근 입고·출고 기록을 불러오지 못했습니다.</div>';
+    return;
+  }
+  if(!rows.length){
+    box.innerHTML='<div class="rh176-title">최근 입고·출고 기록</div><div class="rh176-empty">기록 없음</div>';
+    return;
+  }
+  const body=rows.map(r=>{
+    const type=r.movement_type==='IN'?'입고':'출고';
+    let dt='';
+    try{dt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):String(r.time||'')}catch(e){dt=String(r.created_at||r.time||'')}
+    const loc=r.location?` · ${esc(String(r.location))}`:'';
+    const worker=(r.worker_name||r.worker)?` · ${esc(String(r.worker_name||r.worker))}`:'';
+    return `<div class="rh176-row"><span class="rh176-date">${esc(dt)}</span><span class="rh176-type ${r.movement_type==='IN'?'in':'out'}">${type}</span><b>${Number(r.qty||0).toLocaleString()}</b><span>${loc}${worker}</span></div>`;
+  }).join('');
+  box.innerHTML=`<div class="rh176-title">최근 입고·출고 기록 <small>최근 ${rows.length}건</small></div>${body}`;
+}
+function searchAdminLocationV144(){
   const raw=(document.getElementById('alQueryV144')?.value||'').trim();
   const q=raw.toLowerCase(),status=document.getElementById('alStatusV144'),out=document.getElementById('alResultsV144');
   if(!q){status.textContent='품번 또는 품명을 입력하세요.';out.innerHTML='';return}
@@ -17700,8 +17741,10 @@ async function searchAdminLocationV144(){
       </div>
       <div class="al144-photo">${photo?`<img src="${photo}" alt="${esc(x.part||'')} 사진">`:''}</div>
       <div class="al144-locs">${locHtml}</div>
+      <div id="rh176-admin-${esc(x.part||'')}" class="rh176-box"></div>
     </div>`;
   }).join('');
+  rows.forEach(x=>loadRecentInOutForSearchV176(x.part,`rh176-admin-${x.part}`));
 }
 </script>
 
@@ -17785,8 +17828,10 @@ window.search=function(){
       </div>
       <div class="v147-public-photo">${photo?`<img src="${photo}" alt="${esc(x.part||'')} 사진">`:''}</div>
       <div class="v147-public-locs">${locHtml}</div>
+      <div id="rh176-public-${esc(x.part||'')}" class="rh176-box"></div>
     </div>`;
   }).join('');
+  rows.forEach(x=>loadRecentInOutForSearchV176(x.part,`rh176-public-${x.part}`));
 };
 </script>
 
@@ -17799,5 +17844,15 @@ window.search=function(){
 
 <style id="location-movement-v169-style">
 .loc169-meta{font-size:13px;font-weight:900;color:#8a3b63}
+</style>
+
+<style id="recent-inout-search-v176-style">
+.rh176-box{margin-top:12px;padding-top:10px;border-top:2px solid #eee}
+.rh176-title{font-size:14px;font-weight:1000;color:#333;margin-bottom:7px}
+.rh176-title small{font-size:11px;color:#888}
+.rh176-row{display:grid;grid-template-columns:minmax(125px,auto) 44px 60px 1fr;gap:7px;align-items:center;padding:7px 8px;margin-top:4px;border-radius:8px;background:#fafafa;font-size:12px}
+.rh176-date{color:#666;font-weight:800}.rh176-type{font-weight:1000}.rh176-type.in{color:#087c58}.rh176-type.out{color:#b52c3b}
+.rh176-empty,.rh176-loading{padding:8px;color:#888;font-size:12px;font-weight:800}
+@media(max-width:720px){.rh176-row{grid-template-columns:1fr 40px 52px}.rh176-row span:last-child{grid-column:1/-1}}
 </style>
 </body></html>
