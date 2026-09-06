@@ -1403,6 +1403,28 @@ body.park-location-worker-v63 .erp-only{
   font-weight:900!important;
 }
 </style>
+
+<style id="npp-location-file-colors-v217">
+/* NPP 도면찾기: 보관번호와 레버파일 구분 */
+#publicDrawingResultsV108 .npp-storage-no-v217{
+  display:inline-block;
+  background:#e9f7ee!important;
+  color:#087a43!important;
+  border:1px solid #9ed8b5!important;
+  border-radius:8px!important;
+  padding:4px 9px!important;
+  font-weight:1000!important;
+}
+#publicDrawingResultsV108 .npp-lever-file-v217{
+  display:inline-block;
+  background:#f2ebff!important;
+  color:#7047b8!important;
+  border:1px solid #cdbcf2!important;
+  border-radius:8px!important;
+  padding:4px 9px!important;
+  font-weight:1000!important;
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -18791,6 +18813,71 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startV213,{once:true});
   else startV213();
+})();
+</script>
+
+<script id="npp-location-file-colors-v217-script">
+(function(){
+  function applyNppLocationColorsV217(){
+    const root=document.getElementById('publicDrawingResultsV108');
+    if(!root)return;
+
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode())nodes.push(walker.currentNode);
+
+    nodes.forEach(n=>{
+      const s=n.nodeValue||'';
+      const p=n.parentNode;
+      if(!p||p.closest('.npp-storage-no-v217,.npp-lever-file-v217'))return;
+
+      /* 레버파일 문구 */
+      if(s.includes('레버파일')){
+        const frag=document.createDocumentFragment();
+        const parts=s.split('레버파일');
+        parts.forEach((part,i)=>{
+          if(part)frag.appendChild(document.createTextNode(part));
+          if(i<parts.length-1){
+            const sp=document.createElement('span');
+            sp.className='npp-lever-file-v217';
+            sp.textContent='레버파일';
+            frag.appendChild(sp);
+          }
+        });
+        p.replaceChild(frag,n);
+        return;
+      }
+
+      /* 보관번호 뒤의 숫자/문자 위치값 */
+      const m=s.match(/(보관번호\s*[·:]?\s*)([^·\n]+)/);
+      if(m){
+        const before=s.slice(0,m.index)+m[1];
+        const val=(m[2]||'').trim();
+        const after=s.slice((m.index||0)+m[0].length);
+        if(val && val!=='미등록'){
+          const frag=document.createDocumentFragment();
+          frag.appendChild(document.createTextNode(before));
+          const sp=document.createElement('span');
+          sp.className='npp-storage-no-v217';
+          sp.textContent=val;
+          frag.appendChild(sp);
+          if(after)frag.appendChild(document.createTextNode(after));
+          p.replaceChild(frag,n);
+        }
+      }
+    });
+  }
+
+  function startNppColorsV217(){
+    const root=document.getElementById('publicDrawingResultsV108');
+    if(!root)return;
+    applyNppLocationColorsV217();
+    new MutationObserver(applyNppLocationColorsV217).observe(root,{childList:true,subtree:true});
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',startNppColorsV217,{once:true});
+  }else startNppColorsV217();
 })();
 </script>
 </body></html>
