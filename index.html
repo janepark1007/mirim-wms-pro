@@ -1715,6 +1715,32 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="mobile-location-full-row-colors-v229">
+@media (max-width:768px){
+  #fiPickedV140 .mobile-loc-row-v229,
+  #foPickedV143 .mobile-loc-row-v229{
+    display:block!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+    margin:7px 0!important;
+    padding:8px 10px!important;
+    border-radius:9px!important;
+    font-size:21px!important;
+    line-height:1.4!important;
+    font-weight:1000!important;
+  }
+  #fiPickedV140 .mobile-loc1-v229,#foPickedV143 .mobile-loc1-v229{
+    background:#ffe1e4!important;color:#b9141a!important;border:1px solid #ef9da3!important;
+  }
+  #fiPickedV140 .mobile-loc2-v229,#foPickedV143 .mobile-loc2-v229{
+    background:#ddf6e5!important;color:#087a43!important;border:1px solid #8fd0a9!important;
+  }
+  #fiPickedV140 .mobile-loc3-v229,#foPickedV143 .mobile-loc3-v229{
+    background:#ffe45c!important;color:#5f4700!important;border:1px solid #caa900!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19540,6 +19566,56 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootV227,{once:true});
   else bootV227();
+})();
+</script>
+
+<script id="mobile-location-full-row-colors-v229-script">
+(function(){
+  function esc229(s){
+    return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function apply229(el){
+    if(!el || !window.matchMedia('(max-width:768px)').matches)return;
+    if(el.dataset.locRowsV229==='1')return;
+
+    const text=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
+    if(!text.includes('1자재위치:') && !text.includes('2자재위치:') && !text.includes('3자재위치:'))return;
+
+    const first=text.search(/[123]자재위치:/);
+    if(first<0)return;
+    const top=text.slice(0,first).replace(/\s*·?\s*위치:\s*$/,'').trim();
+    const locText=text.slice(first);
+
+    const matches=[...locText.matchAll(/([123])자재위치:\s*([\s\S]*?)(?=\s*\/\s*[123]자재위치:|$)/g)];
+    if(!matches.length)return;
+
+    const rows=matches.map(m=>{
+      const n=m[1], val=m[2].trim().replace(/\s*\/\s*$/,'');
+      return `<span class="mobile-loc-row-v229 mobile-loc${n}-v229">${n}자재위치: ${esc229(val)}</span>`;
+    }).join('');
+
+    el.innerHTML=`<span class="mobile-picked-top-v229">${esc229(top)}</span>${rows}`;
+    el.dataset.locRowsV229='1';
+  }
+
+  function run229(){
+    apply229(document.getElementById('fiPickedV140'));
+    apply229(document.getElementById('foPickedV143'));
+  }
+
+  function boot229(){
+    run229();
+    ['fiPickedV140','foPickedV143'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      new MutationObserver(()=>{
+        if(el.dataset.locRowsV229==='1') delete el.dataset.locRowsV229;
+        setTimeout(run229,0);
+      }).observe(el,{childList:true,subtree:true,characterData:true});
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot229,{once:true});
+  else boot229();
 })();
 </script>
 </body></html>
