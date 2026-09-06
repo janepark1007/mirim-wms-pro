@@ -16399,4 +16399,324 @@ if(document.readyState==='loading'){
   setTimeout(buildAdminMainV126,500);
 }
 </script>
+
+<style id="admin-main-clean-v127-style">
+/* V127: 관리자 메인은 참고 이미지 형태 하나만 사용 */
+body.admin-view.admin-mainmenu-open-v125 main{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:8px!important;
+  box-sizing:border-box!important;
+  background:#f5faf7!important;
+}
+body.admin-view.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125){
+  display:none!important;
+}
+
+/* 구버전/두번째 이미지형 주메인 메뉴 강제 삭제 */
+body.admin-view #adminMainV123,
+body.admin-view #adminMainMenuV124{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:0!important;
+  overflow:hidden!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+}
+
+/* 현재 메인 */
+body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:calc(100vh - 70px)!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+.admin127-welcome{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 18px;
+  border:1px solid #dce8e1;
+  border-radius:17px;
+  background:#fff;
+  box-shadow:0 4px 14px rgba(40,73,54,.05);
+}
+.admin127-welcome-left{display:flex;align-items:center;gap:12px}
+.admin127-shield{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#ddf4e6;font-size:27px;
+}
+.admin127-welcome-title{font-size:23px;font-weight:1000;color:#0f241a}
+.admin127-welcome-sub{margin-top:4px;font-size:13px;font-weight:700;color:#68766f}
+.admin127-welcome-right{text-align:right}
+.admin127-date{font-size:15px;font-weight:1000;color:#15231c}
+.admin127-mode{
+  display:inline-block;margin-top:7px;padding:6px 12px;border-radius:999px;
+  background:#dff5e6;color:#17834c;font-size:12px;font-weight:1000;
+}
+
+.admin127-card{
+  margin-top:12px;
+  padding:16px;
+  border:1px solid #dce8e1;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 6px 20px rgba(40,73,54,.06);
+}
+.admin127-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+  padding-bottom:11px;border-bottom:1px solid #e9efeb;
+}
+.admin127-title{font-size:22px;font-weight:1000;color:#0d5637}
+.admin127-sub{margin-top:4px;font-size:12px;font-weight:800;color:#5f6d65}
+.admin127-sync{
+  padding:8px 11px;border-radius:999px;border:1px solid #bee2cc;
+  background:#edf9f2;color:#167044;font-size:12px;font-weight:1000;white-space:nowrap;
+}
+.admin127-sync.off{border-color:#eccaca;background:#fff1f1;color:#a73636}
+
+.admin127-stats{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-top:12px;
+}
+.admin127-stat{
+  min-height:70px;padding:9px;border:1px solid #e1e8e4;border-radius:13px;
+  background:#fbfdfc;text-align:center;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.admin127-stat small{font-size:11px;font-weight:900;color:#68766f}
+.admin127-stat b{margin-top:4px;font-size:22px;font-weight:1000;color:#133d29}
+.admin127-stat.erp b{color:#144db4}
+.admin127-stat.pending b{color:#e38300}
+.admin127-stat.unreg b{color:#7b36b9}
+
+.admin127-section{margin:14px 0 7px;font-size:13px;font-weight:1000;color:#283a31}
+.admin127-fast{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.admin127-fast button{
+  min-height:88px!important;border:0!important;border-radius:15px!important;
+  color:#fff!important;font-size:19px!important;font-weight:1000!important;cursor:pointer!important;
+}
+.admin127-fast button small{display:block;margin-top:5px;font-size:11px;font-weight:800;opacity:.92}
+.admin127-in{background:#0c8a46!important}
+.admin127-out{background:#c62828!important}
+
+.admin127-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.admin127-links button{
+  min-height:84px!important;border-radius:14px!important;font-size:14px!important;font-weight:1000!important;
+  cursor:pointer!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;gap:4px!important;
+}
+.admin127-links button .ico{font-size:24px}
+.admin127-links button small{font-size:10px;font-weight:800;color:#6f7a73}
+.admin127-loc{background:#f5efff!important;border:1px solid #d9c9fb!important;color:#171f19!important}
+.admin127-unreg{background:#fff1f7!important;border:1px solid #f4c6d8!important;color:#171f19!important}
+.admin127-orders{background:#fff2f7!important;border:1px solid #f4c5d8!important;color:#171f19!important}
+.admin127-later{background:#edf4ff!important;border:1px solid #c6d8f7!important;color:#171f19!important}
+.admin127-npp{background:#f4efff!important;border:1px solid #d9cdf8!important;color:#171f19!important}
+.admin127-users{background:#f1f8f4!important;border:1px solid #cfe2d6!important;color:#171f19!important}
+
+.admin127-bottom{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.admin127-bottom button{
+  min-height:50px!important;border:1px solid #d7e5dc!important;border-radius:12px!important;
+  background:#f8fbf9!important;color:#1d5a39!important;font-size:13px!important;font-weight:1000!important;cursor:pointer!important;
+}
+
+@media(max-width:900px){
+  .admin127-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin127-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+  body.admin-view.admin-mainmenu-open-v125 main{padding:5px!important}
+  .admin127-welcome{padding:10px}
+  .admin127-shield{width:42px;height:42px;font-size:21px}
+  .admin127-welcome-title{font-size:18px}
+  .admin127-welcome-sub{font-size:10px}
+  .admin127-date{font-size:11px}
+  .admin127-card{padding:10px;border-radius:15px}
+  .admin127-title{font-size:18px}
+  .admin127-fast button{min-height:72px!important;font-size:15px!important}
+  .admin127-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin127-links button{min-height:70px!important;font-size:12px!important}
+  .admin127-bottom{grid-template-columns:1fr}
+}
+</style>
+
+<script id="admin-main-clean-v127-script">
+function getAdminMainDateV127(){
+  try{
+    const d=new Date();
+    const day=['일','월','화','수','목','금','토'][d.getDay()];
+    return `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(d.getDate()).padStart(2,'0')}. (${day})`;
+  }catch(e){return '';}
+}
+function getMetricV127(id,fb){
+  const el=document.getElementById(id);
+  const tx=el?String(el.textContent||'').trim():'';
+  return tx||fb;
+}
+function refreshAdminMainV127(){
+  const sync=document.getElementById('adminSyncV127');
+  if(sync){
+    const ok=!!(window.sharedReady || (typeof sharedReady!=='undefined'&&sharedReady));
+    sync.textContent=ok?'● 공용 동기화 연결됨':'● 동기화 연결 확인';
+    sync.classList.toggle('off',!ok);
+  }
+  const date=document.getElementById('adminDateV127');
+  if(date)date.textContent=getAdminMainDateV127();
+
+  const m=[
+    ['todayInV127','adminTodayIn','0건'],
+    ['todayOutV127','adminTodayOut','0건'],
+    ['erpCountV127','adminErpCount','1,438개'],
+    ['pendingV127','adminPendingCount','0건'],
+    ['unregV127','adminUnregCount','1건']
+  ];
+  m.forEach(([to,from,fb])=>{
+    const el=document.getElementById(to);
+    if(el)el.textContent=getMetricV127(from,fb);
+  });
+}
+
+function buildAdminMainV127(){
+  if(!isAdmin)return;
+  const box=document.getElementById('adminMainMenuV125');
+  if(!box)return;
+
+  box.innerHTML=`
+    <section class="admin127-welcome">
+      <div class="admin127-welcome-left">
+        <div class="admin127-shield">🛡️</div>
+        <div>
+          <div class="admin127-welcome-title">안녕하세요, 관리자님!</div>
+          <div class="admin127-welcome-sub">오늘도 효율적인 자재·창고 관리를 시작합니다.</div>
+        </div>
+      </div>
+      <div class="admin127-welcome-right">
+        <div id="adminDateV127" class="admin127-date"></div>
+        <div class="admin127-mode">관리자 모드</div>
+      </div>
+    </section>
+
+    <section class="admin127-card">
+      <div class="admin127-head">
+        <div>
+          <div class="admin127-title">🧰 관리자 메인</div>
+          <div class="admin127-sub">수량 · 자재위치 · 입고·출고를 한 화면에서 관리합니다.</div>
+        </div>
+        <div id="adminSyncV127" class="admin127-sync">● 동기화 확인</div>
+      </div>
+
+      <div class="admin127-stats">
+        <div class="admin127-stat"><small>오늘 입고</small><b id="todayInV127">0건</b></div>
+        <div class="admin127-stat"><small>오늘 출고</small><b id="todayOutV127">0건</b></div>
+        <div class="admin127-stat erp"><small>ERP 품목</small><b id="erpCountV127">1,438개</b></div>
+        <div class="admin127-stat pending"><small>미입고 주문</small><b id="pendingV127">0건</b></div>
+        <div class="admin127-stat unreg"><small>ERP 미등록</small><b id="unregV127">1건</b></div>
+      </div>
+
+      <div class="admin127-section">가장 많이 쓰는 업무</div>
+      <div class="admin127-fast">
+        <button type="button" class="admin127-in"
+          onclick="closeAdminMainV125();openAdminQuickInOutV108('inbound')">
+          📥 빠른입고<small>입고 수량 등록</small>
+        </button>
+        <button type="button" class="admin127-out"
+          onclick="closeAdminMainV125();openAdminQuickInOutV108('outbound')">
+          📤 빠른출고<small>출고 수량 등록</small>
+        </button>
+      </div>
+
+      <div class="admin127-section">관리 바로가기</div>
+      <div class="admin127-links">
+        <button type="button" class="admin127-loc" onclick="closeAdminMainV125();openMode('location')">
+          <span class="ico">📍</span>자재위치 검색<small>위치 · 수량 확인</small>
+        </button>
+        <button type="button" class="admin127-unreg" onclick="closeAdminMainV125();openAdminTaskView('unreg')">
+          <span class="ico">⚠️</span>ERP 미등록 자재<small>미등록 자재 관리</small>
+        </button>
+        <button type="button" class="admin127-orders" onclick="closeAdminMainV125();openAdminTaskView('orders')">
+          <span class="ico">🛒</span>주문요청 & 문의건<small>통합관리</small>
+        </button>
+        <button type="button" class="admin127-later" onclick="closeAdminMainV125();openAdminTaskView('later')">
+          <span class="ico">📌</span>나중에 확인<small>확인할 업무</small>
+        </button>
+        <button type="button" class="admin127-npp" onclick="closeAdminMainV125();openNppAdminV113()">
+          <span class="ico">📐</span>NPP 도면위치 관리<small>엑셀 정리 도면 수정</small>
+        </button>
+        <button type="button" class="admin127-users" onclick="closeAdminMainV125();openAdminUsersV73()">
+          <span class="ico">👥</span>사용자 관리<small>작업자 확인</small>
+        </button>
+      </div>
+
+      <div class="admin127-bottom">
+        <button type="button" onclick="try{updateHomeSummary();syncDashboardStats();refreshAdminMainV127();}catch(e){refreshAdminMainV127();}">
+          ↻ 메인 현황 새로고침
+        </button>
+        <button type="button" onclick="openAdminMainV125();setTimeout(buildAdminMainV127,10)">
+          ⌂ 관리자 메인 다시보기
+        </button>
+      </div>
+    </section>
+  `;
+
+  /* 두번째 이미지형 구버전 메뉴는 실제 DOM에서도 제거 */
+  ['adminMainV123','adminMainMenuV124'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.remove();
+  });
+
+  refreshAdminMainV127();
+}
+
+/* 관리자 메인을 열 때마다 V127 형태만 생성 */
+const __openAdminMainBeforeV127=window.openAdminMainV125;
+if(typeof __openAdminMainBeforeV127==='function'){
+  window.openAdminMainV125=function(){
+    const r=__openAdminMainBeforeV127.apply(this,arguments);
+    if(isAdmin){
+      setTimeout(buildAdminMainV127,10);
+      setTimeout(buildAdminMainV127,350);
+      setTimeout(buildAdminMainV127,1500);
+      setTimeout(buildAdminMainV127,4000);
+    }
+    return r;
+  };
+}
+
+/* 현재 관리자 상태에서 늦게 살아나는 구버전 메뉴도 제거 */
+function purgeOldAdminMenusV127(){
+  if(!isAdmin)return;
+  ['adminMainV123','adminMainMenuV124'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.remove();
+  });
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(isAdmin){
+      setTimeout(buildAdminMainV127,200);
+      setTimeout(purgeOldAdminMenusV127,1200);
+      setTimeout(buildAdminMainV127,4200);
+    }
+  },{once:true});
+}else if(isAdmin){
+  setTimeout(buildAdminMainV127,200);
+  setTimeout(purgeOldAdminMenusV127,1200);
+  setTimeout(buildAdminMainV127,4200);
+}
+</script>
 </body></html>
