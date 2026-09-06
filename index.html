@@ -17488,4 +17488,362 @@ setTimeout(()=>{
   if(isAdmin)bindEmergencyMainV130();
 },120);
 </script>
+
+<style id="core-work-v131-style">
+/* V131 업무 핵심 복구: 입고/출고/자재위치 검색을 기존 복잡한 관리자 라우팅과 분리 */
+#adminCoreWorkV131{display:none}
+body.admin-view.admin-core-open-v131 #adminCoreWorkV131{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:calc(100vh - 90px)!important;
+  padding:16px!important;
+  box-sizing:border-box!important;
+  background:#f6faf8!important;
+}
+body.admin-view.admin-core-open-v131 main > *:not(#adminCoreWorkV131){
+  display:none!important;
+}
+body.admin-view #locationOrganizerCard{
+  display:none!important;
+}
+
+.core131-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 16px;border:1px solid #dbe6e0;border-radius:16px;background:#fff;
+}
+.core131-title{font-size:23px;font-weight:1000;color:#173a2a}
+.core131-sub{margin-top:3px;color:#68766f;font-size:12px;font-weight:800}
+.core131-home{
+  min-height:42px!important;padding:8px 14px!important;border-radius:11px!important;
+  border:1px solid #cddbd3!important;background:#fff!important;color:#28513c!important;
+  font-weight:1000!important;cursor:pointer!important;
+}
+.core131-search{
+  display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;margin-top:12px;
+}
+.core131-search input{
+  min-height:52px!important;padding:10px 14px!important;border:2px solid #bdd8ca!important;
+  border-radius:12px!important;font-size:17px!important;font-weight:900!important;
+}
+.core131-search button{
+  border:0!important;border-radius:12px!important;background:#087a43!important;color:#fff!important;
+  font-size:16px!important;font-weight:1000!important;cursor:pointer!important;
+}
+.core131-status{
+  margin:9px 2px;color:#617068;font-size:12px;font-weight:900;
+}
+.core131-list{display:grid;gap:10px}
+.core131-card{
+  padding:14px;border:1px solid #dce7e1;border-radius:16px;background:#fff;
+  box-shadow:0 4px 12px rgba(30,68,47,.05);
+}
+.core131-row{
+  display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px;align-items:start;
+}
+.core131-part{font-size:21px;font-weight:1000;color:#17251e}
+.core131-name{margin-top:4px;font-size:14px;font-weight:800;color:#58675f}
+.core131-erp{
+  padding:10px;border-radius:12px;background:#eef6ff;border:1px solid #c8ddf6;
+  text-align:center;color:#255fa8;
+}
+.core131-erp small{display:block;font-size:11px;font-weight:900}
+.core131-erp b{display:block;margin-top:3px;font-size:22px;font-weight:1000}
+.core131-locations{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px;
+}
+.core131-loc{
+  min-height:76px;padding:9px;border-radius:11px;background:#eff9f4;border:1px solid #c8e3d3;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+}
+.core131-loc small{font-size:10px;font-weight:900;color:#5c7568}
+.core131-loc b{margin-top:4px;font-size:13px;font-weight:1000;color:#16633f;word-break:break-word}
+.core131-total{background:#fff0f6;border-color:#f0c6d8}
+.core131-total b{color:#c42b69}
+.core131-action{
+  display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:8px;margin-top:12px;
+}
+.core131-action input{
+  min-height:48px!important;padding:9px 12px!important;border:2px solid #d3ded8!important;
+  border-radius:10px!important;font-size:17px!important;font-weight:1000!important;
+}
+.core131-save{
+  border:0!important;border-radius:10px!important;color:#fff!important;
+  font-size:16px!important;font-weight:1000!important;cursor:pointer!important;
+}
+.core131-save.in{background:#087a43!important}
+.core131-save.out{background:#b82929!important}
+.core131-sync{
+  display:inline-block;margin-top:8px;padding:6px 9px;border-radius:999px;
+  background:#eef8f2;color:#167044;font-size:11px;font-weight:1000;
+}
+@media(max-width:700px){
+  body.admin-view.admin-core-open-v131 #adminCoreWorkV131{padding:7px!important}
+  .core131-row{grid-template-columns:1fr}
+  .core131-locations{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .core131-action{grid-template-columns:1fr 110px}
+  .core131-part{font-size:18px}
+}
+</style>
+
+<script id="core-work-v131-script">
+window.__coreModeV131='location';
+window.__coreRowsV131=[];
+
+function coreMainElV131(){
+  return document.querySelector('main');
+}
+
+function ensureCorePanelV131(){
+  let panel=document.getElementById('adminCoreWorkV131');
+  if(panel)return panel;
+  const main=coreMainElV131();
+  if(!main)return null;
+  panel=document.createElement('section');
+  panel.id='adminCoreWorkV131';
+  panel.innerHTML=`
+    <div class="core131-head">
+      <div>
+        <div id="coreTitleV131" class="core131-title">자재위치 검색</div>
+        <div id="coreSubV131" class="core131-sub">품번 또는 품명으로 검색하세요.</div>
+        <span id="coreSyncV131" class="core131-sync">동기화 확인 중</span>
+      </div>
+      <button type="button" class="core131-home" onclick="coreHomeV131()">⌂ 관리자 메인</button>
+    </div>
+    <div class="core131-search">
+      <input id="coreQueryV131" placeholder="품번 또는 품명 입력">
+      <button type="button" onclick="coreSearchV131()">검색</button>
+    </div>
+    <div id="coreStatusV131" class="core131-status"></div>
+    <div id="coreResultsV131" class="core131-list"></div>
+  `;
+  main.insertBefore(panel,main.firstChild);
+  const q=panel.querySelector('#coreQueryV131');
+  q.addEventListener('keyup',e=>{if(e.key==='Enter')coreSearchV131()});
+  return panel;
+}
+
+function coreSyncLabelV131(){
+  const el=document.getElementById('coreSyncV131');
+  if(!el)return;
+  const ok=!!(window.sharedReady && window.sharedDb);
+  el.textContent=ok?'● PC ↔ 모바일 공용 동기화 연결됨':'● 공용 동기화 확인 필요';
+  el.style.background=ok?'#eef8f2':'#fff2f2';
+  el.style.color=ok?'#167044':'#a83b3b';
+}
+
+function openCoreV131(mode){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  ensureCorePanelV131();
+  window.__coreModeV131=mode;
+  document.body.classList.remove(
+    'admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus',
+    'npp-admin-open-v113','admin-reference-home','other-storage-open-v50'
+  );
+  document.body.classList.add('admin-core-open-v131');
+
+  const titles={
+    inbound:['📦 입고등록','택배/자재 확인 후 수량을 입력하고 저장합니다.'],
+    outbound:['📤 출고등록','품번 검색 후 출고수량을 입력하고 저장합니다.'],
+    location:['📍 자재위치 검색','품번 또는 품명으로 위치와 수량을 확인합니다.']
+  };
+  const [title,sub]=titles[mode]||titles.location;
+  document.getElementById('coreTitleV131').textContent=title;
+  document.getElementById('coreSubV131').textContent=sub;
+  document.getElementById('coreQueryV131').value='';
+  document.getElementById('coreResultsV131').innerHTML='';
+  document.getElementById('coreStatusV131').textContent='';
+  coreSyncLabelV131();
+  setTimeout(()=>document.getElementById('coreQueryV131')?.focus(),40);
+}
+
+function coreHomeV131(){
+  document.body.classList.remove('admin-core-open-v131');
+  window.__adminRouteAwayV128=false;
+  try{window.openAdminMainV125(true);}catch(e){}
+  setTimeout(()=>{
+    try{buildAdminMainV127();}catch(e){}
+    setTimeout(bindCoreMainV131,20);
+  },20);
+}
+
+function coreFindV131(q){
+  const items=Array.isArray(window.ITEMS)?window.ITEMS:[];
+  const s=String(q||'').trim().toLowerCase();
+  if(!s)return [];
+  const exact=items.filter(x=>String(x.part||'').toLowerCase()===s);
+  if(exact.length)return exact.slice(0,30);
+  return items.filter(x=>{
+    const part=String(x.part||'').toLowerCase();
+    const name=String(x.name||'').toLowerCase();
+    return part.includes(s)||name.includes(s);
+  }).slice(0,30);
+}
+
+function coreLocationBlocksV131(x){
+  let locs=[];
+  try{locs=getAllLocations(x.part)||[]}catch(e){}
+  const picked=locs.slice(0,3);
+  while(picked.length<3)picked.push(null);
+
+  const labels=['1자재위치','2자재위치','소모자재위치'];
+  const html=picked.map((e,i)=>`
+    <div class="core131-loc">
+      <small>${labels[i]}</small>
+      <b>${e?esc(formatLoc(e)):'미등록'}${e?`<br>${Number(e.qty||0).toLocaleString()}개`:''}</b>
+    </div>`).join('');
+  const total=locs.reduce((s,e)=>s+Number(e.qty||0),0);
+  return html+`
+    <div class="core131-loc core131-total">
+      <small>총수량</small>
+      <b>${Number(total).toLocaleString()}개</b>
+    </div>`;
+}
+
+function coreErpQtyV131(x){
+  try{return Number(getCurrentErpQtyV118(x)||0)}catch(e){return Number(x.erpQty||0)}
+}
+
+function coreSearchV131(){
+  const q=document.getElementById('coreQueryV131')?.value||'';
+  const rows=coreFindV131(q);
+  window.__coreRowsV131=rows;
+  const status=document.getElementById('coreStatusV131');
+  const out=document.getElementById('coreResultsV131');
+  if(!q.trim()){
+    status.textContent='품번 또는 품명을 입력하세요.';
+    out.innerHTML='';
+    return;
+  }
+  status.textContent=`검색결과 ${rows.length}건`;
+  if(!rows.length){
+    out.innerHTML='<div class="core131-card">검색 결과가 없습니다.</div>';
+    return;
+  }
+
+  const mode=window.__coreModeV131;
+  out.innerHTML=rows.map((x,i)=>`
+    <div class="core131-card">
+      <div class="core131-row">
+        <div>
+          <div class="core131-part">${esc(x.part||'')}</div>
+          <div class="core131-name">${esc(x.name||'')}</div>
+        </div>
+        <div class="core131-erp">
+          <small>ERP 현재 수량</small>
+          <b>${coreErpQtyV131(x).toLocaleString()}개</b>
+        </div>
+      </div>
+      <div class="core131-locations">${coreLocationBlocksV131(x)}</div>
+      ${mode==='inbound'?`
+        <div class="core131-action">
+          <input id="coreQtyV131_${i}" type="number" inputmode="numeric" min="1" placeholder="입고수량">
+          <button class="core131-save in" type="button" onclick="coreSaveV131('IN',${i})">📥 입고 저장</button>
+        </div>`:''}
+      ${mode==='outbound'?`
+        <div class="core131-action">
+          <input id="coreQtyV131_${i}" type="number" inputmode="numeric" min="1" placeholder="출고수량">
+          <button class="core131-save out" type="button" onclick="coreSaveV131('OUT',${i})">📤 출고 저장</button>
+        </div>`:''}
+    </div>`).join('');
+}
+
+async function coreSaveV131(type,i){
+  const x=(window.__coreRowsV131||[])[i];
+  const qty=Number(document.getElementById('coreQtyV131_'+i)?.value);
+  if(!x)return alert('품목 정보를 찾지 못했습니다.');
+  if(!qty||qty<=0)return alert(type==='IN'?'입고수량을 입력하세요.':'출고수량을 입력하세요.');
+
+  const worker='관리자';
+  const btn=event?.currentTarget;
+  if(btn)btn.disabled=true;
+
+  try{
+    if(type==='OUT'){
+      const base=getCurrentStock(x);
+      const available=base===null?null:
+        Number(base)+Number(inboundTotalFor(x.part))+Number(returnTotalFor(x.part))-Number(outboundTotalFor(x.part));
+      if(available!==null && qty>available){
+        alert('출고 가능수량이 부족합니다.\n현재 예상재고: '+available.toLocaleString()+'개');
+        return;
+      }
+    }
+
+    if(sharedReady && sharedDb){
+      await sharedAddMovement(type,x,qty,worker);
+      try{await refreshSharedHistories();}catch(e){}
+      if(type==='IN'){
+        try{await allocateInboundToOpenOrders(x,qty,worker);}catch(e){console.warn(e)}
+      }
+    }else{
+      const row={
+        time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+        part:x.part,name:x.name,qty,worker,location:x.location||''
+      };
+      if(type==='IN'){
+        const a=getInHist();a.unshift(row);setInHist(a);
+      }else{
+        const a=getHist();a.unshift(row);setHist(a);
+      }
+    }
+
+    try{updateHomeSummary();syncDashboardStats();}catch(e){}
+    document.getElementById('coreQtyV131_'+i).value='';
+    coreSyncLabelV131();
+    alert((type==='IN'?'✅ 입고':'✅ 출고')+
+      (sharedReady?' 저장 완료 · PC/모바일 공용 DB 반영':' 저장 완료 · 현재 기기에 저장'));
+  }catch(err){
+    console.error(err);
+    alert((type==='IN'?'입고':'출고')+' 저장 실패: '+(err.message||err));
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+
+/* 관리자 메인 핵심 버튼은 구버전 라우팅을 사용하지 않고 V131로 직결 */
+function bindCoreMainV131(){
+  const box=document.getElementById('adminMainMenuV125');
+  if(!box)return;
+
+  const defs=[
+    ['.admin127-in','inbound'],
+    ['.admin127-out','outbound'],
+    ['.admin127-loc','location']
+  ];
+  defs.forEach(([sel,mode])=>{
+    const old=box.querySelector(sel);
+    if(!old)return;
+
+    /* 이전 V129/V130 캡처 선택자와 충돌하지 않게 새 버튼으로 교체 */
+    const b=old.cloneNode(true);
+    b.className='core-main-btn-v131 '+mode;
+    b.removeAttribute('onclick');
+    b.removeAttribute('data-admin-role-v129');
+    b.onclick=e=>{
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      openCoreV131(mode);
+      return false;
+    };
+    old.replaceWith(b);
+  });
+}
+
+/* V127가 다시 메인을 그릴 때마다 3개 핵심 버튼만 새 버튼으로 교체 */
+const __buildBeforeV131=window.buildAdminMainV127;
+if(typeof __buildBeforeV131==='function'){
+  window.buildAdminMainV127=function(){
+    const r=__buildBeforeV131.apply(this,arguments);
+    setTimeout(bindCoreMainV131,15);
+    return r;
+  };
+}
+
+/* V128/V129/V130이 뒤늦게 버튼을 다시 묶어도 V131이 마지막에 교체 */
+setTimeout(()=>{
+  if(isAdmin){
+    ensureCorePanelV131();
+    bindCoreMainV131();
+  }
+},150);
+</script>
 </body></html>
