@@ -17359,7 +17359,10 @@ function renderLocationQtyBoxV166(targetId,x){
 
 function locTextFastOutboundV143(x){
   const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
-  return locs.length?locs.map(l=>[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')).filter(Boolean).join(' / '):'위치 미등록';
+  return locs.length?locs.map((l,i)=>{
+    const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ');
+    return text?`${i+1}자재위치: ${text} · 수량 ${Number(l.qty||0).toLocaleString()}`:'';
+  }).filter(Boolean).join(' / '):'위치 미등록';
 }
 function fillOutboundLocationSelectV150(x){
   const sel=document.getElementById('foLocV143');
@@ -17368,7 +17371,8 @@ function fillOutboundLocationSelectV150(x){
   sel.innerHTML='<option value="">출고위치 선택(선택사항)</option>';
   locs.forEach((l,i)=>{
     const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ') || `자재위치 ${i+1}`;
-    const qty=(l.qty===0||l.qty)?` · 수량 ${Number(l.qty).toLocaleString()}`:'';
+    const qtyNum=Number(l.qty||0);
+    const qty=` · 수량 ${qtyNum.toLocaleString()}`;
     const opt=document.createElement('option');
     opt.value=String(l.id||`idx:${i}`);
     opt.dataset.locationIndex=String(i);
