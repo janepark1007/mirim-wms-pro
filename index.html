@@ -16921,12 +16921,12 @@ function ensureFastInboundV140(){
       <button id="fiSaveV140" class="fi140-save" type="button" onclick="saveFastInboundV140()">📥 입고저장</button>
     </div>
     <div id="fiPickedV140" class="fi140-picked">품목을 검색하세요.</div>
-    <div id="fiRecentInboundV183" class="fi183-recent-inbound"></div>
     <div id="fiLocationQtyV166" class="loc166-box"></div>
     <div id="fiPhotoBoxV142" class="fi142-photo-box">
       <div id="fiPhotoPreviewV142" class="fi142-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
       <button id="fiPhotoBtnV142" type="button" onclick="changeFastInboundPhotoV142()" disabled>📷 사진 등록</button>
     </div>
+    <div id="fiRecentInboundV183" class="fi183-recent-inbound"></div>
     <div id="fiResultsV140" class="fi140-results"></div>
     <div id="fiStatusV140" class="fi140-status"></div>`;
   main.insertBefore(p,main.firstChild);
@@ -18051,9 +18051,6 @@ body.fast-inbound-v140 #fiRecentInboundV183{
   border-right:1px solid #dfe7e2!important;
   border-bottom:1px solid #dfe7e2!important;
   border-radius:0 0 9px 9px!important;
-}
-body.fast-inbound-v140 #fiPickedV140 + #fiRecentInboundV183{
-  border-top:0!important;
 }
 body.fast-inbound-v140 .fi183-title{
   margin:0 0 5px!important;
