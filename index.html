@@ -1812,6 +1812,48 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="npp-admin-location-choice-v232-style">
+/* NPP 관리자 보관위치 3가지 선택 색상 */
+#nppAdminPanelV113 .npp-loc-v232{
+  display:inline-block!important;
+  padding:5px 10px!important;
+  border-radius:7px!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+#nppAdminPanelV113 .npp-loc-lever-v232{
+  background:#efe7ff!important;
+  color:#6138a8!important;
+  border:1px solid #c7b2ee!important;
+}
+#nppAdminPanelV113 .npp-loc-number-v232{
+  background:#e5b800!important;
+  color:#241d00!important;
+  border:2px solid #9f7f00!important;
+}
+#nppAdminPanelV113 .npp-loc-manual-v232{
+  background:#ddf6e5!important;
+  color:#087a43!important;
+  border:1px solid #8fd0a9!important;
+}
+#nppAdminPanelV113 .npp-loc-edit-wrap-v232{
+  display:flex!important;
+  gap:7px!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+}
+#nppAdminPanelV113 .npp-loc-mode-v232,
+#nppAdminPanelV113 .npp-loc-number-select-v232,
+#nppAdminPanelV113 .npp-loc-manual-input-v232{
+  min-height:44px!important;
+  font-size:20px!important;
+  font-weight:900!important;
+}
+#nppAdminPanelV113 .npp-loc-mode-v232{min-width:145px!important}
+#nppAdminPanelV113 .npp-loc-number-select-v232{min-width:90px!important}
+#nppAdminPanelV113 .npp-loc-manual-input-v232{min-width:170px!important}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19758,5 +19800,124 @@ function locationColorHtmlV231(x){
     return `<span class="loc-direct-v231 loc${n}-direct-v231">${n}자재위치: ${esc(text)} · 수량 ${qty}</span>`;
   }).filter(Boolean).join(' ');
 }
+</script>
+
+<script id="npp-admin-location-choice-v232-script">
+(function(){
+  function modeV232(v){
+    const s=String(v||'').trim();
+    if(s==='레버파일')return 'lever';
+    if(/^\d+$/.test(s) && Number(s)>=1 && Number(s)<=100)return 'number';
+    return 'manual';
+  }
+  function badgeClassV232(v){
+    const m=modeV232(v);
+    return m==='lever'?'npp-loc-lever-v232':m==='number'?'npp-loc-number-v232':'npp-loc-manual-v232';
+  }
+  function numberOptionsV232(selected){
+    let out='';
+    for(let i=1;i<=100;i++)out+=`<option value="${i}"${String(selected)===String(i)?' selected':''}>${i}</option>`;
+    return out;
+  }
+  window.nppLocationModeChangeV232=function(findNo){
+    const mode=document.getElementById(`nppLocModeV232_${findNo}`)?.value||'manual';
+    const num=document.getElementById(`nppLocNumV232_${findNo}`);
+    const manual=document.getElementById(`nppLocManualV232_${findNo}`);
+    if(num)num.style.display=mode==='number'?'inline-block':'none';
+    if(manual)manual.style.display=mode==='manual'?'inline-block':'none';
+  };
+
+  const baseRender=window.renderNppAdminV113;
+  window.renderNppAdminV113=function(){
+    if(typeof baseRender==='function')baseRender.apply(this,arguments);
+    const table=document.querySelector('#nppAdminPanelV113 table');
+    if(!table||!table.rows.length)return;
+    const heads=[...table.rows[0].cells].map(c=>(c.textContent||'').trim());
+    const idx=heads.findIndex(v=>v==='보관위치');
+    if(idx<0)return;
+    [...table.rows].slice(1).forEach(row=>{
+      const cell=row.cells[idx];
+      if(!cell||cell.querySelector('input,select'))return;
+      const v=(cell.textContent||'').trim();
+      if(!v)return;
+      cell.innerHTML=`<span class="npp-loc-v232 ${badgeClassV232(v)}">${escV113(v)}</span>`;
+    });
+  };
+
+  window.editNppRowV113=function(findNo){
+    if(!isAdmin)return;
+    const rows=nppLoadV113(), x=rows.find(r=>String(r.findNo)===String(findNo));
+    const tr=[...document.querySelectorAll('#nppAdminBodyV113 tr')].find(r=>r.dataset.findno===String(findNo));
+    if(!x||!tr)return;
+
+    const current=String(x.location||'').trim();
+    const mode=modeV232(current);
+    const manualValue=mode==='manual'?current:'';
+
+    tr.innerHTML=`
+      <td class="no-v113">${escV113(x.findNo)}</td>
+      <td><b>${escV113(x.name)}</b></td>
+      <td>${escV113(x.key)}</td>
+      <td>
+        <div class="npp-loc-edit-wrap-v232">
+          <select id="nppLocModeV232_${escV113(x.findNo)}" class="npp-loc-mode-v232" onchange="nppLocationModeChangeV232('${escV113(x.findNo)}')">
+            <option value="lever"${mode==='lever'?' selected':''}>레버파일</option>
+            <option value="number"${mode==='number'?' selected':''}>숫자 1~100</option>
+            <option value="manual"${mode==='manual'?' selected':''}>수동입력</option>
+          </select>
+          <select id="nppLocNumV232_${escV113(x.findNo)}" class="npp-loc-number-select-v232" style="display:${mode==='number'?'inline-block':'none'}">
+            ${numberOptionsV232(mode==='number'?current:'1')}
+          </select>
+          <input id="nppLocManualV232_${escV113(x.findNo)}" class="npp-loc-manual-input-v232"
+                 value="${escV113(manualValue)}" placeholder="보관위치 수동입력"
+                 style="display:${mode==='manual'?'inline-block':'none'}">
+        </div>
+      </td>
+      <td>${escV113(x.category||'-')}</td>
+      <td style="display:none">
+        <select id="nppStatusEditV113_${escV113(x.findNo)}">
+          <option value="확인"${x.status==='확인'?' selected':''}>확인</option>
+          <option value="확인 필요"${x.status==='확인 필요'?' selected':''}>확인 필요</option>
+        </select>
+      </td>
+      <td><input id="nppNoteEditV113_${escV113(x.findNo)}" value="${escV113(x.note||'')}" placeholder="비고"></td>
+      <td>
+        <button type="button" class="npp-save-v113" onclick="saveNppRowV113('${escV113(x.findNo)}')">저장</button>
+        <button type="button" class="npp-cancel-v113" onclick="renderNppAdminV113()">취소</button>
+      </td>`;
+  };
+
+  window.saveNppRowV113=function(findNo){
+    if(!isAdmin)return;
+    const rows=nppLoadV113();
+    const i=rows.findIndex(r=>String(r.findNo)===String(findNo));
+    if(i<0)return;
+
+    const mode=document.getElementById(`nppLocModeV232_${findNo}`)?.value||'manual';
+    let location='';
+    if(mode==='lever'){
+      location='레버파일';
+    }else if(mode==='number'){
+      location=(document.getElementById(`nppLocNumV232_${findNo}`)?.value||'1').trim();
+    }else{
+      location=(document.getElementById(`nppLocManualV232_${findNo}`)?.value||'').trim();
+      if(!location){
+        alert('수동입력 보관위치를 입력하세요.');
+        return;
+      }
+    }
+
+    rows[i]={
+      ...rows[i],
+      location,
+      status:(document.getElementById(`nppStatusEditV113_${findNo}`)?.value||rows[i].status||'확인').trim(),
+      note:(document.getElementById(`nppNoteEditV113_${findNo}`)?.value||'').trim()
+    };
+    nppSaveAllV113(rows);
+    window.renderNppAdminV113();
+  };
+
+  setTimeout(()=>{try{window.renderNppAdminV113()}catch(e){}},0);
+})();
 </script>
 </body></html>
