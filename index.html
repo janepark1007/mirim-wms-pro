@@ -17074,10 +17074,8 @@ async function loadRecentInboundV183(part){
 }
 
 function searchFastInboundV140(focusQty=false){
-  const raw=(document.getElementById('fiPartV140')?.value||'').trim();
-  const q=raw.toLowerCase();
-  const picked=document.getElementById('fiPickedV140');
-  const out=document.getElementById('fiResultsV140');
+  const raw=(document.getElementById('fiPartV140')?.value||'').trim(),q=raw.toLowerCase();
+  const picked=document.getElementById('fiPickedV140'),out=document.getElementById('fiResultsV140');
   window.__fiSelectedV140=null;
 
   if(!q){
@@ -17091,9 +17089,13 @@ function searchFastInboundV140(focusQty=false){
   }
 
   const all=itemsFastInboundV140();
-  const normPart=v=>String(v||'').trim().toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
-  const nq=normPart(raw);
-  const rows=all.filter(x=>normPart(x.part)===nq);
+  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  if(!rows.length){
+    rows=all.filter(x=>
+      String(x.part||'').toLowerCase().includes(q) ||
+      String(x.name||'').toLowerCase().includes(q)
+    ).slice(0,15);
+  }
   window.__fiRowsV140=rows;
 
   if(rows.length===1){
