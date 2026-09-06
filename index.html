@@ -4153,6 +4153,23 @@ async function sharedSaveLocation(part,e){
 }
 async function sharedAddMovement(type,x,qty,worker){
  if(!sharedDb)return false;
+ const p=String(x.part);
+
+ /* 공용 현창고 기준값이 없는 품목은 현재 자재위치 수량 합계로 최초 기준값을 만든다.
+    ERP 수량은 사용하지 않는다. */
+ if(!Object.prototype.hasOwnProperty.call(sharedCache.stock,p)){
+   const locs=(sharedCache.locations&&sharedCache.locations[p])||[];
+   const base=locs.reduce((sum,l)=>sum+Number(l.qty||0),0);
+   const baseTime=new Date().toISOString();
+   const {error:baseErr}=await sharedDb.from('production_inventory_sync').upsert(
+     {part_no:p,current_stock:Number(base||0),updated_at:baseTime},
+     {onConflict:'part_no'}
+   );
+   if(baseErr)throw baseErr;
+   sharedCache.stock[p]=Number(base||0);
+   sharedCache.stockUpdated[p]=baseTime;
+   sharedCache.movementDelta[p]=0;
+ }
  const now=new Date();
  const row={
    movement_type:type,part_no:String(x.part),item_name:x.name||'',qty:Number(qty),
@@ -4182,7 +4199,16 @@ async function sharedAddMovement(type,x,qty,worker){
 function stockKey(part){return 'mirim_current_stock_'+part}
 function getCurrentStock(x){
  const p=String(x.part);
- if(sharedReady && Object.prototype.hasOwnProperty.call(sharedCache.stock,p)) return Number(sharedCache.stock[p])+Number(sharedCache.movementDelta[p]||0);
+ if(sharedReady && Object.prototype.hasOwnProperty.call(sharedCache.stock,p)){
+   return Number(sharedCache.stock[p])+Number(sharedCache.movementDelta[p]||0);
+ }
+ /* 공용 현창고 기준값이 아직 없으면 ERP가 아니라 등록된 자재위치 수량 합계를 사용 */
+ if(sharedReady){
+   const locs=(sharedCache.locations&&sharedCache.locations[p])||[];
+   if(locs.length){
+     return locs.reduce((sum,l)=>sum+Number(l.qty||0),0);
+   }
+ }
  const v=localStorage.getItem(stockKey(x.part));
  if(v===null||v==='') return null;
  const n=Number(v); return Number.isFinite(n)?n:null;
@@ -16851,8 +16877,10 @@ function itemsFastInboundV140(){
 }
 function stockFastInboundV149(x){
   try{
-    if(typeof getCurrentStock==='function')return Number(getCurrentStock(x)||0);
-    if(typeof getCurrentQty==='function')return Number(getCurrentQty(x)||0);
+    if(typeof getCurrentStock==='function'){
+      const n=getCurrentStock(x);
+      return Number.isFinite(Number(n))?Number(n):0;
+    }
   }catch(e){}
   return 0;
 }
@@ -17138,11 +17166,12 @@ function showStockQtyFastOutboundV149(x){
 }
 function stockFastOutboundV143(x){
   try{
-    if(typeof getCurrentStock==='function')return Number(getCurrentStock(x)||0);
-    if(typeof getCurrentQty==='function')return Number(getCurrentQty(x)||0);
-    if(typeof getCurrentErpQtyV118==='function')return Number(getCurrentErpQtyV118(x)||0);
+    if(typeof getCurrentStock==='function'){
+      const n=getCurrentStock(x);
+      return Number.isFinite(Number(n))?Number(n):0;
+    }
   }catch(e){}
-  return Number(x.erpQty||0);
+  return 0;
 }
 function locTextFastOutboundV143(x){
   const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
