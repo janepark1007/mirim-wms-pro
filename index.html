@@ -17037,8 +17037,9 @@ body.admin-view.fast-outbound-v143 main > *:not(#fastOutboundV143){display:none!
 .fo143-head h2{margin:0;font-size:22px;color:#8b2020}
 .fo143-head p{margin:4px 0 0;font-size:12px;color:#756666;font-weight:800}
 .fo143-home{min-height:42px;padding:8px 12px;border:1px solid #dfcccc;border-radius:10px;background:#fff;font-weight:1000}
-.fo143-form{display:grid;grid-template-columns:minmax(0,1.35fr) 130px 170px minmax(0,.9fr) 130px;gap:8px;margin-top:10px;padding:14px;background:#fff;border:2px solid #e7bcbc;border-radius:14px}
+.fo143-form{display:grid;grid-template-columns:minmax(0,1.35fr) 125px 130px 170px minmax(0,.9fr) 130px;gap:8px;margin-top:10px;padding:14px;background:#fff;border:2px solid #e7bcbc;border-radius:14px}
 .fo143-form input{min-height:54px;padding:10px 12px;border:2px solid #e1cece;border-radius:10px;font-size:17px;font-weight:900;box-sizing:border-box}
+.fo148-erp{min-height:54px;display:flex;align-items:center;justify-content:center;padding:10px 8px;border:2px solid #d7dce8;border-radius:10px;background:#f7f9fc;color:#34425a;font-size:15px;font-weight:1000;box-sizing:border-box}
 .fo143-save{border:0;border-radius:10px;background:#b52c2c;color:#fff;font-size:16px;font-weight:1000;cursor:pointer}
 .fo143-save:disabled{opacity:.4}
 .fo143-picked,.fo143-status{margin-top:9px;padding:9px 11px;border-radius:9px;background:#fff;border:1px solid #eadcdc;font-size:13px;font-weight:900}
@@ -17050,7 +17051,7 @@ body.admin-view.fast-outbound-v143 main > *:not(#fastOutboundV143){display:none!
 .fo143-results{display:grid;gap:7px;margin-top:8px}
 .fo143-row{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:8px;align-items:center;padding:9px 11px;background:#fff;border:1px solid #eadcdc;border-radius:10px}
 .fo143-row button{min-height:38px;border:0;border-radius:8px;background:#f8e5e5;color:#8a2525;font-weight:1000}
-@media(max-width:720px){.fo143-form{grid-template-columns:1fr 105px}.fo143-form #foPersonV143,.fo143-form #foLocV143,.fo143-save{grid-column:1/-1}.fo143-photo-box{align-items:flex-start;flex-direction:column}.fo143-photo-box button{width:100%}}
+@media(max-width:720px){.fo143-form{grid-template-columns:1fr 105px}.fo143-form #foErpQtyV148{grid-column:1/2}.fo143-form #foPersonV143,.fo143-form #foLocV143,.fo143-save{grid-column:1/-1}.fo143-photo-box{align-items:flex-start;flex-direction:column}.fo143-photo-box button{width:100%}}
 </style>
 
 <script id="fast-outbound-v143-script">
@@ -17071,6 +17072,7 @@ function ensureFastOutboundV143(){
     </div>
     <div class="fo143-form">
       <input id="foPartV143" autocomplete="off" placeholder="품번 또는 품명">
+      <div id="foErpQtyV148" class="fo148-erp">ERP수량 -</div>
       <input id="foQtyV143" type="number" inputmode="numeric" min="1" placeholder="출고수량">
       <input id="foPersonV143" autocomplete="off" placeholder="가져간 사람">
       <input id="foLocV143" autocomplete="off" placeholder="비고(선택)">
@@ -17110,6 +17112,17 @@ function closeFastOutboundV143(){
 function itemsFastOutboundV143(){
   return (typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
 }
+function erpQtyFastOutboundV148(x){
+  try{
+    if(typeof getCurrentErpQtyV118==='function')return Number(getCurrentErpQtyV118(x)||0);
+  }catch(e){}
+  return Number(x?.erpQty||0);
+}
+function showErpQtyFastOutboundV148(x){
+  const el=document.getElementById('foErpQtyV148');
+  if(!el)return;
+  el.textContent=x?`ERP수량 ${erpQtyFastOutboundV148(x).toLocaleString()}`:'ERP수량 -';
+}
 function stockFastOutboundV143(x){
   try{
     if(typeof getCurrentStock==='function')return Number(getCurrentStock(x)||0);
@@ -17141,13 +17154,13 @@ function searchFastOutboundV143(focusQty=false){
   const raw=(document.getElementById('foPartV143')?.value||'').trim(),q=raw.toLowerCase();
   const picked=document.getElementById('foPickedV143'),out=document.getElementById('foResultsV143');
   window.__foSelectedV143=null;
-  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';renderFastOutboundPhotoV143();return}
+  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';showErpQtyFastOutboundV148(null);renderFastOutboundPhotoV143();return}
   const all=itemsFastOutboundV143();
   let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
   if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
   window.__foRowsV143=rows;
   if(rows.length===1){
-    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';renderFastOutboundPhotoV143();
+    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showErpQtyFastOutboundV148(x);renderFastOutboundPhotoV143();
     picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
     out.innerHTML='';if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
   }
@@ -17156,7 +17169,7 @@ function searchFastOutboundV143(focusQty=false){
 }
 function selectFastOutboundV143(i){
   const x=window.__foRowsV143[i];if(!x)return;
-  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';renderFastOutboundPhotoV143();
+  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showErpQtyFastOutboundV148(x);renderFastOutboundPhotoV143();
   document.getElementById('foPickedV143').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
   document.getElementById('foResultsV143').innerHTML='';document.getElementById('foQtyV143')?.focus();
 }
@@ -17204,6 +17217,7 @@ async function saveFastOutboundV143(){
     document.getElementById('foPersonV143').value='';
     document.getElementById('foLocV143').value='';
     document.getElementById('foPickedV143').textContent='다음 출고 품목을 입력하세요.';
+    showErpQtyFastOutboundV148(null);
     document.getElementById('foResultsV143').innerHTML='';
     renderFastOutboundPhotoV143();
     document.getElementById('foPartV143').focus();
