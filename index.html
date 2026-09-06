@@ -16629,7 +16629,7 @@ function buildAdminMainV127(){
 
       <div class="admin127-section">가장 많이 쓰는 업무</div>
       <div class="admin127-fast">
-        <button type="button" id="adminMainInboundV137" class="admin127-in">
+        <button type="button" id="adminMainInboundV137" class="admin127-in" onclick="event.stopPropagation();openFastInboundV140();return false;">
           📥 빠른입고<small>입고 수량 등록</small>
         </button>
         <button type="button" id="adminMainOutboundV137" class="admin127-out">
@@ -16723,7 +16723,6 @@ if(document.readyState==='loading'){
    관리자 메인 버튼 클릭만 캡처 단계에서 1개 기능으로 정확히 연결한다. */
 (function(){
   const routeMapV137={
-    adminMainInboundV137:()=>{ openFastInboundV139(); },
     adminMainOutboundV137:()=>{ closeAdminMainV125(); openAdminQuickInOutV108('outbound'); },
     adminMainLocationV137:()=>{ closeAdminMainV125(); openMode('location'); },
     adminMainUnregV137:()=>{ closeAdminMainV125(); openAdminTaskView('unreg'); },
@@ -16754,386 +16753,166 @@ if(document.readyState==='loading'){
 })();
 </script>
 
-<style id="fast-inbound-v139-style">
-/* V139: V137 기본은 그대로, 빠른입고 화면 안에 실제 입력창을 고정 표시 */
-#fastInboundBoxV139{display:none}
-body.admin-view.fast-inbound-open-v139 #work{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
+<style id="fast-inbound-direct-v140-style">
+#fastInboundV140{display:none}
+body.admin-view.fast-inbound-v140 #fastInboundV140{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  width:100%!important;min-height:calc(100vh - 80px)!important;
+  padding:12px!important;box-sizing:border-box!important;background:#f5faf7!important;
 }
-body.admin-view.fast-inbound-open-v139 #work .card{
-  display:block!important;
-}
-body.admin-view.fast-inbound-open-v139 #fastInboundBoxV139{
-  display:block!important;
-  margin:0 0 14px!important;
-  padding:14px!important;
-  border:2px solid #b7ddc7!important;
-  border-radius:14px!important;
-  background:#f3fbf6!important;
-}
-.fi139-title{font-size:21px;font-weight:1000;color:#145a37}
-.fi139-guide{margin-top:4px;color:#617168;font-size:12px;font-weight:850}
-.fi139-grid{
-  display:grid;
-  grid-template-columns:minmax(220px,1.4fr) 150px minmax(180px,1fr) 130px;
-  gap:8px;
-  margin-top:11px;
-}
-.fi139-grid input{
-  min-height:52px!important;
-  padding:10px 12px!important;
-  border:2px solid #c8dbd1!important;
-  border-radius:10px!important;
-  box-sizing:border-box!important;
-  font-size:16px!important;
-  font-weight:900!important;
-  background:#fff!important;
-}
-.fi139-save{
-  min-height:52px!important;
-  border:0!important;
-  border-radius:10px!important;
-  background:#087a43!important;
-  color:#fff!important;
-  font-size:16px!important;
-  font-weight:1000!important;
-  cursor:pointer!important;
-}
-.fi139-save:disabled{opacity:.42!important;cursor:not-allowed!important}
-.fi139-picked{
-  margin-top:9px;
-  padding:9px 11px;
-  border:1px solid #d4e4dc;
-  border-radius:9px;
-  background:#fff;
-  color:#355a47;
-  font-size:13px;
-  font-weight:900;
-}
-.fi139-results{display:grid;gap:6px;margin-top:8px}
-.fi139-result{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 110px;
-  gap:8px;
-  align-items:center;
-  padding:8px 10px;
-  border:1px solid #dfe9e4;
-  border-radius:9px;
-  background:#fff;
-}
-.fi139-result b{font-size:14px}
-.fi139-result small{display:block;margin-top:2px;color:#68766f;font-weight:800}
-.fi139-result button{
-  min-height:38px;
-  border:0;
-  border-radius:8px;
-  background:#e4f3ea;
-  color:#145c38;
-  font-weight:1000;
-  cursor:pointer;
-}
-.fi139-status{
-  margin-top:9px;
-  font-size:11px;
-  font-weight:1000;
-}
-.fi139-ok{
-  display:none;
-  margin-top:9px;
-  padding:9px 11px;
-  border-radius:9px;
-  background:#e8f7ee;
-  color:#126d3e;
-  font-weight:1000;
-}
-.fi139-ok.show{display:block}
-@media(max-width:760px){
-  .fi139-grid{grid-template-columns:1fr 105px}
-  .fi139-grid #fiLocV139{grid-column:1/-1}
-  .fi139-grid .fi139-save{grid-column:1/-1}
-}
+body.admin-view.fast-inbound-v140 main > *:not(#fastInboundV140){display:none!important}
+.fi140-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;background:#fff;border:1px solid #d9e7df;border-radius:14px}
+.fi140-head h2{margin:0;font-size:22px;color:#145a37}
+.fi140-head p{margin:4px 0 0;font-size:12px;color:#65746c;font-weight:800}
+.fi140-home{min-height:42px;padding:8px 12px;border:1px solid #cbdad2;border-radius:10px;background:#fff;font-weight:1000}
+.fi140-form{display:grid;grid-template-columns:minmax(0,1.4fr) 150px minmax(0,1fr) 130px;gap:8px;margin-top:10px;padding:14px;background:#fff;border:2px solid #b7ddc7;border-radius:14px}
+.fi140-form input{min-height:54px;padding:10px 12px;border:2px solid #cbdcd3;border-radius:10px;font-size:17px;font-weight:900;box-sizing:border-box}
+.fi140-save{border:0;border-radius:10px;background:#087a43;color:#fff;font-size:16px;font-weight:1000;cursor:pointer}
+.fi140-save:disabled{opacity:.4}
+.fi140-picked,.fi140-status{margin-top:9px;padding:9px 11px;border-radius:9px;background:#fff;border:1px solid #dce7e1;font-size:13px;font-weight:900}
+.fi140-results{display:grid;gap:7px;margin-top:8px}
+.fi140-row{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:8px;align-items:center;padding:9px 11px;background:#fff;border:1px solid #dce7e1;border-radius:10px}
+.fi140-row button{min-height:38px;border:0;border-radius:8px;background:#e3f2e9;color:#155c38;font-weight:1000}
+@media(max-width:720px){.fi140-form{grid-template-columns:1fr 100px}.fi140-form #fiLocV140,.fi140-save{grid-column:1/-1}}
 </style>
 
-<script id="fast-inbound-v139-script">
-window.__fiSelectedV139=null;
-window.__adminWorkingAwayV139=false;
+<script id="fast-inbound-direct-v140-script">
+window.__fiRowsV140=[];
+window.__fiSelectedV140=null;
 
-/* 관리자 메인에서 업무 화면으로 들어간 뒤 0.3/1.2/3.8/4초 지연 메인이 다시 덮는 것을 차단 */
-const __openAdminMainBeforeV139=window.openAdminMainV125;
-if(typeof __openAdminMainBeforeV139==='function'){
-  window.openAdminMainV125=function(){
-    if(window.__adminWorkingAwayV139)return;
-    return __openAdminMainBeforeV139.apply(this,arguments);
-  };
-}
-
-function ensureFastInboundBoxV139(){
-  let box=document.getElementById('fastInboundBoxV139');
-  if(box)return box;
-
-  const work=document.getElementById('work');
-  const card=work?.querySelector('.card');
-  if(!card)return null;
-
-  box=document.createElement('div');
-  box.id='fastInboundBoxV139';
-  box.innerHTML=`
-    <div class="fi139-title">📦 택배 빠른입고</div>
-    <div class="fi139-guide">택배 정리하면서 품번/품명 → 입고수량 → 임시위치(선택) → 입고저장</div>
-
-    <div class="fi139-grid">
-      <input id="fiPartV139" autocomplete="off" placeholder="품번 또는 품명 입력">
-      <input id="fiQtyV139" type="number" inputmode="numeric" min="1" placeholder="입고수량">
-      <input id="fiLocV139" autocomplete="off" placeholder="임시위치 선택 입력 예: 택배정리대 A">
-      <button id="fiSaveV139" class="fi139-save" type="button" onclick="saveFastInboundV139()">📥 입고저장</button>
+function ensureFastInboundV140(){
+  let p=document.getElementById('fastInboundV140');
+  if(p)return p;
+  const main=document.querySelector('main');
+  if(!main)return null;
+  p=document.createElement('section');
+  p.id='fastInboundV140';
+  p.innerHTML=`
+    <div class="fi140-head">
+      <div><h2>📦 택배 빠른입고</h2><p>택배 정리하면서 바로 입력하고 공용 DB에 저장합니다.</p></div>
+      <button class="fi140-home" type="button" onclick="closeFastInboundV140()">⌂ 관리자 메인</button>
     </div>
+    <div class="fi140-form">
+      <input id="fiPartV140" autocomplete="off" placeholder="품번 또는 품명">
+      <input id="fiQtyV140" type="number" inputmode="numeric" min="1" placeholder="입고수량">
+      <input id="fiLocV140" autocomplete="off" placeholder="임시위치(선택)">
+      <button id="fiSaveV140" class="fi140-save" type="button" onclick="saveFastInboundV140()">📥 입고저장</button>
+    </div>
+    <div id="fiPickedV140" class="fi140-picked">품목을 검색하세요.</div>
+    <div id="fiResultsV140" class="fi140-results"></div>
+    <div id="fiStatusV140" class="fi140-status"></div>`;
+  main.insertBefore(p,main.firstChild);
 
-    <div id="fiPickedV139" class="fi139-picked">품목을 검색하세요.</div>
-    <div id="fiResultsV139" class="fi139-results"></div>
-    <div id="fiStatusV139" class="fi139-status"></div>
-    <div id="fiOkV139" class="fi139-ok"></div>
-  `;
-
-  card.insertBefore(box,card.firstChild);
-
-  const p=document.getElementById('fiPartV139');
-  const q=document.getElementById('fiQtyV139');
-
-  p.addEventListener('input',searchFastInboundV139);
-  p.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      e.preventDefault();
-      searchFastInboundV139(true);
-    }
-  });
-  q.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      e.preventDefault();
-      saveFastInboundV139();
-    }
-  });
-
-  return box;
+  const part=document.getElementById('fiPartV140');
+  const qty=document.getElementById('fiQtyV140');
+  part.addEventListener('input',searchFastInboundV140);
+  part.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchFastInboundV140(true)}});
+  qty.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveFastInboundV140()}});
+  return p;
 }
 
-function allItemsFastInboundV139(){
-  return (typeof ITEMS!=='undefined' && Array.isArray(ITEMS)) ? ITEMS : [];
+function openFastInboundV140(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  ensureFastInboundV140();
+
+  /* 메인 지연 복구 코드가 덮지 못하도록 관리자메인 상태를 제거 */
+  document.body.classList.remove('admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus','npp-admin-open-v113');
+  document.body.classList.add('fast-inbound-v140');
+
+  const p=document.getElementById('fastInboundV140');
+  p.style.setProperty('display','block','important');
+  syncFastInboundV140();
+  setTimeout(()=>document.getElementById('fiPartV140')?.focus(),30);
 }
 
-function matchesFastInboundV139(raw){
-  const s=String(raw||'').trim().toLowerCase();
-  if(!s)return [];
-  const items=allItemsFastInboundV139();
-
-  const exact=items.filter(x=>String(x.part||'').trim().toLowerCase()===s);
-  if(exact.length)return exact.slice(0,15);
-
-  return items.filter(x=>
-    String(x.part||'').toLowerCase().includes(s) ||
-    String(x.name||'').toLowerCase().includes(s)
-  ).slice(0,15);
+function closeFastInboundV140(){
+  document.body.classList.remove('fast-inbound-v140');
+  try{openAdminMainV125()}catch(e){}
 }
 
-function searchFastInboundV139(focusQty=false){
-  const raw=document.getElementById('fiPartV139')?.value||'';
-  const rows=matchesFastInboundV139(raw);
-  const picked=document.getElementById('fiPickedV139');
-  const out=document.getElementById('fiResultsV139');
-  window.__fiSelectedV139=null;
-  window.__fiRowsV139=rows;
+function itemsFastInboundV140(){
+  return (typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+}
 
-  if(!raw.trim()){
-    picked.textContent='품목을 검색하세요.';
+function searchFastInboundV140(focusQty=false){
+  const raw=(document.getElementById('fiPartV140')?.value||'').trim();
+  const q=raw.toLowerCase();
+  const picked=document.getElementById('fiPickedV140');
+  const out=document.getElementById('fiResultsV140');
+  window.__fiSelectedV140=null;
+  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';return}
+
+  const all=itemsFastInboundV140();
+  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
+  window.__fiRowsV140=rows;
+
+  if(rows.length===1){
+    const x=rows[0];window.__fiSelectedV140=x;
+    document.getElementById('fiPartV140').value=x.part||'';
+    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}`;
     out.innerHTML='';
+    if(focusQty)setTimeout(()=>document.getElementById('fiQtyV140')?.focus(),20);
     return;
   }
-
-  const exact=rows.find(x=>String(x.part||'').trim().toLowerCase()===raw.trim().toLowerCase());
-  if(exact || rows.length===1){
-    const x=exact||rows[0];
-    window.__fiSelectedV139=x;
-    document.getElementById('fiPartV139').value=x.part||'';
-    picked.innerHTML=`✅ 선택됨: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}`;
-    out.innerHTML='';
-    if(focusQty)setTimeout(()=>document.getElementById('fiQtyV139')?.focus(),20);
-    return;
-  }
-
-  picked.textContent=rows.length?`검색결과 ${rows.length}건 · 품목을 선택하세요.`:'검색 결과가 없습니다.';
-  out.innerHTML=rows.map((x,i)=>`
-    <div class="fi139-result">
-      <div><b>${esc(x.part||'')}</b><small>${esc(x.name||'')}</small></div>
-      <button type="button" onclick="selectFastInboundV139(${i})">선택</button>
-    </div>
-  `).join('');
+  picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
+  out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
 }
 
-function selectFastInboundV139(i){
-  const x=(window.__fiRowsV139||[])[i];
-  if(!x)return;
-  window.__fiSelectedV139=x;
-  document.getElementById('fiPartV139').value=x.part||'';
-  document.getElementById('fiPickedV139').innerHTML=`✅ 선택됨: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}`;
-  document.getElementById('fiResultsV139').innerHTML='';
-  setTimeout(()=>document.getElementById('fiQtyV139')?.focus(),20);
+function selectFastInboundV140(i){
+  const x=window.__fiRowsV140[i];if(!x)return;
+  window.__fiSelectedV140=x;
+  document.getElementById('fiPartV140').value=x.part||'';
+  document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}`;
+  document.getElementById('fiResultsV140').innerHTML='';
+  document.getElementById('fiQtyV140')?.focus();
 }
 
-function syncFastInboundV139(){
+function syncFastInboundV140(){
   const ok=!!(sharedReady&&sharedDb);
-  const status=document.getElementById('fiStatusV139');
-  const btn=document.getElementById('fiSaveV139');
-  if(status){
-    status.textContent=ok?'● 공용 DB 연결됨 · PC/모바일 동일 데이터 반영':'● 공용 DB 연결 안 됨 · 저장 차단';
-    status.style.color=ok?'#167044':'#b02f2f';
-  }
+  const el=document.getElementById('fiStatusV140');
+  const btn=document.getElementById('fiSaveV140');
+  if(el){el.textContent=ok?'● 공용 DB 연결됨 · PC/모바일 동일 반영':'● 공용 DB 연결 안 됨 · 저장 차단';el.style.color=ok?'#167044':'#b02f2f'}
   if(btn)btn.disabled=!ok;
   return ok;
 }
 
-async function saveFastInboundLocationV139(x,qty,text){
-  text=String(text||'').trim();
-  if(!text)return;
-
-  if(typeof loadSharedLocations==='function')await loadSharedLocations();
-
+async function saveLocationFastInboundV140(x,qty,text){
+  text=String(text||'').trim();if(!text)return;
+  await loadSharedLocations();
   const part=String(x.part||'');
-  const rows=(sharedCache?.locations?.[part]||[]);
-  const same=rows.find(r=>String(r.room||'').trim()==='입고대기' && String(r.detail||'').trim()===text);
-
-  const record={
-    room:'입고대기',
-    zone:'',
-    level:'',
-    height:'',
-    storage:'',
-    detail:text,
-    qty:Number(qty||0),
-    note:noteWithDivision('택배 빠른입고 임시위치',getItemDivision(part)),
-    is_primary:rows.length===0
-  };
-
-  if(same){
-    record.qty=Number(same.qty||0)+Number(qty||0);
-    record.is_primary=!!same.is_primary;
-    await sharedSaveMultiLocation(part,{...same,...record},same.id);
-  }else{
-    await sharedSaveMultiLocation(part,record,null);
-  }
+  const rows=(sharedCache.locations[part]||[]);
+  const same=rows.find(r=>String(r.room||'').trim()==='입고대기'&&String(r.detail||'').trim()===text);
+  const rec={room:'입고대기',zone:'',level:'',height:'',storage:'',detail:text,qty:Number(qty),note:noteWithDivision('택배 빠른입고 임시위치',getItemDivision(part)),is_primary:rows.length===0};
+  if(same){rec.qty=Number(same.qty||0)+Number(qty);rec.is_primary=!!same.is_primary;await sharedSaveMultiLocation(part,{...same,...rec},same.id)}
+  else await sharedSaveMultiLocation(part,rec,null);
 }
 
-function showFastInboundOkV139(msg){
-  const el=document.getElementById('fiOkV139');
-  if(!el)return;
-  el.textContent=msg;
-  el.classList.add('show');
-  clearTimeout(window.__fiOkTimerV139);
-  window.__fiOkTimerV139=setTimeout(()=>el.classList.remove('show'),2200);
-}
-
-async function saveFastInboundV139(){
-  if(!syncFastInboundV139()){
-    alert('PC와 모바일 모든 데이터가 같이 반영되어야 해서 공용 DB가 연결되지 않으면 저장하지 않습니다.');
-    return;
-  }
-
-  const x=window.__fiSelectedV139;
-  const qty=Number(document.getElementById('fiQtyV139')?.value||0);
-  const loc=String(document.getElementById('fiLocV139')?.value||'').trim();
-
-  if(!x){
-    alert('먼저 품번 또는 품명을 검색해서 품목을 선택하세요.');
-    document.getElementById('fiPartV139')?.focus();
-    return;
-  }
-  if(!qty||qty<=0){
-    alert('입고수량을 입력하세요.');
-    document.getElementById('fiQtyV139')?.focus();
-    return;
-  }
-
-  const btn=document.getElementById('fiSaveV139');
-  if(btn)btn.disabled=true;
+async function saveFastInboundV140(){
+  if(!syncFastInboundV140())return alert('공용 DB 연결 후 저장할 수 있습니다.');
+  const x=window.__fiSelectedV140;
+  const qty=Number(document.getElementById('fiQtyV140')?.value||0);
+  const loc=(document.getElementById('fiLocV140')?.value||'').trim();
+  if(!x)return alert('품목을 먼저 선택하세요.');
+  if(!qty||qty<=0)return alert('입고수량을 입력하세요.');
 
   try{
-    /* 공용 입고 이력 */
     await sharedAddMovement('IN',x,qty,'관리자');
-
-    /* 주문요청과 입고 자동 대조 */
-    try{await allocateInboundToOpenOrders(x,qty,'관리자');}catch(e){console.warn(e)}
-
-    /* 임시 위치를 입력한 경우 공용 위치 데이터에도 함께 저장 */
-    if(loc)await saveFastInboundLocationV139(x,qty,loc);
-
-    /* 저장 후 공용 데이터를 다시 읽어 PC/모바일 기준 통일 */
+    try{await allocateInboundToOpenOrders(x,qty,'관리자')}catch(e){}
+    if(loc)await saveLocationFastInboundV140(x,qty,loc);
     await refreshSharedHistories();
     if(typeof loadSharedLocations==='function')await loadSharedLocations();
-    if(typeof loadTodayOrderRequests==='function')await loadTodayOrderRequests();
-    try{updateHomeSummary();}catch(e){}
-    try{syncDashboardStats();}catch(e){}
-
-    showFastInboundOkV139(
-      `✅ ${x.part} · ${qty.toLocaleString()}개 입고 완료` +
-      (loc?` · 임시위치 ${loc}`:'') +
-      ` · 전체 동기화 반영`
-    );
-
-    window.__fiSelectedV139=null;
-    document.getElementById('fiPartV139').value='';
-    document.getElementById('fiQtyV139').value='';
-    document.getElementById('fiLocV139').value='';
-    document.getElementById('fiPickedV139').textContent='다음 택배 품목을 입력하세요.';
-    document.getElementById('fiResultsV139').innerHTML='';
-    document.getElementById('fiPartV139').focus();
-  }catch(err){
-    console.error('V139 빠른입고 실패',err);
-    alert('입고 저장 실패: '+(err?.message||err));
-  }finally{
-    syncFastInboundV139();
-  }
+    try{updateHomeSummary();syncDashboardStats()}catch(e){}
+    alert(`✅ ${x.part} ${qty.toLocaleString()}개 입고 완료`+(loc?`\n📍 ${loc}`:'')+'\nPC/모바일 공용 DB 반영');
+    window.__fiSelectedV140=null;
+    document.getElementById('fiPartV140').value='';
+    document.getElementById('fiQtyV140').value='';
+    document.getElementById('fiLocV140').value='';
+    document.getElementById('fiPickedV140').textContent='다음 택배 품목을 입력하세요.';
+    document.getElementById('fiResultsV140').innerHTML='';
+    document.getElementById('fiPartV140').focus();
+  }catch(e){console.error(e);alert('입고 저장 실패: '+(e.message||e))}
+  finally{syncFastInboundV140()}
 }
-
-function openFastInboundV139(){
-  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
-
-  window.__adminWorkingAwayV139=true;
-
-  /* 관리자 메인을 완전히 닫은 뒤 기존 정상 inbound 검색 화면을 연다 */
-  try{closeAdminMainV125();}catch(e){}
-  document.body.classList.remove('admin-mainmenu-open-v125');
-  document.body.classList.add('fast-inbound-open-v139');
-
-  openMode('inbound');
-  ensureFastInboundBoxV139();
-  syncFastInboundV139();
-
-  /* 입력창은 반드시 화면 최상단에 보이게 */
-  const box=document.getElementById('fastInboundBoxV139');
-  if(box)box.style.setProperty('display','block','important');
-
-  setTimeout(()=>{
-    document.getElementById('fiPartV139')?.focus();
-    document.getElementById('fastInboundBoxV139')?.scrollIntoView({block:'start'});
-  },50);
-}
-
-/* 빠른출고/자재위치 등 다른 관리자 업무로 이동하면 빠른입고 표시상태 제거 */
-const __openModeBeforeV139=window.openMode;
-if(typeof __openModeBeforeV139==='function'){
-  window.openMode=function(m){
-    const r=__openModeBeforeV139.apply(this,arguments);
-    if(m!=='inbound')document.body.classList.remove('fast-inbound-open-v139');
-    return r;
-  };
-}
-
-/* 홈 버튼으로 돌아갈 때만 관리자 메인 재허용 */
-document.getElementById('homeBtn')?.addEventListener('click',()=>{
-  if(isAdmin){
-    window.__adminWorkingAwayV139=false;
-    document.body.classList.remove('fast-inbound-open-v139');
-  }
-},true);
 </script>
 </body></html>
