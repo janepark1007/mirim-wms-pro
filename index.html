@@ -15976,4 +15976,427 @@ if(document.readyState==='loading'){
   setTimeout(openAdminMainV125,4000);
 }
 </script>
+
+<style id="admin-main-reference-v126-style">
+/* V126 관리자 메인 - 사용자 참고 이미지 형태 */
+body.admin-view.admin-mainmenu-open-v125 main{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:10px 16px 18px!important;
+  box-sizing:border-box!important;
+  background:#f5faf7!important;
+}
+body.admin-view.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125){
+  display:none!important;
+}
+body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:calc(100vh - 80px)!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+
+/* 상단 환영 카드 */
+.admin-main126-welcome{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  min-height:94px;
+  padding:16px 20px;
+  border:1px solid #dfe9e3;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 4px 14px rgba(42,80,57,.05);
+}
+.admin-main126-welcome-left{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.admin-main126-shield{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#ddf4e6;
+  font-size:28px;
+}
+.admin-main126-welcome-title{
+  font-size:24px;
+  font-weight:1000;
+  color:#10251b;
+}
+.admin-main126-welcome-sub{
+  margin-top:4px;
+  color:#63736b;
+  font-size:14px;
+  font-weight:700;
+}
+.admin-main126-welcome-right{
+  text-align:right;
+  flex:none;
+}
+.admin-main126-date{
+  font-size:15px;
+  font-weight:1000;
+  color:#0f2018;
+}
+.admin-main126-mode{
+  display:inline-block;
+  margin-top:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:#dff5e6;
+  color:#16834b;
+  font-size:12px;
+  font-weight:1000;
+}
+
+/* 본문 카드 */
+.admin-main126-card{
+  margin-top:14px;
+  padding:18px;
+  border:1px solid #dfe9e3;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 7px 22px rgba(42,80,57,.06);
+}
+.admin-main126-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom:12px;
+  border-bottom:1px solid #e9efeb;
+}
+.admin-main126-title{
+  font-size:23px;
+  font-weight:1000;
+  color:#0d5637;
+}
+.admin-main126-sub{
+  margin-top:4px;
+  color:#596a61;
+  font-size:12px;
+  font-weight:800;
+}
+.admin-main126-sync{
+  padding:9px 12px;
+  border-radius:999px;
+  border:1px solid #bfe2cc;
+  background:#eef9f2;
+  color:#167044;
+  font-size:12px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.admin-main126-sync.off{
+  border-color:#eccaca;
+  background:#fff1f1;
+  color:#a73636;
+}
+
+/* KPI */
+.admin-main126-stats{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.admin-main126-stat{
+  min-height:72px;
+  padding:10px;
+  border:1px solid #e1e8e4;
+  border-radius:14px;
+  background:#fbfdfc;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.admin-main126-stat small{
+  color:#65766d;
+  font-size:11px;
+  font-weight:900;
+}
+.admin-main126-stat b{
+  margin-top:5px;
+  font-size:23px;
+  font-weight:1000;
+  color:#143e2a;
+}
+.admin-main126-stat.erp b{color:#144db4}
+.admin-main126-stat.pending b{color:#e38300}
+.admin-main126-stat.unreg b{color:#7b36b9}
+
+/* 빠른입출고 */
+.admin-main126-section-title{
+  margin:16px 0 8px;
+  color:#243a2e;
+  font-size:14px;
+  font-weight:1000;
+}
+.admin-main126-fast{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.admin-main126-fast button{
+  min-height:92px!important;
+  border:0!important;
+  border-radius:16px!important;
+  color:#fff!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+.admin-main126-fast button small{
+  display:block;
+  margin-top:6px;
+  font-size:11px;
+  font-weight:800;
+  opacity:.92;
+}
+.admin-main126-in{background:#0c8a46!important}
+.admin-main126-out{background:#c62828!important}
+
+/* 관리 바로가기 */
+.admin-main126-links{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.admin-main126-links button{
+  min-height:88px!important;
+  border-radius:15px!important;
+  font-size:15px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+}
+.admin-main126-links button .ico{
+  font-size:25px;
+}
+.admin-main126-links button small{
+  font-size:10px;
+  font-weight:800;
+  color:#707a74;
+}
+.admin-main126-loc{
+  background:#f5efff!important;border:1px solid #d9c9fb!important;color:#171f19!important;
+}
+.admin-main126-unreg{
+  background:#fff1f7!important;border:1px solid #f4c6d8!important;color:#171f19!important;
+}
+.admin-main126-orders{
+  background:#fff2f7!important;border:1px solid #f4c5d8!important;color:#171f19!important;
+}
+.admin-main126-later{
+  background:#edf4ff!important;border:1px solid #c6d8f7!important;color:#171f19!important;
+}
+.admin-main126-npp{
+  background:#f4efff!important;border:1px solid #d9cdf8!important;color:#171f19!important;
+}
+.admin-main126-users{
+  background:#f1f8f4!important;border:1px solid #cfe2d6!important;color:#171f19!important;
+}
+
+/* 하단 */
+.admin-main126-bottom{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+.admin-main126-bottom button{
+  min-height:54px!important;
+  border:1px solid #d7e5dc!important;
+  border-radius:13px!important;
+  background:#f8fbf9!important;
+  color:#1d5a39!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+
+@media(max-width:900px){
+  .admin-main126-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-main126-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+  body.admin-view.admin-mainmenu-open-v125 main{padding:6px!important}
+  .admin-main126-welcome{padding:12px}
+  .admin-main126-shield{width:44px;height:44px;font-size:22px}
+  .admin-main126-welcome-title{font-size:19px}
+  .admin-main126-welcome-sub{font-size:11px}
+  .admin-main126-date{font-size:12px}
+  .admin-main126-card{padding:12px;border-radius:16px}
+  .admin-main126-title{font-size:20px}
+  .admin-main126-fast{grid-template-columns:1fr 1fr}
+  .admin-main126-fast button{min-height:76px!important;font-size:16px!important}
+  .admin-main126-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-main126-links button{min-height:74px!important;font-size:13px!important}
+  .admin-main126-bottom{grid-template-columns:1fr}
+}
+</style>
+
+<script id="admin-main-reference-v126-script">
+function getAdminMainDateV126(){
+  try{
+    const d=new Date();
+    const day=['일','월','화','수','목','금','토'][d.getDay()];
+    return `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(d.getDate()).padStart(2,'0')}. (${day})`;
+  }catch(e){return '';}
+}
+
+function getAdminMetricV126(id,fallback){
+  const el=document.getElementById(id);
+  const tx=el?String(el.textContent||'').trim():'';
+  return tx||fallback;
+}
+
+function refreshAdminMainV126(){
+  const sync=document.getElementById('adminMainSyncV126');
+  if(sync){
+    const ok=!!(window.sharedReady || (typeof sharedReady!=='undefined' && sharedReady));
+    sync.textContent=ok?'● 공용 동기화 연결됨':'● 동기화 연결 확인';
+    sync.classList.toggle('off',!ok);
+  }
+  const date=document.getElementById('adminMainDateV126');
+  if(date)date.textContent=getAdminMainDateV126();
+
+  const metrics=[
+    ['adminTodayInV126','adminTodayIn','0건'],
+    ['adminTodayOutV126','adminTodayOut','0건'],
+    ['adminErpCountV126','adminErpCount','1,438개'],
+    ['adminPendingV126','adminPendingCount','0건'],
+    ['adminUnregV126','adminUnregCount','1건']
+  ];
+  metrics.forEach(([to,from,fb])=>{
+    const el=document.getElementById(to);
+    if(el)el.textContent=getAdminMetricV126(from,fb);
+  });
+}
+
+function buildAdminMainV126(){
+  if(!isAdmin)return;
+  const box=document.getElementById('adminMainMenuV125');
+  if(!box)return;
+
+  box.innerHTML=`
+    <section class="admin-main126-welcome">
+      <div class="admin-main126-welcome-left">
+        <div class="admin-main126-shield">🛡️</div>
+        <div>
+          <div class="admin-main126-welcome-title">안녕하세요, 관리자님!</div>
+          <div class="admin-main126-welcome-sub">오늘도 효율적인 자재·창고 관리를 시작합니다.</div>
+        </div>
+      </div>
+      <div class="admin-main126-welcome-right">
+        <div id="adminMainDateV126" class="admin-main126-date"></div>
+        <div class="admin-main126-mode">관리자 모드</div>
+      </div>
+    </section>
+
+    <section class="admin-main126-card">
+      <div class="admin-main126-head">
+        <div>
+          <div class="admin-main126-title">🧰 관리자 메인</div>
+          <div class="admin-main126-sub">수량 · 자재위치 · 입고·출고를 한 화면에서 관리합니다.</div>
+        </div>
+        <div id="adminMainSyncV126" class="admin-main126-sync">● 동기화 확인</div>
+      </div>
+
+      <div class="admin-main126-stats">
+        <div class="admin-main126-stat"><small>오늘 입고</small><b id="adminTodayInV126">0건</b></div>
+        <div class="admin-main126-stat"><small>오늘 출고</small><b id="adminTodayOutV126">0건</b></div>
+        <div class="admin-main126-stat erp"><small>ERP 품목</small><b id="adminErpCountV126">1,438개</b></div>
+        <div class="admin-main126-stat pending"><small>미입고 주문</small><b id="adminPendingV126">0건</b></div>
+        <div class="admin-main126-stat unreg"><small>ERP 미등록</small><b id="adminUnregV126">1건</b></div>
+      </div>
+
+      <div class="admin-main126-section-title">가장 많이 쓰는 업무</div>
+      <div class="admin-main126-fast">
+        <button type="button" class="admin-main126-in"
+          onclick="closeAdminMainV125();openAdminQuickInOutV108('inbound')">
+          📥 빠른입고
+          <small>입고 수량 등록</small>
+        </button>
+        <button type="button" class="admin-main126-out"
+          onclick="closeAdminMainV125();openAdminQuickInOutV108('outbound')">
+          📤 빠른출고
+          <small>출고 수량 등록</small>
+        </button>
+      </div>
+
+      <div class="admin-main126-section-title">관리 바로가기</div>
+      <div class="admin-main126-links">
+        <button type="button" class="admin-main126-loc" onclick="closeAdminMainV125();openMode('location')">
+          <span class="ico">📍</span>자재위치 검색<small>위치 · 수량 확인</small>
+        </button>
+        <button type="button" class="admin-main126-unreg" onclick="closeAdminMainV125();openAdminTaskView('unreg')">
+          <span class="ico">⚠️</span>ERP 미등록 자재<small>미등록 자재 관리</small>
+        </button>
+        <button type="button" class="admin-main126-orders" onclick="closeAdminMainV125();openAdminTaskView('orders')">
+          <span class="ico">🛒</span>주문요청 & 문의건<small>통합관리</small>
+        </button>
+        <button type="button" class="admin-main126-later" onclick="closeAdminMainV125();openAdminTaskView('later')">
+          <span class="ico">📌</span>나중에 확인<small>확인할 업무</small>
+        </button>
+        <button type="button" class="admin-main126-npp" onclick="closeAdminMainV125();openNppAdminV113()">
+          <span class="ico">📐</span>NPP 도면위치 관리<small>엑셀 정리 도면 수정</small>
+        </button>
+        <button type="button" class="admin-main126-users" onclick="closeAdminMainV125();openAdminUsersV73()">
+          <span class="ico">👥</span>사용자 관리<small>작업자 확인</small>
+        </button>
+      </div>
+
+      <div class="admin-main126-bottom">
+        <button type="button" onclick="try{updateHomeSummary();syncDashboardStats();refreshAdminMainV126();}catch(e){refreshAdminMainV126();}">
+          ↻ 메인 현황 새로고침
+        </button>
+        <button type="button" onclick="openAdminMainV125();setTimeout(buildAdminMainV126,10)">
+          ♧ 관리자 메인 다시보기
+        </button>
+      </div>
+    </section>
+  `;
+  refreshAdminMainV126();
+}
+
+/* V125 메인이 열릴 때마다 V126 디자인으로 재구성 */
+const __openAdminMainBeforeV126=window.openAdminMainV125;
+if(typeof __openAdminMainBeforeV126==='function'){
+  window.openAdminMainV125=function(){
+    const r=__openAdminMainBeforeV126.apply(this,arguments);
+    if(isAdmin){
+      setTimeout(buildAdminMainV126,10);
+      setTimeout(refreshAdminMainV126,180);
+    }
+    return r;
+  };
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(isAdmin)setTimeout(buildAdminMainV126,500);
+  },{once:true});
+}else if(isAdmin){
+  setTimeout(buildAdminMainV126,500);
+}
+</script>
 </body></html>
