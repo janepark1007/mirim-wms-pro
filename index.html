@@ -16724,7 +16724,7 @@ if(document.readyState==='loading'){
 (function(){
   const routeMapV137={
     adminMainOutboundV137:()=>{ openFastOutboundV143(); },
-    adminMainLocationV137:()=>{ closeAdminMainV125(); openMode('location'); },
+    adminMainLocationV137:()=>{ openAdminLocationV144(); },
     adminMainUnregV137:()=>{ closeAdminMainV125(); openAdminTaskView('unreg'); },
     adminMainOrdersV137:()=>{ closeAdminMainV125(); openAdminTaskView('orders'); },
     adminMainLaterV137:()=>{ closeAdminMainV125(); openAdminTaskView('later'); },
@@ -17209,6 +17209,110 @@ async function saveFastOutboundV143(){
     document.getElementById('foPartV143').focus();
   }catch(e){console.error(e);alert('출고 저장 실패: '+(e.message||e))}
   finally{syncFastOutboundV143()}
+}
+</script>
+
+<style id="admin-location-v144-style">
+#adminLocationV144{display:none}
+body.admin-view.admin-location-v144 #adminLocationV144{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  width:100%!important;min-height:calc(100vh - 80px)!important;
+  padding:12px!important;box-sizing:border-box!important;background:#f7f5ff!important;
+}
+body.admin-view.admin-location-v144 main > *:not(#adminLocationV144){display:none!important}
+.al144-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;background:#fff;border:1px solid #dfd8ef;border-radius:14px}
+.al144-head h2{margin:0;font-size:22px;color:#514078}
+.al144-head p{margin:4px 0 0;font-size:12px;color:#70667f;font-weight:800}
+.al144-home{min-height:42px;padding:8px 12px;border:1px solid #d9d0e8;border-radius:10px;background:#fff;font-weight:1000}
+.al144-search{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:8px;margin-top:10px;padding:14px;background:#fff;border:2px solid #d9cdef;border-radius:14px}
+.al144-search input{min-height:54px;padding:10px 12px;border:2px solid #d9d0e8;border-radius:10px;font-size:17px;font-weight:900;box-sizing:border-box}
+.al144-search button{border:0;border-radius:10px;background:#66529a;color:#fff;font-size:16px;font-weight:1000}
+.al144-status{margin-top:9px;padding:9px 11px;border-radius:9px;background:#fff;border:1px solid #e3ddef;font-size:12px;font-weight:900}
+.al144-results{display:grid;gap:9px;margin-top:10px}
+.al144-row{padding:12px;background:#fff;border:1px solid #e0d9ec;border-radius:12px}
+.al144-row-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.al144-part{font-size:16px;font-weight:1000;color:#302b37}
+.al144-name{margin-top:2px;font-size:13px;font-weight:850;color:#706b76}
+.al144-stock{font-size:15px;font-weight:1000;color:#b12664;white-space:nowrap}
+.al144-photo img{display:block;max-width:120px;max-height:95px;object-fit:contain;border-radius:8px;margin-top:8px}
+.al144-locs{display:grid;gap:6px;margin-top:9px}
+.al144-loc{padding:8px 10px;border-radius:8px;background:#f7f5fb;font-size:13px;font-weight:900;color:#514078}
+.al144-empty{padding:8px 10px;border-radius:8px;background:#fafafa;color:#888;font-size:13px;font-weight:900}
+@media(max-width:720px){.al144-search{grid-template-columns:1fr}.al144-search button{min-height:50px}.al144-row-head{display:block}.al144-stock{margin-top:6px}}
+</style>
+
+<script id="admin-location-v144-script">
+function ensureAdminLocationV144(){
+  let p=document.getElementById('adminLocationV144');
+  if(p)return p;
+  const main=document.querySelector('main');
+  if(!main)return null;
+  p=document.createElement('section');
+  p.id='adminLocationV144';
+  p.innerHTML=`
+    <div class="al144-head">
+      <div><h2>📍 자재위치검색</h2><p>관리자용 · 빠른입고처럼 품번/품명 입력 후 바로 확인</p></div>
+      <button class="al144-home" type="button" onclick="closeAdminLocationV144()">⌂ 관리자 메인</button>
+    </div>
+    <div class="al144-search">
+      <input id="alQueryV144" autocomplete="off" placeholder="품번 또는 품명 입력">
+      <button type="button" onclick="searchAdminLocationV144()">🔎 검색</button>
+    </div>
+    <div id="alStatusV144" class="al144-status">품번 또는 품명을 입력하세요.</div>
+    <div id="alResultsV144" class="al144-results"></div>`;
+  main.insertBefore(p,main.firstChild);
+  const q=document.getElementById('alQueryV144');
+  q.addEventListener('input',()=>searchAdminLocationV144(false));
+  q.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchAdminLocationV144(true)}});
+  return p;
+}
+function openAdminLocationV144(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  ensureAdminLocationV144();
+  document.body.classList.remove('admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus','npp-admin-open-v113','fast-inbound-v140','fast-outbound-v143');
+  document.body.classList.add('admin-location-v144');
+  try{if(typeof loadSharedLocations==='function')loadSharedLocations()}catch(e){}
+  setTimeout(()=>document.getElementById('alQueryV144')?.focus(),30);
+}
+function closeAdminLocationV144(){
+  document.body.classList.remove('admin-location-v144');
+  try{openAdminMainV125()}catch(e){}
+}
+function stockAdminLocationV144(x){
+  try{
+    if(typeof getCurrentStock==='function')return Number(getCurrentStock(x)||0);
+    if(typeof getCurrentQty==='function')return Number(getCurrentQty(x)||0);
+    if(typeof getCurrentErpQtyV118==='function')return Number(getCurrentErpQtyV118(x)||0);
+  }catch(e){}
+  return Number(x.erpQty||0);
+}
+function searchAdminLocationV144(){
+  const raw=(document.getElementById('alQueryV144')?.value||'').trim();
+  const q=raw.toLowerCase(),status=document.getElementById('alStatusV144'),out=document.getElementById('alResultsV144');
+  if(!q){status.textContent='품번 또는 품명을 입력하세요.';out.innerHTML='';return}
+  const all=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+  let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
+  if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,30);
+  status.textContent=rows.length?`검색결과 ${rows.length}건`:'검색 결과가 없습니다.';
+  out.innerHTML=rows.map(x=>{
+    const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+    const photo=(typeof getPhoto==='function')?getPhoto(x.part):'';
+    const locHtml=locs.length
+      ? locs.map((l,i)=>{
+          const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ');
+          const qty=(l.qty===0||l.qty)?` · 수량 ${Number(l.qty).toLocaleString()}`:'';
+          return `<div class="al144-loc">${i+1}자재위치: ${esc(text||'위치 미등록')}${qty}</div>`;
+        }).join('')
+      : `<div class="al144-empty">위치 미등록</div>`;
+    return `<div class="al144-row">
+      <div class="al144-row-head">
+        <div><div class="al144-part">${esc(x.part||'')}</div><div class="al144-name">${esc(x.name||'')}</div></div>
+        <div class="al144-stock">현재고 ${stockAdminLocationV144(x).toLocaleString()}</div>
+      </div>
+      <div class="al144-photo">${photo?`<img src="${photo}" alt="${esc(x.part||'')} 사진">`:''}</div>
+      <div class="al144-locs">${locHtml}</div>
+    </div>`;
+  }).join('');
 }
 </script>
 </body></html>
