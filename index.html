@@ -17700,13 +17700,8 @@ window.search=async function(){
   }
 
   const all=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+  /* 품번 검색: 입력한 품번과 정확히 같은 품목만 표시 */
   let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
-  if(!rows.length){
-    rows=all.filter(x=>
-      String(x.part||'').toLowerCase().includes(q) ||
-      String(x.name||'').toLowerCase().includes(q)
-    ).slice(0,30);
-  }
 
   if(count)count.textContent=rows.length?`검색결과 ${rows.length}건`:'검색 결과가 없습니다.';
 
