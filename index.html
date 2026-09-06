@@ -5522,6 +5522,71 @@ async function shareOrderRequest(x,i){
   }
 }
 </style>
+
+<style id="pc-search-results-large-v208">
+@media (min-width:769px){
+  /* 검색결과 전체 */
+  #results,
+  #results div,
+  #results span,
+  #results small,
+  #results strong,
+  #results b,
+  #adminLocationV144,
+  #adminLocationV144 div,
+  #adminLocationV144 span,
+  #adminLocationV144 small,
+  #adminLocationV144 strong,
+  #adminLocationV144 b{
+    font-size:20px!important;
+    line-height:1.55!important;
+  }
+
+  /* 품번 */
+  #results .part,
+  #results [class*="part"],
+  #adminLocationV144 .part,
+  #adminLocationV144 [class*="part"]{
+    font-size:25px!important;
+    font-weight:1000!important;
+  }
+
+  /* 품명 */
+  #results .name,
+  #results [class*="name"],
+  #adminLocationV144 .name,
+  #adminLocationV144 [class*="name"]{
+    font-size:21px!important;
+    font-weight:900!important;
+  }
+
+  /* 1/2/3 자재위치 */
+  #results [class*="loc"],
+  #results [class*="location"],
+  #adminLocationV144 [class*="loc"],
+  #adminLocationV144 [class*="location"]{
+    font-size:21px!important;
+    line-height:1.55!important;
+  }
+
+  /* 최근 입출고 제목과 각 기록 */
+  #recentInOutForSearchV176,
+  #recentInOutForSearchV176 *,
+  [id*="recentInOut"],
+  [id*="recentInOut"] *,
+  [class*="recent-inout"],
+  [class*="recent-inout"] *{
+    font-size:20px!important;
+    line-height:1.55!important;
+  }
+
+  /* 검색결과 건수 */
+  #count{
+    font-size:20px!important;
+    font-weight:1000!important;
+  }
+}
+</style>
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
