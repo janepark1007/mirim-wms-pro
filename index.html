@@ -17749,7 +17749,7 @@ body:not(.admin-view) #results .v147-public-row{
 <script id="public-search-admin-look-v147-script">
 /* V147: 일반 자재검색 결과만 관리자 자재위치검색과 같은 표시 방식으로 통일 */
 const __searchBeforeV147=window.search;
-window.search=async function(){
+window.search=function(){
   /* 관리자 업무화면은 기존 search를 건드리지 않음 */
   if(document.body.classList.contains('admin-view')){
     if(typeof __searchBeforeV147==='function')return __searchBeforeV147.apply(this,arguments);
@@ -17774,58 +17774,6 @@ window.search=async function(){
   let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
 
   if(count)count.textContent=rows.length?`검색결과 ${rows.length}건`:'검색 결과가 없습니다.';
-
-  /* 품번을 찾으면 DB 응답을 기다리지 않고 먼저 해당 품번을 바로 표시 */
-  if(rows.length){
-    out.innerHTML=rows.map(x=>{
-      const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
-      const photo=(typeof getPhoto==='function')?getPhoto(x.part):'';
-      let stock=0;
-      try{stock=(typeof getCurrentStock==='function')?Number(getCurrentStock(x)||0):Number(x.erpQty||0)}catch(e){}
-      const locHtml=locs.length?locs.map((l,i)=>{
-        const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ');
-        const qty=(l.qty===0||l.qty)?` · 수량 ${Number(l.qty).toLocaleString()}`:'';
-        return `<div class="v147-public-loc">${i+1}자재위치: ${esc(text||'위치 미등록')}${qty}</div>`;
-      }).join(''):`<div class="v147-public-empty">위치 미등록</div>`;
-      return `<div class="v147-public-row">
-        <div class="v147-public-head">
-          <div><div class="v147-public-part">${esc(x.part||'')}</div><div class="v147-public-name">${esc(x.name||'')}</div></div>
-          <div class="v147-public-stock">현재고 ${Number(stock||0).toLocaleString()}</div>
-        </div>
-        <div class="v147-public-photo">${photo?`<img src="${photo}" alt="${esc(x.part||'')} 사진">`:''}</div>
-        <div class="v147-public-locs">${locHtml}</div>
-      </div>`;
-    }).join('');
-  }else{
-    out.innerHTML='';
-    return;
-  }
-
-  await loadLocationMovementsV169(rows.map(x=>x.part));
-
-  /* 먼저 품번을 보여준 뒤 공용 DB 최신 현재고/자재위치 수량으로 다시 갱신 */
-  if(sharedReady&&sharedDb&&rows.length){
-    await Promise.all(rows.map(async x=>{
-      const p=String(x.part||'');
-      try{
-        const [sres,lres]=await Promise.all([
-          sharedDb.from('production_inventory_sync')
-            .select('part_no,current_stock,updated_at').eq('part_no',p).limit(1),
-          sharedDb.from('production_item_locations')
-            .select('*').eq('part_no',p)
-        ]);
-        if(!sres.error&&(sres.data||[])[0]){
-          const s=sres.data[0];
-          sharedCache.stock[p]=Number(s.current_stock||0);
-          sharedCache.stockUpdated[p]=s.updated_at||'';
-          sharedCache.movementDelta[p]=0;
-        }
-        if(!lres.error){
-          sharedCache.locations[p]=(lres.data||[]);
-        }
-      }catch(e){console.warn('일반검색 최신 재고 동기화 실패',e)}
-    }));
-  }
 
   out.innerHTML=rows.map(x=>{
     const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
