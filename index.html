@@ -17039,7 +17039,7 @@ function searchFastInboundV140(focusQty=false){
       else stock=Number(x.erpQty||0);
     }catch(e){ stock=Number(x.erpQty||0); }
     picked.innerHTML=`<b>✅ 선택: ${escHtml(x.part)} · ${escHtml(x.name||'')}</b><br><span>현재고: ${stockFastOutboundV143(x).toLocaleString()} · 위치: ${escHtml(locTextFastOutboundV143(x))}</span>`;
-    out.innerHTML='';
+    out.innerHTML=`<div class="fi140-row"><div><b>${escHtml(x.part||'')}</b><br><small>${escHtml(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#9a2b2b">현재고: ${stockFastInboundV149(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${escHtml(locTextFastOutboundV143(x))}</div></div></div>`;
     if(focusQty)setTimeout(()=>document.getElementById('fiQtyV140')?.focus(),20);
     return;
   }
@@ -17419,7 +17419,8 @@ function searchFastOutboundV143(focusQty=false){
     });
     renderFastOutboundPhotoV143();
     picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
-    out.innerHTML='';if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
+    out.innerHTML=`<div class="fo143-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div></div>`;
+    if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
   }
   picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
   out.innerHTML=rows.map((x,i)=>`<div class="fo143-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastOutboundV143(${i})">선택</button></div>`).join('');
