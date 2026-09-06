@@ -17689,13 +17689,12 @@ async function loadRecentInOutForSearchV176(part,targetId){
   try{
     if(sharedReady&&sharedDb){
       const {data,error}=await sharedDb.from('production_movements')
-        .select('movement_type,part_no,part_name,qty,worker_name,location,note,created_at')
+        .select('*')
         .eq('part_no',String(part))
-        .in('movement_type',['IN','OUT'])
         .order('created_at',{ascending:false})
-        .limit(10);
+        .limit(30);
       if(error)throw error;
-      rows=data||[];
+      rows=(data||[]).filter(r=>r.movement_type==='IN'||r.movement_type==='OUT').slice(0,10);
     }else{
       const ins=(typeof getInHist==='function'?getInHist():[]).filter(r=>String(r.part_no||r.part||'')===String(part)).map(r=>({...r,movement_type:'IN'}));
       const outs=(typeof getHist==='function'?getHist():[]).filter(r=>String(r.part_no||r.part||'')===String(part)).map(r=>({...r,movement_type:'OUT'}));
