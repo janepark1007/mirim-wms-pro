@@ -16978,6 +16978,7 @@ function openFastInboundV140(){
   const p=document.getElementById('fastInboundV140');
   p.style.setProperty('display','block','important');
   syncFastInboundV140();
+  loadRecentInboundV183((document.getElementById('fiPartV140')?.value||'').trim());
   setTimeout(()=>document.getElementById('fiPartV140')?.focus(),30);
 }
 
@@ -17039,19 +17040,19 @@ async function loadRecentInboundV183(part){
   const el=document.getElementById('fiRecentInboundV183');
   if(!el)return;
   const p=String(part||'').trim();
-  if(!p){el.innerHTML='';return;}
 
   el.innerHTML='<div class="fi183-title">최근 입고내역 불러오는 중...</div>';
   let rows=[];
 
   try{
     if(sharedReady&&sharedDb){
-      const {data,error}=await sharedDb
+      let q=sharedDb
         .from('production_movements')
-        .select('*')
-        .eq('part_no',p)
+        .select('*');
+      if(p)q=q.eq('part_no',p);
+      const {data,error}=await q
         .order('created_at',{ascending:false})
-        .limit(30);
+        .limit(p?30:100);
       if(error)throw error;
       rows=(data||[]).filter(r=>r.movement_type==='IN').slice(0,10);
     }
@@ -17062,7 +17063,7 @@ async function loadRecentInboundV183(part){
   if(!rows.length){
     try{
       const local=(typeof getInHist==='function')?(getInHist()||[]):[];
-      rows=local.filter(r=>String(r.part||r.part_no||'').trim()===p)
+      rows=local.filter(r=>!p||String(r.part||r.part_no||'').trim()===p)
         .map(r=>({
           movement_type:'IN',
           qty:Number(r.qty||0),
@@ -17095,6 +17096,7 @@ async function loadRecentInboundV183(part){
       const worker=String(r.worker_name||r.worker||'').trim();
       return `<div class="fi183-row">
         <span class="fi183-date">${fmt(r.created_at)}</span>
+        ${!p?`<b>${escHtml(String(r.part_no||r.part||''))}</b>`:''}
         <b class="fi183-in">입고</b>
         <span>자재위치: ${escHtml(loc||'-')}</span>
         <b class="fi183-in">입고수량: +${qty}</b>
@@ -17361,6 +17363,7 @@ function openFastOutboundV143(){
   const panel=document.getElementById('fastOutboundV143');
   if(panel)panel.style.setProperty('display','block','important');
   syncFastOutboundV143();
+  loadRecentOutboundV184((document.getElementById('foPartV143')?.value||'').trim());
   setTimeout(()=>document.getElementById('foPartV143')?.focus(),30);
 }
 function closeFastOutboundV143(){
@@ -17507,19 +17510,19 @@ async function loadRecentOutboundV184(part){
   const el=document.getElementById('foRecentOutboundV184');
   if(!el)return;
   const p=String(part||'').trim();
-  if(!p){el.innerHTML='';return;}
 
   el.innerHTML='<div class="fo184-title">최근 출고내역 불러오는 중...</div>';
   let rows=[];
 
   try{
     if(sharedReady&&sharedDb){
-      const {data,error}=await sharedDb
+      let q=sharedDb
         .from('production_movements')
-        .select('*')
-        .eq('part_no',p)
+        .select('*');
+      if(p)q=q.eq('part_no',p);
+      const {data,error}=await q
         .order('created_at',{ascending:false})
-        .limit(30);
+        .limit(p?30:100);
       if(error)throw error;
       rows=(data||[]).filter(r=>r.movement_type==='OUT').slice(0,10);
     }
@@ -17530,7 +17533,7 @@ async function loadRecentOutboundV184(part){
   if(!rows.length){
     try{
       const local=(typeof getHist==='function')?(getHist()||[]):[];
-      rows=local.filter(r=>String(r.part||r.part_no||'').trim()===p)
+      rows=local.filter(r=>!p||String(r.part||r.part_no||'').trim()===p)
         .map(r=>({
           movement_type:'OUT',
           qty:Number(r.qty||0),
@@ -17563,6 +17566,7 @@ async function loadRecentOutboundV184(part){
       const worker=String(r.worker_name||r.worker||'').trim();
       return `<div class="fo184-row">
         <span class="fo184-date">${fmt(r.created_at)}</span>
+        ${!p?`<b>${escHtml(String(r.part_no||r.part||''))}</b>`:''}
         <b class="fo184-out">출고</b>
         <span>자재위치: ${escHtml(loc||'-')}</span>
         <b class="fo184-out">출고수량: -${qty}</b>
