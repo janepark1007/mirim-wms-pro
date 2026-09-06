@@ -17114,8 +17114,14 @@ async function saveLocationFastInboundV140(x,qty,text,warehouse){
   const rows=(sharedCache.locations[part]||[]);
   const same=rows.find(r=>String(r.room||'').trim()===warehouse&&String(r.detail||'').trim()===text);
   const rec={room:warehouse,zone:'',level:'',height:'',storage:'',detail:text,qty:Number(qty),note:noteWithDivision('택배 빠른입고 위치등록',getItemDivision(part)),is_primary:rows.length===0};
-  if(same){rec.qty=Number(same.qty||0)+Number(qty);rec.is_primary=!!same.is_primary;await sharedSaveMultiLocation(part,{...same,...rec},same.id)}
-  else await sharedSaveMultiLocation(part,rec,null);
+  if(same){
+    rec.qty=Number(same.qty||0)+Number(qty);
+    rec.is_primary=!!same.is_primary;
+    await sharedSaveMultiLocation(part,{...same,...rec},same.id);
+  }else{
+    await sharedSaveMultiLocation(part,rec,null);
+  }
+  return {label:[warehouse,text].filter(Boolean).join(' '),balance:Number(rec.qty||qty)};
 }
 
 async function saveFastInboundV140(){
@@ -17152,7 +17158,9 @@ async function saveFastInboundV140(){
     }
     try{await allocateInboundToOpenOrders(x,qty,'관리자')}catch(e){}
     if(loc){
-      await saveLocationFastInboundV140(x,qty,loc,warehouse);
+      const locResultV169=await saveLocationFastInboundV140(x,qty,loc,warehouse);
+      await recordLocationMovementV169('IN',x,qty,locResultV169?.label||[warehouse,loc].filter(Boolean).join(' '),locResultV169?.balance||qty);
+      await loadLocationMovementsV169([x.part]);
       if(typeof loadSharedLocations==='function')await loadSharedLocations();
       renderLocationQtyBoxV166('fiLocationQtyV166',x);
     }
@@ -17281,6 +17289,57 @@ function stockFastOutboundV143(x){
   return 0;
 }
 
+
+async function recordLocationMovementV169(type,x,qty,locationLabel,balance){
+  if(!sharedReady||!sharedDb||!x)return;
+  try{
+    const now=new Date().toISOString();
+    const koDate=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
+    const payload={
+      part_no:String(x.part||''),
+      item_name:x.name||'',
+      movement_type:type,
+      qty:Number(qty||0),
+      location:String(locationLabel||''),
+      location_balance:Number(balance||0),
+      date:koDate,
+      created_at:now
+    };
+    const {error}=await sharedDb.from('wms_admin_notifications').insert({
+      type:'LOCATION_QTY_MOVEMENT_V169',
+      title:`${type==='IN'?'입고':'출고'} · ${x.part}`,
+      message:`${locationLabel} · ${type==='IN'?'+':'-'}${Number(qty).toLocaleString()} · 현재 ${Number(balance).toLocaleString()}`,
+      payload,
+      created_at:now
+    });
+    if(error)throw error;
+  }catch(e){console.warn('위치별 입출고 기록 저장 실패',e)}
+}
+
+function latestLocationMovementV169(part,label){
+  try{
+    const rows=(window.__locationMovementV169||[]).filter(r=>{
+      const p=r.payload||{};
+      return String(p.part_no||'')===String(part||'') &&
+             String(p.location||'').trim()===String(label||'').trim();
+    });
+    rows.sort((a,b)=>new Date(b.created_at||b.payload?.created_at||0)-new Date(a.created_at||a.payload?.created_at||0));
+    return rows[0]||null;
+  }catch(e){return null}
+}
+async function loadLocationMovementsV169(parts){
+  if(!sharedReady||!sharedDb)return;
+  try{
+    const {data,error}=await sharedDb.from('wms_admin_notifications')
+      .select('type,payload,created_at')
+      .eq('type','LOCATION_QTY_MOVEMENT_V169')
+      .order('created_at',{ascending:false})
+      .limit(500);
+    if(error)throw error;
+    window.__locationMovementV169=data||[];
+  }catch(e){console.warn('위치별 입출고 기록 불러오기 실패',e)}
+}
+
 function locationQtyRowsV166(x){
   if(!x)return [];
   try{
@@ -17293,7 +17352,14 @@ function locationQtyHtmlV166(x){
   return locs.map((l,i)=>{
     const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')||'위치 미등록';
     const qty=(l.qty===0||l.qty)?Number(l.qty).toLocaleString():'-';
-    return `<div class="loc166-row">${i+1}자재위치: ${escHtml(text)} · 수량 ${qty}</div>`;
+    const mv=latestLocationMovementV169(x.part,text);
+    const p=mv?.payload||{};
+    const date=p.date||'';
+    const movement=p.movement_type==='IN'
+      ? `입고 +${Number(p.qty||0).toLocaleString()}`
+      : (p.movement_type==='OUT'?`출고 -${Number(p.qty||0).toLocaleString()}`:'');
+    const extra=(date||movement)?` <span class="loc169-meta">· ${escHtml(date)}${movement?` · ${movement}`:''} · 현재고 ${qty}</span>`:'';
+    return `<div class="loc166-row">${i+1}자재위치: ${escHtml(text)} · 수량 ${qty}${extra}</div>`;
   }).join('');
 }
 function renderLocationQtyBoxV166(targetId,x){
@@ -17512,6 +17578,10 @@ async function saveFastOutboundV143(){
   try{
     /* 선택 위치가 있으면 실제 위치 DB 수량부터 차감하고 저장 검증 */
     const locationResult=await deductOutboundLocationQtyV158(x,qty,selectedLocationRecord);
+    if(locationResult?.selected){
+      await recordLocationMovementV169('OUT',x,qty,locationResult.label,locationResult.after);
+      await loadLocationMovementsV169([x.part]);
+    }
 
     /* 위치 저장 성공 후 공용 총재고/출고이력을 반영 */
     await sharedAddMovement('OUT',x,qty,person);
@@ -17629,7 +17699,7 @@ function stockAdminLocationV144(x){
   }catch(e){}
   return Number(x.erpQty||0);
 }
-function searchAdminLocationV144(){
+async function searchAdminLocationV144(){
   const raw=(document.getElementById('alQueryV144')?.value||'').trim();
   const q=raw.toLowerCase(),status=document.getElementById('alStatusV144'),out=document.getElementById('alResultsV144');
   if(!q){status.textContent='품번 또는 품명을 입력하세요.';out.innerHTML='';return}
@@ -17704,6 +17774,7 @@ window.search=async function(){
   let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
 
   if(count)count.textContent=rows.length?`검색결과 ${rows.length}건`:'검색 결과가 없습니다.';
+  await loadLocationMovementsV169(rows.map(x=>x.part));
 
   /* 기존에 정상 표시되던 일반검색 화면은 그대로 두고,
      검색된 품목의 공용 현재고/자재위치 수량만 DB에서 최신값으로 갱신 */
@@ -17744,8 +17815,13 @@ window.search=async function(){
     const locHtml=locs.length
       ? locs.map((l,i)=>{
           const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ');
-          const qty=(l.qty===0||l.qty)?` · 수량 ${Number(l.qty).toLocaleString()}`:'';
-          return `<div class="v147-public-loc">${i+1}자재위치: ${esc(text||'위치 미등록')}${qty}</div>`;
+          const qtyNum=(l.qty===0||l.qty)?Number(l.qty):null;
+          const qty=qtyNum!==null?` · 수량 ${qtyNum.toLocaleString()}`:'';
+          const mv=latestLocationMovementV169(x.part,text);
+          const p=mv?.payload||{};
+          const movement=p.movement_type==='IN'?`입고 +${Number(p.qty||0).toLocaleString()}`:(p.movement_type==='OUT'?`출고 -${Number(p.qty||0).toLocaleString()}`:'');
+          const meta=(p.date||movement)?` · ${esc(p.date||'')}${movement?` · ${movement}`:''}${qtyNum!==null?` · 현재고 ${qtyNum.toLocaleString()}`:''}`:'';
+          return `<div class="v147-public-loc">${i+1}자재위치: ${esc(text||'위치 미등록')}${qty}${meta}</div>`;
         }).join('')
       : `<div class="v147-public-empty">위치 미등록</div>`;
 
@@ -17769,5 +17845,9 @@ window.search=async function(){
 .loc166-box{margin:8px 0}
 .loc166-row{margin-top:6px;padding:9px 11px;border-radius:8px;background:#f7f4fb;color:#4b2e78;font-size:14px;font-weight:1000}
 #adminLocationV144 .al144-loc{background:#f7f4fb!important;color:#4b2e78!important;font-weight:1000!important}
+</style>
+
+<style id="location-movement-v169-style">
+.loc169-meta{font-size:13px;font-weight:900;color:#8a3b63}
 </style>
 </body></html>
