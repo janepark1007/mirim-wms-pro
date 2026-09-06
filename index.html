@@ -5296,15 +5296,25 @@ function search(){
         </div>` : '');
 
    const parkLocationWorker=(!isAdmin && String(currentWorker?.name||'').trim()==='박향숙');
-   const locEdit=(isAdmin||parkLocationWorker)?locationEditor(x,i):'';
+   // V130: 자재위치 수정은 위치관리 화면에서만 표시. 입고/출고/검색에는 절대 끼어들지 않음.
+   const locEdit=(mode==='location' && (isAdmin||parkLocationWorker))?locationEditor(x,i):'';
    const inbound=mode==='inbound'
-     ? `<div class="outgrid">
-          <input id="in_worker_${i}" value="${esc(currentWorker?.name||(isAdmin?'관리자':''))}" readonly placeholder="등록자">
-          <input id="in_qty_${i}" type="number" inputmode="numeric" placeholder="입고수량">
-        </div>
-        <div class="approval-note worker-direct-save-note">✅ 작업자 직접 입고등록 · 공용 DB 자동반영</div>
-        <button class="primary" style="width:100%;min-height:50px;margin-top:9px"
-          onclick='saveIn(${JSON.stringify(x)},${i})'>📥 입고 저장</button>`
+     ? `<div class="admin-inbound-check-v130">
+          <label class="admin-inbound-confirm-v130">
+            <input id="in_check_${i}" type="checkbox"
+              onchange="toggleInboundSaveV130(${i})">
+            <span>📦 택배/자재 실물 확인 완료</span>
+          </label>
+          <div class="outgrid">
+            <input id="in_worker_${i}" value="${esc(currentWorker?.name||(isAdmin?'관리자':''))}" readonly placeholder="등록자">
+            <input id="in_qty_${i}" type="number" inputmode="numeric" min="1" placeholder="입고수량"
+              oninput="toggleInboundSaveV130(${i})">
+          </div>
+          <div class="approval-note worker-direct-save-note">확인 체크 → 입고수량 입력 → 저장 · 공용 DB 자동반영</div>
+          <button id="in_save_${i}" class="primary admin-inbound-save-v130" disabled
+            style="width:100%;min-height:54px;margin-top:9px"
+            onclick='saveInV130(${JSON.stringify(x)},${i})'>📥 입고 저장</button>
+        </div>`
      : '';
 
    const outbound=mode==='outbound'
@@ -17232,5 +17242,250 @@ setTimeout(()=>{
     bindAdminMainRolesV129();
   }
 },100);
+</script>
+
+<style id="emergency-workflow-v130-style">
+/* V130 긴급 업무복구: 입고 화면과 도면관리만 명확히 분리 */
+body.admin-view #work .admin-inbound-check-v130{
+  margin-top:12px!important;
+  padding:14px!important;
+  border:2px solid #bfe2cc!important;
+  border-radius:14px!important;
+  background:#f3fbf6!important;
+}
+body.admin-view #work .admin-inbound-confirm-v130{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-height:48px!important;
+  margin-bottom:10px!important;
+  padding:10px 12px!important;
+  border:1px solid #b9dcc6!important;
+  border-radius:11px!important;
+  background:#fff!important;
+  color:#155d3a!important;
+  font-size:16px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+body.admin-view #work .admin-inbound-confirm-v130 input{
+  width:24px!important;
+  height:24px!important;
+  accent-color:#087a43!important;
+}
+body.admin-view #work .admin-inbound-save-v130:disabled{
+  opacity:.42!important;
+  cursor:not-allowed!important;
+  filter:grayscale(.25)!important;
+}
+body.admin-view #work .admin-inbound-save-v130:not(:disabled){
+  background:#087a43!important;
+  color:#fff!important;
+}
+
+/* 입고/출고 화면에는 위치수정 UI가 절대 보이지 않음 */
+body.admin-view:not(.admin-location-edit-v129) #work .location-editor,
+body.admin-view:not(.admin-location-edit-v129) #work [class*="location-editor"],
+body.admin-view:not(.admin-location-edit-v129) #work .location-edit{
+  display:none!important;
+}
+
+/* NPP 생산도면 관리 화면은 관리자에서 항상 단독 표시 */
+body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  position:relative!important;
+  z-index:20!important;
+}
+body.admin-view.npp-admin-open-v113 #adminMainMenuV125,
+body.admin-view.npp-admin-open-v113 #adminMainV123,
+body.admin-view.npp-admin-open-v113 #adminMainMenuV124{
+  display:none!important;
+}
+.npp-admin-title-v113::after{
+  content:" · 생산도면 관리";
+  font-size:.72em;
+  color:#7863b5;
+}
+.npp-save-status-v130{
+  display:none;
+  margin:8px 0 0;
+  padding:9px 12px;
+  border-radius:9px;
+  background:#eaf8ef;
+  color:#126a40;
+  font-weight:1000;
+}
+.npp-save-status-v130.show{display:block}
+</style>
+
+<script id="emergency-workflow-v130-script">
+/* ---------- 택배 자재 입고 ---------- */
+function toggleInboundSaveV130(i){
+  const check=document.getElementById('in_check_'+i);
+  const qty=document.getElementById('in_qty_'+i);
+  const btn=document.getElementById('in_save_'+i);
+  if(!btn)return;
+  btn.disabled=!(check?.checked && Number(qty?.value)>0);
+}
+
+async function saveInV130(x,i){
+  const check=document.getElementById('in_check_'+i);
+  const qty=document.getElementById('in_qty_'+i);
+
+  if(!check?.checked){
+    alert('먼저 택배/자재 실물을 확인하고 체크해 주세요.');
+    return;
+  }
+  if(!qty || Number(qty.value)<=0){
+    alert('입고수량을 입력해 주세요.');
+    qty?.focus();
+    return;
+  }
+
+  /* 기존 검증·공용DB 반영·주문자동대조 로직을 그대로 사용 */
+  await saveIn(x,i);
+}
+
+/* 관리자 빠른입고는 작업화면만 열고 다른 관리자 패널이 섞이지 않게 정리 */
+function openInboundWorkV130(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+  window.__adminRouteAwayV128=true;
+  document.body.classList.remove(
+    'admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus',
+    'npp-admin-open-v113','other-storage-open-v50','admin-location-edit-v129'
+  );
+
+  try{hideLocationEditorV129?.();}catch(e){}
+
+  const task=document.getElementById('adminTaskFocusPanel');
+  if(task)task.classList.add('hidden');
+  const npp=document.getElementById('nppAdminPanelV113');
+  if(npp)npp.style.removeProperty('display');
+
+  openMode('inbound');
+
+  const title=document.getElementById('title');
+  if(title)title.textContent='📦 택배 자재 입고등록';
+
+  setTimeout(()=>{
+    const q=document.getElementById('q');
+    if(q){
+      q.placeholder='품번 또는 품명 검색';
+      q.focus();
+    }
+  },60);
+}
+
+/* ---------- 생산/NPP 도면관리 ---------- */
+function showNppSaveStatusV130(msg){
+  let el=document.getElementById('nppSaveStatusV130');
+  if(!el){
+    const head=document.querySelector('#nppAdminPanelV113 .npp-admin-head-v113');
+    if(!head)return;
+    el=document.createElement('div');
+    el.id='nppSaveStatusV130';
+    el.className='npp-save-status-v130';
+    head.insertAdjacentElement('afterend',el);
+  }
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(window.__nppSaveTimerV130);
+  window.__nppSaveTimerV130=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+function openProductionDrawingV130(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+  window.__adminRouteAwayV128=true;
+  document.body.classList.remove(
+    'admin-mainmenu-open-v125','admin-task-focus','admin-shortcut-focus',
+    'other-storage-open-v50','admin-location-edit-v129'
+  );
+  try{hideLocationEditorV129?.();}catch(e){}
+
+  openNppAdminV113();
+
+  /* 구버전 관리자 화면이 다시 덮는 것을 방지 */
+  document.body.classList.add('npp-admin-open-v113');
+  const panel=document.getElementById('nppAdminPanelV113');
+  if(panel){
+    panel.style.setProperty('display','block','important');
+    panel.style.setProperty('visibility','visible','important');
+  }
+  setTimeout(()=>{
+    try{renderNppAdminV113();}catch(e){}
+    document.getElementById('nppAdminQv113')?.focus();
+  },50);
+}
+
+/* NPP 저장은 기존 206건 데이터 구조를 유지하면서 확실한 저장완료 피드백 */
+const __saveNppBeforeV130=window.saveNppRowV113;
+if(typeof __saveNppBeforeV130==='function'){
+  window.saveNppRowV113=function(findNo){
+    const r=__saveNppBeforeV130.apply(this,arguments);
+    showNppSaveStatusV130('✅ 도면 보관위치/상태 저장 완료 · 찾기번호 '+findNo);
+    return r;
+  };
+}
+
+/* 관리자 메인 두 핵심 버튼은 V130 안전 업무흐름으로 직접 연결 */
+function bindEmergencyMainV130(){
+  const box=document.getElementById('adminMainMenuV125');
+  if(!box)return;
+
+  const inbound=box.querySelector('.admin127-in');
+  if(inbound){
+    inbound.removeAttribute('onclick');
+    inbound.removeAttribute('data-admin-role-v129');
+    inbound.onclick=e=>{
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      openInboundWorkV130();
+      return false;
+    };
+  }
+
+  const npp=box.querySelector('.admin127-npp');
+  if(npp){
+    npp.removeAttribute('onclick');
+    npp.removeAttribute('data-admin-role-v129');
+    npp.onclick=e=>{
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      openProductionDrawingV130();
+      return false;
+    };
+  }
+}
+
+/* V129 캡처 핸들러보다 먼저 잡기 위해 관리자 메인 전체에서 두 버튼만 최우선 분기 */
+document.addEventListener('click',e=>{
+  if(!isAdmin)return;
+  const btn=e.target.closest('#adminMainMenuV125 .admin127-in, #adminMainMenuV125 .admin127-npp');
+  if(!btn)return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+
+  if(btn.classList.contains('admin127-in'))openInboundWorkV130();
+  else openProductionDrawingV130();
+},true);
+
+/* 관리자 메인 재렌더 때마다 다시 연결 */
+const __buildAdminMainBeforeV130=window.buildAdminMainV127;
+if(typeof __buildAdminMainBeforeV130==='function'){
+  window.buildAdminMainV127=function(){
+    const r=__buildAdminMainBeforeV130.apply(this,arguments);
+    setTimeout(bindEmergencyMainV130,20);
+    return r;
+  };
+}
+
+setTimeout(()=>{
+  if(isAdmin)bindEmergencyMainV130();
+},120);
 </script>
 </body></html>
