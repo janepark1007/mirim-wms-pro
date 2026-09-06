@@ -1774,6 +1774,44 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="location-direct-colors-v231">
+/* 실제 렌더링 단계에서 직접 적용: 빠른입고 / 빠른출고 / 일반 자재위치검색 */
+.loc-direct-v231{
+  display:inline-block!important;
+  box-sizing:border-box!important;
+  border-radius:8px!important;
+  padding:6px 10px!important;
+  margin:3px 4px!important;
+  font-weight:1000!important;
+  line-height:1.35!important;
+}
+.loc1-direct-v231{
+  background:#ffe1e4!important;
+  color:#b9141a!important;
+  border:1px solid #ef9da3!important;
+}
+.loc2-direct-v231{
+  background:#ddf6e5!important;
+  color:#087a43!important;
+  border:1px solid #8fd0a9!important;
+}
+.loc3-direct-v231{
+  background:#ffe45c!important;
+  color:#5f4700!important;
+  border:1px solid #caa900!important;
+}
+@media(max-width:768px){
+  #fiPickedV140 .loc-direct-v231,
+  #foPickedV143 .loc-direct-v231,
+  #results .loc-direct-v231{
+    display:block!important;
+    width:100%!important;
+    margin:6px 0!important;
+    padding:8px 10px!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -17990,7 +18028,7 @@ function searchFastInboundV140(focusQty=false){
     if(inp)inp.value=x.part||'';
     if(out)out.innerHTML='';
     if(picked){
-      picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+      picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${locationColorHtmlV231(x)}</span>`;
     }
 
     try{showStockFastInboundV149(x)}catch(e){}
@@ -18005,7 +18043,7 @@ function searchFastInboundV140(focusQty=false){
         try{renderLocationQtyBoxV166('fiLocationQtyV166',x)}catch(e){}
         const p=document.getElementById('fiPickedV140');
         if(p&&window.__fiSelectedV140===x){
-          p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+          p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${locationColorHtmlV231(x)}</span>`;
         }
       }).catch(()=>{});
     }catch(e){}
@@ -18021,7 +18059,7 @@ function searchFastInboundV140(focusQty=false){
 
   if(picked)picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
   if(out){
-    out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
+    out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${locationColorHtmlV231(x)}</div></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
   }
 }
 
@@ -18034,7 +18072,7 @@ function selectFastInboundV140(i){
   renderFastInboundPhotoV142();
   loadRecentInboundV183(x.part);
 
-  document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+  document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${locationColorHtmlV231(x)}</span>`;
   document.getElementById('fiResultsV140').innerHTML='';
 
   getLatestWarehouseStockV156(x.part).then(n=>{
@@ -18042,7 +18080,7 @@ function selectFastInboundV140(i){
     if(el&&window.__fiSelectedV140===x)el.textContent=`현 창고 재고 ${Number(n).toLocaleString()}`;
     renderLocationQtyBoxV166('fiLocationQtyV166',x);
     const p=document.getElementById('fiPickedV140');
-    if(p&&window.__fiSelectedV140===x)p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+    if(p&&window.__fiSelectedV140===x)p.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(n).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${locationColorHtmlV231(x)}</span>`;
   }).catch(()=>{});
 
   document.getElementById('fiQtyV140')?.focus();
@@ -18440,16 +18478,16 @@ function searchFastOutboundV143(focusQty=false){
   window.__foRowsV143=rows;
   if(rows.length===1){
     const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();loadRecentOutboundV184(x.part);
-    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${locationColorHtmlV231(x)}</span>`;
     out.innerHTML='';if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
   }
   picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
-  out.innerHTML=rows.map((x,i)=>`<div class="fo143-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</div></div><button type="button" onclick="selectFastOutboundV143(${i})">선택</button></div>`).join('');
+  out.innerHTML=rows.map((x,i)=>`<div class="fo143-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small><div style="margin-top:5px;font-size:12px;font-weight:1000;color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</div><div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${locationColorHtmlV231(x)}</div></div><button type="button" onclick="selectFastOutboundV143(${i})">선택</button></div>`).join('');
 }
 function selectFastOutboundV143(i){
   const x=window.__foRowsV143[i];if(!x)return;
   window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();loadRecentOutboundV184(x.part);
-  document.getElementById('foPickedV143').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
+  document.getElementById('foPickedV143').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${locationColorHtmlV231(x)}</span>`;
   document.getElementById('foResultsV143').innerHTML='';document.getElementById('foQtyV143')?.focus();
 }
 function syncFastOutboundV143(){
@@ -18878,7 +18916,7 @@ window.search=function(){
           const p=mv?.payload||{};
           const movement=p.movement_type==='IN'?`입고 +${Number(p.qty||0).toLocaleString()}`:(p.movement_type==='OUT'?`출고 -${Number(p.qty||0).toLocaleString()}`:'');
           const meta=(p.date||movement)?` · ${esc(p.date||'')}${movement?` · ${movement}`:''}${qtyNum!==null?` · 현재고 ${qtyNum.toLocaleString()}`:''}`:'';
-          return `<div class="v147-public-loc">${i+1}자재위치: ${esc(text||'위치 미등록')}${qty}${meta}</div>`;
+          return `<div class="v147-public-loc loc-direct-v231 loc${i+1}-direct-v231">${i+1}자재위치: ${esc(text||'위치 미등록')}${qty}${meta}</div>`;
         }).join('')
       : `<div class="v147-public-empty">위치 미등록</div>`;
 
@@ -19706,5 +19744,19 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot230,{once:true});
   else boot230();
 })();
+</script>
+
+<script id="location-direct-render-v231">
+function locationColorHtmlV231(x){
+  const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+  if(!locs.length)return '<span>위치 미등록</span>';
+  return locs.map((l,i)=>{
+    const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ');
+    if(!text)return '';
+    const qty=Number(l.qty||0).toLocaleString();
+    const n=i+1;
+    return `<span class="loc-direct-v231 loc${n}-direct-v231">${n}자재위치: ${esc(text)} · 수량 ${qty}</span>`;
+  }).filter(Boolean).join(' ');
+}
 </script>
 </body></html>
