@@ -5587,6 +5587,58 @@ async function shareOrderRequest(x,i){
   }
 }
 </style>
+
+<style id="pc-search-text-extra-large-v209">
+@media (min-width:769px){
+  #results{
+    font-size:24px!important;
+    line-height:1.65!important;
+  }
+  #results *{
+    font-size:22px!important;
+    line-height:1.6!important;
+  }
+  #results b,
+  #results strong{
+    font-size:24px!important;
+    font-weight:1000!important;
+  }
+
+  /* 품번/품명 */
+  #results .part,
+  #results [class*="part"]{
+    font-size:28px!important;
+    font-weight:1000!important;
+  }
+  #results .name,
+  #results [class*="name"]{
+    font-size:23px!important;
+    font-weight:900!important;
+  }
+
+  /* 1·2·3 자재위치 */
+  #results [class*="loc"],
+  #results [class*="location"]{
+    font-size:23px!important;
+    font-weight:900!important;
+    line-height:1.65!important;
+  }
+
+  /* 최근 입출고 */
+  #results [id*="recent"],
+  #results [id*="recent"] *,
+  #results [class*="recent"],
+  #results [class*="recent"] *{
+    font-size:22px!important;
+    line-height:1.65!important;
+  }
+
+  #count{
+    font-size:22px!important;
+    font-weight:1000!important;
+  }
+}
+</style>
 </head>
      <body><h2>미림 자재 문의 · ${type}</h2><p>문의내용은 클립보드에 복사되었습니다. 사진과 함께 카카오톡 PC의 <b>미림 자재 문의</b> 방으로 보내세요.</p>
      <img src="${photoUrl}" alt="품목 사진"><pre>${safeMsg}</pre></body></html>`);
