@@ -17219,6 +17219,45 @@ function fillOutboundLocationSelectV150(x){
     sel.appendChild(opt);
   });
 }
+
+function renderFastOutboundSelectedV153(x){
+  const picked=document.getElementById('foPickedV143');
+  if(!picked)return;
+  if(!x){
+    picked.innerHTML='<div style="font-weight:900">품목을 검색하세요.</div>';
+    return;
+  }
+  let stock=0;
+  try{ stock=stockFastOutboundV143(x); }catch(e){}
+  const photo=(typeof getPhoto==='function')?getPhoto(x.part):'';
+  const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+  const locHtml=locs.length?locs.map((l,i)=>{
+    const text=[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')||'위치 미등록';
+    const qty=(l.qty===0||l.qty)?` · 수량 ${Number(l.qty).toLocaleString()}`:'';
+    return `<div class="fo153-loc">${i+1}자재위치: ${escHtml(text)}${qty}</div>`;
+  }).join(''):'<div class="fo153-loc">자재위치: 미등록</div>';
+
+  picked.innerHTML=`
+    <div class="fo153-card">
+      <div class="fo153-part">${escHtml(x.part||'')}</div>
+      <div class="fo153-name">${escHtml(x.name||'')}</div>
+      ${photo?`<img class="fo153-img" src="${photo}" alt="품목사진">`:''}
+      <div class="fo153-stock">현 창고 재고: ${Number(stock||0).toLocaleString()}</div>
+      ${locHtml}
+      <div class="fo153-entry">
+        <label>출고수량</label>
+        <input id="foQtyMirrorV153" type="number" inputmode="numeric" min="1" placeholder="출고수량">
+        <button type="button" onclick="document.getElementById('foQtyV143').value=document.getElementById('foQtyMirrorV153').value||'';document.getElementById('foPersonV143').focus();">수량 적용</button>
+      </div>
+    </div>`;
+  const mirror=document.getElementById('foQtyMirrorV153');
+  const main=document.getElementById('foQtyV143');
+  if(mirror&&main){
+    mirror.value=main.value||'';
+    mirror.addEventListener('input',()=>{main.value=mirror.value;});
+  }
+}
+
 function renderFastOutboundPhotoV143(){
   const box=document.getElementById('foPhotoPreviewV143'),btn=document.getElementById('foPhotoBtnV143'),x=window.__foSelectedV143;
   if(!box||!btn)return;
@@ -17238,13 +17277,13 @@ function searchFastOutboundV143(focusQty=false){
   const raw=(document.getElementById('foPartV143')?.value||'').trim(),q=raw.toLowerCase();
   const picked=document.getElementById('foPickedV143'),out=document.getElementById('foResultsV143');
   window.__foSelectedV143=null;
-  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';showStockQtyFastOutboundV149(null);fillOutboundLocationSelectV150(null);renderFastOutboundPhotoV143();return}
+  if(!q){picked.textContent='품목을 검색하세요.';out.innerHTML='';showStockQtyFastOutboundV149(null);fillOutboundLocationSelectV150(null);renderFastOutboundSelectedV153(null);renderFastOutboundPhotoV143();return}
   const all=itemsFastOutboundV143();
   let rows=all.filter(x=>String(x.part||'').trim().toLowerCase()===q);
   if(!rows.length)rows=all.filter(x=>String(x.part||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q)).slice(0,15);
   window.__foRowsV143=rows;
   if(rows.length===1){
-    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();
+    const x=rows[0];window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundSelectedV153(x);renderFastOutboundPhotoV143();
     picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
     out.innerHTML='';if(focusQty)setTimeout(()=>document.getElementById('foQtyV143')?.focus(),20);return;
   }
@@ -17253,7 +17292,7 @@ function searchFastOutboundV143(focusQty=false){
 }
 function selectFastOutboundV143(i){
   const x=window.__foRowsV143[i];if(!x)return;
-  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundPhotoV143();
+  window.__foSelectedV143=x;document.getElementById('foPartV143').value=x.part||'';showStockQtyFastOutboundV149(x);fillOutboundLocationSelectV150(x);renderFastOutboundSelectedV153(x);renderFastOutboundPhotoV143();
   document.getElementById('foPickedV143').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#9a2b2b">현재고: ${stockFastOutboundV143(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locTextFastOutboundV143(x))}</span>`;
   document.getElementById('foResultsV143').innerHTML='';document.getElementById('foQtyV143')?.focus();
 }
@@ -17302,6 +17341,7 @@ async function saveFastOutboundV143(){
     document.getElementById('foPersonV143').value='';
     document.getElementById('foLocV143').value='';
     fillOutboundLocationSelectV150(null);
+    renderFastOutboundSelectedV153(null);
     document.getElementById('foPickedV143').textContent='다음 출고 품목을 입력하세요.';
     showStockQtyFastOutboundV149(null);
     document.getElementById('foResultsV143').innerHTML='';
@@ -17502,4 +17542,19 @@ window.search=function(){
   }).join('');
 };
 </script>
+
+<style id="fast-outbound-general-look-v153">
+#fastOutboundV143 #foPickedV143{padding:0!important;background:transparent!important;border:0!important}
+.fo153-card{margin-top:10px;border:1px solid #d9d6e6;border-radius:12px;background:#fff;padding:14px;box-sizing:border-box}
+.fo153-part{font-size:20px;font-weight:1000;color:#292337}
+.fo153-name{margin-top:4px;font-size:15px;font-weight:900;color:#666170}
+.fo153-img{display:block;width:72px;height:96px;object-fit:cover;border-radius:10px;margin:10px 0}
+.fo153-stock{margin:8px 0;padding:9px 11px;border-radius:8px;background:#eef9f2;color:#075f37;font-size:16px;font-weight:1000}
+.fo153-loc{margin-top:6px;padding:9px 11px;border-radius:8px;background:#f6f3fb;color:#49317a;font-size:15px;font-weight:1000}
+.fo153-entry{display:grid;grid-template-columns:auto minmax(120px,180px) 100px;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid #eee}
+.fo153-entry label{font-weight:1000}
+.fo153-entry input{min-height:46px;padding:8px 10px;border:2px solid #d9d1e6;border-radius:9px;font-size:17px;font-weight:900}
+.fo153-entry button{min-height:46px;border:0;border-radius:9px;background:#8f2440;color:#fff;font-weight:1000}
+@media(max-width:720px){.fo153-entry{grid-template-columns:1fr}.fo153-entry button{width:100%}}
+</style>
 </body></html>
