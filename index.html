@@ -16899,7 +16899,7 @@ function ensureFastInboundV140(){
   p.id='fastInboundV140';
   p.innerHTML=`
     <div class="fi140-head">
-      <div><h2>📦 택배 빠른입고</h2><p>택배 정리하면서 바로 입력하고 공용 DB에 저장합니다.</p></div>
+      <div><h2>📥 창고 빠른입고</h2><p>창고에서 품목 확인 후 바로 입고합니다.</p></div>
       <button class="fi140-home" type="button" onclick="closeFastInboundV140()">⌂ 관리자 메인</button>
     </div>
     <div class="fi140-form">
@@ -17844,5 +17844,84 @@ window.search=function(){
 .rh176-date{color:#666;font-weight:800}.rh176-type{font-weight:1000}.rh176-type.in{color:#087c58}.rh176-type.out{color:#b52c3b}
 .rh176-empty,.rh176-loading{padding:8px;color:#888;font-size:12px;font-weight:800}
 @media(max-width:720px){.rh176-row{grid-template-columns:1fr 40px 52px}.rh176-row span:last-child{grid-column:1/-1}}
+</style>
+
+<style id="fast-inbound-like-outbound-v181-style">
+/* V181: 빠른입고 화면만 창고 빠른출고와 같은 화면 구조/크기로 맞춤 */
+body.admin-view.fast-inbound-v140 #fastInboundV140{
+  background:#f7fbf8!important;
+}
+.fi140-head{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:14px!important;
+  background:#fff!important;
+  border:1px solid #d8e7df!important;
+  border-radius:14px!important;
+}
+.fi140-head h2{margin:0!important;font-size:22px!important;color:#12643d!important}
+.fi140-head p{margin:4px 0 0!important;font-size:12px!important;color:#65746c!important;font-weight:800!important}
+.fi140-home{
+  min-height:42px!important;padding:8px 12px!important;
+  border:1px solid #cbdad2!important;border-radius:10px!important;
+  background:#fff!important;font-weight:1000!important;
+}
+.fi140-form{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.35fr) 125px 130px 165px 165px minmax(0,.9fr) 130px!important;
+  gap:8px!important;margin-top:10px!important;padding:14px!important;
+  background:#fff!important;border:2px solid #b9ddc8!important;border-radius:14px!important;
+}
+.fi140-form input,.fi140-form select{
+  min-height:54px!important;padding:10px 12px!important;
+  border:2px solid #cedfd5!important;border-radius:10px!important;
+  font-size:17px!important;font-weight:900!important;box-sizing:border-box!important;background:#fff!important;
+}
+#fiStockV149{
+  min-height:54px!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:10px 8px!important;border:2px solid #d7dce8!important;border-radius:10px!important;
+  background:#f7f9fc!important;color:#34425a!important;font-size:15px!important;font-weight:1000!important;
+  box-sizing:border-box!important;
+}
+.fi140-save{
+  min-height:54px!important;border:0!important;border-radius:10px!important;
+  background:#11834d!important;color:#fff!important;font-size:16px!important;font-weight:1000!important;
+}
+.fi140-picked,.fi140-status{
+  margin-top:9px!important;padding:9px 11px!important;border-radius:9px!important;
+  background:#fff!important;border:1px solid #dce7e1!important;font-size:13px!important;font-weight:900!important;
+}
+/* 출고 화면처럼 선택행에 위치별 수량이 보이므로 별도 중복 위치박스는 숨김 */
+body.fast-inbound-v140 #fiLocationQtyV166{display:none!important}
+.fi142-photo-box{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  margin-top:9px!important;padding:10px 11px!important;background:#fff!important;
+  border:1px solid #dce7e1!important;border-radius:10px!important;
+}
+.fi142-photo-preview{flex:1!important;min-width:0!important;font-size:12px!important;font-weight:900!important;color:#5c6861!important}
+.fi142-photo-preview img{display:block!important;max-width:110px!important;max-height:90px!important;object-fit:contain!important;border-radius:8px!important;margin-top:6px!important}
+.fi142-photo-box button{
+  min-height:42px!important;padding:8px 12px!important;border:0!important;border-radius:9px!important;
+  background:#ece7f8!important;color:#514078!important;font-weight:1000!important;
+}
+.fi140-results{display:grid!important;gap:7px!important;margin-top:8px!important}
+.fi140-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr) 100px!important;gap:8px!important;align-items:center!important;
+  padding:9px 11px!important;background:#fff!important;border:1px solid #dce7e1!important;border-radius:10px!important;
+}
+.fi140-row button{min-height:38px!important;border:0!important;border-radius:8px!important;background:#e3f2e9!important;color:#155c38!important;font-weight:1000!important}
+
+@media(max-width:720px){
+  .fi140-form{grid-template-columns:1fr 105px!important}
+  .fi140-form #fiStockV149{grid-column:1/2!important}
+  .fi140-form #fiStatementV142,
+  .fi140-form #fiWarehouseV154,
+  .fi140-form #fiLocV140,
+  .fi140-save{grid-column:1/-1!important}
+  .fi142-photo-box{align-items:flex-start!important;flex-direction:column!important}
+  .fi142-photo-box button{width:100%!important}
+}
 </style>
 </body></html>
