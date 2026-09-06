@@ -18193,4 +18193,53 @@ body.admin-view.npp-admin-open-v113 #adminLocationV144{
   },true);
 })();
 </script>
+
+<style id="npp-admin-only-v203-style">
+/* NPP 관리자 화면이 열렸을 때 기존 관리자 메인은 완전히 숨김 */
+body.admin-view.npp-admin-open-v113 main{
+  display:none!important;
+}
+body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+</style>
+<script id="npp-admin-only-v203-script">
+(function(){
+  /* 기존 관리자 메인 지연 타이머가 NPP 화면을 다시 덮는 문제 차단 */
+  const oldOpenAdminMainV203=window.openAdminMainV125;
+  if(typeof oldOpenAdminMainV203==='function'){
+    window.openAdminMainV125=function(){
+      if(document.body.classList.contains('npp-admin-open-v113'))return;
+      return oldOpenAdminMainV203.apply(this,arguments);
+    };
+  }
+
+  const oldOpenNppV203=window.openNppAdminV113;
+  window.openNppAdminV113=function(){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+    document.body.classList.remove(
+      'admin-mainmenu-open-v125',
+      'admin-reference-home',
+      'admin-shortcut-focus',
+      'admin-task-focus',
+      'fast-inbound-v140',
+      'fast-outbound-v143',
+      'admin-location-v144',
+      'other-storage-open-v50'
+    );
+    document.body.classList.add('admin-view','npp-admin-open-v113');
+
+    const panel=document.getElementById('nppAdminPanelV113');
+    if(panel){
+      panel.style.setProperty('display','block','important');
+      panel.style.setProperty('visibility','visible','important');
+      panel.style.setProperty('opacity','1','important');
+    }
+    try{renderNppAdminV113()}catch(e){console.error(e)}
+    try{window.scrollTo(0,0)}catch(e){}
+  };
+})();
+</script>
 </body></html>
