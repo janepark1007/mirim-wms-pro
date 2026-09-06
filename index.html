@@ -17928,4 +17928,60 @@ setTimeout(()=>{
   if(isAdmin)restoreAdminMainV132Fix();
 },180);
 </script>
+
+<style id="v135-quick-button-readability">
+/* V135: V132 관리자 메인의 빠른입고/빠른출고만 가독성 개선
+   - 과한 반짝임/애니메이션 제거
+   - 글자 선명도 강화
+   - 기존 기능/배치/동작은 변경하지 않음
+*/
+body.admin-view #adminMainMenuV125 .admin127-in,
+body.admin-view #adminMainMenuV125 .admin127-out,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound{
+  animation:none!important;
+  transition:none!important;
+  filter:none!important;
+  text-shadow:none!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.08)!important;
+  opacity:1!important;
+  color:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  font-weight:1000!important;
+  letter-spacing:0!important;
+}
+
+body.admin-view #adminMainMenuV125 .admin127-in,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound{
+  background:#087a43!important;
+  border:2px solid #066838!important;
+}
+
+body.admin-view #adminMainMenuV125 .admin127-out,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound{
+  background:#b52c2c!important;
+  border:2px solid #982424!important;
+}
+
+/* 내부 텍스트가 별도 span/div로 구성돼 있어도 전부 선명하게 */
+body.admin-view #adminMainMenuV125 .admin127-in *,
+body.admin-view #adminMainMenuV125 .admin127-out *,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound *,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound *{
+  color:#ffffff!important;
+  -webkit-text-fill-color:#ffffff!important;
+  opacity:1!important;
+  text-shadow:none!important;
+  filter:none!important;
+}
+
+/* hover 때도 깜빡임 없이 살짝 눌리는 정도만 */
+body.admin-view #adminMainMenuV125 .admin127-in:hover,
+body.admin-view #adminMainMenuV125 .admin127-out:hover,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound:hover,
+body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound:hover{
+  transform:translateY(-1px)!important;
+  filter:none!important;
+}
+</style>
 </body></html>
