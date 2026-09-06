@@ -5604,7 +5604,29 @@ async function getLatestWarehouseStockV156(part){
       if(error)throw error;
       const r=(data||[])[0];
       if(r){
-        const n=Number(r.current_stock||0);
+        let n=Number(r.current_stock||0);
+
+        /* 잘못 생성된 0 기준값 복구:
+           입출고 이력이 없는 품목만 등록된 자재위치 수량 합계를 최초 현창고재고로 사용 */
+        const locs=(sharedCache.locations&&sharedCache.locations[p])||[];
+        const locSum=locs.reduce((sum,l)=>sum+Number(l.qty||0),0);
+        const hasMovement=Number((sharedCache.inTotal&&sharedCache.inTotal[p])||0)!==0 ||
+                          Number((sharedCache.outTotal&&sharedCache.outTotal[p])||0)!==0 ||
+                          Number((sharedCache.returnTotal&&sharedCache.returnTotal[p])||0)!==0;
+        if(n===0 && locSum>0 && !hasMovement){
+          const fixTime=new Date().toISOString();
+          const {error:fixErr}=await sharedDb.from('production_inventory_sync').upsert(
+            {part_no:p,current_stock:locSum,updated_at:fixTime},
+            {onConflict:'part_no'}
+          );
+          if(!fixErr){
+            n=locSum;
+            r.updated_at=fixTime;
+          }else{
+            console.warn('현 창고재고 0 기준값 복구 실패',fixErr);
+          }
+        }
+
         sharedCache.stock[p]=n;
         sharedCache.stockUpdated[p]=r.updated_at||'';
         sharedCache.movementDelta[p]=0;
