@@ -1676,11 +1676,43 @@ body.park-location-worker-v63 .erp-only{
 }
 </style>
 
-<style id="mobile-material-location-3colors-v228">
+<style id="mobile-location-colored-boxes-v228">
 @media (max-width:768px){
-  #fiPickedV140 .loc1-v213,#foPickedV143 .loc1-v213{color:#d71920!important;font-weight:1000!important;}
-  #fiPickedV140 .loc2-v213,#foPickedV143 .loc2-v213{color:#087a43!important;font-weight:1000!important;}
-  #fiPickedV140 .loc3-v213,#foPickedV143 .loc3-v213{color:#c28a00!important;font-weight:1000!important;}
+  /* 1자재위치 = 적색 */
+  #fiPickedV140 .loc1-v213,
+  #foPickedV143 .loc1-v213{
+    display:inline-block!important;
+    color:#c9151b!important;
+    background:#ffe5e7!important;
+    border:1px solid #f2a8ad!important;
+    border-radius:7px!important;
+    padding:2px 6px!important;
+    font-weight:1000!important;
+  }
+
+  /* 2자재위치 = 녹색 */
+  #fiPickedV140 .loc2-v213,
+  #foPickedV143 .loc2-v213{
+    display:inline-block!important;
+    color:#087a43!important;
+    background:#e2f7e8!important;
+    border:1px solid #9ed8b5!important;
+    border-radius:7px!important;
+    padding:2px 6px!important;
+    font-weight:1000!important;
+  }
+
+  /* 3자재위치 = 노랑 */
+  #fiPickedV140 .loc3-v213,
+  #foPickedV143 .loc3-v213{
+    display:inline-block!important;
+    color:#6f5200!important;
+    background:#ffe76a!important;
+    border:1px solid #d7b900!important;
+    border-radius:7px!important;
+    padding:2px 6px!important;
+    font-weight:1000!important;
+  }
 }
 </style>
 </head>
