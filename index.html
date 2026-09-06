@@ -17749,12 +17749,26 @@ window.search=function(){
       String(x.part||'').toLowerCase().includes(q) ||
       String(x.name||'').toLowerCase().includes(q)
     );
-    rows.sort((a,b)=>(String(a.part).toLowerCase()===q?-1:0)-(String(b.part).toLowerCase()===q?-1:0));
+    rows.sort((a,b)=>{
+      const ae=String(a.part||'').toLowerCase()===q;
+      const be=String(b.part||'').toLowerCase()===q;
+      return ae===be?0:(ae?-1:1);
+    });
     rows=rows.slice(0,30);
+
+    /* 기존 일반검색에서 정상적으로 찾던 품번은 그대로 살린다.
+       V162 직접DB 렌더가 ITEMS 매칭 실패로 품번을 숨기지 않도록 함. */
+    if(!rows.length){
+      if(typeof oldSearchV162==='function'){
+        return oldSearchV162.apply(this,arguments);
+      }
+      if(count)count.textContent='검색결과 0건';
+      if(out)out.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';
+      return;
+    }
 
     if(count)count.textContent=`검색결과 ${rows.length}건`;
     if(!out)return;
-    if(!rows.length){out.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';return;}
 
     const cards=[];
     for(const x of rows){
