@@ -1596,6 +1596,44 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="npp-lever-number-box-v224">
+#publicDrawingResultsV108 .npp-lever-number-v224{
+  display:inline-block!important;
+  background:#f2c200!important;
+  color:#2f2600!important;
+  border:2px solid #b98f00!important;
+  border-radius:5px!important;
+  padding:3px 8px!important;
+  margin-left:5px!important;
+  font-weight:1000!important;
+  line-height:1.2!important;
+  vertical-align:middle!important;
+}
+</style>
+
+<style id="npp-lever-number-deep-yellow-v225">
+/* 레버파일 표시는 기존 모바일 느낌 유지, 숫자만 PC/모바일 공통 진한 노랑 네모 */
+#publicDrawingResultsV108 .npp-lever-number-v224{
+  display:inline-block!important;
+  background:#e5b800!important;
+  color:#241d00!important;
+  border:2px solid #9f7f00!important;
+  border-radius:5px!important;
+  padding:4px 9px!important;
+  margin-left:5px!important;
+  font-weight:1000!important;
+  line-height:1.2!important;
+  vertical-align:middle!important;
+}
+@media(max-width:768px){
+  #publicDrawingResultsV108 .npp-lever-number-v224{
+    background:#e5b800!important;
+    color:#241d00!important;
+    border-color:#9f7f00!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19254,6 +19292,59 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
 
   const obs=new MutationObserver(mount);
   obs.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+<script id="npp-lever-number-box-v224-script">
+(function(){
+  function splitLeverNumberV224(){
+    const root=document.getElementById('publicDrawingResultsV108');
+    if(!root)return;
+
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode())nodes.push(walker.currentNode);
+
+    nodes.forEach(n=>{
+      const p=n.parentNode;
+      if(!p || p.closest('.npp-lever-number-v224'))return;
+      const s=n.nodeValue||'';
+
+      /* 레버파일 뒤 숫자만 네모 박스로 분리 */
+      const re=/(레버파일)\s*[-_:]?\s*(\d+)/g;
+      if(!re.test(s))return;
+      re.lastIndex=0;
+
+      const frag=document.createDocumentFragment();
+      let last=0,m;
+      while((m=re.exec(s))){
+        if(m.index>last)frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+        frag.appendChild(document.createTextNode(m[1]+' '));
+        const num=document.createElement('span');
+        num.className='npp-lever-number-v224';
+        num.textContent=m[2];
+        frag.appendChild(num);
+        last=re.lastIndex;
+      }
+      if(last<s.length)frag.appendChild(document.createTextNode(s.slice(last)));
+      p.replaceChild(frag,n);
+    });
+  }
+
+  function bootV224(){
+    const root=document.getElementById('publicDrawingResultsV108');
+    if(!root)return;
+    let busy=false;
+    const run=()=>{
+      if(busy)return;
+      busy=true;
+      try{splitLeverNumberV224()}finally{busy=false}
+    };
+    run();
+    new MutationObserver(()=>setTimeout(run,0)).observe(root,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootV224,{once:true});
+  else bootV224();
 })();
 </script>
 </body></html>
