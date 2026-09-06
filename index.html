@@ -16934,6 +16934,8 @@ function ensureFastInboundV140(){
   const part=document.getElementById('fiPartV140');
   const qty=document.getElementById('fiQtyV140');
   part.addEventListener('input',searchFastInboundV140);
+  part.addEventListener('keyup',e=>{if(e.key!=='Enter')searchFastInboundV140(false)});
+  part.addEventListener('change',()=>searchFastInboundV140(false));
   part.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchFastInboundV140(true)}});
   qty.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveFastInboundV140()}});
   return p;
