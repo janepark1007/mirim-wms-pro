@@ -17061,15 +17061,17 @@ async function loadRecentInboundV183(part){
     }catch(e){return escHtml(String(v||''));}
   };
 
+  try{await loadLocationMovementsV169([p])}catch(e){}
   el.innerHTML=`<div class="fi183-title">최근 입고내역 최근 ${rows.length}건</div>`+
     rows.map(r=>{
       const qty=Number(r.qty||0).toLocaleString();
-      const loc=String(r.location||'').trim();
+      const loc=movementLocationForHistoryV194(p,'IN',r.qty,r.created_at,r.location||r.loc);
       const worker=String(r.worker_name||r.worker||'').trim();
       return `<div class="fi183-row">
         <span class="fi183-date">${fmt(r.created_at)}</span>
-        <b class="fi183-in">입고 +${qty}</b>
-        ${loc?`<span>위치: ${escHtml(loc)}</span>`:''}
+        <b class="fi183-in">입고</b>
+        <span>자재위치: ${escHtml(loc||'-')}</span>
+        <b class="fi183-in">입고수량: +${qty}</b>
         ${worker?`<span>담당: ${escHtml(worker)}</span>`:''}
       </div>`;
     }).join('');
@@ -17527,15 +17529,17 @@ async function loadRecentOutboundV184(part){
     }catch(e){return escHtml(String(v||''));}
   };
 
+  try{await loadLocationMovementsV169([p])}catch(e){}
   el.innerHTML=`<div class="fo184-title">최근 출고내역 최근 ${rows.length}건</div>`+
     rows.map(r=>{
       const qty=Number(r.qty||0).toLocaleString();
-      const loc=String(r.location||'').trim();
+      const loc=movementLocationForHistoryV194(p,'OUT',r.qty,r.created_at,r.location||r.loc);
       const worker=String(r.worker_name||r.worker||'').trim();
       return `<div class="fo184-row">
         <span class="fo184-date">${fmt(r.created_at)}</span>
-        <b class="fo184-out">출고 -${qty}</b>
-        ${loc?`<span>위치: ${escHtml(loc)}</span>`:''}
+        <b class="fo184-out">출고</b>
+        <span>자재위치: ${escHtml(loc||'-')}</span>
+        <b class="fo184-out">출고수량: -${qty}</b>
         ${worker?`<span>가져간 사람: ${escHtml(worker)}</span>`:''}
       </div>`;
     }).join('');
@@ -17825,6 +17829,29 @@ function stockAdminLocationV144(x){
   return Number(x.erpQty||0);
 }
 async 
+
+function movementLocationForHistoryV194(part,type,qty,createdAt,fallback){
+  const direct=String(fallback||'').trim();
+  if(direct)return direct;
+  try{
+    const rows=(window.__locationMovementV169||[]).filter(r=>{
+      const p=r?.payload||{};
+      return String(p.part_no||'')===String(part||'') &&
+             String(p.movement_type||'')===String(type||'') &&
+             Number(p.qty||0)===Number(qty||0);
+    });
+    if(!rows.length)return '';
+    if(!createdAt)return String(rows[0]?.payload?.location||'');
+    const target=new Date(createdAt).getTime();
+    rows.sort((a,b)=>{
+      const ta=new Date(a?.created_at||a?.payload?.created_at||0).getTime();
+      const tb=new Date(b?.created_at||b?.payload?.created_at||0).getTime();
+      return Math.abs(ta-target)-Math.abs(tb-target);
+    });
+    return String(rows[0]?.payload?.location||'');
+  }catch(e){return direct}
+}
+
 async function loadRecentInOutForSearchV176(part,targetId){
   const box=document.getElementById(targetId);
   if(!box)return;
@@ -17854,13 +17881,17 @@ async function loadRecentInOutForSearchV176(part,targetId){
     box.innerHTML='<div class="rh176-title">최근 입고·출고 기록</div><div class="rh176-empty">기록 없음</div>';
     return;
   }
+  try{await loadLocationMovementsV169([part])}catch(e){}
   const body=rows.map(r=>{
-    const type=r.movement_type==='IN'?'입고':'출고';
+    const isIn=r.movement_type==='IN';
+    const type=isIn?'입고':'출고';
     let dt='';
     try{dt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):String(r.time||'')}catch(e){dt=String(r.created_at||r.time||'')}
-    const loc=r.location?` · ${esc(String(r.location))}`:'';
-    const worker=(r.worker_name||r.worker)?` · ${esc(String(r.worker_name||r.worker))}`:'';
-    return `<div class="rh176-row"><span class="rh176-date">${esc(dt)}</span><span class="rh176-type ${r.movement_type==='IN'?'in':'out'}">${type}</span><b>${Number(r.qty||0).toLocaleString()}</b><span>${loc}${worker}</span></div>`;
+    const loc=movementLocationForHistoryV194(part,r.movement_type,r.qty,r.created_at||r.time,r.location||r.loc);
+    const worker=(r.worker_name||r.worker)?` · 담당: ${esc(String(r.worker_name||r.worker))}`:'';
+    const qtyLabel=isIn?'입고수량':'출고수량';
+    const sign=isIn?'+':'-';
+    return `<div class="rh176-row"><span class="rh176-date">${esc(dt)}</span><span class="rh176-type ${isIn?'in':'out'}">${type}</span><span>자재위치: ${esc(loc||'-')}</span><b>${qtyLabel}: ${sign}${Number(r.qty||0).toLocaleString()}</b><span>${worker}</span></div>`;
   }).join('');
   box.innerHTML=`<div class="rh176-title">최근 입고·출고 기록 <small>최근 ${rows.length}건</small></div>${body}`;
 }
