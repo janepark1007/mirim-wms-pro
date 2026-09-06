@@ -15099,4 +15099,331 @@ body:not(.admin-view) #work #results .location-card-v17{
   }
 })();
 </script>
+
+<style id="admin-main-dashboard-v123-style">
+/* V123 관리자 메인 전용 대시보드 */
+#adminMainV123{display:none}
+body.admin-view:not(.admin-task-focus):not(.npp-admin-open-v113) #adminMainV123{
+  display:block!important;
+  width:min(1180px,calc(100% - 24px))!important;
+  margin:14px auto 26px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+  border:1px solid #dbe8e0!important;
+  border-radius:20px!important;
+  background:#fff!important;
+  box-shadow:0 8px 28px rgba(25,76,52,.09)!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body.admin-view:not(.admin-task-focus) #home > #adminMainV123{
+  display:block!important;
+}
+
+/* 관리자 메인에서는 기존 작업자용 주요업무 버튼 영역 중복 숨김 */
+body.admin-view:not(.admin-task-focus) #home > .today-task-box{
+  display:none!important;
+}
+body.admin-view:not(.admin-task-focus) #adminQuickInOutV108{
+  display:none!important;
+}
+
+.admin-main-head-v123{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom:14px;
+  border-bottom:1px solid #edf1ee;
+}
+.admin-main-title-v123{
+  font-size:24px;
+  font-weight:1000;
+  color:#183e2d;
+}
+.admin-main-sub-v123{
+  margin-top:4px;
+  color:#708078;
+  font-size:12px;
+  font-weight:800;
+}
+.admin-sync-v123{
+  min-width:128px;
+  padding:9px 12px;
+  border-radius:999px;
+  text-align:center;
+  font-size:12px;
+  font-weight:1000;
+  border:1px solid #bfe2cd;
+  background:#edf9f2;
+  color:#12683f;
+}
+.admin-sync-v123.off{
+  border-color:#efd0d0;
+  background:#fff2f2;
+  color:#a92e2e;
+}
+
+.admin-stat-v123{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:9px;
+  margin:14px 0;
+}
+.admin-stat-v123>div{
+  min-height:72px;
+  padding:10px;
+  box-sizing:border-box;
+  border:1px solid #e4e9e6;
+  border-radius:13px;
+  background:#fafcfb;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.admin-stat-v123 small{
+  color:#718078;
+  font-size:11px;
+  font-weight:900;
+}
+.admin-stat-v123 b{
+  margin-top:4px;
+  color:#1e372b;
+  font-size:20px;
+  font-weight:1000;
+}
+
+.admin-main-section-title-v123{
+  margin:16px 0 9px;
+  font-size:14px;
+  font-weight:1000;
+  color:#41564b;
+}
+
+/* 사용자 요청 우선순위: 상단 입고/출고 */
+.admin-main-top-v123{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.admin-main-top-v123 button{
+  min-height:92px!important;
+  border:0!important;
+  border-radius:16px!important;
+  color:#fff!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+.admin-main-top-v123 .in-v123{background:#087a43!important}
+.admin-main-top-v123 .out-v123{background:#b82929!important}
+.admin-main-top-v123 button small{
+  display:block;
+  margin-top:5px;
+  font-size:11px;
+  font-weight:800;
+  opacity:.9;
+}
+
+/* 중간 관리메뉴 */
+.admin-main-grid-v123{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.admin-main-grid-v123 button{
+  min-height:88px!important;
+  border-radius:15px!important;
+  border:1px solid #dce5df!important;
+  background:#fff!important;
+  color:#24362d!important;
+  font-size:15px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+}
+.admin-main-grid-v123 button .ico-v123{font-size:26px}
+.admin-main-grid-v123 button small{
+  color:#7a867f;
+  font-size:10px;
+  font-weight:800;
+}
+.admin-main-grid-v123 .loc-v123{background:#f5efff!important;border-color:#ddcafa!important}
+.admin-main-grid-v123 .unreg-v123{background:#fff0f8!important;border-color:#f0c6dd!important}
+.admin-main-grid-v123 .orders-v123{background:#fff0f6!important;border-color:#f5bfd4!important}
+.admin-main-grid-v123 .later-v123{background:#eef4ff!important;border-color:#cbd9f7!important}
+.admin-main-grid-v123 .npp-v123{background:#f4f1ff!important;border-color:#d8cef6!important}
+.admin-main-grid-v123 .users-v123{background:#f2f8f4!important;border-color:#cfe4d7!important}
+
+.admin-main-bottom-v123{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+.admin-main-bottom-v123 button{
+  min-height:56px!important;
+  border:1px solid #d7e5dc!important;
+  border-radius:13px!important;
+  background:#f7faf8!important;
+  color:#27533e!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+
+@media(max-width:800px){
+  .admin-stat-v123{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-main-grid-v123{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  body.admin-view:not(.admin-task-focus):not(.npp-admin-open-v113) #adminMainV123{
+    width:calc(100% - 12px)!important;
+    padding:12px!important;
+    margin:8px auto 18px!important;
+  }
+  .admin-main-head-v123{align-items:flex-start}
+  .admin-main-title-v123{font-size:20px}
+  .admin-sync-v123{min-width:auto;font-size:11px;padding:8px 9px}
+  .admin-main-top-v123{grid-template-columns:1fr 1fr}
+  .admin-main-top-v123 button{min-height:78px!important;font-size:17px!important}
+  .admin-main-grid-v123{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-main-grid-v123 button{min-height:78px!important;font-size:13px!important}
+  .admin-main-bottom-v123{grid-template-columns:1fr}
+}
+</style>
+
+<script id="admin-main-dashboard-v123-script">
+function adminMainCountV123(id,fallback='0건'){
+  const el=document.getElementById(id);
+  return el&&String(el.textContent||'').trim()?String(el.textContent).trim():fallback;
+}
+
+function refreshAdminMainV123(){
+  const box=document.getElementById('adminMainV123');
+  if(!box)return;
+
+  const sync=document.getElementById('adminSyncV123');
+  if(sync){
+    const ok=!!(window.sharedReady || (typeof sharedReady!=='undefined'&&sharedReady));
+    sync.textContent=ok?'● 공용 동기화 연결됨':'● 동기화 연결 확인';
+    sync.classList.toggle('off',!ok);
+  }
+
+  const map=[
+    ['v123TodayIn','adminTodayIn','0건'],
+    ['v123TodayOut','adminTodayOut','0건'],
+    ['v123ErpCount','adminErpCount','1,440개'],
+    ['v123Pending','adminPendingCount','0건'],
+    ['v123Unreg','adminUnregCount','0건']
+  ];
+  map.forEach(([to,from,fb])=>{
+    const target=document.getElementById(to);
+    if(target)target.textContent=adminMainCountV123(from,fb);
+  });
+}
+
+function ensureAdminMainV123(){
+  if(!isAdmin)return;
+  const home=document.getElementById('home');
+  if(!home)return;
+
+  let box=document.getElementById('adminMainV123');
+  if(!box){
+    box=document.createElement('section');
+    box.id='adminMainV123';
+    box.innerHTML=`
+      <div class="admin-main-head-v123">
+        <div>
+          <div class="admin-main-title-v123">🧰 관리자 메인</div>
+          <div class="admin-main-sub-v123">수량 · 자재위치 · 입고·출고를 한 화면에서 관리합니다.</div>
+        </div>
+        <div id="adminSyncV123" class="admin-sync-v123">● 동기화 확인 중</div>
+      </div>
+
+      <div class="admin-stat-v123">
+        <div><small>오늘 입고</small><b id="v123TodayIn">0건</b></div>
+        <div><small>오늘 출고</small><b id="v123TodayOut">0건</b></div>
+        <div><small>ERP 품목</small><b id="v123ErpCount">1,440개</b></div>
+        <div><small>미입고 주문</small><b id="v123Pending">0건</b></div>
+        <div><small>ERP 미등록</small><b id="v123Unreg">0건</b></div>
+      </div>
+
+      <div class="admin-main-section-title-v123">가장 많이 쓰는 업무</div>
+      <div class="admin-main-top-v123">
+        <button type="button" class="in-v123" onclick="openAdminQuickInOutV108('inbound')">
+          📥 빠른입고<small>입고 수량 등록</small>
+        </button>
+        <button type="button" class="out-v123" onclick="openAdminQuickInOutV108('outbound')">
+          📤 빠른출고<small>출고 수량 등록</small>
+        </button>
+      </div>
+
+      <div class="admin-main-section-title-v123">관리 바로가기</div>
+      <div class="admin-main-grid-v123">
+        <button type="button" class="loc-v123" onclick="openMode('location')">
+          <span class="ico-v123">📍</span><span>자재위치 검색</span><small>위치 · 수량 확인</small>
+        </button>
+        <button type="button" class="unreg-v123" onclick="openAdminTaskView('unreg')">
+          <span class="ico-v123">⚠️</span><span>ERP 미등록 자재</span><small>미등록 자재 관리</small>
+        </button>
+        <button type="button" class="orders-v123" onclick="openAdminTaskView('orders')">
+          <span class="ico-v123">🛒</span><span>주문요청 & 문의건</span><small>통합관리</small>
+        </button>
+        <button type="button" class="later-v123" onclick="openAdminTaskView('later')">
+          <span class="ico-v123">📌</span><span>나중에 확인</span><small>확인할 업무</small>
+        </button>
+        <button type="button" class="npp-v123" onclick="openNppAdminV113()">
+          <span class="ico-v123">📐</span><span>NPP 도면위치 관리</span><small>엑셀 정리 도면 수정</small>
+        </button>
+        <button type="button" class="users-v123" onclick="openAdminUsersV73()">
+          <span class="ico-v123">👥</span><span>사용자 관리</span><small>작업자 확인</small>
+        </button>
+      </div>
+
+      <div class="admin-main-bottom-v123">
+        <button type="button" onclick="try{updateHomeSummary();syncDashboardStats();refreshAdminMainV123();}catch(e){refreshAdminMainV123();}">
+          ↻ 메인 현황 새로고침
+        </button>
+        <button type="button" onclick="try{forceAdminHomeV121();}catch(e){};setTimeout(refreshAdminMainV123,80)">
+          ⌂ 관리자 메인 다시보기
+        </button>
+      </div>`;
+    const welcome=home.querySelector('.welcome-row');
+    if(welcome)welcome.insertAdjacentElement('afterend',box);
+    else home.prepend(box);
+  }
+
+  try{updateHomeSummary();}catch(e){}
+  try{syncDashboardStats();}catch(e){}
+  setTimeout(refreshAdminMainV123,60);
+}
+
+/* V121 관리자 홈 복구 뒤 새 관리자 메인도 생성 */
+const __forceAdminHomeV121_beforeV123=window.forceAdminHomeV121;
+if(typeof __forceAdminHomeV121_beforeV123==='function'){
+  window.forceAdminHomeV121=function(){
+    const r=__forceAdminHomeV121_beforeV123.apply(this,arguments);
+    if(isAdmin){
+      ensureAdminMainV123();
+      setTimeout(refreshAdminMainV123,120);
+    }
+    return r;
+  };
+}
+
+/* 관리자 로그인/초기화 시 */
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(isAdmin){
+      ensureAdminMainV123();
+      refreshAdminMainV123();
+    }
+  },900);
+});
+</script>
 </body></html>
