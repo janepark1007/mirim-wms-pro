@@ -1553,6 +1553,49 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="npp-note-v223-style">
+#nppAdminPanelV113 .npp-note-v223,
+#publicDrawingSearchV108 .npp-note-v223{
+  width:100%;
+  box-sizing:border-box;
+  margin-top:18px;
+  padding:14px;
+  border:1px solid #d7dce5;
+  border-radius:12px;
+  background:#fff;
+}
+#nppAdminPanelV113 .npp-note-v223-title,
+#publicDrawingSearchV108 .npp-note-v223-title{
+  font-weight:1000;
+  margin-bottom:8px;
+}
+#nppAdminPanelV113 .npp-note-v223 textarea,
+#publicDrawingSearchV108 .npp-note-v223 textarea{
+  width:100%;
+  min-height:90px;
+  box-sizing:border-box;
+  resize:vertical;
+  padding:10px 12px;
+  border:1px solid #cbd3df;
+  border-radius:9px;
+  font:inherit;
+}
+#nppAdminPanelV113 .npp-note-v223 button,
+#publicDrawingSearchV108 .npp-note-v223 button{
+  margin-top:8px;
+}
+@media(max-width:768px){
+  #publicDrawingSearchV108 .npp-note-v223{
+    display:block!important;
+    margin-top:16px!important;
+  }
+  #publicDrawingSearchV108 .npp-note-v223 textarea{
+    min-height:100px!important;
+    font-size:18px!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -19154,6 +19197,63 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();
+})();
+</script>
+
+<script id="npp-note-v223-script">
+(function(){
+  const KEY='npp_manual_note_v223';
+
+  function getNote(){ try{return localStorage.getItem(KEY)||''}catch(e){return ''} }
+  function saveNote(v){
+    try{localStorage.setItem(KEY,String(v||''));return true}catch(e){return false}
+  }
+
+  function makeBox(id){
+    const box=document.createElement('div');
+    box.className='npp-note-v223';
+    box.id=id;
+    box.innerHTML=`
+      <div class="npp-note-v223-title">📝 비고</div>
+      <textarea placeholder="필요한 문구를 수동으로 입력하세요."></textarea>
+      <button type="button">비고 저장</button>
+    `;
+    const ta=box.querySelector('textarea');
+    ta.value=getNote();
+    box.querySelector('button').addEventListener('click',()=>{
+      if(saveNote(ta.value)){
+        const b=box.querySelector('button');
+        const old=b.textContent;
+        b.textContent='저장됨 ✓';
+        setTimeout(()=>b.textContent=old,900);
+        document.querySelectorAll('.npp-note-v223 textarea').forEach(x=>{
+          if(x!==ta)x.value=ta.value;
+        });
+      }
+    });
+    return box;
+  }
+
+  function mountAdmin(){
+    const root=document.getElementById('nppAdminPanelV113');
+    if(!root||document.getElementById('nppAdminNoteV223'))return;
+    root.appendChild(makeBox('nppAdminNoteV223'));
+  }
+
+  function mountMobile(){
+    if(!window.matchMedia('(max-width:768px)').matches)return;
+    const root=document.getElementById('publicDrawingSearchV108');
+    if(!root||document.getElementById('nppMobileNoteV223'))return;
+    root.appendChild(makeBox('nppMobileNoteV223'));
+  }
+
+  function mount(){ mountAdmin(); mountMobile(); }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
+  else mount();
+
+  const obs=new MutationObserver(mount);
+  obs.observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 </body></html>
