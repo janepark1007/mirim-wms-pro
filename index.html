@@ -17380,25 +17380,86 @@ function outboundLocationLabelV158(l){
 }
 async function deductOutboundLocationQtyV158(x,qty,loc){
   if(!loc)return {selected:false,label:''};
-  const before=Number(loc.qty||0);
-  if(Number(qty)>before)throw new Error(`선택한 자재위치 수량이 부족합니다. 현재 ${before.toLocaleString()}개`);
-  const after=before-Number(qty);
+  if(!sharedReady||!sharedDb)throw new Error('공용 DB가 연결되지 않았습니다.');
+
   const p=String(x.part);
-  let target=loc;
-  if(!target.id){
-    const raw=(sharedCache.locations&&sharedCache.locations[p])||[];
-    const norm=v=>String(v||'').trim();
-    target=raw.find(r=>
+  const before=Number(loc.qty||0);
+  if(Number(qty)>before){
+    throw new Error(`선택한 자재위치 수량이 부족합니다. 현재 ${before.toLocaleString()}개`);
+  }
+  const after=before-Number(qty);
+  const norm=v=>String(v||'').trim();
+
+  /* 1. 현재 공용DB에서 이 품목의 실제 위치 행을 다시 조회 */
+  const {data:rows,error:readErr}=await sharedDb
+    .from('production_item_locations')
+    .select('*')
+    .eq('part_no',p);
+  if(readErr)throw readErr;
+
+  const dbRows=rows||[];
+  let target=null;
+
+  /* id가 있으면 가장 먼저 id로 정확히 찾음 */
+  if(loc.id){
+    target=dbRows.find(r=>String(r.id||'')===String(loc.id))||null;
+  }
+
+  /* id가 없거나 표시용 위치였으면 실제 위치 필드 전체로 정확히 찾음 */
+  if(!target){
+    target=dbRows.find(r=>
       norm(r.room)===norm(loc.room) &&
       norm(r.zone)===norm(loc.zone) &&
       norm(r.level)===norm(loc.level) &&
       norm(r.height)===norm(loc.height) &&
       norm(r.storage)===norm(loc.storage) &&
       norm(r.detail)===norm(loc.detail)
-    )||loc;
+    )||null;
   }
-  await sharedSaveMultiLocation(p,{...target,qty:after},target.id||null);
-  return {selected:true,label:outboundLocationLabelV158(target),before,after};
+
+  if(!target){
+    throw new Error(`선택한 자재위치의 실제 DB 행을 찾지 못했습니다: ${outboundLocationLabelV158(loc)}`);
+  }
+
+  const dbBefore=Number(target.qty||0);
+  if(Number(qty)>dbBefore){
+    throw new Error(`선택한 자재위치 수량이 부족합니다. 현재 ${dbBefore.toLocaleString()}개`);
+  }
+  const dbAfter=dbBefore-Number(qty);
+
+  /* 2. 실제 DB 행의 qty를 직접 UPDATE */
+  const {data:updated,error:updateErr}=await sharedDb
+    .from('production_item_locations')
+    .update({qty:dbAfter,updated_at:new Date().toISOString()})
+    .eq('id',target.id)
+    .select('*');
+  if(updateErr)throw updateErr;
+  if(!updated||!updated.length){
+    throw new Error('자재위치 수량 업데이트가 DB에 반영되지 않았습니다.');
+  }
+
+  /* 3. DB를 다시 읽어서 정말 차감됐는지 검증 */
+  const {data:verifyRows,error:verifyErr}=await sharedDb
+    .from('production_item_locations')
+    .select('*')
+    .eq('id',target.id)
+    .limit(1);
+  if(verifyErr)throw verifyErr;
+  const verified=(verifyRows||[])[0];
+  if(!verified || Number(verified.qty)!==dbAfter){
+    throw new Error(`자재위치 수량 저장 검증 실패 (예상 ${dbAfter}, 실제 ${verified?verified.qty:'없음'})`);
+  }
+
+  /* 4. PC/모바일 공용 위치 캐시도 DB 최신값으로 다시 로드 */
+  if(typeof loadSharedLocations==='function')await loadSharedLocations();
+
+  return {
+    selected:true,
+    label:outboundLocationLabelV158(verified),
+    before:dbBefore,
+    after:dbAfter,
+    locationId:target.id
+  };
 }
 
 async function saveFastOutboundV143(){
@@ -17418,10 +17479,11 @@ async function saveFastOutboundV143(){
   }
 
   try{
-    /* 기존 공용 출고 처리 사용: 출고수량/현재고/입출고 집계가 기존 구조대로 모두 갱신 */
-    await sharedAddMovement('OUT',x,qty,person);
+    /* 선택 위치가 있으면 실제 위치 DB 수량부터 차감하고 저장 검증 */
     const locationResult=await deductOutboundLocationQtyV158(x,qty,selectedLocationRecord);
-    if(typeof loadSharedLocations==='function')await loadSharedLocations();
+
+    /* 위치 저장 성공 후 공용 총재고/출고이력을 반영 */
+    await sharedAddMovement('OUT',x,qty,person);
     await refreshSharedStockV152(x.part);
     await getLatestWarehouseStockV156(x.part);
 
