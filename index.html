@@ -17849,139 +17849,631 @@ setTimeout(()=>{
 },150);
 </script>
 
-<style id="admin-mode-restore-v132fix-style">
-/* V132 FIX: 관리자 로그인 후 관리자 메인을 최우선으로 복구 */
-body.admin-view.admin-mainmenu-open-v125 main{
+<style id="fast-inbound-v133-style">
+/* V133 택배 정리용 빠른입고 */
+#fastInboundV133{display:none}
+body.admin-view.fast-inbound-open-v133 #fastInboundV133{
   display:block!important;
   width:100%!important;
   max-width:none!important;
-  min-height:calc(100vh - 70px)!important;
-  visibility:visible!important;
-  opacity:1!important;
-}
-body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  pointer-events:auto!important;
-  width:100%!important;
   min-height:calc(100vh - 80px)!important;
-  height:auto!important;
-  max-height:none!important;
-  overflow:visible!important;
+  padding:12px!important;
+  box-sizing:border-box!important;
+  background:#f5faf7!important;
 }
-body.admin-view.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125){
+body.admin-view.fast-inbound-open-v133 main > *:not(#fastInboundV133){
   display:none!important;
+}
+.fi133-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;background:#fff;border:1px solid #d8e6de;border-radius:15px;
+}
+.fi133-title{font-size:23px;font-weight:1000;color:#143a28}
+.fi133-sub{margin-top:3px;font-size:12px;font-weight:800;color:#66766d}
+.fi133-sync{
+  display:inline-block;margin-top:7px;padding:5px 9px;border-radius:999px;
+  font-size:11px;font-weight:1000
+}
+.fi133-home{
+  min-height:42px;padding:7px 13px;border:1px solid #cbdad2;border-radius:10px;
+  background:#fff;color:#254d3a;font-weight:1000;cursor:pointer
+}
+.fi133-entry{
+  display:grid;grid-template-columns:minmax(0,1fr) 150px 125px;
+  gap:8px;margin-top:10px;padding:12px;background:#fff;border:2px solid #b8dcc8;border-radius:15px;
+}
+.fi133-entry input{
+  min-height:54px!important;padding:10px 13px!important;border:2px solid #cddcd4!important;
+  border-radius:11px!important;font-size:18px!important;font-weight:1000!important;
+}
+.fi133-save{
+  border:0!important;border-radius:11px!important;background:#087a43!important;
+  color:#fff!important;font-size:17px!important;font-weight:1000!important;cursor:pointer!important;
+}
+.fi133-save:disabled{opacity:.4!important;cursor:not-allowed!important}
+.fi133-picked{
+  margin-top:9px;padding:11px 13px;border-radius:12px;background:#eef8f2;border:1px solid #cae5d5;
+  font-weight:900;color:#1b5a3a;min-height:22px;
+}
+.fi133-help{margin:7px 2px 0;color:#68766f;font-size:11px;font-weight:800}
+.fi133-results{display:grid;gap:8px;margin-top:10px}
+.fi133-item{
+  display:grid;grid-template-columns:minmax(0,1fr) 160px 120px;gap:8px;align-items:center;
+  padding:11px 12px;background:#fff;border:1px solid #dce7e1;border-radius:12px;
+}
+.fi133-item b{font-size:16px}
+.fi133-item small{display:block;margin-top:2px;color:#65746c;font-weight:800}
+.fi133-loc{
+  font-size:12px;font-weight:900;color:#246040;text-align:center;
+  padding:7px;border-radius:9px;background:#f3f8f5
+}
+.fi133-choose{
+  min-height:39px;border:0;border-radius:9px;background:#ddeee5;color:#145b37;font-weight:1000;cursor:pointer
+}
+.fi133-recent{
+  margin-top:12px;padding:12px;background:#fff;border:1px solid #dce7e1;border-radius:14px
+}
+.fi133-recent h3{margin:0 0 8px;font-size:15px;color:#244b38}
+.fi133-log{
+  display:grid;grid-template-columns:90px minmax(0,1fr) 90px;gap:7px;
+  padding:7px 0;border-top:1px solid #eef2f0;font-size:12px;font-weight:850
+}
+.fi133-log:first-of-type{border-top:0}
+.fi133-ok{
+  display:none;margin-top:9px;padding:10px 12px;border-radius:10px;
+  background:#e8f7ee;color:#116c3e;font-weight:1000
+}
+.fi133-ok.show{display:block}
+@media(max-width:720px){
+  body.admin-view.fast-inbound-open-v133 #fastInboundV133{padding:6px!important}
+  .fi133-entry{grid-template-columns:minmax(0,1fr) 95px}
+  .fi133-entry .fi133-save{grid-column:1/-1;min-height:50px}
+  .fi133-item{grid-template-columns:1fr 100px}
+  .fi133-loc{grid-column:1/-1;text-align:left}
+  .fi133-title{font-size:19px}
+  .fi133-log{grid-template-columns:70px minmax(0,1fr) 70px}
 }
 </style>
 
-<script id="admin-mode-restore-v132fix-script">
-function restoreAdminMainV132Fix(){
-  if(!isAdmin)return;
+<script id="fast-inbound-v133-script">
+window.__fastInboundSelectedV133=null;
 
-  /* 뒤에 추가된 업무화면 상태가 관리자 메인을 가리지 않게 초기화 */
-  window.__adminRouteAwayV128=false;
+function ensureFastInboundV133(){
+  let p=document.getElementById('fastInboundV133');
+  if(p)return p;
+  const main=document.querySelector('main');
+  if(!main)return null;
+
+  p=document.createElement('section');
+  p.id='fastInboundV133';
+  p.innerHTML=`
+    <div class="fi133-head">
+      <div>
+        <div class="fi133-title">📦 자재 빠른입고</div>
+        <div class="fi133-sub">택배 정리하면서 품번 → 수량 → Enter로 계속 입력</div>
+        <span id="fiSyncV133" class="fi133-sync">동기화 확인 중</span>
+      </div>
+      <button type="button" class="fi133-home" onclick="closeFastInboundV133()">⌂ 관리자 메인</button>
+    </div>
+
+    <div class="fi133-entry">
+      <input id="fiPartV133" autocomplete="off" placeholder="품번 또는 품명">
+      <input id="fiQtyV133" type="number" inputmode="numeric" min="1" placeholder="입고수량">
+      <button id="fiSaveV133" class="fi133-save" type="button" onclick="saveFastInboundV133()">📥 바로 저장</button>
+    </div>
+
+    <div class="fi134-location-box">
+      <label class="fi134-check">
+        <input id="fiLocUseV134" type="checkbox" onchange="toggleFastLocV134()">
+        <span>📍 입고하면서 위치도 같이 등록</span>
+      </label>
+      <div id="fiLocFieldsV134" class="fi134-fields">
+        <input id="fiTempLocV134" placeholder="임시 위치 예: 택배정리대 A / 1층 임시선반">
+        <input id="fiLocQtyV134" type="number" inputmode="numeric" min="0" placeholder="위치수량(기본=입고수량)">
+      </div>
+      <div class="fi134-help">지금은 임시 위치로 저장해도 되고, 나중에 자재창고/세부위치를 정한 뒤 <b>위치 수정·정리</b>에서 다시 바꿀 수 있습니다.</div>
+      <button type="button" class="fi134-edit" onclick="openLocationEditV134()">🧹 자재위치 수정·정리</button>
+    </div>
+
+    <div id="fiPickedV133" class="fi133-picked">품목을 검색하세요.</div>
+    <div class="fi133-help">품번이 정확히 일치하면 자동 선택됩니다. 저장 후 검색칸으로 자동 복귀합니다.</div>
+    <div id="fiOkV133" class="fi133-ok"></div>
+    <div id="fiResultsV133" class="fi133-results"></div>
+
+    <div class="fi133-recent">
+      <h3>최근 빠른입고</h3>
+      <div id="fiRecentV133"></div>
+    </div>
+  `;
+  main.insertBefore(p,main.firstChild);
+
+  const part=p.querySelector('#fiPartV133');
+  const qty=p.querySelector('#fiQtyV133');
+
+  part.addEventListener('input',()=>searchFastInboundV133());
+  part.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if(window.__fastInboundSelectedV133) qty.focus();
+      else searchFastInboundV133(true);
+    }
+  });
+  qty.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      saveFastInboundV133();
+    }
+  });
+  return p;
+}
+
+function fastInboundSyncStateV133(){
+  const el=document.getElementById('fiSyncV133');
+  const btn=document.getElementById('fiSaveV133');
+  if(!el)return false;
+
+  const ok=!!(window.sharedReady && window.sharedDb);
+  el.textContent=ok?'● PC ↔ 모바일 ↔ 관리자 데이터 연동됨':'● 동기화 끊김 · 저장 차단';
+  el.style.background=ok?'#e8f7ee':'#fff0f0';
+  el.style.color=ok?'#126d3e':'#a82c2c';
+  if(btn)btn.disabled=!ok;
+  return ok;
+}
+
+function openFastInboundV133(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+  ensureFastInboundV133();
+
   document.body.classList.remove(
-    'admin-core-open-v131',
-    'fast-inbound-open-v133',
-    'admin-task-focus',
-    'admin-shortcut-focus',
-    'npp-admin-open-v113',
-    'admin-reference-home',
-    'other-storage-open-v50',
-    'admin-location-edit-v129',
-    'admin-location-edit-v134'
+    'admin-mainmenu-open-v125','admin-core-open-v131','admin-task-focus',
+    'admin-shortcut-focus','npp-admin-open-v113','admin-reference-home',
+    'other-storage-open-v50','admin-location-edit-v129'
   );
-  document.body.classList.add('admin-view','admin-mainmenu-open-v125');
+  document.body.classList.add('fast-inbound-open-v133');
+
+  window.__adminRouteAwayV128=true;
+  window.__fastInboundSelectedV133=null;
+
+  document.getElementById('fiPartV133').value='';
+  document.getElementById('fiQtyV133').value='';
+  document.getElementById('fiPickedV133').textContent='품목을 검색하세요.';
+  document.getElementById('fiResultsV133').innerHTML='';
+  fastInboundSyncStateV133();
+  renderFastInboundRecentV133();
+
+  setTimeout(()=>document.getElementById('fiPartV133')?.focus(),40);
+}
+
+function closeFastInboundV133(){
+  document.body.classList.remove('fast-inbound-open-v133');
+  window.__adminRouteAwayV128=false;
+  try{window.openAdminMainV125(true);}catch(e){}
+  setTimeout(()=>{
+    try{buildAdminMainV127();}catch(e){}
+    setTimeout(bindFastInboundMainV133,20);
+  },20);
+}
+
+function allItemsV133(){
+  return (typeof ITEMS!=='undefined' && Array.isArray(ITEMS)) ? ITEMS : [];
+}
+
+function fastInboundMatchesV133(q){
+  const s=String(q||'').trim().toLowerCase();
+  if(!s)return [];
+  const items=allItemsV133();
+
+  const exactPart=items.filter(x=>String(x.part||'').trim().toLowerCase()===s);
+  if(exactPart.length)return exactPart.slice(0,20);
+
+  const exactName=items.filter(x=>String(x.name||'').trim().toLowerCase()===s);
+  if(exactName.length===1)return exactName;
+
+  return items.filter(x=>{
+    const p=String(x.part||'').toLowerCase();
+    const n=String(x.name||'').toLowerCase();
+    return p.includes(s)||n.includes(s);
+  }).slice(0,20);
+}
+
+function fastInboundLocV133(x){
+  try{
+    const arr=getAllLocations(x.part)||[];
+    if(!arr.length)return '위치 미등록';
+    return arr.slice(0,2).map(e=>formatLoc(e)).filter(Boolean).join(' / ')||'위치 미등록';
+  }catch(e){return '위치 확인 필요'}
+}
+
+function selectFastInboundV133(index){
+  const q=document.getElementById('fiPartV133')?.value||'';
+  const rows=fastInboundMatchesV133(q);
+  const x=rows[index];
+  if(!x)return;
+
+  window.__fastInboundSelectedV133=x;
+  document.getElementById('fiPartV133').value=String(x.part||'');
+  document.getElementById('fiPickedV133').innerHTML=
+    `✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')} · ${esc(fastInboundLocV133(x))}`;
+  document.getElementById('fiResultsV133').innerHTML='';
+  setTimeout(()=>document.getElementById('fiQtyV133')?.focus(),20);
+}
+
+function searchFastInboundV133(forceFocusQty=false){
+  const q=document.getElementById('fiPartV133')?.value||'';
+  const out=document.getElementById('fiResultsV133');
+  const picked=document.getElementById('fiPickedV133');
+  window.__fastInboundSelectedV133=null;
+
+  if(!q.trim()){
+    picked.textContent='품목을 검색하세요.';
+    out.innerHTML='';
+    return;
+  }
+
+  const rows=fastInboundMatchesV133(q);
+  const exact=rows.find(x=>String(x.part||'').trim().toLowerCase()===q.trim().toLowerCase());
+
+  if(exact){
+    window.__fastInboundSelectedV133=exact;
+    picked.innerHTML=`✅ 자동선택: <b>${esc(exact.part||'')}</b> · ${esc(exact.name||'')} · ${esc(fastInboundLocV133(exact))}`;
+    out.innerHTML='';
+    if(forceFocusQty)setTimeout(()=>document.getElementById('fiQtyV133')?.focus(),20);
+    return;
+  }
+
+  if(rows.length===1){
+    window.__fastInboundSelectedV133=rows[0];
+    picked.innerHTML=`✅ 자동선택: <b>${esc(rows[0].part||'')}</b> · ${esc(rows[0].name||'')} · ${esc(fastInboundLocV133(rows[0]))}`;
+    out.innerHTML='';
+    if(forceFocusQty)setTimeout(()=>document.getElementById('fiQtyV133')?.focus(),20);
+    return;
+  }
+
+  picked.textContent=rows.length?`검색결과 ${rows.length}건 · 품목을 선택하세요.`:'검색 결과가 없습니다.';
+  out.innerHTML=rows.map((x,i)=>`
+    <div class="fi133-item">
+      <div><b>${esc(x.part||'')}</b><small>${esc(x.name||'')}</small></div>
+      <div class="fi133-loc">${esc(fastInboundLocV133(x))}</div>
+      <button type="button" class="fi133-choose" onclick="selectFastInboundV133(${i})">선택</button>
+    </div>`).join('');
+}
+
+async function saveFastInboundV133(){
+  if(!fastInboundSyncStateV133()){
+    alert('공용 동기화가 연결되어 있지 않아 저장을 막았습니다.\nPC와 모바일에 같은 데이터가 반영되도록 동기화 연결 후 저장해 주세요.');
+    return;
+  }
+
+  const x=window.__fastInboundSelectedV133;
+  if(!x){
+    alert('먼저 품번 또는 품명을 검색해서 품목을 선택하세요.');
+    document.getElementById('fiPartV133')?.focus();
+    return;
+  }
+
+  const qty=Number(document.getElementById('fiQtyV133')?.value);
+  if(!qty||qty<=0){
+    alert('입고수량을 입력하세요.');
+    document.getElementById('fiQtyV133')?.focus();
+    return;
+  }
+
+  const btn=document.getElementById('fiSaveV133');
+  if(btn)btn.disabled=true;
 
   try{
-    if(typeof buildAdminMainV127==='function')buildAdminMainV127();
-    else if(typeof openAdminMainV125==='function')openAdminMainV125(true);
-  }catch(e){console.error('관리자 메인 복구',e)}
+    /* 1. 공용 입고 이력 */
+    await sharedAddMovement('IN',x,qty,'관리자');
 
-  const menu=document.getElementById('adminMainMenuV125');
-  if(menu){
-    menu.style.setProperty('display','block','important');
-    menu.style.setProperty('visibility','visible','important');
-    menu.style.setProperty('opacity','1','important');
-    menu.style.setProperty('pointer-events','auto','important');
+    /* 2. 주문요청 자동대조/부분입고 반영 */
+    try{await allocateInboundToOpenOrders(x,qty,'관리자');}catch(e){console.warn('주문대조',e)}
+
+    /* 3. 공용 이력 재조회 -> PC/모바일 동일 기준 */
+    await refreshSharedHistories();
+
+    /* 4. 관리자 메인/통계 갱신 */
+    try{updateHomeSummary();}catch(e){}
+    try{syncDashboardStats();}catch(e){}
+    try{refreshAdminMainDataV128?.();}catch(e){}
+
+    /* 5. 현재 공용 위치/재고 캐시가 있으면 화면도 즉시 최신화 */
+    try{await loadSharedLocations?.();}catch(e){}
+
+    showFastInboundOkV133(`✅ ${x.part} · ${qty.toLocaleString()}개 입고 저장 완료 · 전체 데이터 연동`);
+
+    document.getElementById('fiPartV133').value='';
+    document.getElementById('fiQtyV133').value='';
+    document.getElementById('fiPickedV133').textContent='다음 택배 품번을 입력하세요.';
+    document.getElementById('fiResultsV133').innerHTML='';
+    window.__fastInboundSelectedV133=null;
+
+    renderFastInboundRecentV133();
+    setTimeout(()=>document.getElementById('fiPartV133')?.focus(),30);
+  }catch(err){
+    console.error('빠른입고 저장 실패',err);
+    alert('입고 저장 실패: '+(err?.message||err));
+  }finally{
+    fastInboundSyncStateV133();
   }
 }
 
-/* 관리자 로그인 성공 직후 반드시 관리자 메인 복구 */
-const __adminLoginBeforeV132Fix=window.adminLogin;
-if(typeof __adminLoginBeforeV132Fix==='function'){
-  window.adminLogin=async function(){
-    const r=await __adminLoginBeforeV132Fix.apply(this,arguments);
-    if(isAdmin){
-      restoreAdminMainV132Fix();
-      setTimeout(restoreAdminMainV132Fix,250);
-      setTimeout(restoreAdminMainV132Fix,1200);
-      setTimeout(restoreAdminMainV132Fix,3500);
-    }
+function showFastInboundOkV133(msg){
+  const el=document.getElementById('fiOkV133');
+  if(!el)return;
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(window.__fiOkTimerV133);
+  window.__fiOkTimerV133=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+function renderFastInboundRecentV133(){
+  const box=document.getElementById('fiRecentV133');
+  if(!box)return;
+  const rows=Array.isArray(window.sharedTodayIns)?window.sharedTodayIns:
+    (typeof sharedTodayIns!=='undefined'&&Array.isArray(sharedTodayIns)?sharedTodayIns:[]);
+  const list=rows.slice(0,10);
+
+  box.innerHTML=list.length?list.map(r=>`
+    <div class="fi133-log">
+      <span>${esc(r.time||'')}</span>
+      <span><b>${esc(r.part||'')}</b> · ${esc(r.name||'')}</span>
+      <span style="text-align:right">${Number(r.qty||0).toLocaleString()}개</span>
+    </div>`).join(''):'<div style="font-size:12px;color:#7b8781">오늘 입고 이력이 없습니다.</div>';
+}
+
+/* 관리자 메인의 빠른입고 버튼을 V133 택배 빠른입고로만 연결 */
+function bindFastInboundMainV133(){
+  const box=document.getElementById('adminMainMenuV125');
+  if(!box)return;
+
+  let b=box.querySelector('.admin127-in, .core-main-btn-v131.inbound');
+  if(!b)return;
+
+  /* 과거 라우터가 잡는 클래스 제거 */
+  b.classList.remove('admin127-in','core-main-btn-v131','inbound');
+  b.classList.add('fast-inbound-main-v133');
+  b.removeAttribute('onclick');
+  b.removeAttribute('data-admin-role-v129');
+
+  const clone=b.cloneNode(true);
+  clone.onclick=e=>{
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    openFastInboundV133();
+    return false;
+  };
+  b.replaceWith(clone);
+}
+
+/* 관리자 메인 재생성 후 다시 빠른입고 직결 */
+const __buildBeforeV133=window.buildAdminMainV127;
+if(typeof __buildBeforeV133==='function'){
+  window.buildAdminMainV127=function(){
+    const r=__buildBeforeV133.apply(this,arguments);
+    setTimeout(bindFastInboundMainV133,30);
     return r;
   };
 }
 
-/* 이미 관리자 상태로 열린 경우도 복구 */
 setTimeout(()=>{
-  if(isAdmin)restoreAdminMainV132Fix();
+  if(isAdmin){
+    ensureFastInboundV133();
+    bindFastInboundMainV133();
+  }
 },180);
 </script>
 
-<style id="v135-quick-button-readability">
-/* V135: V132 관리자 메인의 빠른입고/빠른출고만 가독성 개선
-   - 과한 반짝임/애니메이션 제거
-   - 글자 선명도 강화
-   - 기존 기능/배치/동작은 변경하지 않음
-*/
-body.admin-view #adminMainMenuV125 .admin127-in,
-body.admin-view #adminMainMenuV125 .admin127-out,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound{
-  animation:none!important;
-  transition:none!important;
-  filter:none!important;
-  text-shadow:none!important;
-  box-shadow:0 3px 10px rgba(0,0,0,.08)!important;
+<style id="fast-inbound-location-v134-style">
+.fi134-location-box{
+  margin-top:10px;padding:12px;background:#fff;border:1px solid #d7e5dd;border-radius:14px
+}
+.fi134-check{display:flex;align-items:center;gap:9px;font-weight:1000;color:#20583b;cursor:pointer}
+.fi134-check input{width:22px;height:22px;accent-color:#087a43}
+.fi134-fields{display:none;grid-template-columns:minmax(0,1fr) 180px;gap:8px;margin-top:9px}
+.fi134-fields.show{display:grid}
+.fi134-fields input{
+  min-height:46px;padding:9px 11px;border:1px solid #cddbd3;border-radius:10px;
+  font-size:15px;font-weight:850
+}
+.fi134-help{margin-top:8px;color:#6a786f;font-size:11px;font-weight:800;line-height:1.5}
+.fi134-edit{
+  margin-top:9px;min-height:42px;padding:8px 12px;border:1px solid #8ebca2;border-radius:10px;
+  background:#eef8f2;color:#17633d;font-weight:1000;cursor:pointer
+}
+body.admin-view.admin-location-edit-v134 main > *:not(#locationOrganizerCard){
+  display:none!important;
+}
+body.admin-view.admin-location-edit-v134 #locationOrganizerCard{
+  display:block!important;
+  visibility:visible!important;
   opacity:1!important;
-  color:#ffffff!important;
-  -webkit-text-fill-color:#ffffff!important;
-  font-weight:1000!important;
-  letter-spacing:0!important;
+  pointer-events:auto!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  margin:12px auto!important;
 }
-
-body.admin-view #adminMainMenuV125 .admin127-in,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound{
-  background:#087a43!important;
-  border:2px solid #066838!important;
-}
-
-body.admin-view #adminMainMenuV125 .admin127-out,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound{
-  background:#b52c2c!important;
-  border:2px solid #982424!important;
-}
-
-/* 내부 텍스트가 별도 span/div로 구성돼 있어도 전부 선명하게 */
-body.admin-view #adminMainMenuV125 .admin127-in *,
-body.admin-view #adminMainMenuV125 .admin127-out *,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound *,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound *{
-  color:#ffffff!important;
-  -webkit-text-fill-color:#ffffff!important;
-  opacity:1!important;
-  text-shadow:none!important;
-  filter:none!important;
-}
-
-/* hover 때도 깜빡임 없이 살짝 눌리는 정도만 */
-body.admin-view #adminMainMenuV125 .admin127-in:hover,
-body.admin-view #adminMainMenuV125 .admin127-out:hover,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.inbound:hover,
-body.admin-view #adminMainMenuV125 .core-main-btn-v131.outbound:hover{
-  transform:translateY(-1px)!important;
-  filter:none!important;
+@media(max-width:720px){
+  .fi134-fields{grid-template-columns:1fr}
 }
 </style>
+
+<script id="fast-inbound-location-v134-script">
+function toggleFastLocV134(){
+  const on=!!document.getElementById('fiLocUseV134')?.checked;
+  document.getElementById('fiLocFieldsV134')?.classList.toggle('show',on);
+  if(on){
+    const q=document.getElementById('fiQtyV133')?.value||'';
+    const lq=document.getElementById('fiLocQtyV134');
+    if(lq && !lq.value && q)lq.value=q;
+  }
+}
+
+function getFastTempLocationV134(){
+  const enabled=!!document.getElementById('fiLocUseV134')?.checked;
+  if(!enabled)return null;
+
+  const text=String(document.getElementById('fiTempLocV134')?.value||'').trim();
+  if(!text)return {error:'위치도 같이 등록하려면 임시 위치를 입력해 주세요.'};
+
+  const inboundQty=Number(document.getElementById('fiQtyV133')?.value||0);
+  const locQtyRaw=document.getElementById('fiLocQtyV134')?.value;
+  const locQty=(locQtyRaw===''||locQtyRaw==null)?inboundQty:Number(locQtyRaw||0);
+
+  return {text,qty:Math.max(0,locQty)};
+}
+
+async function saveFastTempLocationV134(x,loc){
+  if(!loc || loc.error)return;
+  if(!sharedReady || !sharedDb)throw new Error('공용 동기화가 연결되지 않아 위치를 저장할 수 없습니다.');
+
+  await loadSharedLocations();
+
+  const p=String(x.part||'');
+  const existing=(sharedCache.locations[p]||[]).find(e =>
+    String(e.room||'').trim()==='입고대기' &&
+    String(e.detail||'').trim()===String(loc.text||'').trim()
+  );
+
+  if(existing){
+    const next={
+      ...existing,
+      room:'입고대기',
+      detail:loc.text,
+      qty:Number(existing.qty||0)+Number(loc.qty||0),
+      note:noteWithDivision('택배 빠른입고 임시위치',getItemDivision(p)),
+      is_primary:!!existing.is_primary
+    };
+    await sharedSaveMultiLocation(p,next,existing.id);
+  }else{
+    const arr=sharedCache.locations[p]||[];
+    await sharedSaveMultiLocation(p,{
+      room:'입고대기',
+      zone:'',
+      level:'',
+      height:'',
+      storage:'',
+      detail:loc.text,
+      qty:Number(loc.qty||0),
+      note:noteWithDivision('택배 빠른입고 임시위치',getItemDivision(p)),
+      is_primary:arr.length===0
+    },null);
+  }
+
+  await loadSharedLocations();
+}
+
+async function openLocationEditV134(){
+  if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+
+  document.body.classList.remove(
+    'fast-inbound-open-v133','admin-core-open-v131','admin-mainmenu-open-v125',
+    'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
+    'admin-location-edit-v129'
+  );
+  document.body.classList.add('admin-location-edit-v134');
+
+  const card=document.getElementById('locationOrganizerCard');
+  if(card){
+    card.classList.remove('hidden');
+    card.style.removeProperty('display');
+  }
+  try{await loadLocationOrganizer();}catch(e){console.error(e)}
+  setTimeout(()=>card?.scrollIntoView({block:'start'}),30);
+}
+
+/* 관리자 메인/위치정리에서 돌아가기용 */
+function closeLocationEditV134(){
+  document.body.classList.remove('admin-location-edit-v134');
+  window.__adminRouteAwayV128=false;
+  try{window.openAdminMainV125(true);}catch(e){}
+  setTimeout(()=>{try{buildAdminMainV127();}catch(e){}},20);
+}
+
+/* 기존 빠른입고 저장 앞에 위치 입력값 검증/저장 연동 */
+const __saveFastInboundBeforeV134=window.saveFastInboundV133;
+if(typeof __saveFastInboundBeforeV134==='function'){
+  window.saveFastInboundV133=async function(){
+    const loc=getFastTempLocationV134();
+    if(loc?.error){
+      alert(loc.error);
+      document.getElementById('fiTempLocV134')?.focus();
+      return;
+    }
+
+    const x=window.__fastInboundSelectedV133;
+    const qty=Number(document.getElementById('fiQtyV133')?.value||0);
+
+    if(!x || !qty || qty<=0){
+      return __saveFastInboundBeforeV134.apply(this,arguments);
+    }
+
+    if(!fastInboundSyncStateV133()){
+      alert('PC와 모바일에 모든 데이터가 같이 반영되어야 하므로 동기화 연결 전에는 저장하지 않습니다.');
+      return;
+    }
+
+    const btn=document.getElementById('fiSaveV133');
+    if(btn)btn.disabled=true;
+
+    try{
+      /* 입고 이동 데이터 */
+      await sharedAddMovement('IN',x,qty,'관리자');
+
+      /* 주문/문의 자동대조 */
+      try{await allocateInboundToOpenOrders(x,qty,'관리자');}catch(e){console.warn('주문대조',e)}
+
+      /* 선택한 경우 임시 위치도 같은 공용 DB에 저장 */
+      if(loc)await saveFastTempLocationV134(x,loc);
+
+      /* 전 데이터 재동기화 */
+      await refreshSharedHistories();
+      await loadSharedLocations();
+
+      try{updateHomeSummary();}catch(e){}
+      try{syncDashboardStats();}catch(e){}
+      try{refreshAdminMainDataV128?.();}catch(e){}
+
+      showFastInboundOkV133(
+        `✅ ${x.part} · ${qty.toLocaleString()}개 입고 저장 완료` +
+        (loc?` · 위치 "${loc.text}" 등록 완료`:'') +
+        ` · PC/모바일 전체 연동`
+      );
+
+      document.getElementById('fiPartV133').value='';
+      document.getElementById('fiQtyV133').value='';
+      document.getElementById('fiPickedV133').textContent='다음 택배 품번을 입력하세요.';
+      document.getElementById('fiResultsV133').innerHTML='';
+      document.getElementById('fiTempLocV134').value='';
+      document.getElementById('fiLocQtyV134').value='';
+      document.getElementById('fiLocUseV134').checked=false;
+      document.getElementById('fiLocFieldsV134').classList.remove('show');
+      window.__fastInboundSelectedV133=null;
+
+      renderFastInboundRecentV133();
+      setTimeout(()=>document.getElementById('fiPartV133')?.focus(),30);
+    }catch(err){
+      console.error('빠른입고+위치 저장 실패',err);
+      alert('입고 저장 실패: '+(err?.message||err));
+    }finally{
+      fastInboundSyncStateV133();
+    }
+  };
+}
+
+/* 입고수량 입력 시 위치수량 기본값 자동 채우기 */
+setTimeout(()=>{
+  const qty=document.getElementById('fiQtyV133');
+  if(qty && !qty.dataset.v134Bound){
+    qty.dataset.v134Bound='1';
+    qty.addEventListener('input',()=>{
+      const locOn=document.getElementById('fiLocUseV134')?.checked;
+      const lq=document.getElementById('fiLocQtyV134');
+      if(locOn && lq && !lq.dataset.userChanged)lq.value=qty.value;
+    });
+    document.getElementById('fiLocQtyV134')?.addEventListener('input',e=>{
+      e.currentTarget.dataset.userChanged='1';
+    });
+  }
+},200);
+</script>
 </body></html>
