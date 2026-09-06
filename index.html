@@ -16850,20 +16850,64 @@ function searchFastInboundV140(focusQty=false){
   if(rows.length===1){
     const x=rows[0];window.__fiSelectedV140=x;
     document.getElementById('fiPartV140').value=x.part||'';
-    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}`;
+    const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+    const locText=locs.length
+      ? locs.map(l=>[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')).filter(Boolean).join(' / ')
+      : '위치 미등록';
+    let stock=0;
+    try{
+      if(typeof getCurrentStock==='function') stock=Number(getCurrentStock(x)||0);
+      else if(typeof getCurrentQty==='function') stock=Number(getCurrentQty(x)||0);
+      else if(typeof getCurrentErpQtyV118==='function') stock=Number(getCurrentErpQtyV118(x)||0);
+      else stock=Number(x.erpQty||0);
+    }catch(e){ stock=Number(x.erpQty||0); }
+    picked.innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(stock||0).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locText)}</span>`;
     out.innerHTML='';
     if(focusQty)setTimeout(()=>document.getElementById('fiQtyV140')?.focus(),20);
     return;
   }
   picked.textContent=rows.length?`검색결과 ${rows.length}건 · 선택하세요.`:'검색 결과가 없습니다.';
-  out.innerHTML=rows.map((x,i)=>`<div class="fi140-row"><div><b>${esc(x.part||'')}</b><br><small>${esc(x.name||'')}</small></div><button type="button" onclick="selectFastInboundV140(${i})">선택</button></div>`).join('');
+  out.innerHTML=rows.map((x,i)=>{
+    const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+    const locText=locs.length
+      ? locs.map(l=>[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')).filter(Boolean).join(' / ')
+      : '위치 미등록';
+    let stock=0;
+    try{
+      if(typeof getCurrentStock==='function') stock=Number(getCurrentStock(x)||0);
+      else if(typeof getCurrentQty==='function') stock=Number(getCurrentQty(x)||0);
+      else if(typeof getCurrentErpQtyV118==='function') stock=Number(getCurrentErpQtyV118(x)||0);
+      else stock=Number(x.erpQty||0);
+    }catch(e){ stock=Number(x.erpQty||0); }
+
+    return `<div class="fi140-row">
+      <div>
+        <b>${esc(x.part||'')}</b><br>
+        <small>${esc(x.name||'')}</small>
+        <div style="margin-top:5px;font-size:12px;font-weight:1000;color:#185f3c">현재고: ${Number(stock||0).toLocaleString()}</div>
+        <div style="margin-top:2px;font-size:12px;font-weight:900;color:#5c4b88">위치: ${esc(locText)}</div>
+      </div>
+      <button type="button" onclick="selectFastInboundV140(${i})">선택</button>
+    </div>`;
+  }).join('');
 }
 
 function selectFastInboundV140(i){
   const x=window.__fiRowsV140[i];if(!x)return;
   window.__fiSelectedV140=x;
   document.getElementById('fiPartV140').value=x.part||'';
-  document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}`;
+  const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+  const locText=locs.length
+    ? locs.map(l=>[l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')).filter(Boolean).join(' / ')
+    : '위치 미등록';
+  let stock=0;
+  try{
+    if(typeof getCurrentStock==='function') stock=Number(getCurrentStock(x)||0);
+    else if(typeof getCurrentQty==='function') stock=Number(getCurrentQty(x)||0);
+    else if(typeof getCurrentErpQtyV118==='function') stock=Number(getCurrentErpQtyV118(x)||0);
+    else stock=Number(x.erpQty||0);
+  }catch(e){ stock=Number(x.erpQty||0); }
+  document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${Number(stock||0).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${esc(locText)}</span>`;
   document.getElementById('fiResultsV140').innerHTML='';
   document.getElementById('fiQtyV140')?.focus();
 }
