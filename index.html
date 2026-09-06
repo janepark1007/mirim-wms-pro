@@ -17647,7 +17647,7 @@ body:not(.admin-view) #results .v147-public-row{
 <script id="public-search-admin-look-v147-script">
 /* V147: 일반 자재검색 결과만 관리자 자재위치검색과 같은 표시 방식으로 통일 */
 const __searchBeforeV147=window.search;
-window.search=function(){
+window.search=async function(){
   /* 관리자 업무화면은 기존 search를 건드리지 않음 */
   if(document.body.classList.contains('admin-view')){
     if(typeof __searchBeforeV147==='function')return __searchBeforeV147.apply(this,arguments);
@@ -17677,6 +17677,31 @@ window.search=function(){
   }
 
   if(count)count.textContent=rows.length?`검색결과 ${rows.length}건`:'검색 결과가 없습니다.';
+
+  /* 기존에 정상 표시되던 일반검색 화면은 그대로 두고,
+     검색된 품목의 공용 현재고/자재위치 수량만 DB에서 최신값으로 갱신 */
+  if(sharedReady&&sharedDb&&rows.length){
+    await Promise.all(rows.map(async x=>{
+      const p=String(x.part||'');
+      try{
+        const [sres,lres]=await Promise.all([
+          sharedDb.from('production_inventory_sync')
+            .select('part_no,current_stock,updated_at').eq('part_no',p).limit(1),
+          sharedDb.from('production_item_locations')
+            .select('*').eq('part_no',p)
+        ]);
+        if(!sres.error&&(sres.data||[])[0]){
+          const s=sres.data[0];
+          sharedCache.stock[p]=Number(s.current_stock||0);
+          sharedCache.stockUpdated[p]=s.updated_at||'';
+          sharedCache.movementDelta[p]=0;
+        }
+        if(!lres.error){
+          sharedCache.locations[p]=(lres.data||[]);
+        }
+      }catch(e){console.warn('일반검색 최신 재고 동기화 실패',e)}
+    }));
+  }
 
   out.innerHTML=rows.map(x=>{
     const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
@@ -17712,176 +17737,4 @@ window.search=function(){
 };
 </script>
 
-
-
-
-<script id="public-search-direct-db-render-v162">
-(function(){
-  const oldSearchV162=window.search;
-
-  function locLabelV162(l){
-    return [l.room,l.zone,l.level,l.height,l.storage,l.detail].filter(Boolean).join(' ')||'위치 미등록';
-  }
-  function stockFallbackV162(x){
-    try{
-      const n=getCurrentStock(x);
-      return Number.isFinite(Number(n))?Number(n):0;
-    }catch(e){return 0}
-  }
-
-  window.search=async function(){
-    if(document.body.classList.contains('admin-view')){
-      return typeof oldSearchV162==='function'?oldSearchV162.apply(this,arguments):undefined;
-    }
-
-    const q=(document.getElementById('q')?.value||'').trim().toLowerCase();
-    const out=document.getElementById('results');
-    const count=document.getElementById('count');
-    if(!q){
-      if(out)out.innerHTML='';
-      if(count)count.textContent='';
-      return;
-    }
-
-    const items=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
-    let rows=items.filter(x=>
-      String(x.part||'').toLowerCase()===q ||
-      String(x.part||'').toLowerCase().includes(q) ||
-      String(x.name||'').toLowerCase().includes(q)
-    );
-    rows.sort((a,b)=>{
-      const ae=String(a.part||'').toLowerCase()===q;
-      const be=String(b.part||'').toLowerCase()===q;
-      return ae===be?0:(ae?-1:1);
-    });
-    rows=rows.slice(0,30);
-
-    /* 기존 일반검색에서 정상적으로 찾던 품번은 그대로 살린다.
-       V162 직접DB 렌더가 ITEMS 매칭 실패로 품번을 숨기지 않도록 함. */
-    if(!rows.length){
-      if(typeof oldSearchV162==='function'){
-        return oldSearchV162.apply(this,arguments);
-      }
-      if(count)count.textContent='검색결과 0건';
-      if(out)out.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';
-      return;
-    }
-
-    if(count)count.textContent=`검색결과 ${rows.length}건`;
-    if(!out)return;
-
-    const cards=[];
-    for(const x of rows){
-      let stock=stockFallbackV162(x);
-      let locs=[];
-
-      if(sharedReady&&sharedDb){
-        try{
-          const [sres,lres]=await Promise.all([
-            sharedDb.from('production_inventory_sync')
-              .select('part_no,current_stock,updated_at').eq('part_no',String(x.part)).limit(1),
-            sharedDb.from('production_item_locations')
-              .select('*').eq('part_no',String(x.part))
-          ]);
-          if(!sres.error && (sres.data||[])[0]){
-            const s=sres.data[0];
-            stock=Number(s.current_stock||0);
-            sharedCache.stock[String(x.part)]=stock;
-            sharedCache.movementDelta[String(x.part)]=0;
-          }
-          if(!lres.error){
-            locs=(lres.data||[]);
-            sharedCache.locations[String(x.part)]=locs;
-          }
-        }catch(e){console.warn('일반검색 DB 직접조회 실패',e);}
-      }
-
-      if(!locs.length){
-        try{locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[]}catch(e){}
-      }
-
-      const photo=(typeof getPhoto==='function')?getPhoto(x.part):'';
-      const locHtml=locs.length?locs.map((l,i)=>{
-        const qty=(l.qty===0||l.qty)?` · 수량 ${Number(l.qty).toLocaleString()}`:'';
-        return `<div class="pub162-loc">${i+1}자재위치: ${escHtml(locLabelV162(l))}${qty}</div>`;
-      }).join(''):'<div class="pub162-loc">자재위치: 미등록</div>';
-
-      cards.push(`
-        <div class="pub162-card">
-          <div class="pub162-top">
-            <div>
-              <div class="pub162-part">${escHtml(x.part||'')}</div>
-              <div class="pub162-name">${escHtml(x.name||'')}</div>
-            </div>
-            <div class="pub162-stock">현재고 ${Number(stock).toLocaleString()}</div>
-          </div>
-          ${photo?`<img class="pub162-img" src="${photo}" alt="품목사진">`:''}
-          <div class="pub162-locs">${locHtml}</div>
-        </div>`);
-    }
-    out.innerHTML=cards.join('');
-  };
-})();
-</script>
-<style id="public-search-direct-db-render-v162-style">
-.pub162-card{margin:10px 0;padding:12px;border:1px solid #ddd5ee;border-radius:12px;background:#fff}
-.pub162-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.pub162-part{font-size:18px;font-weight:1000;color:#2e2937}
-.pub162-name{margin-top:4px;font-size:14px;font-weight:900;color:#696472}
-.pub162-stock{font-size:16px;font-weight:1000;color:#bd1f67;white-space:nowrap}
-.pub162-img{display:block;width:72px;height:96px;object-fit:cover;border-radius:9px;margin:9px 0}
-.pub162-loc{margin-top:6px;padding:9px 11px;border-radius:8px;background:#f7f4fb;color:#4d327b;font-size:14px;font-weight:1000}
-@media(max-width:720px){.pub162-top{gap:6px}.pub162-stock{font-size:14px}}
-</style>
-
-<style id="public-search-result-visible-v164-style">
-/* 일반 자재위치검색 결과가 반드시 검색창 바로 아래 보이도록 */
-body:not(.admin-view) #results{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  height:auto!important;
-  max-height:none!important;
-  overflow:visible!important;
-  position:relative!important;
-  left:auto!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:auto!important;
-  transform:none!important;
-  margin-top:12px!important;
-  width:100%!important;
-}
-body:not(.admin-view) #results .pub162-card{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  position:relative!important;
-  width:100%!important;
-  box-sizing:border-box!important;
-}
-body:not(.admin-view) #work{
-  overflow:visible!important;
-  height:auto!important;
-  min-height:0!important;
-}
-</style>
-<script id="public-search-result-visible-v164-script">
-(function(){
-  const prevV164=window.search;
-  window.search=async function(){
-    const result=await (typeof prevV164==='function'?prevV164.apply(this,arguments):undefined);
-    if(!document.body.classList.contains('admin-view')){
-      const out=document.getElementById('results');
-      if(out){
-        out.classList.remove('hidden');
-        out.style.display='block';
-        out.style.visibility='visible';
-        out.style.opacity='1';
-      }
-    }
-    return result;
-  };
-})();
-</script>
 </body></html>
