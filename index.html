@@ -1324,6 +1324,24 @@ body.park-location-worker-v63 .erp-only{
   }
 }
 </style>
+
+<style id="location-colors-all-v213">
+:root{
+  --loc1-v213:#087a43;
+  --loc2-v213:#b77900;
+  --loc3-v213:#7047b8;
+}
+
+/* 빠른입고/빠른출고 선택 요약 안의 위치 문구 */
+#fiPickedV140 .loc1-v213,#foPickedV143 .loc1-v213{color:var(--loc1-v213)!important;font-weight:1000!important}
+#fiPickedV140 .loc2-v213,#foPickedV143 .loc2-v213{color:var(--loc2-v213)!important;font-weight:1000!important}
+#fiPickedV140 .loc3-v213,#foPickedV143 .loc3-v213{color:var(--loc3-v213)!important;font-weight:1000!important}
+
+/* 일반/관리자 자재위치 검색 결과 */
+#results .loc1-v213,#adminLocationV144 .loc1-v213{color:var(--loc1-v213)!important;font-weight:1000!important}
+#results .loc2-v213,#adminLocationV144 .loc2-v213{color:var(--loc2-v213)!important;font-weight:1000!important}
+#results .loc3-v213,#adminLocationV144 .loc3-v213{color:var(--loc3-v213)!important;font-weight:1000!important}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -18665,6 +18683,53 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
       return r;
     };
   }
+})();
+</script>
+
+<script id="location-colors-all-v213-script">
+(function(){
+  function colorLocationLabelsV213(root){
+    if(!root)return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(n=>{
+      const s=n.nodeValue||'';
+      if(!/[123]자재위치/.test(s))return;
+      const p=n.parentNode;
+      if(!p||p.closest('.loc1-v213,.loc2-v213,.loc3-v213'))return;
+      const frag=document.createDocumentFragment();
+      const re=/([123])자재위치/g;
+      let last=0,m;
+      while((m=re.exec(s))){
+        if(m.index>last)frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+        const sp=document.createElement('span');
+        sp.className='loc'+m[1]+'-v213';
+        sp.textContent=m[0];
+        frag.appendChild(sp);
+        last=re.lastIndex;
+      }
+      if(last<s.length)frag.appendChild(document.createTextNode(s.slice(last)));
+      p.replaceChild(frag,n);
+    });
+  }
+
+  function applyV213(){
+    ['fiPickedV140','foPickedV143','results','adminLocationV144'].forEach(id=>{
+      colorLocationLabelsV213(document.getElementById(id));
+    });
+  }
+
+  const obs=new MutationObserver(()=>applyV213());
+  function startV213(){
+    applyV213();
+    ['fiPickedV140','foPickedV143','results','adminLocationV144'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)obs.observe(el,{childList:true,subtree:true});
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startV213,{once:true});
+  else startV213();
 })();
 </script>
 </body></html>
