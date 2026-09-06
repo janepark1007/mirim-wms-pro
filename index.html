@@ -19064,4 +19064,96 @@ body.admin-view.npp-admin-open-v113 #nppAdminPanelV113{
   else bootNppAdminV219();
 })();
 </script>
+
+<script id="npp-manual-type-v222">
+(function(){
+  const oldRender=window.renderNppAdminV113;
+  const oldEdit=window.editNppRowV113;
+  const oldSave=window.saveNppRowV113;
+
+  function typeValueV222(x){
+    return String(x?.type||'').trim();
+  }
+
+  window.renderNppAdminV113=function(){
+    if(typeof oldRender==='function') oldRender.apply(this,arguments);
+    const body=document.getElementById('nppAdminBodyV113');
+    const table=body?.closest('table');
+    if(!body||!table)return;
+
+    const rows=nppLoadV113();
+    const heads=[...table.tHead.rows[0].cells];
+    let statusIdx=heads.findIndex(c=>(c.textContent||'').trim().includes('확인상태'));
+    if(statusIdx>=0){
+      [...table.rows].forEach(r=>{ if(r.cells[statusIdx]) r.cells[statusIdx].style.display='none'; });
+    }
+
+    let typeIdx=[...table.tHead.rows[0].cells].findIndex(c=>(c.textContent||'').trim()==='종류');
+    if(typeIdx<0){
+      const th=document.createElement('th');
+      th.textContent='종류';
+      table.tHead.rows[0].appendChild(th);
+      typeIdx=table.tHead.rows[0].cells.length-1;
+    }
+
+    [...body.rows].forEach(tr=>{
+      const x=rows.find(r=>String(r.findNo)===String(tr.dataset.findno));
+      let td=tr.cells[typeIdx];
+      if(!td){ td=tr.insertCell(-1); }
+      td.className='npp-type-cell-v222';
+      td.textContent=typeValueV222(x)||'-';
+    });
+  };
+
+  window.editNppRowV113=function(findNo){
+    if(typeof oldEdit==='function') oldEdit.apply(this,arguments);
+    const tr=[...document.querySelectorAll('#nppAdminBodyV113 tr')].find(r=>r.dataset.findno===String(findNo));
+    const x=nppLoadV113().find(r=>String(r.findNo)===String(findNo));
+    if(!tr||!x)return;
+
+    const table=tr.closest('table');
+    const heads=[...table.tHead.rows[0].cells];
+    const statusIdx=heads.findIndex(c=>(c.textContent||'').trim().includes('확인상태'));
+    if(statusIdx>=0 && tr.cells[statusIdx])tr.cells[statusIdx].style.display='none';
+
+    let typeIdx=heads.findIndex(c=>(c.textContent||'').trim()==='종류');
+    if(typeIdx<0)return;
+    let td=tr.cells[typeIdx];
+    if(!td)td=tr.insertCell(-1);
+    td.className='npp-type-cell-v222';
+    td.innerHTML=`<input id="nppTypeEditV222_${escV113(x.findNo)}" value="${escV113(typeValueV222(x))}" placeholder="종류 직접 입력">`;
+  };
+
+  window.saveNppRowV113=function(findNo){
+    const input=document.getElementById(`nppTypeEditV222_${findNo}`);
+    const manualType=input?input.value.trim():null;
+
+    if(typeof oldSave==='function') oldSave.apply(this,arguments);
+
+    if(manualType!==null){
+      const rows=nppLoadV113();
+      const i=rows.findIndex(r=>String(r.findNo)===String(findNo));
+      if(i>=0){
+        rows[i]={...rows[i],type:manualType};
+        nppSaveAllV113(rows);
+      }
+      window.renderNppAdminV113();
+    }
+  };
+
+  // V219 observer가 자동 분류를 다시 넣지 못하도록 수동 종류 셀을 최종 정리
+  const boot=()=>{
+    const root=document.getElementById('nppAdminPanelV113');
+    if(!root)return;
+    const obs=new MutationObserver(()=>{
+      root.querySelectorAll('.npp-type-cell-v222').forEach(td=>{
+        td.querySelectorAll('.npp-type-v219').forEach(el=>el.remove());
+      });
+    });
+    obs.observe(root,{childList:true,subtree:true});
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
+})();
+</script>
 </body></html>
