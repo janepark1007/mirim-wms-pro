@@ -3146,34 +3146,84 @@ function openInboundPhotoAutomationV200(){
   setTimeout(()=>{ try{$('photoSearchInput').click()}catch(e){} },120);
 }
 
+async function preparePhotoForPartOcr(file){
+ return new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onerror=()=>reject(new Error('사진 파일을 읽지 못했습니다.'));
+   reader.onload=()=>{
+     const original=reader.result;
+     const img=new Image();
+     img.onload=()=>{
+       try{
+         const maxSide=1800;
+         const scale=Math.min(1,maxSide/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+         const w=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+         const h=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+         const c=document.createElement('canvas');c.width=w;c.height=h;
+         const ctx=c.getContext('2d',{willReadFrequently:true});
+         ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+         const data=ctx.getImageData(0,0,w,h), d=data.data;
+         for(let i=0;i<d.length;i+=4){
+           const y=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+           const v=Math.max(0,Math.min(255,(y-128)*1.45+128));
+           d[i]=d[i+1]=d[i+2]=v;
+         }
+         ctx.putImageData(data,0,0);
+         resolve({original,ocr:c.toDataURL('image/jpeg',0.92)});
+       }catch(e){resolve({original,ocr:original});}
+     };
+     img.onerror=()=>resolve({original,ocr:original});
+     img.src=original;
+   };
+   reader.readAsDataURL(file);
+ });
+}
 async function runPhotoSearch(file){
  if(!file)return;
- if(file.size>6*1024*1024){alert('사진은 6MB 이하로 선택해 주세요.');return;}
- const reader=new FileReader();
- reader.onload=async()=>{
-   const queryUrl=reader.result;
+ if(file.size>20*1024*1024){alert('사진 용량이 너무 큽니다. 20MB 이하 사진으로 다시 찍어 주세요.');return;}
+ const status=$('photoSearchStatus');
+ const results=$('photoSearchResults');
+ try{
+   status.textContent='사진을 품번 인식용으로 준비 중...';
+   const prepared=await preparePhotoForPartOcr(file);
+   const queryUrl=prepared.original;
+   const ocrUrl=prepared.ocr;
    $('photoSearchPreview').innerHTML=`<img class="photo-search-preview" src="${queryUrl}" alt="검색 사진">`;
-   $('photoSearchResults').innerHTML='';
+   results.innerHTML='';
    const sections=[];
    let recognizedText='';
-   try{
-     if(window.Tesseract){
-       $('photoSearchStatus').textContent='사진 속 품번을 읽는 중...';
-       const r=await Tesseract.recognize(queryUrl,'kor+eng',{logger:m=>{
-         if(m.status==='recognizing text') $('photoSearchStatus').textContent=`사진 속 품번 읽는 중... ${Math.round((m.progress||0)*100)}%`;
-       }});
+   let ocrMatches=[];
+
+   if(!window.Tesseract){
+     status.innerHTML='<b style="color:#b42318">⚠️ 사진 글자 인식 기능을 불러오지 못했습니다.</b><br>인터넷 연결을 확인한 뒤 이 화면을 새로고침하고 다시 시도해 주세요.';
+   }else{
+     try{
+       status.textContent='사진 속 품번(영문·숫자)을 읽는 중... 0%';
+       const r=await Tesseract.recognize(ocrUrl,'eng',{
+         logger:m=>{
+           if(m.status==='recognizing text') status.textContent=`사진 속 품번 읽는 중... ${Math.round((m.progress||0)*100)}%`;
+         }
+       });
        recognizedText=String(r?.data?.text||'').trim();
-       const ocrMatches=ocrPartCandidates(recognizedText);
-       if(ocrMatches.length){
-         sections.push(`<div class="notice" style="margin-top:12px;background:#eaf8ef">✅ 사진에서 ERP 품번 후보 ${ocrMatches.length}개를 찾았습니다. 맞는 품번의 [⬇️ 빠른입고]를 누르면 입고 화면에 자동 연결됩니다.</div>${ocrMatches.map(m=>photoMatchCard(m,'ocr')).join('')}`);
-       }else if(recognizedText){
-         sections.push(`<div class="notice" style="margin-top:12px">⚠️ 글자는 읽었지만 ERP 품번과 확실히 일치하는 항목은 찾지 못했습니다.</div>`);
+       ocrMatches=ocrPartCandidates(recognizedText);
+       if(!ocrMatches.length && recognizedText){
+         const compact=recognizedText.replace(/[|\\]/g,'1').replace(/[Oo]/g,'0');
+         ocrMatches=ocrPartCandidates(compact);
        }
+       if(ocrMatches.length){
+         sections.push(`<div class="notice" style="margin-top:12px;background:#eaf8ef">✅ 사진에서 ERP 품번 후보 ${ocrMatches.length}개를 찾았습니다. 맞는 품번의 [⬇️ 빠른입고]를 누르세요.</div>${ocrMatches.map(m=>photoMatchCard(m,'ocr')).join('')}`);
+       }else{
+         const sample=esc(recognizedText.replace(/\s+/g,' ').slice(0,160));
+         sections.push(`<div class="notice" style="margin-top:12px;background:#fff4d6">⚠️ 사진 글자는 읽었지만 ERP 품번을 확정하지 못했습니다.${sample?`<br><small>읽힌 글자: ${sample}</small>`:''}<br>품번 부분을 더 가까이 크게 찍어 주세요.</div>`);
+       }
+     }catch(e){
+       console.warn('사진 품번 OCR 실패',e);
+       sections.push('<div class="notice" style="margin-top:12px;background:#fff0ed;color:#9a2f1c">⚠️ 사진 글자 인식에 실패했습니다. 품번 라벨을 화면 가득 차게 다시 촬영해 주세요.</div>');
      }
-   }catch(e){console.warn('사진 품번 OCR 실패',e);}
+   }
 
    try{
-     $('photoSearchStatus').textContent='등록된 품목 사진도 함께 비교 중...';
+     status.textContent=ocrMatches.length?'ERP 품번 후보 확인 완료 · 등록 사진도 비교 중...':'등록된 품목 사진도 비교 중...';
      const queryFp=await imgToFingerprint(queryUrl);
      const candidates=[];
      for(const x of ITEMS){
@@ -3181,23 +3231,18 @@ async function runPhotoSearch(file){
        try{const fp=await imgToFingerprint(photo);candidates.push({x,photo,score:photoSimilarity(queryFp,fp)});}catch(e){}
      }
      candidates.sort((a,b)=>b.score-a.score);
-     const top=candidates.slice(0,5);
+     const top=candidates.slice(0,5).filter(x=>x.score>=0.50);
      if(top.length){
        sections.push(`<div style="margin-top:16px;font-weight:1000;color:#174c36">🖼️ 등록 사진 유사 품목</div>${top.map(m=>photoMatchCard(m,'photo')).join('')}`);
      }
-     if(!sections.length){
-       $('photoSearchStatus').textContent='⚠️ 품번 후보와 비교할 등록 사진을 찾지 못했습니다. 사진을 더 가까이, 글자가 선명하게 보이도록 다시 찍어 주세요.';
-     }else{
-       $('photoSearchStatus').textContent=recognizedText?'품번 인식과 사진 비교가 완료되었습니다. 반드시 실제 품번을 확인한 뒤 입고하세요.':'사진 비교가 완료되었습니다.';
-     }
-     $('photoSearchResults').innerHTML=sections.join('');
-   }catch(e){
-     console.error(e);
-     if(sections.length){$('photoSearchResults').innerHTML=sections.join('');$('photoSearchStatus').textContent='품번 인식 결과를 표시했습니다. 사진 비교는 완료하지 못했습니다.';}
-     else $('photoSearchStatus').textContent='사진 분석 중 오류가 발생했습니다.';
-   }
- };
- reader.readAsDataURL(file);
+   }catch(e){console.warn('등록사진 비교 실패',e);}
+
+   results.innerHTML=sections.join('');
+   status.textContent=ocrMatches.length?'✅ 품번 후보를 찾았습니다. 실제 라벨과 확인한 뒤 빠른입고를 눌러 주세요.':'⚠️ 품번을 못 찾았습니다. 품번 글자만 크게 나오도록 다시 찍어 주세요.';
+ }catch(e){
+   console.error(e);
+   status.textContent='사진을 처리하지 못했습니다. 다시 촬영해 주세요.';
+ }
 }
 $('photoSearchInput').onchange=e=>runPhotoSearch(e.target.files?.[0]);
 
@@ -17963,7 +18008,35 @@ body.admin-view.fast-inbound-v140 main > *:not(#fastInboundV140){display:none!im
 .fi142-photo-preview img{display:block;max-width:110px;max-height:90px;object-fit:contain;border-radius:8px;margin-top:6px}
 .fi142-photo-box button{min-height:42px;padding:8px 12px;border:0;border-radius:9px;background:#ece7f8;color:#514078;font-weight:1000}
 .fi142-photo-box button:disabled{opacity:.45}
+.fi-loc-recommend{margin-top:9px;padding:11px 12px;border:1px solid #cfe2d7;border-radius:11px;background:#f7fcf9;font-size:13px;font-weight:900;line-height:1.55}
+.fi-loc-recommend.existing{background:#eef8f2;border-color:#b8ddc7;color:#145f39}
+.fi-loc-recommend.suggest{background:#f4f1ff;border-color:#d7cef4;color:#514078}
+.fi-loc-recommend.warn{background:#fff6df;border-color:#ecd99a;color:#755900}
+.fi-loc-recommend button{margin-top:8px;min-height:38px;border:0;border-radius:9px;background:#514078;color:#fff;font-weight:1000;padding:0 12px}
 @media(max-width:720px){.fi140-form{grid-template-columns:1fr 105px}.fi140-form #fiStockV149{grid-column:1/2}.fi140-form #fiStatementV142{grid-column:1/-1}.fi140-form #fiWarehouseV154{grid-column:1/-1}.fi140-form #fiLocV140,.fi140-save{grid-column:1/-1}.fi142-photo-box{align-items:flex-start;flex-direction:column}.fi142-photo-box button{width:100%}}
+</style>
+
+<script id="escape-html-compat-v241">
+/* V241: 일부 신규 화면에서 사용하는 escHtml 호환 함수 */
+if(typeof window.escHtml!=='function'){
+  window.escHtml=function(v){
+    try{
+      if(typeof window.esc==='function')return window.esc(String(v??''));
+    }catch(e){}
+    return String(v??'')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  };
+}
+</script>
+
+
+<style id="fast-inbound-later-v250-style">
+.fi250-later{width:100%;min-height:54px;border:2px solid #e38b86;border-radius:12px;background:#fff0ee;color:#a92d26;font-weight:1000;font-size:18px;margin-top:8px}
+.fi250-later:active{transform:translateY(1px)}
 </style>
 
 <script id="fast-inbound-direct-v140-script">
@@ -17991,7 +18064,7 @@ function ensureFastInboundV140(){
         <option value="있다">거래명세서 있다</option>
         <option value="없다">거래명세서 없다</option>
       </select>
-      <select id="fiWarehouseV154" aria-label="자재위치 창고 선택">
+      <select id="fiWarehouseV154" aria-label="자재위치 창고 선택" onchange="refreshFastInboundLocationRecommendationV240()">
         <option value="">자재위치 선택사항</option>
         <option value="1층자재창고">1층자재창고</option>
         <option value="2층자재창고">2층자재창고</option>
@@ -17999,9 +18072,11 @@ function ensureFastInboundV140(){
       </select>
       <input id="fiLocV140" autocomplete="off" placeholder="위치 등록(선택)">
       <button id="fiSaveV140" class="fi140-save" type="button" onclick="saveFastInboundV140()">📥 입고저장</button>
+      <button id="fiLaterV250" class="fi250-later" type="button" onclick="saveFastInboundLaterV250()">📌 나중에 확인</button>
     </div>
     <div id="fiPickedV140" class="fi140-picked">품목을 검색하세요.</div>
     <div id="fiLocationQtyV166" class="loc166-box"></div>
+    <div id="fiLocRecommendV240" class="fi-loc-recommend warn">품목을 선택하면 기존 위치 또는 중복 없는 추천 위치를 안내합니다.</div>
     <div id="fiPhotoBoxV142" class="fi142-photo-box">
       <div id="fiPhotoPreviewV142" class="fi142-photo-preview">품목 선택 후 사진을 확인할 수 있습니다.</div>
       <button id="fiPhotoBtnV142" type="button" onclick="changeFastInboundPhotoV142()" disabled>🖼 품목사진 등록</button>
@@ -18058,6 +18133,82 @@ function showStockFastInboundV149(x){
   el.textContent=x?`현 창고 재고 ${stockFastInboundV149(x).toLocaleString()}`:'현 창고 재고 -';
 }
 
+function usedInboundLocationNumbersV240(){
+  const used=new Set();
+  const scan=(arr)=>{
+    (arr||[]).forEach(e=>{
+      const n=locationDetailNumber(e?.detail);
+      if(Number.isFinite(n)&&n>=1000&&n<=13000)used.add(n);
+    });
+  };
+  if(sharedReady){
+    Object.values(sharedCache.locations||{}).forEach(scan);
+  }else{
+    const seen=new Set();
+    itemsFastInboundV140().forEach(x=>{
+      const part=String(x.part||'');
+      if(part&&!seen.has(part)){seen.add(part);scan(getAllLocations(part));}
+    });
+  }
+  return used;
+}
+function nextUnusedInboundLocationV240(){
+  const used=usedInboundLocationNumbersV240();
+  for(let n=1000;n<=13000;n++)if(!used.has(n))return String(n);
+  return '';
+}
+function mapInboundWarehouseV240(room){
+  const r=String(room||'');
+  if(r.includes('1층'))return '1층자재창고';
+  if(r.includes('2층'))return '2층자재창고';
+  if(r.includes('소모'))return '소모자재위치';
+  return '';
+}
+async function refreshFastInboundLocationRecommendationV240(){
+  const box=document.getElementById('fiLocRecommendV240');
+  const x=window.__fiSelectedV140;
+  if(!box)return;
+  if(!x){box.className='fi-loc-recommend warn';box.textContent='품목을 선택하면 기존 위치 또는 중복 없는 추천 위치를 안내합니다.';return;}
+  try{if(typeof loadSharedLocations==='function')await loadSharedLocations();}catch(e){}
+  const locs=(typeof getAllLocations==='function')?getAllLocations(x.part):[];
+  if(locs&&locs.length){
+    const primary=locs.find(e=>e.is_primary)||locs[0];
+    const wh=document.getElementById('fiWarehouseV154');
+    const li=document.getElementById('fiLocV140');
+    const mapped=mapInboundWarehouseV240(primary?.room);
+    if(wh&&mapped)wh.value=mapped;
+    if(li&&primary?.detail)li.value=String(primary.detail);
+    box.className='fi-loc-recommend existing';
+    box.innerHTML=`✅ <b>기존 보관위치 우선 추천</b><br>${esc(formatLoc(primary)||primary?.detail||'위치 확인 필요')}<br><small>기존 품목은 새 번호를 만들지 않고 기존 위치에 입고하는 것이 우선입니다.</small>`;
+    return;
+  }
+  const warehouse=(document.getElementById('fiWarehouseV154')?.value||'').trim();
+  const suggestion=nextUnusedInboundLocationV240();
+  if(!warehouse){
+    box.className='fi-loc-recommend warn';
+    box.innerHTML='⚠️ 등록된 기존 위치가 없습니다.<br><b>자재위치 창고를 먼저 선택하면 중복 없는 추천번호를 자동 적용합니다.</b>';
+    return;
+  }
+  if(!suggestion){
+    box.className='fi-loc-recommend warn';
+    box.textContent='⚠️ 1000~13000 범위에서 추천 가능한 미사용 번호를 찾지 못했습니다.';
+    return;
+  }
+  const li=document.getElementById('fiLocV140');
+  if(li&&!li.value.trim())li.value=suggestion;
+  box.className='fi-loc-recommend suggest';
+  box.innerHTML=`✨ <b>중복 없는 추천 위치번호: ${esc(suggestion)}</b><br>${esc(warehouse)} · 현재 등록된 1000~13000 번호를 제외해 추천했습니다.<br><small>실제 선반 공간을 확인한 뒤 입고저장하세요.</small><br><button type="button" onclick="applyInboundLocationRecommendationV240('${esc(suggestion)}')">추천번호 적용</button>`;
+}
+function applyInboundLocationRecommendationV240(v){
+  const el=document.getElementById('fiLocV140');if(el)el.value=String(v||'');
+}
+function validateInboundLocationDuplicateV240(part,text){
+  const v=String(text||'').trim();
+  const n=locationDetailNumber(v);
+  if(!Number.isFinite(n)||n<1000)return [];
+  return findLocationDetailDuplicates(v,String(part||''),'','','');
+}
+
 function renderFastInboundPhotoV142(){
   const box=document.getElementById('fiPhotoPreviewV142');
   const btn=document.getElementById('fiPhotoBtnV142');
@@ -18075,17 +18226,78 @@ function renderFastInboundPhotoV142(){
     ? `현재 저장된 사진<img src="${photo}" alt="${esc(x.part||'')} 사진">`
     : '현재 저장된 사진이 없습니다.';
 }
+async function fileToDataUrlV241(file){
+  return await new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(String(r.result||''));
+    r.onerror=()=>reject(new Error('사진 파일을 읽지 못했습니다.'));
+    r.readAsDataURL(file);
+  });
+}
+async function saveItemPhotoRobustV241(part,file){
+  const p=String(part||'').trim();
+  if(!p)throw new Error('품번이 없습니다.');
+  if(!file)throw new Error('사진을 선택하지 않았습니다.');
+  if(file.size>25*1024*1024)throw new Error('사진은 25MB 이하로 선택해 주세요.');
+
+  const optimized=await optimizeItemPhoto(file);
+  let sharedError=null;
+  if(sharedReady&&sharedDb){
+    try{
+      const url=await sharedUploadPhoto(p,optimized);
+      sharedCache.photo[p]=url;
+      try{localStorage.removeItem(photoKey(p));}catch(e){}
+      return {mode:'shared',url};
+    }catch(e){
+      sharedError=e;
+      console.warn('공용 사진 저장 실패, 기기 임시저장으로 전환',e);
+    }
+  }
+
+  /* 공용 저장 실패/미연결이어도 사진 등록 자체는 막지 않음 */
+  const dataUrl=await fileToDataUrlV241(optimized);
+  try{
+    localStorage.setItem(photoKey(p),dataUrl);
+  }catch(e){
+    throw sharedError||new Error('휴대폰 임시 사진 저장 공간이 부족합니다.');
+  }
+  if(sharedReady&&sharedCache)sharedCache.photo[p]=dataUrl;
+  return {mode:'local',url:dataUrl,error:sharedError};
+}
 function changeFastInboundPhotoV142(){
   const x=window.__fiSelectedV140;
   if(!x)return alert('품목을 먼저 선택하세요.');
-  if(typeof choosePhoto!=='function')return alert('기존 사진 등록 기능을 찾지 못했습니다.');
-  choosePhoto(x.part);
-  /* 기존 사진 저장 기능이 완료된 뒤 미리보기만 갱신 */
-  let n=0;
-  const timer=setInterval(()=>{
-    renderFastInboundPhotoV142();
-    if(++n>=20)clearInterval(timer);
-  },500);
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*';
+  input.setAttribute('capture','environment');
+  input.onchange=async()=>{
+    const file=input.files?.[0];
+    if(!file)return;
+    const btn=document.getElementById('fiPhotoBtnV142');
+    const box=document.getElementById('fiPhotoPreviewV142');
+    const oldText=btn?.textContent||'🖼 품목사진 등록';
+    try{
+      if(btn){btn.disabled=true;btn.textContent='⏳ 사진 저장 중...';}
+      if(box)box.innerHTML='<b>사진 저장 중...</b>';
+      const saved=await saveItemPhotoRobustV241(x.part,file);
+      renderFastInboundPhotoV142();
+      try{if(typeof search==='function')search();}catch(e){}
+      if(saved.mode==='shared'){
+        alert('✅ 품목사진 저장 완료\n\n공용 DB에 저장되어 PC와 모바일에서 같이 보입니다.');
+      }else{
+        const reason=saved.error?('\n\n공용 DB 저장 실패 사유: '+(saved.error.message||saved.error)):' ';
+        alert('⚠️ 사진은 이 기기에 임시 저장했습니다.\n공용 DB 연결/권한을 확인하면 다른 기기에도 공유할 수 있습니다.'+reason);
+      }
+    }catch(e){
+      console.error('품목사진 등록 실패',e);
+      alert('❌ 품목사진 등록 실패\n\n'+(e.message||e));
+      renderFastInboundPhotoV142();
+    }finally{
+      if(btn){btn.disabled=false;if(btn.textContent==='⏳ 사진 저장 중...')btn.textContent=oldText;}
+    }
+  };
+  input.click();
 }
 
 
@@ -18171,6 +18383,7 @@ function searchFastInboundV140(focusQty=false){
     try{showStockFastInboundV149(null)}catch(e){}
     try{renderLocationQtyBoxV166('fiLocationQtyV166',null)}catch(e){}
     try{renderFastInboundPhotoV142()}catch(e){}
+    try{refreshFastInboundLocationRecommendationV240()}catch(e){}
     try{loadRecentInboundV183('')}catch(e){}
     return;
   }
@@ -18194,6 +18407,7 @@ function searchFastInboundV140(focusQty=false){
     try{showStockFastInboundV149(x)}catch(e){}
     try{renderLocationQtyBoxV166('fiLocationQtyV166',x)}catch(e){}
     try{renderFastInboundPhotoV142()}catch(e){}
+    try{refreshFastInboundLocationRecommendationV240()}catch(e){}
     try{loadRecentInboundV183(x.part)}catch(e){}
 
     try{
@@ -18230,6 +18444,7 @@ function selectFastInboundV140(i){
   showStockFastInboundV149(x);
   renderLocationQtyBoxV166('fiLocationQtyV166',x);
   renderFastInboundPhotoV142();
+  refreshFastInboundLocationRecommendationV240();
   loadRecentInboundV183(x.part);
 
   document.getElementById('fiPickedV140').innerHTML=`✅ 선택: <b>${esc(x.part||'')}</b> · ${esc(x.name||'')}<br><span style="color:#185f3c">현재고: ${stockFastInboundV149(x).toLocaleString()}</span> · <span style="color:#5c4b88">위치: ${locationColorHtmlV231(x)}</span>`;
@@ -18262,6 +18477,10 @@ async function saveLocationFastInboundV140(x,qty,text,warehouse){
   const part=String(x.part||'');
   const rows=(sharedCache.locations[part]||[]);
   const same=rows.find(r=>String(r.room||'').trim()===warehouse&&String(r.detail||'').trim()===text);
+  if(!same){
+    const dup=validateInboundLocationDuplicateV240(part,text);
+    if(dup.length)throw new Error(`세부위치 ${text}은(는) 이미 사용 중입니다: ${dup.slice(0,3).map(d=>d.part+' ('+d.location+')').join(', ')}`);
+  }
   const rec={room:warehouse,zone:'',level:'',height:'',storage:'',detail:text,qty:Number(qty),note:noteWithDivision('택배 빠른입고 위치등록',getItemDivision(part)),is_primary:rows.length===0};
   if(same){
     rec.qty=Number(same.qty||0)+Number(qty);
@@ -18271,6 +18490,50 @@ async function saveLocationFastInboundV140(x,qty,text,warehouse){
     await sharedSaveMultiLocation(part,rec,null);
   }
   return {label:[warehouse,text].filter(Boolean).join(' '),balance:Number(rec.qty||qty)};
+}
+
+
+function saveFastInboundLaterV250(){
+  const selected=window.__fiSelectedV140;
+  const rawPart=String(document.getElementById('fiPartV140')?.value||'').trim();
+  const part=String(selected?.part||rawPart||'').trim();
+  if(!part)return alert('품번 또는 품명을 먼저 입력하세요.');
+
+  const name=String(selected?.name||'ERP/품목 확인 필요').trim();
+  const qty=Number(document.getElementById('fiQtyV140')?.value||0);
+  const statement=String(document.getElementById('fiStatementV142')?.value||'').trim();
+  const warehouse=String(document.getElementById('fiWarehouseV154')?.value||'').trim();
+  const loc=String(document.getElementById('fiLocV140')?.value||'').trim();
+  const location=[warehouse,loc].filter(Boolean).join(' ') || (selected?((getAllLocations(selected.part)||[]).map(e=>formatLoc(e)).join(' / ')):'') || '미등록';
+
+  const missing=[];
+  if(!selected)missing.push('ERP/품목 확인');
+  if(!qty)missing.push('수량 확인');
+  if(!statement)missing.push('거래명세서 확인');
+  if(!warehouse&&!loc)missing.push('위치 확인');
+  const reason=missing.length?missing.join(' · '):'택배입고 재확인';
+  const memo=[
+    qty?`입고예정수량 ${qty.toLocaleString()}개`:'수량 미입력',
+    statement?`거래명세서 ${statement}`:'거래명세서 미확인',
+    location&&location!=='미등록'?`위치 ${location}`:'위치 미확인'
+  ].join(' / ');
+
+  try{
+    const writer=currentWorker?.name||(isAdmin?'관리자':'사용자');
+    const a=typeof getLaterChecks==='function'?getLaterChecks():[];
+    const same=a.find(x=>!x.done && String(x.part||'')===part && String(x.reason||'')===reason);
+    if(same){
+      same.name=name;same.location=location;same.memo=memo;same.updated_at=new Date().toISOString();same.writer=writer;
+    }else{
+      a.unshift({id:Date.now()+Math.random(),part,name,location,reason,memo,writer,created_at:new Date().toISOString(),done:false,source:'FAST_INBOUND'});
+    }
+    if(typeof setLaterChecks==='function')setLaterChecks(a);
+    else localStorage.setItem('mirim_later_checks_v7',JSON.stringify(a));
+    try{if(typeof renderLaterChecks==='function')renderLaterChecks()}catch(e){}
+    alert(`📌 나중에 확인에 저장했습니다.\n${part}${qty?` · ${qty.toLocaleString()}개`:''}`);
+  }catch(e){
+    console.error(e);alert('나중에 확인 저장 실패: '+(e.message||e));
+  }
 }
 
 async function saveFastInboundV140(){
@@ -18286,6 +18549,17 @@ async function saveFastInboundV140(){
   if(loc&&!warehouse)return alert('위치를 등록하려면 자재위치 창고를 먼저 선택하세요.');
 
   try{
+    /* 재고를 올리기 전에 위치 중복을 먼저 검사해 부분 저장을 방지 */
+    if(loc){
+      if(typeof loadSharedLocations==='function')await loadSharedLocations();
+      const part=String(x.part||'');
+      const rows=(sharedCache.locations[part]||[]);
+      const same=rows.find(r=>String(r.room||'').trim()===warehouse&&String(r.detail||'').trim()===loc);
+      if(!same){
+        const dup=validateInboundLocationDuplicateV240(part,loc);
+        if(dup.length)throw new Error(`세부위치 ${loc}은(는) 이미 사용 중입니다: ${dup.slice(0,3).map(d=>d.part+' ('+d.location+')').join(', ')}`);
+      }
+    }
     await sharedAddMovement('IN',x,qty,'관리자');
     await refreshSharedStockV152(x.part);
     await getLatestWarehouseStockV156(x.part);
@@ -18328,6 +18602,7 @@ async function saveFastInboundV140(){
     showStockFastInboundV149(null);
     document.getElementById('fiResultsV140').innerHTML='';
     renderFastInboundPhotoV142();
+    refreshFastInboundLocationRecommendationV240();
     document.getElementById('fiPartV140').focus();
   }catch(e){console.error(e);alert('입고 저장 실패: '+(e.message||e))}
   finally{syncFastInboundV140()}
@@ -20111,5 +20386,23 @@ function locationColorHtmlV231(x){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootV233,{once:true});
   else bootV233();
 })();
+
+/* v241 공용 품목사진 등록 안정화: 일반 검색화면의 사진등록도 같은 저장 경로 사용 */
+function choosePhotoV241(part){
+  if(!isAdmin && !currentWorker){alert('사진 등록 전 작업자 로그인이 필요합니다.');return;}
+  if(!isAdmin && typeof requireWorkerApproval2589==='function' && !requireWorkerApproval2589('사진 등록/변경'))return;
+  const input=document.createElement('input');input.type='file';input.accept='image/*';input.setAttribute('capture','environment');
+  input.onchange=async()=>{
+    const file=input.files?.[0];if(!file)return;
+    try{
+      const saved=await saveItemPhotoRobustV241(part,file);
+      try{if(typeof search==='function')search();}catch(e){}
+      if(saved.mode==='shared')alert('✅ 사진 저장 완료\n\nPC와 모바일에서 같은 사진이 보입니다.');
+      else alert('⚠️ 사진은 이 기기에 임시 저장했습니다.\n공용 DB 사진 저장 권한을 확인해 주세요.');
+    }catch(e){console.error(e);alert('❌ 사진 저장 실패\n\n'+(e.message||e));}
+  };
+  input.click();
+}
+try{choosePhoto=choosePhotoV241;}catch(e){}
 </script>
 </body></html>
