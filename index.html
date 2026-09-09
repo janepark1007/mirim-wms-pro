@@ -1878,6 +1878,22 @@ body.park-location-worker-v63 .erp-only{
 .npp-cat-SHERPA-v233{background:#ffd9c9!important;color:#9b3510!important;border:1px solid #ed9c7b!important}
 .npp-cat-ETC-v233{background:#f0f0f0!important;color:#555!important;border:1px solid #c8c8c8!important}
 </style>
+
+<style id="v234-sync-location-photo-fix">
+/* V234: 요청한 세 부분만 보강 */
+#alResultsV144 .al144-edit-btn{
+  min-height:38px;border:0;border-radius:9px;padding:0 12px;
+  background:#66529a;color:#fff;font-weight:1000;margin-top:7px
+}
+#v234PhotoInboundBtn{
+  min-height:52px!important;border:0!important;border-radius:11px!important;
+  background:#3459a5!important;color:#fff!important;font-weight:1000!important;
+  padding:0 16px!important
+}
+#v234WorkerSyncState{
+  margin-top:7px;font-size:12px;font-weight:900;color:#0b6b3e
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -20464,6 +20480,97 @@ function choosePhotoV241(part){
   input.click();
 }
 try{choosePhoto=choosePhotoV241;}catch(e){}
+</script>
+
+<script id="v234-sync-location-photo-fix-script">
+(function(){
+  /* 1) 작업자 모드: 화면 복귀/재접속 시 공용 DB를 다시 읽고 현재 검색 결과도 갱신 */
+  let syncingV234=false;
+  async function refreshWorkerSharedV234(){
+    if(isAdmin || syncingV234)return;
+    syncingV234=true;
+    try{
+      if(!sharedReady || !sharedDb){
+        if(typeof initSharedDb==='function')await initSharedDb();
+      }else{
+        if(typeof loadSharedCache==='function')await loadSharedCache();
+        if(typeof refreshSharedHistories==='function')await refreshSharedHistories();
+      }
+      const q=document.getElementById('q');
+      if(q && String(q.value||'').trim() && typeof window.search==='function'){
+        try{window.search()}catch(e){}
+      }
+      const b=document.getElementById('syncBar');
+      if(b && sharedReady){
+        b.textContent='✅ 공용 동기화 연결 · 최신값 확인';
+        b.style.background='#eaf7ef';b.style.color='#0b6b3e';
+      }
+    }catch(e){
+      console.warn('작업자 최신 동기화 실패',e);
+    }finally{
+      syncingV234=false;
+    }
+  }
+  window.refreshWorkerSharedV234=refreshWorkerSharedV234;
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshWorkerSharedV234()});
+  window.addEventListener('focus',refreshWorkerSharedV234);
+  setInterval(()=>{if(!isAdmin)refreshWorkerSharedV234()},60000);
+
+  /* 2) 관리자 자재위치검색 결과에서 해당 품목 위치를 바로 수정 */
+  window.openAdminLocationEditV234=function(part){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+    document.body.classList.remove('admin-location-v144');
+    try{openMode('location')}catch(e){}
+    setTimeout(()=>{
+      const q=document.getElementById('q');
+      if(q)q.value=String(part||'');
+      try{if(typeof window.search==='function')window.search()}catch(e){}
+      const target=document.getElementById('results')||document.getElementById('work');
+      if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+    },80);
+  };
+
+  const oldAdminSearchV234=window.searchAdminLocationV144;
+  if(typeof oldAdminSearchV234==='function'){
+    window.searchAdminLocationV144=function(){
+      const r=oldAdminSearchV234.apply(this,arguments);
+      setTimeout(()=>{
+        document.querySelectorAll('#alResultsV144 .al144-row').forEach(row=>{
+          if(row.querySelector('.al144-edit-btn'))return;
+          const part=(row.querySelector('.al144-part')?.textContent||'').trim();
+          if(!part)return;
+          const btn=document.createElement('button');
+          btn.type='button';btn.className='al144-edit-btn';
+          btn.textContent='✏️ 이 품목 위치 바로 수정';
+          btn.onclick=()=>openAdminLocationEditV234(part);
+          const locs=row.querySelector('.al144-locs');
+          if(locs)locs.insertAdjacentElement('afterend',btn);
+          else row.appendChild(btn);
+        });
+      },0);
+      return r;
+    };
+  }
+
+  /* 3) 빠른입고의 택배사진 자동입고 진입 버튼을 확실히 복구 */
+  function ensurePhotoInboundV234(){
+    if(!isAdmin)return;
+    const fi=document.getElementById('fastInboundV140');
+    if(fi && !document.getElementById('v234PhotoInboundBtn')){
+      const head=fi.querySelector('.fi140-head');
+      if(head){
+        const btn=document.createElement('button');
+        btn.id='v234PhotoInboundBtn';btn.type='button';
+        btn.textContent='📷 택배사진으로 입고등록';
+        btn.onclick=()=>openInboundPhotoAutomationV200();
+        head.appendChild(btn);
+      }
+    }
+  }
+  const obs=new MutationObserver(()=>ensurePhotoInboundV234());
+  obs.observe(document.body,{childList:true,subtree:true});
+  setTimeout(ensurePhotoInboundV234,0);
+})();
 </script>
 </body></html>
 <style id="worker-today-inout-v1510">
