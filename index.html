@@ -1894,6 +1894,23 @@ body.park-location-worker-v63 .erp-only{
   margin-top:7px;font-size:12px;font-weight:900;color:#0b6b3e
 }
 </style>
+
+<style id="v235-admin-location-inline-editor-style">
+#alResultsV144 .v235-inline-editor{
+  margin-top:10px;padding:12px;border:2px solid #bca8df;border-radius:12px;background:#fbf9ff
+}
+#alResultsV144 .v235-inline-title{font-weight:1000;font-size:18px;margin-bottom:9px;color:#514078}
+#alResultsV144 .v235-inline-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px
+}
+#alResultsV144 .v235-inline-grid label{font-weight:900;font-size:13px}
+#alResultsV144 .v235-inline-grid select,
+#alResultsV144 .v235-inline-grid input{width:100%;min-height:42px;margin-top:4px}
+#alResultsV144 .v235-inline-actions{display:flex;gap:8px;margin-top:10px}
+#alResultsV144 .v235-save{background:#66529a;color:#fff;border:0;border-radius:9px;padding:10px 16px;font-weight:1000}
+#alResultsV144 .v235-cancel{background:#eee;border:0;border-radius:9px;padding:10px 16px;font-weight:900}
+@media(max-width:720px){#alResultsV144 .v235-inline-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -20570,6 +20587,122 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
   const obs=new MutationObserver(()=>ensurePhotoInboundV234());
   obs.observe(document.body,{childList:true,subtree:true});
   setTimeout(ensurePhotoInboundV234,0);
+})();
+</script>
+
+<script id="v235-admin-location-inline-editor-script">
+(function(){
+  function optionsV235(arr,selected){
+    return [''].concat(arr||[]).map(v=>`<option value="${esc(String(v||''))}"${String(v||'')===String(selected||'')?' selected':''}>${esc(String(v||''))}</option>`).join('');
+  }
+  function findItemV235(part){
+    return (Array.isArray(ITEMS)?ITEMS:[]).find(x=>String(x.part||'')===String(part||''));
+  }
+  window.openAdminLocationInlineV235=function(part,locIndex){
+    if(!isAdmin)return alert('관리자 모드에서만 사용할 수 있습니다.');
+    const row=[...document.querySelectorAll('#alResultsV144 .al144-row')].find(r=>(r.querySelector('.al144-part')?.textContent||'').trim()===String(part));
+    if(!row)return;
+    row.querySelector('.v235-inline-editor')?.remove();
+
+    const locs=(typeof getAllLocations==='function')?(getAllLocations(part)||[]):[];
+    const e=(locIndex>=0&&locs[locIndex])?locs[locIndex]:{};
+    const knownDetail=LOC_OPTIONS.detail.includes(String(e.detail||''))?String(e.detail||''):'';
+    const customDetail=knownDetail?'':String(e.detailCustom||e.detail||'');
+    const box=document.createElement('div');
+    box.className='v235-inline-editor';
+    box.innerHTML=`
+      <div class="v235-inline-title">✏️ ${locIndex>=0?`${locIndex+1}자재위치 수정`:'새 자재위치 추가'}</div>
+      <input type="hidden" class="v235-id" value="${esc(String(e.id||''))}">
+      <div class="v235-inline-grid">
+        <label>자재보관실<select class="v235-room">${optionsV235(LOC_OPTIONS.room,e.room)}</select></label>
+        <label>구역<select class="v235-zone">${optionsV235(LOC_OPTIONS.zone,e.zone)}</select></label>
+        <label>단<select class="v235-level">${optionsV235(LOC_OPTIONS.level,e.level)}</select></label>
+        <label>선반위치<select class="v235-height">${optionsV235(LOC_OPTIONS.height,e.height)}</select></label>
+        <label>보관형태<select class="v235-storage">${optionsV235(LOC_OPTIONS.storage,e.storage)}</select></label>
+        <label>세부위치<select class="v235-detail">${optionsV235(LOC_OPTIONS.detail,knownDetail)}</select></label>
+        <label>세부위치 직접입력<input class="v235-custom" value="${esc(customDetail)}" placeholder="1000번 이상 / 박스명 / 임시보관"></label>
+        <label>비고<input class="v235-note" value="${esc(String(e.note||'').replace(/\[구분:[^\]]+\]\s*/g,'').trim())}" placeholder="위치 관련 비고"></label>
+        <label>해당 위치 수량<input class="v235-qty" type="number" min="0" step="1" value="${e.qty===0||e.qty?Number(e.qty):''}"></label>
+        <label style="display:flex;align-items:center;gap:7px">주 위치 <input class="v235-primary" type="checkbox" style="width:auto"${e.is_primary?' checked':''}></label>
+      </div>
+      <div class="v235-inline-actions">
+        <button type="button" class="v235-save">💾 위치 저장</button>
+        <button type="button" class="v235-cancel">취소</button>
+      </div>`;
+    const locBlock=row.querySelector('.al144-locs');
+    if(locBlock)locBlock.insertAdjacentElement('afterend',box); else row.appendChild(box);
+    box.querySelector('.v235-detail').onchange=function(){if(this.value)box.querySelector('.v235-custom').value=''};
+    box.querySelector('.v235-custom').oninput=function(){if(this.value)box.querySelector('.v235-detail').value=''};
+    box.querySelector('.v235-cancel').onclick=()=>box.remove();
+    box.querySelector('.v235-save').onclick=async()=>{
+      const detail=(box.querySelector('.v235-custom').value||'').trim()||box.querySelector('.v235-detail').value||'';
+      const data={
+        room:box.querySelector('.v235-room').value||'',
+        zone:box.querySelector('.v235-zone').value||'',
+        level:box.querySelector('.v235-level').value||'',
+        height:box.querySelector('.v235-height').value||'',
+        storage:box.querySelector('.v235-storage').value||'',
+        detail,
+        detailCustom:(box.querySelector('.v235-custom').value||'').trim(),
+        note:noteWithDivision((box.querySelector('.v235-note').value||'').trim(),getItemDivision(part)),
+        qty:Math.max(0,Number(box.querySelector('.v235-qty').value||0)),
+        is_primary:box.querySelector('.v235-primary').checked
+      };
+      const id=(box.querySelector('.v235-id').value||'').trim();
+      if(!data.room&&!data.zone&&!data.level&&!data.height&&!data.storage&&!data.detail)return alert('위치를 하나 이상 선택해 주세요.');
+      const btn=box.querySelector('.v235-save'); btn.disabled=true;btn.textContent='저장 중...';
+      try{
+        if(sharedReady){
+          await sharedSaveMultiLocation(part,data,id||null);
+          await loadSharedLocations();
+        }else{
+          const arr=getAllLocations(part).map(x=>({...x}));
+          if(id){
+            const ix=arr.findIndex(x=>String(x.id)===String(id));
+            if(ix>=0)arr[ix]={...arr[ix],...data,id};
+          }else arr.push({...data,id:'local_'+Date.now(),is_primary:data.is_primary||arr.length===0});
+          localStorage.setItem(locArrayKey(part),JSON.stringify(arr));
+        }
+        searchAdminLocationV144();
+        alert(id?'✅ 보관장소 수정 완료':'✅ 보관장소 추가 완료');
+      }catch(err){
+        console.error(err);alert('위치 저장 실패: '+(err.message||err));
+        btn.disabled=false;btn.textContent='💾 위치 저장';
+      }
+    };
+    box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+
+  /* 관리자 검색 결과에 각 위치별 수정 + 새 위치 추가 버튼을 직접 붙임 */
+  const old=window.searchAdminLocationV144;
+  window.searchAdminLocationV144=function(){
+    const r=old.apply(this,arguments);
+    setTimeout(()=>{
+      document.querySelectorAll('#alResultsV144 .al144-row').forEach(row=>{
+        const part=(row.querySelector('.al144-part')?.textContent||'').trim();
+        if(!part)return;
+        const locs=row.querySelectorAll('.al144-loc');
+        locs.forEach((loc,i)=>{
+          if(loc.querySelector('.v235-loc-edit'))return;
+          const b=document.createElement('button');
+          b.type='button';b.className='al144-edit-btn v235-loc-edit';
+          b.textContent=`✏️ ${i+1}자재위치 수정`;
+          b.onclick=()=>openAdminLocationInlineV235(part,i);
+          loc.appendChild(b);
+        });
+        if(!row.querySelector('.v235-add-location')){
+          const b=document.createElement('button');
+          b.type='button';b.className='al144-edit-btn v235-add-location';
+          b.textContent='➕ 새 자재위치 추가';
+          b.onclick=()=>openAdminLocationInlineV235(part,-1);
+          row.querySelector('.al144-locs')?.insertAdjacentElement('afterend',b);
+        }
+        /* V234의 이동형 버튼은 혼동 방지를 위해 이 결과 안에서만 숨김 */
+        row.querySelectorAll('.al144-edit-btn:not(.v235-loc-edit):not(.v235-add-location)').forEach(b=>b.style.display='none');
+      });
+    },0);
+    return r;
+  };
 })();
 </script>
 </body></html>
