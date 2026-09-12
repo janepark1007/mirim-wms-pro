@@ -1911,6 +1911,13 @@ body.park-location-worker-v63 .erp-only{
 #alResultsV144 .v235-cancel{background:#eee;border:0;border-radius:9px;padding:10px 16px;font-weight:900}
 @media(max-width:720px){#alResultsV144 .v235-inline-grid{grid-template-columns:1fr}}
 </style>
+
+<style id="v236-admin-only-local-style">
+/* 관리자 단독 · 로컬저장 모드 */
+#workerLoginPanel,.worker-auth,#adminLoginBtn{display:none!important}
+#syncBar{display:none!important}
+body.admin-view .role-pill::after{content:" · 이 기기 저장";font-size:11px}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -20703,6 +20710,230 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
     },0);
     return r;
   };
+})();
+</script>
+
+<script id="v236-admin-only-local-script">
+(function(){
+  const EDIT_PIN_V236='0307';
+
+  window.requireEditPinV236=function(action){
+    const pin=prompt(`🔐 ${action||'수정'} 비밀번호를 입력하세요.`);
+    if(pin===null)return false;
+    if(String(pin)!==EDIT_PIN_V236){
+      alert('비밀번호가 맞지 않습니다.');
+      return false;
+    }
+    return true;
+  };
+
+  /* 관리자 모드 하나만 사용 */
+  function forceAdminOnlyV236(){
+    try{
+      isAdmin=true;
+      currentWorker=null;
+      sessionStorage.setItem('mirim_prod_admin','1');
+      sessionStorage.removeItem('mirim_worker_session');
+      document.body.classList.remove('worker-locked','worker-search-only-v101');
+      document.body.classList.add('admin-view');
+      document.getElementById('workerLoginPanel')?.classList.add('hidden');
+      document.getElementById('home')?.classList.remove('hidden');
+      if(typeof updateAdminUI==='function')updateAdminUI();
+      if(typeof showAdminReferenceHome==='function')showAdminReferenceHome();
+    }catch(e){console.warn('관리자 단독모드 적용',e)}
+  }
+  window.addEventListener('load',()=>setTimeout(forceAdminOnlyV236,50));
+  setTimeout(forceAdminOnlyV236,0);
+
+  /* 공용DB는 사용하지 않음 */
+  try{sharedReady=false;sharedDb=null}catch(e){}
+  if(window.__mirimSharedTimer){clearInterval(window.__mirimSharedTimer);window.__mirimSharedTimer=null;}
+
+  window.syncFastInboundV140=function(){
+    const el=document.getElementById('fiStatusV140');
+    const btn=document.getElementById('fiSaveV140');
+    if(el){el.textContent='● 이 기기에 저장 · 동기화 사용 안 함';el.style.color='#167044'}
+    if(btn)btn.disabled=false;
+    return true;
+  };
+  window.syncFastOutboundV143=function(){
+    const el=document.getElementById('foStatusV143');
+    const btn=document.getElementById('foSaveV143');
+    if(el){el.textContent='● 이 기기에 저장 · 동기화 사용 안 함';el.style.color='#167044'}
+    if(btn)btn.disabled=false;
+    return true;
+  };
+
+  function localBaseStockV236(x){
+    let n=null;
+    try{n=getCurrentStock(x)}catch(e){}
+    if(Number.isFinite(Number(n)))return Number(n);
+    try{
+      const locs=getAllLocations(x.part)||[];
+      if(locs.length)return locs.reduce((s,l)=>s+Number(l.qty||0),0);
+    }catch(e){}
+    return 0;
+  }
+  function saveLocalStockV236(part,n){
+    localStorage.setItem(stockKey(part),String(Number(n)));
+    localStorage.setItem('mirim_stock_updated_'+String(part),new Date().toISOString());
+  }
+  function saveLocalLocationArrayV236(part,arr){
+    localStorage.setItem(locArrayKey(part),JSON.stringify(arr||[]));
+  }
+
+  /* 빠른입고 - 로컬 저장 */
+  window.saveFastInboundV140=async function(){
+    const x=window.__fiSelectedV140;
+    const qty=Number(document.getElementById('fiQtyV140')?.value||0);
+    const statement=(document.getElementById('fiStatementV142')?.value||'').trim();
+    const warehouse=(document.getElementById('fiWarehouseV154')?.value||'').trim();
+    const loc=(document.getElementById('fiLocV140')?.value||'').trim();
+    if(!x)return alert('품목을 먼저 선택하세요.');
+    if(!qty||qty<=0)return alert('입고수량을 입력하세요.');
+    if(!statement)return alert('거래명세서 있다 / 없다를 선택하세요.');
+    if(loc&&!warehouse)return alert('위치를 등록하려면 자재위치 창고를 먼저 선택하세요.');
+
+    try{
+      const before=localBaseStockV236(x);
+      const after=before+qty;
+      saveLocalStockV236(x.part,after);
+
+      let locationLabel='';
+      if(loc){
+        const arr=(getAllLocations(x.part)||[]).map(v=>({...v}));
+        const same=arr.find(v=>String(v.room||'').trim()===warehouse&&String(v.detail||'').trim()===loc);
+        if(same){
+          same.qty=Number(same.qty||0)+qty;
+          locationLabel=[same.room,same.zone,same.level,same.height,same.storage,same.detail].filter(Boolean).join(' ');
+        }else{
+          const row={id:'local_'+Date.now(),room:warehouse,zone:'',level:'',height:'',storage:'',detail:loc,detailCustom:loc,note:'택배 빠른입고',qty,is_primary:arr.length===0};
+          arr.push(row);
+          locationLabel=[warehouse,loc].filter(Boolean).join(' ');
+        }
+        saveLocalLocationArrayV236(x.part,arr);
+      }
+
+      const a=getInHist();
+      a.unshift({
+        time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+        created_at:new Date().toISOString(),
+        part:x.part,name:x.name,qty,worker:'관리자',
+        location:locationLabel,statement
+      });
+      setInHist(a);
+
+      alert(`✅ ${x.part} ${qty.toLocaleString()}개 입고 완료\n이 기기에 저장되었습니다.${locationLabel?`\n📍 ${locationLabel}`:''}`);
+      window.__fiSelectedV140=null;
+      document.getElementById('fiPartV140').value='';
+      document.getElementById('fiQtyV140').value='';
+      document.getElementById('fiStatementV142').value='';
+      document.getElementById('fiWarehouseV154').value='';
+      document.getElementById('fiLocV140').value='';
+      document.getElementById('fiPickedV140').textContent='다음 택배 품목을 입력하세요.';
+      document.getElementById('fiResultsV140').innerHTML='';
+      try{showStockFastInboundV149(null);renderFastInboundPhotoV142();refreshFastInboundLocationRecommendationV240();updateHomeSummary();}catch(e){}
+      document.getElementById('fiPartV140')?.focus();
+    }catch(e){console.error(e);alert('입고 저장 실패: '+(e.message||e))}
+    finally{syncFastInboundV140()}
+  };
+
+  /* 빠른출고 - 로컬 저장 */
+  window.saveFastOutboundV143=async function(){
+    const x=window.__foSelectedV143;
+    const qty=Number(document.getElementById('foQtyV143')?.value||0);
+    const person=(document.getElementById('foPersonV143')?.value||'').trim();
+    const selected=selectedOutboundLocationV158(x);
+    if(!x)return alert('품목을 먼저 선택하세요.');
+    if(!qty||qty<=0)return alert('출고수량을 입력하세요.');
+    if(!person)return alert('가져간 사람을 입력하세요.');
+
+    const before=localBaseStockV236(x);
+    if(before<qty)return alert(`현재고 ${before.toLocaleString()}개보다 많이 출고할 수 없습니다.`);
+    if(selected && qty>Number(selected.qty||0))return alert(`선택한 자재위치 수량 ${Number(selected.qty||0).toLocaleString()}개보다 많이 출고할 수 없습니다.`);
+
+    try{
+      let sourceLocation='';
+      let remain=null;
+      if(selected){
+        const arr=(getAllLocations(x.part)||[]).map(v=>({...v}));
+        let idx=-1;
+        if(selected.id)idx=arr.findIndex(v=>String(v.id||'')===String(selected.id));
+        if(idx<0){
+          const norm=v=>String(v||'').trim();
+          idx=arr.findIndex(v=>norm(v.room)===norm(selected.room)&&norm(v.zone)===norm(selected.zone)&&norm(v.level)===norm(selected.level)&&norm(v.height)===norm(selected.height)&&norm(v.storage)===norm(selected.storage)&&norm(v.detail)===norm(selected.detail));
+        }
+        if(idx>=0){
+          arr[idx].qty=Math.max(0,Number(arr[idx].qty||0)-qty);
+          remain=arr[idx].qty;
+          sourceLocation=[arr[idx].room,arr[idx].zone,arr[idx].level,arr[idx].height,arr[idx].storage,arr[idx].detail].filter(Boolean).join(' ');
+          saveLocalLocationArrayV236(x.part,arr);
+        }
+      }
+
+      saveLocalStockV236(x.part,before-qty);
+      const a=getHist();
+      a.unshift({
+        time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+        created_at:new Date().toISOString(),
+        part:x.part,name:x.name,qty,worker:person,location:sourceLocation
+      });
+      setHist(a);
+
+      alert(`✅ ${x.part} ${qty.toLocaleString()}개 출고 완료\n👤 가져간 사람: ${person}${sourceLocation?`\n📍 ${sourceLocation}`:''}${remain!==null?`\n📦 해당 위치 잔량: ${Number(remain).toLocaleString()}개`:''}\n이 기기에 저장되었습니다.`);
+      window.__foSelectedV143=null;
+      document.getElementById('foPartV143').value='';
+      document.getElementById('foQtyV143').value='';
+      document.getElementById('foPersonV143').value='';
+      document.getElementById('foLocV143').value='';
+      try{fillOutboundLocationSelectV150(null)}catch(e){}
+      document.getElementById('foPickedV143').textContent='다음 출고 품목을 입력하세요.';
+      document.getElementById('foResultsV143').innerHTML='';
+      try{showStockQtyFastOutboundV149(null);renderFastOutboundPhotoV143();updateHomeSummary();}catch(e){}
+      document.getElementById('foPartV143')?.focus();
+    }catch(e){console.error(e);alert('출고 저장 실패: '+(e.message||e))}
+    finally{syncFastOutboundV143()}
+  };
+
+  /* 기존 수량 직접수정은 비밀번호 필요 */
+  const oldSaveCurrentStockV236=window.saveCurrentStock;
+  if(typeof oldSaveCurrentStockV236==='function'){
+    window.saveCurrentStock=async function(part,i){
+      if(!requireEditPinV236('현 창고수량 수정'))return;
+      return oldSaveCurrentStockV236.apply(this,arguments);
+    };
+  }
+
+  /* 기존 위치 편집 저장은 비밀번호 필요 */
+  const oldSaveLocationV236=window.saveLocation;
+  if(typeof oldSaveLocationV236==='function'){
+    window.saveLocation=async function(part,i){
+      if(!requireEditPinV236('자재위치 수정'))return;
+      return oldSaveLocationV236.apply(this,arguments);
+    };
+  }
+
+  /* V235 검색결과 인라인 위치수정도 저장 직전에 비밀번호 */
+  const oldOpenInlineV236=window.openAdminLocationInlineV235;
+  if(typeof oldOpenInlineV236==='function'){
+    window.openAdminLocationInlineV235=function(){
+      const r=oldOpenInlineV236.apply(this,arguments);
+      setTimeout(()=>{
+        const boxes=document.querySelectorAll('#alResultsV144 .v235-inline-editor');
+        const box=boxes[boxes.length-1];
+        const btn=box?.querySelector('.v235-save');
+        if(btn&&!btn.dataset.pinV236){
+          btn.dataset.pinV236='1';
+          const old=btn.onclick;
+          btn.onclick=async function(ev){
+            if(!requireEditPinV236('자재위치 수정'))return;
+            return old?.call(this,ev);
+          };
+        }
+      },0);
+      return r;
+    };
+  }
 })();
 </script>
 </body></html>
