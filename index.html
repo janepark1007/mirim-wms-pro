@@ -1918,6 +1918,38 @@ body.park-location-worker-v63 .erp-only{
 #syncBar{display:none!important}
 body.admin-view .role-pill::after{content:" · 이 기기 저장";font-size:11px}
 </style>
+
+<style id="v237-three-functions-only-style">
+/* V237: 관리자 단독 - 입고/출고/현 자재위치만 표시 */
+body.v237-simple-admin #syncBar,
+body.v237-simple-admin #workerLoginPanel,
+body.v237-simple-admin #adminLoginBtn{display:none!important}
+body.v237-simple-admin.admin-mainmenu-open-v125 #adminMainMenuV125{
+  display:block!important;max-width:980px!important;margin:22px auto!important;padding:18px!important;
+  background:#fff!important;border:1px solid #dfe9e3!important;border-radius:18px!important;
+}
+body.v237-simple-admin.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125){display:none!important}
+#adminMainMenuV125.v237-simple-menu .admin-main125-head{display:none!important}
+#adminMainMenuV125.v237-simple-menu .admin-main125-grid{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important;
+}
+#adminMainMenuV125.v237-simple-menu .admin-main125-btn{
+  display:flex!important;min-height:150px!important;border-radius:18px!important;
+  align-items:center!important;justify-content:center!important;flex-direction:column!important;
+  font-size:22px!important;font-weight:1000!important;
+}
+#adminMainMenuV125.v237-simple-menu .admin-main125-btn .ico{font-size:38px!important;margin-bottom:8px!important}
+#adminMainMenuV125.v237-simple-menu .admin-main125-btn small{font-size:14px!important;margin-top:6px!important}
+#adminMainMenuV125.v237-simple-menu .v237-in{background:#0b7a43!important;color:#fff!important;border-color:#075e34!important}
+#adminMainMenuV125.v237-simple-menu .v237-out{background:#c62828!important;color:#fff!important;border-color:#9f1f1f!important}
+#adminMainMenuV125.v237-simple-menu .v237-loc{background:#7251b5!important;color:#fff!important;border-color:#5c3e9b!important}
+#adminMainMenuV125.v237-simple-menu .admin-main125-tools,
+#adminMainMenuV125.v237-simple-menu .admin-main125-subtitle{display:none!important}
+@media(max-width:700px){
+ #adminMainMenuV125.v237-simple-menu .admin-main125-grid{grid-template-columns:1fr!important}
+ #adminMainMenuV125.v237-simple-menu .admin-main125-btn{min-height:105px!important}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -20934,6 +20966,134 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
       return r;
     };
   }
+})();
+</script>
+
+<script id="v237-three-functions-only-script">
+(function(){
+  const EDIT_PIN_V237='0307';
+
+  function applySimpleAdminV237(){
+    try{
+      isAdmin=true; currentWorker=null;
+      sessionStorage.setItem('mirim_prod_admin','1');
+      sessionStorage.removeItem('mirim_worker_session');
+      document.body.classList.remove('worker-locked','worker-search-only-v101');
+      document.body.classList.add('admin-view','v237-simple-admin');
+    }catch(e){}
+  }
+
+  function buildSimpleMenuV237(){
+    applySimpleAdminV237();
+    try{if(typeof openAdminMainV125==='function')openAdminMainV125()}catch(e){}
+    const box=document.getElementById('adminMainMenuV125');
+    if(!box)return;
+    box.classList.add('v237-simple-menu');
+    const grid=box.querySelector('.admin-main125-grid');
+    if(grid){
+      grid.innerHTML=`
+        <button type="button" class="admin-main125-btn v237-in" onclick="closeAdminMainV125();openFastInboundV140()">
+          <span class="ico">📥</span>입고
+          <small>입고 수량 등록</small>
+        </button>
+        <button type="button" class="admin-main125-btn v237-out" onclick="closeAdminMainV125();openFastOutboundV143()">
+          <span class="ico">📤</span>출고
+          <small>출고 수량 등록</small>
+        </button>
+        <button type="button" class="admin-main125-btn v237-loc" onclick="closeAdminMainV125();openAdminLocationV144()">
+          <span class="ico">📍</span>현 자재위치 등록·수정
+          <small>기존 위치 확인 · 추가 · 수정</small>
+        </button>`;
+    }
+  }
+  window.buildSimpleMenuV237=buildSimpleMenuV237;
+
+  /* DB 연결 없이 기존 브라우저에 등록되어 있던 위치를 우선 복구해서 사용 */
+  const oldGetAllLocationsV237=window.getAllLocations;
+  if(typeof oldGetAllLocationsV237==='function'){
+    window.getAllLocations=function(part){
+      try{
+        const arr=JSON.parse(localStorage.getItem(locArrayKey(part))||'[]');
+        if(Array.isArray(arr)&&arr.length)return arr;
+      }catch(e){}
+      try{
+        const one=getLocEdit(part);
+        if(one)return [{...one,id:null,is_primary:true}];
+      }catch(e){}
+      return oldGetAllLocationsV237.apply(this,arguments)||[];
+    };
+  }
+
+  /* 위치 저장은 동기화 없이 로컬 저장. 수정/추가 시 비밀번호 */
+  window.saveAdminLocationLocalV237=function(part,box){
+    if(!window.requireEditPinV236 ? !confirm('위치를 저장할까요?') : !requireEditPinV236('자재위치 수정'))return false;
+    return true;
+  };
+
+  /* V235 인라인 편집기의 기존 DB 저장 버튼을 로컬 저장으로 교체 */
+  const oldOpenV235=window.openAdminLocationInlineV235;
+  if(typeof oldOpenV235==='function'){
+    window.openAdminLocationInlineV235=function(part,locIndex){
+      const r=oldOpenV235.apply(this,arguments);
+      setTimeout(()=>{
+        const rows=[...document.querySelectorAll('#alResultsV144 .al144-row')];
+        const row=rows.find(x=>(x.querySelector('.al144-part')?.textContent||'').trim()===String(part).trim());
+        const ed=row?.querySelector('.v235-inline-editor');
+        if(!ed)return;
+        const btn=ed.querySelector('button');
+        if(!btn)return;
+        btn.onclick=async function(){
+          if(typeof requireEditPinV236==='function'&&!requireEditPinV236('자재위치 수정'))return;
+          const arr=(getAllLocations(part)||[]).map(x=>({...x}));
+          const id=ed.querySelector('.v235-id')?.value||'';
+          const detailSel=ed.querySelector('.v235-detail')?.value||'';
+          const custom=ed.querySelector('.v235-custom')?.value||'';
+          const data={
+            id:id||('local_'+Date.now()),
+            room:ed.querySelector('.v235-room')?.value||'',
+            zone:ed.querySelector('.v235-zone')?.value||'',
+            level:ed.querySelector('.v235-level')?.value||'',
+            height:ed.querySelector('.v235-height')?.value||'',
+            storage:ed.querySelector('.v235-storage')?.value||'',
+            detail:custom||detailSel||'',
+            detailCustom:custom||'',
+            note:ed.querySelector('.v235-note')?.value||'',
+            qty:Number(ed.querySelector('.v235-qty')?.value||0),
+            is_primary:!!ed.querySelector('.v235-primary')?.checked
+          };
+          let idx=-1;
+          if(id)idx=arr.findIndex(x=>String(x.id||'')===String(id));
+          if(idx<0 && Number.isInteger(Number(locIndex)) && Number(locIndex)>=0 && Number(locIndex)<arr.length)idx=Number(locIndex);
+          if(data.is_primary)arr.forEach(x=>x.is_primary=false);
+          if(idx>=0)arr[idx]={...arr[idx],...data}; else arr.push(data);
+          if(!arr.some(x=>x.is_primary)&&arr.length)arr[0].is_primary=true;
+          localStorage.setItem(locArrayKey(part),JSON.stringify(arr));
+          try{searchAdminLocationV144()}catch(e){}
+          alert(idx>=0?'✅ 자재위치 수정 완료':'✅ 자재위치 등록 완료');
+        };
+      },0);
+      return r;
+    };
+  }
+
+  /* 관리자 위치화면은 공용DB를 읽으려 하지 않음 */
+  const oldOpenAdminLocV237=window.openAdminLocationV144;
+  if(typeof oldOpenAdminLocV237==='function'){
+    window.openAdminLocationV144=function(){
+      try{sharedReady=false;sharedDb=null}catch(e){}
+      return oldOpenAdminLocV237.apply(this,arguments);
+    };
+  }
+
+  /* 각 화면의 홈 복귀는 3개 메뉴로 */
+  document.addEventListener('click',function(e){
+    const b=e.target.closest&&e.target.closest('.fi140-home,.fo143-home,.al144-home');
+    if(!b)return;
+    setTimeout(buildSimpleMenuV237,20);
+  },true);
+
+  window.addEventListener('load',()=>setTimeout(buildSimpleMenuV237,80));
+  setTimeout(buildSimpleMenuV237,20);
 })();
 </script>
 </body></html>
