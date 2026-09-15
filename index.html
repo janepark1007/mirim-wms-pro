@@ -21096,6 +21096,122 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
   setTimeout(buildSimpleMenuV237,20);
 })();
 </script>
+
+<script id="v238-inbound-four-digit-location-script">
+(function(){
+  function fourDigitLocationV238(v){
+    const m=String(v||'').trim().match(/(?:^|\D)(\d{4})(?:\D|$)/);
+    return m ? m[1] : '';
+  }
+
+  function usedFourDigitLocationsV238(){
+    const used=new Set();
+    const all=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+    all.forEach(x=>{
+      try{
+        (getAllLocations(x.part)||[]).forEach(l=>{
+          const fields=[l.detail,l.detailCustom,l.location,l.note];
+          fields.forEach(v=>{
+            const n=fourDigitLocationV238(v);
+            if(n)used.add(n);
+          });
+        });
+      }catch(e){}
+    });
+    return used;
+  }
+
+  window.nextUnusedInboundLocationV240=function(){
+    const used=usedFourDigitLocationsV238();
+    for(let n=1000;n<=9999;n++){
+      const s=String(n);
+      if(!used.has(s))return s;
+    }
+    return '';
+  };
+
+  const oldRefresh=window.refreshFastInboundLocationRecommendationV240;
+  window.refreshFastInboundLocationRecommendationV240=async function(){
+    const box=document.getElementById('fiLocRecommendV240');
+    const x=window.__fiSelectedV140;
+    if(!box)return;
+    if(!x){
+      box.className='fi-loc-recommend warn';
+      box.textContent='품목을 선택하면 기존 위치 또는 등록되지 않은 4자리 추천번호를 안내합니다.';
+      return;
+    }
+    const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+    if(locs.length){
+      const primary=locs.find(e=>e.is_primary)||locs[0];
+      const wh=document.getElementById('fiWarehouseV154');
+      const li=document.getElementById('fiLocV140');
+      try{
+        const mapped=typeof mapInboundWarehouseV240==='function'?mapInboundWarehouseV240(primary?.room):'';
+        if(wh&&mapped)wh.value=mapped;
+      }catch(e){}
+      const current=fourDigitLocationV238(primary?.detail)||fourDigitLocationV238(primary?.detailCustom);
+      if(li&&current)li.value=current;
+      box.className='fi-loc-recommend existing';
+      box.textContent=current
+        ? `기존 자재위치 ${current} · 필요하면 택배입고 시 다른 4자리 위치로 변경할 수 있습니다.`
+        : '기존 자재위치가 있습니다. 택배입고 시 4자리 위치번호를 직접 정할 수 있습니다.';
+      return;
+    }
+    const next=nextUnusedInboundLocationV240();
+    const li=document.getElementById('fiLocV140');
+    if(li&&!String(li.value||'').trim())li.value=next;
+    box.className='fi-loc-recommend new';
+    box.textContent=next
+      ? `추천 위치 ${next} · 현재 등록된 4자리 번호를 제외한 가장 빠른 빈 번호입니다. 직접 변경 가능.`
+      : '사용 가능한 4자리 위치번호가 없습니다.';
+  };
+
+  /* 입고 위치 입력은 4자리 숫자만 허용하고, 다른 품목이 사용 중이면 저장 차단 */
+  function validateInboundLocationV238(){
+    const li=document.getElementById('fiLocV140');
+    if(!li)return true;
+    const raw=String(li.value||'').trim();
+    if(!raw)return true; // 위치 미지정 입고는 기존 동작 유지
+    if(!/^\d{4}$/.test(raw)){
+      alert('자재위치 번호는 4자리 숫자로 입력하세요. 예: 1000');
+      li.focus(); return false;
+    }
+    const selected=window.__fiSelectedV140;
+    const usedByOther=[];
+    const all=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+    all.forEach(x=>{
+      if(selected&&String(x.part)===String(selected.part))return;
+      try{
+        if((getAllLocations(x.part)||[]).some(l=>fourDigitLocationV238(l.detail)===raw||fourDigitLocationV238(l.detailCustom)===raw))
+          usedByOther.push(x.part);
+      }catch(e){}
+    });
+    if(usedByOther.length){
+      alert(`위치번호 ${raw}은 이미 등록되어 있습니다.\n다른 4자리 번호를 사용하세요.`);
+      li.focus(); return false;
+    }
+    return true;
+  }
+
+  const oldSave=window.saveFastInboundV140;
+  if(typeof oldSave==='function'){
+    window.saveFastInboundV140=async function(){
+      if(!validateInboundLocationV238())return;
+      return oldSave.apply(this,arguments);
+    };
+  }
+
+  /* 택배 빠른입고 화면이 열릴 때 안내 문구를 4자리 기준으로 표시 */
+  const oldOpen=window.openFastInboundV140;
+  if(typeof oldOpen==='function'){
+    window.openFastInboundV140=function(){
+      const r=oldOpen.apply(this,arguments);
+      setTimeout(()=>{try{refreshFastInboundLocationRecommendationV240()}catch(e){}},20);
+      return r;
+    };
+  }
+})();
+</script>
 </body></html>
 <style id="worker-today-inout-v1510">
 #workerTodayInOutV1510{display:none;margin:12px 0 14px}
