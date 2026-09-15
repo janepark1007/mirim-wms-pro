@@ -1969,28 +1969,10 @@ body.v237-simple-admin.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125)
 }
 </style>
 
-<style id="v243-main-exact-four-style">
-/* 메인 화면은 요청한 4개 메뉴만 */
-body.v243-main-exact.admin-mainmenu-open-v125 #adminMainMenuV125{
-  display:block!important;width:100%!important;max-width:none!important;margin:0!important;
-}
-body.v243-main-exact.admin-mainmenu-open-v125 #adminMainMenuV125 > *:not(.admin-main125-grid){
-  display:none!important;
-}
-body.v243-main-exact.admin-mainmenu-open-v125 #adminMainMenuV125 .admin-main125-grid{
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:10px!important;
-  width:100%!important;
-}
-body.v243-main-exact.admin-mainmenu-open-v125 #adminMainMenuV125 .admin-main125-btn{
-  display:flex!important;min-height:105px!important;
-}
-@media(max-width:700px){
- body.v243-main-exact.admin-mainmenu-open-v125 #adminMainMenuV125 .admin-main125-grid{
-   grid-template-columns:1fr!important;
- }
-}
+<style id="v249-no-sync-style">
+#syncBar,[id*="syncBar"],[class*="sync-bar"],
+.sync-status,.sync-btn,.shared-sync-status,
+button[onclick*="sync"],button[onclick*="Sync"]{display:none!important}
 </style>
 </head>
 <body>
@@ -21537,182 +21519,52 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
 })();
 </script>
 
-<script id="v243-main-exact-four-script">
+<script id="v249-no-sync-script">
 (function(){
-  function buildExactMainV243(){
-    try{
-      isAdmin=true; currentWorker=null;
-      document.body.classList.remove(
-        'fast-inbound-v140','fast-outbound-v143','admin-location-v144',
-        'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
-        'admin-reference-home','other-storage-open-v50'
-      );
-      document.body.classList.add('admin-view','v237-simple-admin','v243-main-exact','admin-mainmenu-open-v125');
-      if(typeof openAdminMainV125==='function')openAdminMainV125();
+  /* V249: 공용/실시간 동기화 완전 비활성화. 로컬 저장 기능은 그대로 사용 */
+  try{ if(window.__mirimSharedTimer) clearInterval(window.__mirimSharedTimer); }catch(e){}
+  try{ if(window.__mirimSyncTimer) clearInterval(window.__mirimSyncTimer); }catch(e){}
+  try{ if(window.__syncTimer) clearInterval(window.__syncTimer); }catch(e){}
+  window.__mirimSharedTimer=null;
+  window.__mirimSyncTimer=null;
+  window.__syncTimer=null;
 
-      const box=document.getElementById('adminMainMenuV125');
-      if(!box)return;
-      box.classList.add('v237-simple-menu','v240-main-four');
-      const grid=box.querySelector('.admin-main125-grid');
-      if(grid)grid.innerHTML=`
-        <button type="button" class="admin-main125-btn v240-in"
-          onclick="askAdminV241('빠른입고',()=>{closeAdminMainV125();openFastInboundV140()})">
-          <span class="ico">📥</span>빠른입고
-          <small>입고 수량 등록</small>
-        </button>
-        <button type="button" class="admin-main125-btn v240-out"
-          onclick="askAdminV241('빠른출고',()=>{closeAdminMainV125();openFastOutboundV143()})">
-          <span class="ico">📤</span>빠른출고
-          <small>출고 수량 등록</small>
-        </button>
-        <button type="button" class="admin-main125-btn v240-loc"
-          onclick="closeAdminMainV125();openAdminLocationV144()">
-          <span class="ico">📍</span>자재위치 검색
-          <small>누구나 검색 · 조회 가능</small>
-        </button>
-        <button type="button" class="admin-main125-btn v240-npp"
-          onclick="askAdminV241('NPP 도면위치 관리',()=>{closeAdminMainV125();openNppAdminV113()})">
-          <span class="ico">📐</span>NPP 도면위치 관리
-          <small>도면 보관위치 확인 · 관리</small>
-        </button>`;
-      window.scrollTo(0,0);
-    }catch(e){console.error('V243 메인 오류',e)}
-  }
-  window.buildExactMainV243=buildExactMainV243;
-  window.buildMainV240=buildExactMainV243;
-  window.buildPublicMainV241=buildExactMainV243;
-  window.goMainV239=buildExactMainV243;
+  try{ sharedReady=false; }catch(e){}
+  try{ sharedDb=null; }catch(e){}
+  try{ window.sharedReady=false; window.sharedDb=null; }catch(e){}
 
-  window.addEventListener('load',()=>setTimeout(buildExactMainV243,180));
-  setTimeout(buildExactMainV243,60);
-})();
-</script>
+  const noopAsync=async function(){ return null; };
+  const noop=function(){ return null; };
 
-<script id="v244-24h-edit-unlock-script">
-(function(){
-  const PIN_V244='347910';
-  const KEY_V244='mirim_edit_unlock_until_v244';
-  const HOURS_V244=24*60*60*1000;
+  [
+    'initShared','initSharedDb','initSharedV1','connectSharedDb',
+    'loadSharedLocations','loadSharedStock','loadSharedData',
+    'refreshShared','refreshSharedData','syncShared','syncAll',
+    'startSharedSync','startSync','reconnectShared','reconnectSync'
+  ].forEach(n=>{ if(typeof window[n]==='function') window[n]=noopAsync; });
 
-  function unlockedV244(){
-    const until=Number(localStorage.getItem(KEY_V244)||0);
-    if(until>Date.now())return true;
-    if(until)localStorage.removeItem(KEY_V244);
-    return false;
-  }
-  function unlockV244(action){
-    if(unlockedV244())return true;
-    const pin=prompt(`🔐 ${action||'입력·수정'} 권한이 필요합니다.\n1차 비밀번호를 입력하세요.`);
-    if(pin===null)return false;
-    if(String(pin)!==PIN_V244){
-      alert('비밀번호가 맞지 않습니다.\n검색·조회만 가능합니다.');
-      return false;
-    }
-    localStorage.setItem(KEY_V244,String(Date.now()+HOURS_V244));
-    alert('✅ 인증되었습니다.\n이 기기에서 24시간 동안 입력·수정 작업이 가능합니다.');
-    return true;
-  }
-  window.unlockedV244=unlockedV244;
-  window.unlockV244=unlockV244;
-
-  /* 기존 관리자 진입 잠금은 24시간 인증으로 통일 */
-  window.askAdminV241=function(action,callback){
-    if(unlockV244(action))callback();
+  /* 입고/출고 저장 뒤 호출되는 동기화도 로컬 상태 표시만 하고 종료 */
+  window.syncFastInboundV140=function(){
+    const b=document.getElementById('fiSaveV140');
+    if(b)b.disabled=false;
   };
-  window.requireEditPinV236=function(action){
-    return unlockV244(action||'입력·수정');
+  window.syncFastOutboundV143=function(){
+    const b=document.getElementById('foSaveV143');
+    if(b)b.disabled=false;
   };
 
-  /* 위치 편집 진입도 동일한 24시간 인증 적용 */
-  const oldInline=window.openAdminLocationInlineV235;
-  if(typeof oldInline==='function'){
-    window.openAdminLocationInlineV235=function(){
-      if(!unlockV244('자재위치 등록·수정'))return;
-      return oldInline.apply(this,arguments);
-    };
+  function hideSyncV249(){
+    document.querySelectorAll(
+      '#syncBar,[id*="syncBar"],[class*="sync-bar"],.sync-status,.sync-btn,.shared-sync-status'
+    ).forEach(el=>el.style.setProperty('display','none','important'));
+    document.querySelectorAll('button').forEach(b=>{
+      const s=((b.textContent||'')+' '+(b.getAttribute('onclick')||'')).toLowerCase();
+      if(s.includes('동기화')||s.includes('sync')) b.style.setProperty('display','none','important');
+    });
   }
-
-  /* 직접 저장 함수 호출 시에도 인증 없이는 저장 금지 */
-  const oldIn=window.saveFastInboundV140;
-  if(typeof oldIn==='function'){
-    window.saveFastInboundV140=function(){
-      if(!unlockV244('빠른입고 등록'))return;
-      return oldIn.apply(this,arguments);
-    };
-  }
-  const oldOut=window.saveFastOutboundV143;
-  if(typeof oldOut==='function'){
-    window.saveFastOutboundV143=function(){
-      if(!unlockV244('빠른출고 등록'))return;
-      return oldOut.apply(this,arguments);
-    };
-  }
-})();
-</script>
-
-<script id="v246-main-restored-four-script">
-(function(){
-  function mainV246(){
-    try{
-      isAdmin=true; currentWorker=null;
-      document.body.classList.remove(
-        'fast-inbound-v140','fast-outbound-v143','admin-location-v144',
-        'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
-        'admin-reference-home','other-storage-open-v50'
-      );
-      document.body.classList.add('admin-view','v237-simple-admin','admin-mainmenu-open-v125');
-
-      if(typeof openAdminMainV125==='function')openAdminMainV125();
-
-      const box=document.getElementById('adminMainMenuV125');
-      if(!box)return;
-      box.style.setProperty('display','block','important');
-
-      const grid=box.querySelector('.admin-main125-grid');
-      if(grid){
-        grid.style.setProperty('display','grid','important');
-        grid.innerHTML=`
-          <button type="button" class="admin-main125-btn v240-in"
-            onclick="askAdminV241('빠른입고',()=>{closeAdminMainV125();openFastInboundV140()})">
-            <span class="ico">📥</span>빠른입고<small>입고 수량 등록</small>
-          </button>
-          <button type="button" class="admin-main125-btn v240-out"
-            onclick="askAdminV241('빠른출고',()=>{closeAdminMainV125();openFastOutboundV143()})">
-            <span class="ico">📤</span>빠른출고<small>출고 수량 등록</small>
-          </button>
-          <button type="button" class="admin-main125-btn v240-loc"
-            onclick="closeAdminMainV125();openAdminLocationV144()">
-            <span class="ico">📍</span>자재위치 검색<small>누구나 검색 · 조회 가능</small>
-          </button>
-          <button type="button" class="admin-main125-btn v240-npp"
-            onclick="askAdminV241('NPP 도면위치 관리',()=>{closeAdminMainV125();openNppAdminV113()})">
-            <span class="ico">📐</span>NPP 도면위치 관리<small>도면 보관위치 확인 · 관리</small>
-          </button>`;
-      }
-
-      /* 기존 메인의 부가 메뉴만 숨김. 메인 컨테이너 자체는 절대 숨기지 않음 */
-      box.querySelectorAll('.admin-main125-tools,.admin-main125-subtitle').forEach(el=>{
-        el.style.setProperty('display','none','important');
-      });
-      window.scrollTo(0,0);
-    }catch(e){console.error('V246 메인 복원 오류',e)}
-  }
-
-  window.mainV246=mainV246;
-  window.goMainV239=mainV246;
-  window.buildMainV240=mainV246;
-  window.buildPublicMainV241=mainV246;
-  window.buildExactMainV243=mainV246;
-
-  document.addEventListener('click',function(e){
-    const b=e.target.closest&&e.target.closest('.fi140-home,.fo143-home,.al144-home,#homeBtn');
-    if(!b)return;
-    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-    mainV246();
-  },true);
-
-  window.addEventListener('load',()=>setTimeout(mainV246,180));
-  setTimeout(mainV246,60);
+  document.addEventListener('DOMContentLoaded',hideSyncV249);
+  window.addEventListener('load',()=>setTimeout(hideSyncV249,50));
+  setTimeout(hideSyncV249,20);
 })();
 </script>
 </body></html>
