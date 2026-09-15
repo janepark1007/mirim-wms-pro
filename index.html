@@ -21587,6 +21587,68 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
   setTimeout(buildExactMainV243,60);
 })();
 </script>
+
+<script id="v244-24h-edit-unlock-script">
+(function(){
+  const PIN_V244='347910';
+  const KEY_V244='mirim_edit_unlock_until_v244';
+  const HOURS_V244=24*60*60*1000;
+
+  function unlockedV244(){
+    const until=Number(localStorage.getItem(KEY_V244)||0);
+    if(until>Date.now())return true;
+    if(until)localStorage.removeItem(KEY_V244);
+    return false;
+  }
+  function unlockV244(action){
+    if(unlockedV244())return true;
+    const pin=prompt(`🔐 ${action||'입력·수정'} 권한이 필요합니다.\n1차 비밀번호를 입력하세요.`);
+    if(pin===null)return false;
+    if(String(pin)!==PIN_V244){
+      alert('비밀번호가 맞지 않습니다.\n검색·조회만 가능합니다.');
+      return false;
+    }
+    localStorage.setItem(KEY_V244,String(Date.now()+HOURS_V244));
+    alert('✅ 인증되었습니다.\n이 기기에서 24시간 동안 입력·수정 작업이 가능합니다.');
+    return true;
+  }
+  window.unlockedV244=unlockedV244;
+  window.unlockV244=unlockV244;
+
+  /* 기존 관리자 진입 잠금은 24시간 인증으로 통일 */
+  window.askAdminV241=function(action,callback){
+    if(unlockV244(action))callback();
+  };
+  window.requireEditPinV236=function(action){
+    return unlockV244(action||'입력·수정');
+  };
+
+  /* 위치 편집 진입도 동일한 24시간 인증 적용 */
+  const oldInline=window.openAdminLocationInlineV235;
+  if(typeof oldInline==='function'){
+    window.openAdminLocationInlineV235=function(){
+      if(!unlockV244('자재위치 등록·수정'))return;
+      return oldInline.apply(this,arguments);
+    };
+  }
+
+  /* 직접 저장 함수 호출 시에도 인증 없이는 저장 금지 */
+  const oldIn=window.saveFastInboundV140;
+  if(typeof oldIn==='function'){
+    window.saveFastInboundV140=function(){
+      if(!unlockV244('빠른입고 등록'))return;
+      return oldIn.apply(this,arguments);
+    };
+  }
+  const oldOut=window.saveFastOutboundV143;
+  if(typeof oldOut==='function'){
+    window.saveFastOutboundV143=function(){
+      if(!unlockV244('빠른출고 등록'))return;
+      return oldOut.apply(this,arguments);
+    };
+  }
+})();
+</script>
 </body></html>
 <style id="worker-today-inout-v1510">
 #workerTodayInOutV1510{display:none;margin:12px 0 14px}
