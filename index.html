@@ -1969,10 +1969,22 @@ body.v237-simple-admin.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125)
 }
 </style>
 
-<style id="v249-no-sync-style">
-#syncBar,[id*="syncBar"],[class*="sync-bar"],
-.sync-status,.sync-btn,.shared-sync-status,
-button[onclick*="sync"],button[onclick*="Sync"]{display:none!important}
+<style id="v250-core-main-style">
+#adminMainMenuV125.v250-core-main .admin-main125-grid{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important
+}
+#adminMainMenuV125.v250-core-main .v250-erp{background:#6b3fa0!important;color:#fff!important}
+#adminMainMenuV125.v250-core-main .v250-in{background:#087a43!important;color:#fff!important}
+#adminMainMenuV125.v250-core-main .v250-out{background:#c62828!important;color:#fff!important}
+#adminMainMenuV125.v250-core-main .v250-check{background:#eee6ff!important;color:#3d256f!important}
+#adminMainMenuV125.v250-core-main .v250-qty{background:#dff3ff!important;color:#174f72!important}
+#adminMainMenuV125.v250-core-main .v250-loc{background:#e5f5e9!important;color:#185c34!important}
+@media(max-width:800px){
+ #adminMainMenuV125.v250-core-main .admin-main125-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:560px){
+ #adminMainMenuV125.v250-core-main .admin-main125-grid{grid-template-columns:1fr!important}
+}
 </style>
 </head>
 <body>
@@ -21519,52 +21531,84 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
 })();
 </script>
 
-<script id="v249-no-sync-script">
+<script id="v250-core-inventory-script">
 (function(){
-  /* V249: 공용/실시간 동기화 완전 비활성화. 로컬 저장 기능은 그대로 사용 */
-  try{ if(window.__mirimSharedTimer) clearInterval(window.__mirimSharedTimer); }catch(e){}
-  try{ if(window.__mirimSyncTimer) clearInterval(window.__mirimSyncTimer); }catch(e){}
-  try{ if(window.__syncTimer) clearInterval(window.__syncTimer); }catch(e){}
-  window.__mirimSharedTimer=null;
-  window.__mirimSyncTimer=null;
-  window.__syncTimer=null;
+ function openQtyRegistrationV250(){
+   if(!isAdmin)return alert('수량 등록은 관리자만 가능합니다.');
+   try{ if(typeof closeAdminMainV125==='function')closeAdminMainV125(); }catch(e){}
+   try{
+     if(typeof openMode==='function'){
+       openMode('search');
+       setTimeout(()=>{
+         const inp=document.getElementById('q');
+         if(inp){inp.placeholder='품번 또는 품명 검색 → 현 창고수량 등록';inp.focus();}
+       },80);
+     }else if(typeof openAdminLocationV144==='function'){
+       openAdminLocationV144();
+     }
+   }catch(e){console.error(e)}
+ }
+ window.openQtyRegistrationV250=openQtyRegistrationV250;
 
-  try{ sharedReady=false; }catch(e){}
-  try{ sharedDb=null; }catch(e){}
-  try{ window.sharedReady=false; window.sharedDb=null; }catch(e){}
+ function buildCoreMainV250(){
+   try{
+     isAdmin=true;
+     document.body.classList.remove(
+       'fast-inbound-v140','fast-outbound-v143','admin-location-v144',
+       'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
+       'other-storage-open-v50'
+     );
+     document.body.classList.add('admin-view','admin-mainmenu-open-v125');
+     if(typeof openAdminMainV125==='function')openAdminMainV125();
+     const box=document.getElementById('adminMainMenuV125');
+     if(!box)return;
+     box.classList.add('v250-core-main');
+     const grid=box.querySelector('.admin-main125-grid');
+     if(grid)grid.innerHTML=`
+       <button type="button" class="admin-main125-btn v250-erp" onclick="openErpChangeV71()">
+         <span class="ico">🔄</span>ERP 업데이트
+         <small>업데이트된 ERP 품번 · 수량 확인</small>
+       </button>
+       <button type="button" class="admin-main125-btn v250-in" onclick="closeAdminMainV125();openFastInboundV140()">
+         <span class="ico">📥</span>빠른입고
+         <small>입고수량 · 위치 바로 반영</small>
+       </button>
+       <button type="button" class="admin-main125-btn v250-out" onclick="closeAdminMainV125();openFastOutboundV143()">
+         <span class="ico">📤</span>빠른출고
+         <small>출고수량 · 위치수량 차감</small>
+       </button>
+       <button type="button" class="admin-main125-btn v250-check" onclick="closeAdminMainV125();openAdminLocationV144()">
+         <span class="ico">🔎</span>자재위치 · 자재수량
+         <small>품번 검색 · 현재 위치 · 위치별 수량 확인</small>
+       </button>
+       <button type="button" class="admin-main125-btn v250-qty" onclick="openQtyRegistrationV250()">
+         <span class="ico">🔢</span>수량 등록
+         <small>기존 현 창고수량 등록 · 수정</small>
+       </button>
+       <button type="button" class="admin-main125-btn v250-loc" onclick="closeAdminMainV125();openLocationRegistrationV59()">
+         <span class="ico">📍</span>위치 등록
+         <small>기존 자재위치 등록 · 수정</small>
+       </button>`;
+     box.querySelectorAll('.admin-main125-tools,.admin-main125-subtitle').forEach(el=>{
+       el.style.setProperty('display','none','important');
+     });
+     window.scrollTo(0,0);
+   }catch(e){console.error('V250 핵심메인 오류',e)}
+ }
+ window.buildCoreMainV250=buildCoreMainV250;
+ window.goMainV239=buildCoreMainV250;
+ window.buildMainV240=buildCoreMainV250;
+ window.buildPublicMainV241=buildCoreMainV250;
 
-  const noopAsync=async function(){ return null; };
-  const noop=function(){ return null; };
+ document.addEventListener('click',function(e){
+   const b=e.target.closest&&e.target.closest('.fi140-home,.fo143-home,.al144-home');
+   if(!b)return;
+   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+   buildCoreMainV250();
+ },true);
 
-  [
-    'initShared','initSharedDb','initSharedV1','connectSharedDb',
-    'loadSharedLocations','loadSharedStock','loadSharedData',
-    'refreshShared','refreshSharedData','syncShared','syncAll',
-    'startSharedSync','startSync','reconnectShared','reconnectSync'
-  ].forEach(n=>{ if(typeof window[n]==='function') window[n]=noopAsync; });
-
-  /* 입고/출고 저장 뒤 호출되는 동기화도 로컬 상태 표시만 하고 종료 */
-  window.syncFastInboundV140=function(){
-    const b=document.getElementById('fiSaveV140');
-    if(b)b.disabled=false;
-  };
-  window.syncFastOutboundV143=function(){
-    const b=document.getElementById('foSaveV143');
-    if(b)b.disabled=false;
-  };
-
-  function hideSyncV249(){
-    document.querySelectorAll(
-      '#syncBar,[id*="syncBar"],[class*="sync-bar"],.sync-status,.sync-btn,.shared-sync-status'
-    ).forEach(el=>el.style.setProperty('display','none','important'));
-    document.querySelectorAll('button').forEach(b=>{
-      const s=((b.textContent||'')+' '+(b.getAttribute('onclick')||'')).toLowerCase();
-      if(s.includes('동기화')||s.includes('sync')) b.style.setProperty('display','none','important');
-    });
-  }
-  document.addEventListener('DOMContentLoaded',hideSyncV249);
-  window.addEventListener('load',()=>setTimeout(hideSyncV249,50));
-  setTimeout(hideSyncV249,20);
+ window.addEventListener('load',()=>setTimeout(buildCoreMainV250,180));
+ setTimeout(buildCoreMainV250,70);
 })();
 </script>
 </body></html>
