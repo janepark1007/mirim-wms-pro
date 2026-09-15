@@ -21340,6 +21340,178 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
   setTimeout(buildMainV240,40);
 })();
 </script>
+
+<script id="v241-public-search-admin-lock-script">
+(function(){
+  const ADMIN_PIN_V241='0307';
+  let adminUnlockedV241=false;
+
+  function askAdminV241(action, callback){
+    if(adminUnlockedV241){ callback(); return; }
+    const pin=prompt(`🔐 ${action}은 관리자만 사용할 수 있습니다.\n비밀번호를 입력하세요.`);
+    if(pin===null)return;
+    if(String(pin)!==ADMIN_PIN_V241){
+      alert('비밀번호가 맞지 않습니다.\n검색·조회만 이용할 수 있습니다.');
+      return;
+    }
+    adminUnlockedV241=true;
+    callback();
+  }
+  window.askAdminV241=askAdminV241;
+
+  function buildPublicMainV241(){
+    try{
+      isAdmin=true; /* 기존 검색/화면 렌더러는 유지하되 버튼에서 권한 차단 */
+      currentWorker=null;
+      document.body.classList.remove(
+        'fast-inbound-v140','fast-outbound-v143','admin-location-v144',
+        'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
+        'admin-reference-home','other-storage-open-v50'
+      );
+      document.body.classList.add('admin-view','v237-simple-admin','admin-mainmenu-open-v125');
+      if(typeof openAdminMainV125==='function')openAdminMainV125();
+      const box=document.getElementById('adminMainMenuV125');
+      if(!box)return;
+      box.classList.add('v237-simple-menu','v240-main-four');
+      const grid=box.querySelector('.admin-main125-grid');
+      if(grid)grid.innerHTML=`
+        <button type="button" class="admin-main125-btn v240-loc"
+          onclick="closeAdminMainV125();openAdminLocationV144()">
+          <span class="ico">📍</span>자재위치검색
+          <small>누구나 검색 · 조회 가능</small>
+        </button>
+        <button type="button" class="admin-main125-btn v240-in"
+          onclick="askAdminV241('입고 등록',()=>{closeAdminMainV125();openFastInboundV140()})">
+          <span class="ico">🔒📥</span>입고
+          <small>관리자 비밀번호 필요</small>
+        </button>
+        <button type="button" class="admin-main125-btn v240-out"
+          onclick="askAdminV241('출고 등록',()=>{closeAdminMainV125();openFastOutboundV143()})">
+          <span class="ico">🔒📤</span>출고
+          <small>관리자 비밀번호 필요</small>
+        </button>
+        <button type="button" class="admin-main125-btn v240-npp"
+          onclick="askAdminV241('NPP도면위치관리',()=>{closeAdminMainV125();openNppAdminV113()})">
+          <span class="ico">🔒📐</span>NPP도면위치관리
+          <small>관리자 비밀번호 필요</small>
+        </button>`;
+      box.querySelector('.admin-main125-tools')?.style.setProperty('display','none','important');
+      box.querySelector('.admin-main125-subtitle')?.style.setProperty('display','none','important');
+      window.scrollTo(0,0);
+    }catch(e){console.error('V241 메인 표시 오류',e)}
+  }
+  window.buildMainV240=buildPublicMainV241;
+  window.buildPublicMainV241=buildPublicMainV241;
+  window.goMainV239=buildPublicMainV241;
+
+  /* 자재위치 검색결과에서 등록/수정은 관리자 비밀번호 없이는 실행 금지 */
+  const oldInlineV241=window.openAdminLocationInlineV235;
+  if(typeof oldInlineV241==='function'){
+    window.openAdminLocationInlineV235=function(){
+      const args=arguments, self=this;
+      askAdminV241('자재위치 등록·수정',()=>oldInlineV241.apply(self,args));
+    };
+  }
+
+  /* 입고/출고 화면 직접 함수 호출도 잠금 */
+  const oldInV241=window.openFastInboundV140;
+  if(typeof oldInV241==='function'){
+    window.openFastInboundV140=function(){
+      const args=arguments,self=this;
+      if(adminUnlockedV241)return oldInV241.apply(self,args);
+      askAdminV241('입고 등록',()=>oldInV241.apply(self,args));
+    };
+  }
+  const oldOutV241=window.openFastOutboundV143;
+  if(typeof oldOutV241==='function'){
+    window.openFastOutboundV143=function(){
+      const args=arguments,self=this;
+      if(adminUnlockedV241)return oldOutV241.apply(self,args);
+      askAdminV241('출고 등록',()=>oldOutV241.apply(self,args));
+    };
+  }
+
+  window.addEventListener('load',()=>setTimeout(buildPublicMainV241,140));
+  setTimeout(buildPublicMainV241,50);
+})();
+</script>
+
+<script id="v242-inbound-recommend-display-fix-script">
+(function(){
+  function used4V242(){
+    const used=new Set();
+    const all=(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS))?ITEMS:[];
+    all.forEach(x=>{
+      try{
+        (getAllLocations(x.part)||[]).forEach(l=>{
+          [l.detail,l.detailCustom].forEach(v=>{
+            const s=String(v||'').trim();
+            if(/^\d{4}$/.test(s))used.add(s);
+          });
+        });
+      }catch(e){}
+    });
+    return used;
+  }
+  function next4V242(){
+    const used=used4V242();
+    for(let n=1000;n<=9999;n++){
+      const s=String(n);
+      if(!used.has(s))return s;
+    }
+    return '';
+  }
+
+  window.refreshFastInboundLocationRecommendationV240=function(){
+    const box=document.getElementById('fiLocRecommendV240');
+    const x=window.__fiSelectedV140;
+    if(!box)return;
+    if(!x){
+      box.className='fi-loc-recommend warn';
+      box.innerHTML='품목을 선택하면 <b>기존 위치</b> 또는 <b>등록되지 않은 4자리 추천번호</b>가 바로 표시됩니다.';
+      return;
+    }
+
+    const locs=(typeof getAllLocations==='function')?(getAllLocations(x.part)||[]):[];
+    const primary=locs.find(e=>e.is_primary)||locs[0]||null;
+    const li=document.getElementById('fiLocV140');
+    const wh=document.getElementById('fiWarehouseV154');
+
+    if(primary){
+      const text=[primary.room,primary.zone,primary.level,primary.height,primary.storage,primary.detail].filter(Boolean).join(' ');
+      const existing=String(primary.detail||primary.detailCustom||'').trim();
+      try{
+        const mapped=(typeof mapInboundWarehouseV240==='function')?mapInboundWarehouseV240(primary.room):'';
+        if(wh&&mapped)wh.value=mapped;
+      }catch(e){}
+      if(li&&existing)li.value=existing;
+      box.className='fi-loc-recommend existing';
+      box.innerHTML=`✅ <b>기존 자재위치</b><br><span style="font-size:20px;font-weight:1000">${esc(text||existing||'위치 확인 필요')}</span><br><small>기존 위치로 입고하거나 4자리 번호를 직접 변경할 수 있습니다.</small>`;
+      return;
+    }
+
+    const suggestion=next4V242();
+    if(li)li.value=suggestion;
+    box.className='fi-loc-recommend new';
+    box.innerHTML=suggestion
+      ? `🆕 <b>추천 자재위치</b><br><span style="font-size:26px;font-weight:1000">${suggestion}</span><br><small>현재 등록된 4자리 번호를 제외한 빈 번호입니다. 직접 변경할 수 있습니다.</small>`
+      : '⚠️ 사용 가능한 4자리 추천번호가 없습니다.';
+  };
+
+  /* 정확 품번 선택/후보 클릭 직후 추천 박스를 한 번 더 즉시 갱신 */
+  document.addEventListener('click',function(e){
+    if(e.target.closest&&e.target.closest('#fiResultsV140 button,#fiResultsV140 .fi140-row,#fiResultsV140 .fi140-item')){
+      setTimeout(()=>{try{refreshFastInboundLocationRecommendationV240()}catch(_){}},0);
+      setTimeout(()=>{try{refreshFastInboundLocationRecommendationV240()}catch(_){}},80);
+    }
+  },true);
+
+  const fi=document.getElementById('fiPartV140');
+  if(fi){
+    fi.addEventListener('change',()=>setTimeout(()=>{try{refreshFastInboundLocationRecommendationV240()}catch(_){}},20));
+  }
+})();
+</script>
 </body></html>
 <style id="worker-today-inout-v1510">
 #workerTodayInOutV1510{display:none;margin:12px 0 14px}
