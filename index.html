@@ -103,8 +103,10 @@ function openPanel(id){
 function saveInbound(){
  const part=clean(inPart.value), qty=Number(inQty.value), loc=clean(inLoc.value);
  if(!part||!Number.isFinite(qty)||qty<=0){inMsg.textContent='품번과 입고수량을 확인해 주세요.';return}
- const db=loadDB(), item=db[part]||{qty:0,location:''};
- item.qty=Number(item.qty||0)+qty;
+ const db=loadDB(), item=db[part]||{qty:0,location:'',totalIn:0,totalOut:0};
+ item.totalIn=Number(item.totalIn||0)+qty;
+ item.totalOut=Number(item.totalOut||0);
+ item.qty=Number(item.totalIn)-Number(item.totalOut);
  if(loc)item.location=loc;
  db[part]=item; saveDB(db);
  addHistory('입고',part,qty,item.location||'미등록',item.qty);
@@ -117,7 +119,10 @@ function saveOutbound(){
  const db=loadDB(), item=db[part];
  if(!item){outMsg.textContent='등록되지 않은 품번입니다.';return}
  if(Number(item.qty||0)<qty){outMsg.textContent=`출고 불가 · 현재수량 ${item.qty||0}`;return}
- item.qty=Number(item.qty||0)-qty; db[part]=item; saveDB(db);
+ item.totalIn=Number(item.totalIn||item.qty||0);
+ item.totalOut=Number(item.totalOut||0)+qty;
+ item.qty=Number(item.totalIn)-Number(item.totalOut);
+ db[part]=item; saveDB(db);
  addHistory('출고',part,qty,item.location||'미등록',item.qty);
  outMsg.textContent=`등록완료 · 현재수량 ${item.qty}`;
  outQty.value='';
@@ -232,6 +237,78 @@ window.addEventListener('load',()=>{
  }
  document.addEventListener('click',e=>{
    if(e.target.closest && e.target.closest('#findSuggest button'))setTimeout(showLocationNow,0);
+ });
+})();
+</script>
+
+<script id="total-in-out-qty-script">
+(function(){
+ function totals(item){
+   if(!item)return {tin:0,tout:0,now:0};
+   const tin=Number(item.totalIn!=null?item.totalIn:item.qty||0);
+   const tout=Number(item.totalOut||0);
+   return {tin,tout,now:tin-tout};
+ }
+ function showLookupTotals(){
+   const input=document.getElementById('findPart'), el=document.getElementById('findResult');
+   if(!input||!el)return;
+   const part=String(input.value||'').trim();
+   if(!part){el.textContent='품번을 입력해 주세요.';return}
+   const item=loadDB()[part], x=totals(item);
+   el.innerHTML='<b>품번</b> '+part+
+     '<br><b>자재위치</b> '+(item&&item.location?item.location:'미등록')+
+     '<br><b>총 입고수량</b> '+x.tin+
+     '<br><b>총 출고수량</b> '+x.tout+
+     '<br><b>현재수량</b> '+x.now;
+ }
+ function showOutboundTotals(){
+   const input=document.getElementById('outPart'), el=document.getElementById('outLocationInfo');
+   if(!input||!el)return;
+   const part=String(input.value||'').trim();
+   if(!part){el.textContent='자재위치: 품번을 선택해 주세요.';return}
+   const item=loadDB()[part], x=totals(item);
+   el.innerHTML='<b>자재위치</b> '+(item&&item.location?item.location:'미등록')+
+     '<br><b>총 입고수량</b> '+x.tin+
+     '<br><b>총 출고수량</b> '+x.tout+
+     '<br><b>현재수량</b> '+x.now;
+ }
+ window.findItem=showLookupTotals;
+ window.showOutboundLocation=showOutboundTotals;
+ ['input','change'].forEach(ev=>{
+   document.getElementById('findPart')?.addEventListener(ev,()=>setTimeout(showLookupTotals,0));
+   document.getElementById('outPart')?.addEventListener(ev,()=>setTimeout(showOutboundTotals,0));
+ });
+ document.addEventListener('click',e=>{
+   if(e.target.closest?.('#findSuggest button'))setTimeout(showLookupTotals,0);
+   if(e.target.closest?.('#outSuggest button'))setTimeout(showOutboundTotals,0);
+ });
+})();
+</script>
+
+<script id="location-final-qty-only-script">
+(function(){
+ function showFinalLocationQty(){
+   const input=document.getElementById('findPart');
+   const el=document.getElementById('findResult');
+   if(!input||!el)return;
+   const part=String(input.value||'').trim();
+   if(!part){el.textContent='품번을 입력해 주세요.';return}
+   const item=loadDB()[part];
+   const totalIn=item ? Number(item.totalIn!=null ? item.totalIn : item.qty||0) : 0;
+   const totalOut=item ? Number(item.totalOut||0) : 0;
+   const finalQty=totalIn-totalOut;
+   el.innerHTML='<b>품번</b> '+part+
+     '<br><b>자재위치</b> '+(item&&item.location ? item.location : '미등록')+
+     '<br><b>최종수량</b> '+finalQty;
+ }
+ window.findItem=showFinalLocationQty;
+ const input=document.getElementById('findPart');
+ if(input){
+   input.addEventListener('input',()=>setTimeout(showFinalLocationQty,0));
+   input.addEventListener('change',()=>setTimeout(showFinalLocationQty,0));
+ }
+ document.addEventListener('click',e=>{
+   if(e.target.closest?.('#findSuggest button'))setTimeout(showFinalLocationQty,0);
  });
 })();
 </script>
