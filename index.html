@@ -1986,6 +1986,21 @@ body.v237-simple-admin.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125)
  #adminMainMenuV125.v250-core-main .admin-main125-grid{grid-template-columns:1fr!important}
 }
 </style>
+
+<style id="v251-core-four-only-style">
+#adminMainMenuV125.v251-core-four .admin-main125-grid{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:14px!important;
+}
+#adminMainMenuV125.v251-core-four .v251-erp{background:#6b3fa0!important;color:#fff!important}
+#adminMainMenuV125.v251-core-four .v251-in{background:#087a43!important;color:#fff!important}
+#adminMainMenuV125.v251-core-four .v251-out{background:#c62828!important;color:#fff!important}
+#adminMainMenuV125.v251-core-four .v251-loc{background:#eee6ff!important;color:#30205e!important}
+@media(max-width:650px){
+ #adminMainMenuV125.v251-core-four .admin-main125-grid{grid-template-columns:1fr!important}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -21609,6 +21624,68 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
 
  window.addEventListener('load',()=>setTimeout(buildCoreMainV250,180));
  setTimeout(buildCoreMainV250,70);
+})();
+</script>
+
+<script id="v251-core-four-only-script">
+(function(){
+ function buildCoreFourV251(){
+   try{
+     isAdmin=true;
+     document.body.classList.remove(
+       'fast-inbound-v140','fast-outbound-v143','admin-location-v144',
+       'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
+       'other-storage-open-v50'
+     );
+     document.body.classList.add('admin-view','admin-mainmenu-open-v125');
+     if(typeof openAdminMainV125==='function')openAdminMainV125();
+
+     const box=document.getElementById('adminMainMenuV125');
+     if(!box)return;
+     box.classList.remove('v250-core-main');
+     box.classList.add('v251-core-four');
+
+     const grid=box.querySelector('.admin-main125-grid');
+     if(grid)grid.innerHTML=`
+       <button type="button" class="admin-main125-btn v251-erp" onclick="openErpChangeV71()">
+         <span class="ico">🔄</span>ERP 업데이트
+         <small>업데이트된 ERP 품번 · 수량 확인</small>
+       </button>
+       <button type="button" class="admin-main125-btn v251-in" onclick="closeAdminMainV125();openFastInboundV140()">
+         <span class="ico">📥</span>빠른입고
+         <small>입고 수량 등록</small>
+       </button>
+       <button type="button" class="admin-main125-btn v251-out" onclick="closeAdminMainV125();openFastOutboundV143()">
+         <span class="ico">📤</span>빠른출고
+         <small>출고 수량 등록</small>
+       </button>
+       <button type="button" class="admin-main125-btn v251-loc" onclick="closeAdminMainV125();openAdminLocationV144()">
+         <span class="ico">📍</span>자재위치 검색
+         <small>현재 위치 · 자재수량 확인</small>
+       </button>`;
+
+     /* 메인에서 불필요한 바로가기/부가 메뉴는 강제로 숨김 */
+     box.querySelectorAll('.admin-main125-tools,.admin-main125-subtitle').forEach(el=>{
+       el.style.setProperty('display','none','important');
+     });
+     window.scrollTo(0,0);
+   }catch(e){console.error('V251 메인 오류',e)}
+ }
+ window.buildCoreFourV251=buildCoreFourV251;
+ window.buildCoreMainV250=buildCoreFourV251;
+ window.goMainV239=buildCoreFourV251;
+ window.buildMainV240=buildCoreFourV251;
+ window.buildPublicMainV241=buildCoreFourV251;
+
+ document.addEventListener('click',function(e){
+   const b=e.target.closest&&e.target.closest('.fi140-home,.fo143-home,.al144-home');
+   if(!b)return;
+   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+   buildCoreFourV251();
+ },true);
+
+ window.addEventListener('load',()=>setTimeout(buildCoreFourV251,180));
+ setTimeout(buildCoreFourV251,70);
 })();
 </script>
 </body></html>
