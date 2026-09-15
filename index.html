@@ -21212,6 +21212,51 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
   }
 })();
 </script>
+
+<script id="v239-home-main-fix-script">
+(function(){
+  function goMainV239(){
+    try{
+      document.body.classList.remove(
+        'fast-inbound-v140','fast-outbound-v143','admin-location-v144',
+        'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
+        'admin-reference-home','other-storage-open-v50'
+      );
+      document.body.classList.add('admin-view','v237-simple-admin','admin-mainmenu-open-v125');
+      ['fastInboundV140','fastOutboundV143','adminLocationV144'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el)el.style.removeProperty('display');
+      });
+      if(typeof buildSimpleMenuV237==='function')buildSimpleMenuV237();
+      else if(typeof openAdminMainV125==='function')openAdminMainV125();
+      window.scrollTo(0,0);
+    }catch(e){console.error('홈 이동 오류',e)}
+  }
+  window.goMainV239=goMainV239;
+
+  /* 입고·출고·자재위치 화면의 홈 버튼만 메인 3버튼 화면으로 고정 */
+  document.addEventListener('click',function(e){
+    const b=e.target.closest&&e.target.closest('.fi140-home,.fo143-home,.al144-home');
+    if(!b)return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    goMainV239();
+  },true);
+
+  /* 상단 공통 홈 버튼도 관리자 단독 메인으로 */
+  const hb=document.getElementById('homeBtn');
+  if(hb){
+    hb.addEventListener('click',function(e){
+      if(!document.body.classList.contains('v237-simple-admin'))return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      goMainV239();
+    },true);
+  }
+})();
+</script>
 </body></html>
 <style id="worker-today-inout-v1510">
 #workerTodayInOutV1510{display:none;margin:12px 0 14px}
