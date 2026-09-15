@@ -205,5 +205,35 @@ window.addEventListener('load',()=>{
  window.showOutboundLocation=showOutboundLocation;
 })();
 </script>
+
+<script id="location-lookup-display-fix">
+(function(){
+ function showLocationNow(){
+   const input=document.getElementById('findPart');
+   const el=document.getElementById('findResult');
+   if(!input||!el)return;
+   const part=String(input.value||'').trim();
+   if(!part){el.textContent='품번을 입력해 주세요.';return}
+   const db=loadDB();
+   const item=db[part];
+   if(!item){
+     el.innerHTML='<b>품번</b> '+part+'<br><b>자재위치</b> 미등록<br><b>현재수량</b> 0';
+     return;
+   }
+   el.innerHTML='<b>품번</b> '+part+
+     '<br><b>자재위치</b> '+(item.location||'미등록')+
+     '<br><b>현재수량</b> '+Number(item.qty||0);
+ }
+ window.findItem=showLocationNow;
+ const input=document.getElementById('findPart');
+ if(input){
+   input.addEventListener('input',()=>setTimeout(showLocationNow,0));
+   input.addEventListener('change',()=>setTimeout(showLocationNow,0));
+ }
+ document.addEventListener('click',e=>{
+   if(e.target.closest && e.target.closest('#findSuggest button'))setTimeout(showLocationNow,0);
+ });
+})();
+</script>
 </body>
 </html>
