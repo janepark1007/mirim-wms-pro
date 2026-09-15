@@ -21783,6 +21783,62 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
   setTimeout(coreOnlyV254,120);
 })();
 </script>
+
+<script id="v255-only-four-final">
+(function(){
+  const allowed = [
+    ['🔄','ERP 업데이트','업데이트된 ERP 품번 · 수량 확인',"openErpChangeV71()"],
+    ['📥','빠른입고','입고 수량 등록',"closeAdminMainV125();openFastInboundV140()"],
+    ['📤','빠른출고','출고 수량 등록',"closeAdminMainV125();openFastOutboundV143()"],
+    ['📍','자재위치 검색','현재 위치 · 자재수량 확인',"closeAdminMainV125();openAdminLocationV144()"]
+  ];
+
+  function renderOnlyFour(){
+    const box=document.getElementById('adminMainMenuV125');
+    if(!box)return;
+    const grid=box.querySelector('.admin-main125-grid');
+    if(!grid)return;
+
+    /* 메인 메뉴의 기존 항목은 실제 DOM에서 전부 삭제 */
+    while(grid.firstChild) grid.removeChild(grid.firstChild);
+
+    allowed.forEach((a,i)=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='admin-main125-btn v255-core-'+i;
+      b.setAttribute('onclick',a[3]);
+      b.innerHTML='<span class="ico">'+a[0]+'</span>'+a[1]+'<small>'+a[2]+'</small>';
+      grid.appendChild(b);
+    });
+
+    /* 메인 메뉴 안의 부가 영역도 실제 삭제 */
+    Array.from(box.children).forEach(el=>{
+      if(!el.classList.contains('admin-main125-grid') &&
+         !el.classList.contains('admin-main125-title')){
+        el.remove();
+      }
+    });
+
+    box.style.setProperty('display','block','important');
+    grid.style.setProperty('display','grid','important');
+    if(innerWidth<=900) grid.style.setProperty('grid-template-columns','1fr','important');
+  }
+
+  window.renderOnlyFourV255=renderOnlyFour;
+  window.addEventListener('load',()=>setTimeout(renderOnlyFour,500));
+  setTimeout(renderOnlyFour,50);
+
+  /* 옛 모바일 코드가 메인을 다시 그려도 즉시 4개로 복원 */
+  const obs=new MutationObserver(()=>{
+    const g=document.querySelector('#adminMainMenuV125 .admin-main125-grid');
+    if(g && g.children.length!==4) renderOnlyFour();
+  });
+  window.addEventListener('load',()=>{
+    const b=document.getElementById('adminMainMenuV125');
+    if(b)obs.observe(b,{childList:true,subtree:true});
+  });
+})();
+</script>
 </body></html>
 <style id="worker-today-inout-v1510">
 #workerTodayInOutV1510{display:none;margin:12px 0 14px}
