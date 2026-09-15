@@ -61,6 +61,7 @@ input{width:100%;padding:14px;border:1px solid #d1d5db;border-radius:12px;font-s
   <section id="outbound" class="panel">
     <h2>📤 출고</h2>
     <label>품번</label><div class="search-wrap"><input id="outPart" autocomplete="off" placeholder="ERP 품번 또는 품명 입력"><div id="outSuggest" class="suggest"></div></div><div id="outErpInfo" class="erp-info"></div>
+    <div id="outLocationInfo" class="result" style="margin-top:10px">자재위치: 품번을 선택해 주세요.</div>
     <label>출고수량</label><input id="outQty" type="number" min="1">
     <button class="action" onclick="saveOutbound()">출고 등록</button>
     <div id="outMsg" class="small"></div>
@@ -177,6 +178,32 @@ window.addEventListener('load',()=>{
  bindErpSearch('outPart','outSuggest','outErpInfo');
  bindErpSearch('findPart','findSuggest','findErpInfo');
 });
+</script>
+
+<script id="outbound-location-display-script">
+(function(){
+ function showOutboundLocation(){
+   const input=document.getElementById('outPart');
+   const el=document.getElementById('outLocationInfo');
+   if(!input||!el)return;
+   const part=String(input.value||'').trim();
+   if(!part){el.textContent='자재위치: 품번을 선택해 주세요.';return}
+   const db=loadDB();
+   const item=db[part];
+   el.innerHTML='<b>자재위치</b> '+(item&&item.location ? item.location : '미등록')+
+                (item ? '<br><b>현재수량</b> '+Number(item.qty||0) : '');
+ }
+ const input=document.getElementById('outPart');
+ if(input){
+   input.addEventListener('input',()=>setTimeout(showOutboundLocation,0));
+   input.addEventListener('change',()=>setTimeout(showOutboundLocation,0));
+   input.addEventListener('click',()=>setTimeout(showOutboundLocation,0));
+ }
+ document.addEventListener('click',e=>{
+   if(e.target.closest && e.target.closest('#outSuggest button'))setTimeout(showOutboundLocation,0);
+ });
+ window.showOutboundLocation=showOutboundLocation;
+})();
 </script>
 </body>
 </html>
