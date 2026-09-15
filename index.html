@@ -2001,29 +2001,6 @@ body.v237-simple-admin.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125)
  #adminMainMenuV125.v251-core-four .admin-main125-grid{grid-template-columns:1fr!important}
 }
 </style>
-
-<style id="v252-mobile-four-force-style">
-@media(max-width:900px){
-  /* 모바일에서도 PC와 같은 관리자 핵심 메인을 사용 */
-  body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125{
-    display:block!important;visibility:visible!important;opacity:1!important;
-    width:100%!important;max-width:none!important;margin:0!important;
-  }
-  body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125 .admin-main125-grid{
-    display:grid!important;grid-template-columns:1fr!important;gap:10px!important;
-  }
-  body.admin-view.admin-mainmenu-open-v125 #adminMainMenuV125 .admin-main125-btn{
-    display:flex!important;visibility:visible!important;min-height:82px!important;
-  }
-  /* 예전 모바일 전용 핵심메뉴가 다시 덮어쓰지 못하게 함 */
-  body.admin-view.admin-mainmenu-open-v125 #workerCoreMenu,
-  body.admin-view.admin-mainmenu-open-v125 .worker-core-menu,
-  body.admin-view.admin-mainmenu-open-v125 [id*="workerMain"],
-  body.admin-view.admin-mainmenu-open-v125 [class*="worker-main"]{
-    display:none!important;
-  }
-}
-</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -21712,27 +21689,33 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
 })();
 </script>
 
-<script id="v252-mobile-four-force-script">
+<script id="v253-mobile-main-only-fix">
 (function(){
- function forceMobileMainV252(){
-   if(window.innerWidth>900)return;
-   try{
-     isAdmin=true;
-     document.body.classList.add('admin-view','admin-mainmenu-open-v125');
-     if(typeof buildCoreFourV251==='function')buildCoreFourV251();
-     const box=document.getElementById('adminMainMenuV125');
-     if(box){
-       box.style.setProperty('display','block','important');
-       box.style.setProperty('visibility','visible','important');
-       const grid=box.querySelector('.admin-main125-grid');
-       if(grid)grid.style.setProperty('display','grid','important');
-     }
-   }catch(e){console.error('V252 모바일 메인 적용 오류',e)}
- }
- window.forceMobileMainV252=forceMobileMainV252;
- window.addEventListener('load',()=>setTimeout(forceMobileMainV252,250));
- window.addEventListener('resize',()=>setTimeout(forceMobileMainV252,80));
- setTimeout(forceMobileMainV252,100);
+  function applyV253(){
+    if(window.innerWidth>900)return;
+    try{
+      /* 기존 V251 메인 4개 메뉴를 그대로 다시 렌더링 */
+      if(typeof window.buildCoreFourV251==='function'){
+        window.buildCoreFourV251();
+      }
+      const box=document.getElementById('adminMainMenuV125');
+      if(box){
+        box.style.setProperty('display','block','important');
+        box.style.setProperty('visibility','visible','important');
+        box.style.setProperty('opacity','1','important');
+        const grid=box.querySelector('.admin-main125-grid');
+        if(grid){
+          grid.style.setProperty('display','grid','important');
+          grid.style.setProperty('grid-template-columns','1fr','important');
+        }
+      }
+    }catch(e){console.error('V253 mobile main fix',e)}
+  }
+
+  /* 모바일의 예전 화면 초기화가 끝난 뒤 마지막에 한 번만 적용 */
+  window.addEventListener('load',function(){
+    setTimeout(applyV253,700);
+  });
 })();
 </script>
 </body></html>
