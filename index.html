@@ -1950,6 +1950,24 @@ body.v237-simple-admin.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125)
  #adminMainMenuV125.v237-simple-menu .admin-main125-btn{min-height:105px!important}
 }
 </style>
+
+<style id="v240-main-location-four-only-style">
+#adminMainMenuV125.v240-main-four .admin-main125-grid{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+#adminMainMenuV125.v240-main-four .v240-loc{background:#7251b5!important;color:#fff!important;border-color:#5c3e9b!important}
+#adminMainMenuV125.v240-main-four .v240-in{background:#0b7a43!important;color:#fff!important;border-color:#075e34!important}
+#adminMainMenuV125.v240-main-four .v240-out{background:#c62828!important;color:#fff!important;border-color:#9f1f1f!important}
+#adminMainMenuV125.v240-main-four .v240-npp{background:#455a9f!important;color:#fff!important;border-color:#35467d!important}
+@media(max-width:900px){
+ #adminMainMenuV125.v240-main-four .admin-main125-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:600px){
+ #adminMainMenuV125.v240-main-four .admin-main125-grid{grid-template-columns:1fr!important}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -21255,6 +21273,71 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
       goMainV239();
     },true);
   }
+})();
+</script>
+
+<script id="v240-main-location-four-only-script">
+(function(){
+  function buildMainV240(){
+    try{
+      isAdmin=true;
+      currentWorker=null;
+      document.body.classList.remove(
+        'fast-inbound-v140','fast-outbound-v143','admin-location-v144',
+        'admin-task-focus','admin-shortcut-focus','npp-admin-open-v113',
+        'admin-reference-home','other-storage-open-v50'
+      );
+      document.body.classList.add('admin-view','v237-simple-admin','admin-mainmenu-open-v125');
+      if(typeof openAdminMainV125==='function')openAdminMainV125();
+      const box=document.getElementById('adminMainMenuV125');
+      if(!box)return;
+      box.classList.add('v237-simple-menu','v240-main-four');
+      const grid=box.querySelector('.admin-main125-grid');
+      if(grid){
+        grid.innerHTML=`
+          <button type="button" class="admin-main125-btn v240-loc" onclick="closeAdminMainV125();openAdminLocationV144()">
+            <span class="ico">📍</span>자재위치검색
+            <small>현 자재위치 확인 · 등록 · 수정</small>
+          </button>
+          <button type="button" class="admin-main125-btn v240-in" onclick="closeAdminMainV125();openFastInboundV140()">
+            <span class="ico">📥</span>입고
+            <small>택배·입고 수량 등록</small>
+          </button>
+          <button type="button" class="admin-main125-btn v240-out" onclick="closeAdminMainV125();openFastOutboundV143()">
+            <span class="ico">📤</span>출고
+            <small>출고 수량 등록</small>
+          </button>
+          <button type="button" class="admin-main125-btn v240-npp" onclick="closeAdminMainV125();openNppAdminV113()">
+            <span class="ico">📐</span>NPP도면위치관리
+            <small>NPP 도면 보관위치 확인 · 관리</small>
+          </button>`;
+      }
+      box.querySelector('.admin-main125-tools')?.style.setProperty('display','none','important');
+      box.querySelector('.admin-main125-subtitle')?.style.setProperty('display','none','important');
+      window.scrollTo(0,0);
+    }catch(e){console.error('V240 메인 표시 오류',e)}
+  }
+  window.buildMainV240=buildMainV240;
+
+  /* V239 홈 이동 목적지만 새 4개 메인으로 교체 */
+  window.goMainV239=buildMainV240;
+
+  document.addEventListener('click',function(e){
+    const b=e.target.closest&&e.target.closest('.fi140-home,.fo143-home,.al144-home');
+    if(!b)return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    buildMainV240();
+  },true);
+
+  const hb=document.getElementById('homeBtn');
+  if(hb)hb.addEventListener('click',function(e){
+    if(!document.body.classList.contains('v237-simple-admin'))return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    buildMainV240();
+  },true);
+
+  window.addEventListener('load',()=>setTimeout(buildMainV240,120));
+  setTimeout(buildMainV240,40);
 })();
 </script>
 </body></html>
