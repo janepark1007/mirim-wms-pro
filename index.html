@@ -61,10 +61,27 @@ input{width:100%;padding:14px;border:1px solid #d1d5db;border-radius:12px;font-s
     <label>품번</label><input id="findPart" autocomplete="off" placeholder="품번 입력">
     <button class="action" onclick="findItem()">조회</button>
     <div id="findResult" class="result">품번을 입력해 주세요.</div>
+    <div id="recentHistory" class="result" style="margin-top:14px"></div>
   </section>
 </main>
 <script>
 const KEY='simple_material_inventory_v1';
+
+const HISTORY_KEY='simple_material_history_v1';
+function loadHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(e){return []}}
+function addHistory(type,part,qty,location,currentQty){
+ const h=loadHistory();
+ h.unshift({type,part,qty,location,currentQty,time:new Date().toLocaleString('ko-KR')});
+ localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,50)));
+ renderHistory();
+}
+function renderHistory(){
+ const el=document.getElementById('recentHistory'); if(!el)return;
+ const h=loadHistory().slice(0,10);
+ if(!h.length){el.innerHTML='<b>최근 입고·출고 내역</b><br>등록된 내역이 없습니다.';return}
+ el.innerHTML='<b>최근 입고·출고 내역</b><br>'+
+ h.map(x=>`${x.time} · <b>${x.type}</b> · ${x.part} · ${x.qty}개 · 현재 ${x.currentQty}개 · ${x.location}`).join('<br>');
+}
 function loadDB(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
 function saveDB(db){localStorage.setItem(KEY,JSON.stringify(db))}
 function clean(v){return String(v||'').trim()}
@@ -79,6 +96,7 @@ function saveInbound(){
  item.qty=Number(item.qty||0)+qty;
  if(loc)item.location=loc;
  db[part]=item; saveDB(db);
+ addHistory('입고',part,qty,item.location||'미등록',item.qty);
  inMsg.textContent=`등록완료 · 현재수량 ${item.qty} · 위치 ${item.location||'미등록'}`;
  inQty.value='';
 }
@@ -89,6 +107,7 @@ function saveOutbound(){
  if(!item){outMsg.textContent='등록되지 않은 품번입니다.';return}
  if(Number(item.qty||0)<qty){outMsg.textContent=`출고 불가 · 현재수량 ${item.qty||0}`;return}
  item.qty=Number(item.qty||0)-qty; db[part]=item; saveDB(db);
+ addHistory('출고',part,qty,item.location||'미등록',item.qty);
  outMsg.textContent=`등록완료 · 현재수량 ${item.qty}`;
  outQty.value='';
 }
@@ -99,6 +118,7 @@ function findItem(){
  findResult.innerHTML=`<b>품번</b> ${part}<br><b>현재수량</b> ${item.qty||0}<br><b>자재위치</b> ${item.location||'미등록'}`;
 }
 document.getElementById('findPart').addEventListener('keydown',e=>{if(e.key==='Enter')findItem()});
+renderHistory();
 openPanel('location');
 </script>
 </body>
