@@ -2001,6 +2001,14 @@ body.v237-simple-admin.admin-mainmenu-open-v125 main > *:not(#adminMainMenuV125)
  #adminMainMenuV125.v251-core-four .admin-main125-grid{grid-template-columns:1fr!important}
 }
 </style>
+
+<style id="v254-core-only-no-sync-style">
+/* 요청한 4개 외 메인 메뉴/동기화 UI 강제 제거 */
+#syncBar,[id*="syncBar"],[class*="sync-bar"],.sync-status,.sync-btn,.shared-sync-status{display:none!important}
+@media(max-width:900px){
+  #adminMainMenuV125 .admin-main125-grid{grid-template-columns:1fr!important}
+}
+</style>
 </head>
 <body>
 <div id="vipLoginModal" class="order-modal-backdrop hidden" aria-hidden="true">
@@ -21716,6 +21724,63 @@ try{choosePhoto=choosePhotoV241;}catch(e){}
   window.addEventListener('load',function(){
     setTimeout(applyV253,700);
   });
+})();
+</script>
+
+<script id="v254-core-only-no-sync-script">
+(function(){
+  /* 공용/실시간 연동 사용 안 함 */
+  try{if(window.__mirimSharedTimer)clearInterval(window.__mirimSharedTimer)}catch(e){}
+  try{if(window.__mirimSyncTimer)clearInterval(window.__mirimSyncTimer)}catch(e){}
+  try{sharedReady=false;sharedDb=null}catch(e){}
+  try{window.sharedReady=false;window.sharedDb=null}catch(e){}
+
+  window.syncFastInboundV140=function(){
+    const b=document.getElementById('fiSaveV140'); if(b)b.disabled=false;
+  };
+  window.syncFastOutboundV143=function(){
+    const b=document.getElementById('foSaveV143'); if(b)b.disabled=false;
+  };
+
+  function coreOnlyV254(){
+    try{
+      if(typeof window.buildCoreFourV251==='function')window.buildCoreFourV251();
+      const box=document.getElementById('adminMainMenuV125');
+      if(!box)return;
+      const grid=box.querySelector('.admin-main125-grid');
+      if(!grid)return;
+
+      /* 메인 그리드에는 이 4개만 새로 생성 */
+      grid.innerHTML=`
+        <button type="button" class="admin-main125-btn v251-erp" onclick="openErpChangeV71()">
+          <span class="ico">🔄</span>ERP 업데이트<small>업데이트된 ERP 품번 · 수량 확인</small>
+        </button>
+        <button type="button" class="admin-main125-btn v251-in" onclick="closeAdminMainV125();openFastInboundV140()">
+          <span class="ico">📥</span>빠른입고<small>입고 수량 등록</small>
+        </button>
+        <button type="button" class="admin-main125-btn v251-out" onclick="closeAdminMainV125();openFastOutboundV143()">
+          <span class="ico">📤</span>빠른출고<small>출고 수량 등록</small>
+        </button>
+        <button type="button" class="admin-main125-btn v251-loc" onclick="closeAdminMainV125();openAdminLocationV144()">
+          <span class="ico">📍</span>자재위치 검색<small>현재 위치 · 자재수량 확인</small>
+        </button>`;
+
+      /* 메인 주변의 예전 바로가기/부가 메뉴는 DOM에서 제거 */
+      box.querySelectorAll('.admin-main125-tools,.admin-main125-subtitle').forEach(el=>el.remove());
+
+      document.querySelectorAll(
+        '#syncBar,[id*="syncBar"],[class*="sync-bar"],.sync-status,.sync-btn,.shared-sync-status'
+      ).forEach(el=>el.remove());
+    }catch(e){console.error('V254 core only',e)}
+  }
+
+  window.coreOnlyV254=coreOnlyV254;
+  window.buildCoreFourV251=coreOnlyV254;
+  window.buildCoreMainV250=coreOnlyV254;
+  window.goMainV239=coreOnlyV254;
+
+  window.addEventListener('load',()=>setTimeout(coreOnlyV254,700));
+  setTimeout(coreOnlyV254,120);
 })();
 </script>
 </body></html>
